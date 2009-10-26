@@ -234,8 +234,14 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	mqtt_raw_disconnect(sock);
+	mqtt_raw_pingreq(sock);
+	read(sock, &buf, 1);
+	printf("%d ", buf);
+	read(sock, &buf, 1);
+	printf("%d\n", buf);
+
 	sleep(2);
+	mqtt_raw_disconnect(sock);
 	close(sock);
 
 	return 0;
