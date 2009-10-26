@@ -11,7 +11,7 @@ complete functionality. When a function does error handling and checks input
 then mark it as "safe".
 
 
-CONNACK
+CONNACK [server only]
 CONNECT (naive: mqtt_raw_connect())
 DISCONNECT (complete: mqtt_raw_disconnect())
 PINGREQ (complete: mqtt_raw_pingreq())
@@ -21,7 +21,7 @@ PUBCOMP
 PUBLISH (naive: mqtt_raw_publish())
 PUBREC
 PUBREL
-SUBACK
+SUBACK [server only]
 SUBSCRIBE (naive: mqtt_raw_subscribe())
-UNSUBACK
+UNSUBACK [server only]
 UNSUBSCRIBE
