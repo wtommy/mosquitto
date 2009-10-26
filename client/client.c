@@ -50,6 +50,7 @@ uint16_t mqtt_raw_publish(int sock, bool dup, uint8_t qos, bool retain, const ch
 	}
 	memcpy(&(packet[pos]), payload, payloadlen);
 	bytes = write(sock, packet, packetlen);
+	free(packet);
 	return bytes-packetlen;
 }
 
