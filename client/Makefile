@@ -1,12 +1,19 @@
 CC=cc
 CFLAGS=-I../library -Wall
+LDFLAGS=
 
 .PHONY: all clean
 
 all : client
 
-client : client.c ../library/mqtt3.h
-	${CC} $(CFLAGS) $< -o $@
+client : client.o util.o
+	${CC} $(LDFLAGS) $^ -o $@
+
+client.o : client.c ../library/mqtt3.h
+	${CC} $(CFLAGS) -c $< -o $@
+
+util.o : ../library/util.c ../library/mqtt3.h
+	${CC} $(CFLAGS) -c $< -o $@
 
 clean : 
-	-rm -f client
+	-rm -f *.o client

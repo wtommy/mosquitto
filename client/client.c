@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
 	mqtt_raw_connect(sock, "Roger", 5, false, 0, false, "", 0, "", 0, 10, false);
 
 	read(sock, &buf, 1);
-	printf("%d ", buf);
+	printf("%s ", mqtt_command_to_string(buf&0xF0));
 	if(buf == 32){
 		// CONNACK
 		read(sock, &buf, 1); // Remaining length
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
 			// Connection accepted
 			mqtt_raw_subscribe(sock, false, "a/b/c", 5, 0);
 			read(sock, &buf, 1);
-			printf("%d ", buf);
+			printf("%s ", mqtt_command_to_string(buf&0xF0));
 			read(sock, &buf, 1); // Remaining length
 			printf("%d ", buf);
 			read(sock, &buf, 1); // Message ID MSB
@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
 
 			mqtt_raw_publish(sock, false, 0, false, "a/b/c", 5, "Roger", 5);
 			read(sock, &buf, 1); // Should be 00110000 = 48 = PUBLISH
-			printf("%d ", buf);
+			printf("%s ", mqtt_command_to_string(buf&0xF0));
 			read(sock, &buf, 1); // Remaining length (should be 12)
 			printf("%d ", buf);
 			read(sock, &buf, 1); // Topic MSB
@@ -236,7 +236,7 @@ int main(int argc, char *argv[])
 
 	mqtt_raw_pingreq(sock);
 	read(sock, &buf, 1);
-	printf("%d ", buf);
+	printf("%s ", mqtt_command_to_string(buf&0xF0));
 	read(sock, &buf, 1);
 	printf("%d\n", buf);
 

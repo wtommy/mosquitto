@@ -1,6 +1,8 @@
 #ifndef MQTT3_H
 #define MQTT3_H
 
+#include <stdint.h>
+
 /* For version 3 of the MQTT protocol */
 
 /* Macros for accessing the MSB and LSB of a uint16_t */
@@ -22,5 +24,8 @@
 #define PINGREQ 0xC0
 #define PINGRESP 0xD0
 #define DISCONNECT 0xE0
+
+/* Utility functions */
+const char *mqtt_command_to_string(uint8_t command);
 
 #endif
