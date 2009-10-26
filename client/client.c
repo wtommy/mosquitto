@@ -18,7 +18,9 @@
 
 uint16_t mqtt_generate_message_id(void)
 {
-	return 1;
+	static uint16_t mid = 1;
+
+	return ++mid;
 }
 
 uint16_t mqtt_raw_publish(int sock, bool dup, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const char *payload, int payloadlen)
