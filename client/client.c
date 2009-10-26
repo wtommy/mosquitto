@@ -13,6 +13,7 @@
 #define CONNECT 0x10
 #define PUBLISH 0x30
 #define SUBSCRIBE 0x80
+#define PINGREQ 0xC0
 #define DISCONNECT 0xE0
 
 #define MQTT_MSB(A) (uint8_t)((A & 0xFF00) >> 8)
@@ -112,6 +113,16 @@ void mqtt_raw_disconnect(int sock)
 	uint8_t packet[2];
 
 	packet[0] = DISCONNECT;
+	packet[1] = 0;
+
+	write(sock, packet, 2);
+}
+
+void mqtt_raw_pingreq(int sock)
+{
+	uint8_t packet[2];
+
+	packet[0] = PINGREQ;
 	packet[1] = 0;
 
 	write(sock, packet, 2);

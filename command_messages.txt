@@ -14,7 +14,7 @@ then mark it as "safe".
 CONNACK
 CONNECT (naive: mqtt_raw_connect())
 DISCONNECT (complete: mqtt_raw_disconnect())
-PINGREQ
+PINGREQ (complete: mqtt_raw_pingreq())
 PINGRESP
 PUBACK
 PUBCOMP
