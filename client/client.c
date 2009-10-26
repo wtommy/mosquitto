@@ -54,6 +54,52 @@ uint16_t mqtt_raw_publish(int sock, bool dup, uint8_t qos, bool retain, const ch
 	return bytes-packetlen;
 }
 
+void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool cleanstart)
+{
+	uint8_t *packet = NULL;
+	int packetlen;
+	int pos;
+
+	packetlen = 2 + 12 + 2+client_id_len;
+	if(will) packetlen += 2+will_topic_len + 2+will_msg_len;
+
+	packet = (uint8_t *)malloc(packetlen);
+
+	/* Fixed header */
+	packet[0] = CONNECT;
+	packet[1] = packetlen - 2; // Remaining bytes
+
+	/* Variable header */
+	packet[2] = 0; // Protocol name UTF-8 MSB
+	packet[3] = 6; // Protocol name UTF-8 LSB
+	sprintf(&(packet[4]), "MQIsdp"); // Protocol name
+	packet[10] = 3; // Protocol version
+	packet[11] = (will_retain<<5) | (will_qos<<4) | (will<<2) | cleanstart;
+	packet[12] = MQTT_MSB(keepalive);
+	packet[13] = MQTT_LSB(keepalive);
+
+	/* Payload */
+	packet[14] = MQTT_MSB(client_id_len);
+	packet[15] = MQTT_LSB(client_id_len);
+	memcpy(&(packet[16]), client_id, client_id_len);
+	pos = 16+client_id_len;
+	if(will){
+		packet[pos] = MQTT_MSB(will_topic_len);
+		pos++;
+		packet[pos] = MQTT_LSB(will_topic_len);
+		pos++;
+		memcpy(&(packet[pos]), will_topic, will_topic_len);
+		pos+=will_topic_len;
+		packet[pos] = MQTT_MSB(will_msg_len);
+		pos++;
+		packet[pos] = MQTT_LSB(will_msg_len);
+		pos++;
+		memcpy(&(packet[pos]), will_msg, will_msg_len);
+	}
+	write(sock, packet, packetlen);
+	free(packet);
+}
+
 int main(int argc, char *argv[])
 {
 	int sock;
@@ -77,27 +123,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	buf = 16; write(sock, &buf, 1); // CONNECT
-	buf = 19; write(sock, &buf, 1); // Remaining length
-	buf = 0; write(sock, &buf, 1); // UTF-8 length MSB
-	buf = 6; write(sock, &buf, 1); // UTF-8 length LSB
-	buf = 'M'; write(sock, &buf, 1);
-	buf = 'Q'; write(sock, &buf, 1);
-	buf = 'I'; write(sock, &buf, 1);
-	buf = 's'; write(sock, &buf, 1);
-	buf = 'd'; write(sock, &buf, 1);
-	buf = 'p'; write(sock, &buf, 1);
-	buf = 3; write(sock, &buf, 1); // Protocol version
-	buf = 2; write(sock, &buf, 1); // Clean start, no Will
-	buf = 0; write(sock, &buf, 1); // Keep alive MSB 
-	buf = 10; write(sock, &buf, 1); // Keep alive LSB
-	buf = 0; write(sock, &buf, 1); // UTF-8 length MSB
-	buf = 5; write(sock, &buf, 1); // UTF-8 length LSB
-	buf = 'R'; write(sock, &buf, 1);
-	buf = 'o'; write(sock, &buf, 1);
-	buf = 'g'; write(sock, &buf, 1);
-	buf = 'e'; write(sock, &buf, 1);
-	buf = 'r'; write(sock, &buf, 1);
+	mqtt_raw_connect(sock, "Roger", 5, false, 0, false, "", 0, "", 0, 10, false);
 
 	read(sock, &buf, 1);
 	if(buf == 32){
