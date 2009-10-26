@@ -9,8 +9,48 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-uint16_t mqtt_publish(int sock, bool dup, char qos, bool retain, const char *topic, const char *payload, int len)
+#define CONNECT 0x10
+#define PUBLISH 0x30
+
+#define MQTT_MSB(A) (uint8_t)((A & 0xFF00) >> 8)
+#define MQTT_LSB(A) (uint8_t)(A & 0x00FF)
+
+uint16_t mqtt_generate_message_id(void)
 {
+	return 1;
+}
+
+uint16_t mqtt_raw_publish(int sock, bool dup, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const char *payload, int payloadlen)
+{
+	uint8_t *packet = NULL;
+	int packetlen, bytes;
+	int pos;
+	uint16_t mid;
+
+	packetlen = 2+2+topiclen + payloadlen;
+	if(qos > 0) packetlen += 2; /* For message id */
+
+	packet = (uint8_t *)malloc(packetlen);
+
+	/* Fixed header */
+	packet[0] = PUBLISH | (dup<<3) | (qos<<2) | retain;
+	packet[1] = packetlen-2; /* Don't include fixed header length */
+
+	/* Variable header (topic string) */
+	packet[2] = MQTT_MSB(topiclen);
+	packet[3] = MQTT_LSB(topiclen);
+	memcpy(&(packet[4]), topic, topiclen);
+	pos = 4+topiclen;
+	if(qos > 0){
+		mid = mqtt_generate_message_id();
+		packet[pos] = MQTT_MSB(mid);
+		pos++;
+		packet[pos] = MQTT_LSB(mid);
+		pos++;
+	}
+	memcpy(&(packet[pos]), payload, payloadlen);
+	bytes = write(sock, packet, packetlen);
+	return bytes-packetlen;
 }
 
 int main(int argc, char *argv[])
@@ -67,16 +107,7 @@ int main(int argc, char *argv[])
 
 		if(buf == 0){
 			// Connection accepted
-			buf = 48; write(sock, &buf, 1); // PUBLISH
-			buf = 8; write(sock, &buf, 1); // Remaining length
-			buf = 0; write(sock, &buf, 1); // UTF-8 MSB
-			buf = 3; write(sock, &buf, 1); // UTF-8 LSB
-			buf = 'a'; write(sock, &buf, 1);
-			buf = '/'; write(sock, &buf, 1);
-			buf = 'b'; write(sock, &buf, 1);
-			buf = 'b'; write(sock, &buf, 1);
-			buf = 'o'; write(sock, &buf, 1);
-			buf = 'o'; write(sock, &buf, 1);
+			mqtt_raw_publish(sock, false, 0, false, "a/b/c", 5, "Roger", 5);
 			read(sock, &buf, 1);
 			printf("%d\n", buf);
 			read(sock, &buf, 1);
