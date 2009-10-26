@@ -27,6 +27,7 @@ uint16_t mqtt_raw_publish(int sock, bool dup, uint8_t qos, bool retain, const ch
 	int pos;
 	uint16_t mid;
 
+	/* FIXME - deal with packetlen > 127 */
 	packetlen = 2+2+topiclen + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
 
@@ -60,6 +61,7 @@ void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool w
 	int packetlen;
 	int pos;
 
+	/* FIXME - deal with packetlen > 127 */
 	packetlen = 2 + 12 + 2+client_id_len;
 	if(will) packetlen += 2+will_topic_len + 2+will_msg_len;
 
