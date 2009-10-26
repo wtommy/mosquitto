@@ -121,6 +121,16 @@ void mqtt_raw_pingreq(int sock)
 	write(sock, packet, 2);
 }
 
+void mqtt_raw_pingresp(int sock)
+{
+	uint8_t packet[2];
+
+	packet[0] = PINGRESP;
+	packet[1] = 0;
+
+	write(sock, packet, 2);
+}
+
 void mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen, char topic_qos)
 {
 	uint8_t *packet = NULL;
