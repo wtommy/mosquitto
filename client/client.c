@@ -101,34 +101,29 @@ void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool w
 	free(packet);
 }
 
-void mqtt_raw_disconnect(int sock)
+void mqtt_send_simple(int sock, uint8_t command)
 {
 	uint8_t packet[2];
 
-	packet[0] = DISCONNECT;
+	packet[0] = command;
 	packet[1] = 0;
 
 	write(sock, packet, 2);
+}
+
+void mqtt_raw_disconnect(int sock)
+{
+	mqtt_send_simple(sock, DISCONNECT);
 }
 
 void mqtt_raw_pingreq(int sock)
 {
-	uint8_t packet[2];
-
-	packet[0] = PINGREQ;
-	packet[1] = 0;
-
-	write(sock, packet, 2);
+	mqtt_send_simple(sock, PINGREQ);
 }
 
 void mqtt_raw_pingresp(int sock)
 {
-	uint8_t packet[2];
-
-	packet[0] = PINGRESP;
-	packet[1] = 0;
-
-	write(sock, packet, 2);
+	mqtt_send_simple(sock, PINGRESP);
 }
 
 void mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen, char topic_qos)
