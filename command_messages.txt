@@ -24,4 +24,4 @@ PUBREL
 SUBACK [server only]
 SUBSCRIBE (naive: mqtt_raw_subscribe())
 UNSUBACK [server only]
-UNSUBSCRIBE
+UNSUBSCRIBE (naive: mqtt_raw_unsubscribe())

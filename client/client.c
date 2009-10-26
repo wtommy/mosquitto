@@ -127,6 +127,7 @@ void mqtt_raw_pingresp(int sock)
 
 void mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen, char topic_qos)
 {
+	/* FIXME - only deals with a single topic */
 	uint8_t *packet = NULL;
 	int packetlen;
 	int pos;
@@ -149,6 +150,35 @@ void mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen
 	memcpy(&(packet[pos]), topic, topiclen);
 	pos += topiclen;
 	packet[pos] = topic_qos;
+
+	write(sock, packet, packetlen);
+	free(packet);
+}
+
+
+void mqtt_raw_unsubscribe(int sock, bool dup, const char *topic, uint16_t topiclen)
+{
+	/* FIXME - only deals with a single topic */
+	uint8_t *packet = NULL;
+	int packetlen;
+	int pos;
+	uint16_t mid;
+
+	/* FIXME - deal with packetlen > 127 */
+	packetlen = 2 + 2 + 2+topiclen;
+
+	packet = (uint8_t *)malloc(packetlen);
+
+	/* Fixed header */
+	packet[0] = UNSUBSCRIBE | (dup<<3) | (1<<1);
+	packet[1] = packetlen - 2; // Remaining bytes
+	mid = mqtt_generate_message_id();
+	packet[2] = MQTT_MSB(mid);
+	packet[3] = MQTT_LSB(mid);
+	packet[4] = MQTT_MSB(topiclen);
+	packet[5] = MQTT_LSB(topiclen);
+	pos = 6;
+	memcpy(&(packet[pos]), topic, topiclen);
 
 	write(sock, packet, packetlen);
 	free(packet);
@@ -237,6 +267,16 @@ int main(int argc, char *argv[])
 			printf("%c\n", buf);
 		}
 	}
+
+	mqtt_raw_unsubscribe(sock, false, "a/b/c", 5);
+	read(sock, &buf, 1);
+	printf("%s ", mqtt_command_to_string(buf&0xF0));
+	read(sock, &buf, 1); // Remaining length
+	printf("%d ", buf);
+	read(sock, &buf, 1); // Message ID MSB
+	printf("%d ", buf);
+	read(sock, &buf, 1); // Message ID LSB
+	printf("%d\n", buf);
 
 	mqtt_raw_pingreq(sock);
 	read(sock, &buf, 1);
