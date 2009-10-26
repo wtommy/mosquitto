@@ -129,21 +129,25 @@ int main(int argc, char *argv[])
 	mqtt_raw_connect(sock, "Roger", 5, false, 0, false, "", 0, "", 0, 10, false);
 
 	read(sock, &buf, 1);
+	printf("%d ", buf);
 	if(buf == 32){
 		// CONNACK
+		read(sock, &buf, 1); // Remaining length
+		printf("%d ", buf);
 		read(sock, &buf, 1);//Reserved
+		printf("%d ", buf);
 		read(sock, &buf, 1); // Return code
 		printf("%d\n", buf);
 
 		if(buf == 0){
 			// Connection accepted
-			mqtt_raw_publish(sock, false, 0, false, "a/b/c", 5, "Roger", 5);
+			mqtt_raw_publish(sock, false, 1, false, "a/b/c", 5, "Roger", 5);
 			read(sock, &buf, 1);
-			printf("%d\n", buf);
+			printf("%d ", buf);
 			read(sock, &buf, 1);
-			printf("%d\n", buf);
+			printf("%d ", buf);
 			read(sock, &buf, 1);
-			printf("%d\n", buf);
+			printf("%d ", buf);
 			read(sock, &buf, 1);
 			printf("%d\n", buf);
 		}
