@@ -6,6 +6,11 @@ cover the complete implementation. This may mean that "Remaining length"
 headers are limited to 127 bytes, forms of QoS>0 aren't properly supported,
 persistant data isn't stored or some other limitation.
 
+Note that "complete" doesn't mean everything is finished - it just means
+complete functionality. When a function does error handling and checks input
+then mark it as "safe".
+
+
 CONNACK
 CONNECT (naive: mqtt_raw_connect())
 DISCONNECT (complete: mqtt_raw_disconnect())
