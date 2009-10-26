@@ -12,13 +12,14 @@
 
 #define CONNECT 0x10
 #define PUBLISH 0x30
+#define SUBSCRIBE 0x80
 
 #define MQTT_MSB(A) (uint8_t)((A & 0xFF00) >> 8)
 #define MQTT_LSB(A) (uint8_t)(A & 0x00FF)
 
 uint16_t mqtt_generate_message_id(void)
 {
-	static uint16_t mid = 1;
+	static uint16_t mid = 123;
 
 	return ++mid;
 }
@@ -105,11 +106,41 @@ void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool w
 	free(packet);
 }
 
+void mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen, char topic_qos)
+{
+	uint8_t *packet = NULL;
+	int packetlen;
+	int pos;
+	uint16_t mid;
+
+	/* FIXME - deal with packetlen > 127 */
+	packetlen = 2 + 2 + 2+topiclen + 1;
+
+	packet = (uint8_t *)malloc(packetlen);
+
+	/* Fixed header */
+	packet[0] = SUBSCRIBE | (dup<<3) | (1<<1);
+	packet[1] = packetlen - 2; // Remaining bytes
+	mid = mqtt_generate_message_id();
+	packet[2] = MQTT_MSB(mid);
+	packet[3] = MQTT_LSB(mid);
+	packet[4] = MQTT_MSB(topiclen);
+	packet[5] = MQTT_LSB(topiclen);
+	pos = 6;
+	memcpy(&(packet[pos]), topic, topiclen);
+	pos += topiclen;
+	packet[pos] = topic_qos;
+
+	write(sock, packet, packetlen);
+	free(packet);
+}
+
+
 int main(int argc, char *argv[])
 {
 	int sock;
 	struct sockaddr_in addr;
-	char buf;
+	unsigned char buf;
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock == -1){
@@ -143,7 +174,20 @@ int main(int argc, char *argv[])
 
 		if(buf == 0){
 			// Connection accepted
-			mqtt_raw_publish(sock, false, 1, false, "a/b/c", 5, "Roger", 5);
+			mqtt_raw_subscribe(sock, false, "a/b/c", 5, 0);
+			read(sock, &buf, 1);
+			printf("%d ", buf);
+			read(sock, &buf, 1); // Remaining length
+			printf("%d ", buf);
+			read(sock, &buf, 1); // Message ID MSB
+			printf("%d ", buf);
+			read(sock, &buf, 1); // Message ID LSB
+			printf("%d ", buf);
+			read(sock, &buf, 1); // Granted QoS
+			printf("%d\n", buf);
+
+
+			mqtt_raw_publish(sock, false, 0, false, "a/b/c", 5, "Roger", 5);
 			read(sock, &buf, 1);
 			printf("%d ", buf);
 			read(sock, &buf, 1);
