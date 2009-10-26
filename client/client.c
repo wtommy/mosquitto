@@ -188,14 +188,34 @@ int main(int argc, char *argv[])
 
 
 			mqtt_raw_publish(sock, false, 0, false, "a/b/c", 5, "Roger", 5);
-			read(sock, &buf, 1);
+			read(sock, &buf, 1); // Should be 00110000 = 48 = PUBLISH
 			printf("%d ", buf);
-			read(sock, &buf, 1);
+			read(sock, &buf, 1); // Remaining length (should be 12)
 			printf("%d ", buf);
-			read(sock, &buf, 1);
+			read(sock, &buf, 1); // Topic MSB
 			printf("%d ", buf);
+			read(sock, &buf, 1); // Topic LSB
+			printf("%d ", buf);
+			read(sock, &buf, 1); // Topic
+			printf("%c", buf);
 			read(sock, &buf, 1);
-			printf("%d\n", buf);
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c ", buf);
+			read(sock, &buf, 1); // Payload
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c\n", buf);
 		}
 	}
 	sleep(2);
