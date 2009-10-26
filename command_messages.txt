@@ -1,0 +1,22 @@
+Command message status
+======================
+
+Naive here means that the function call works for a specific case but doesn't
+cover the complete implementation. This may mean that "Remaining length"
+headers are limited to 127 bytes, forms of QoS>0 aren't properly supported,
+persistant data isn't stored or some other limitation.
+
+CONNACK
+CONNECT (naive: mqtt_raw_connect())
+DISCONNECT (complete: mqtt_raw_disconnect())
+PINGREQ
+PINGRESP
+PUBACK
+PUBCOMP
+PUBLISH (naive: mqtt_raw_publish())
+PUBREC
+PUBREL
+SUBACK
+SUBSCRIBE (naive: mqtt_raw_subscribe())
+UNSUBACK
+UNSUBSCRIBE
