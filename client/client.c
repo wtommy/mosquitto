@@ -10,14 +10,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#define CONNECT 0x10
-#define PUBLISH 0x30
-#define SUBSCRIBE 0x80
-#define PINGREQ 0xC0
-#define DISCONNECT 0xE0
-
-#define MQTT_MSB(A) (uint8_t)((A & 0xFF00) >> 8)
-#define MQTT_LSB(A) (uint8_t)(A & 0x00FF)
+#include <mqtt3.h>
 
 uint16_t mqtt_generate_message_id(void)
 {

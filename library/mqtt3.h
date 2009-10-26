@@ -1,23 +1,26 @@
-#ifndef MQTT_H
-#define MQTT_H
+#ifndef MQTT3_H
+#define MQTT3_H
 
 /* For version 3 of the MQTT protocol */
 
-/* Message types */
-#define CONNECT 1
-#define CONNACK 2
-#define PUBLISH 3
-#define PUBACK 4
-#define PUBREC 5
-#define PUBREL 6
-#define PUBCOMP 7
-#define SUBSCRIBE 8
-#define SUBACK 9
-#define UNSUBSCRIBE 10
-#define UNSUBACK 11
-#define PINGREG 12
-#define PINGRESP 13
-#define DISCONNECT 14
+/* Macros for accessing the MSB and LSB of a uint16_t */
+#define MQTT_MSB(A) (uint8_t)((A & 0xFF00) >> 8)
+#define MQTT_LSB(A) (uint8_t)(A & 0x00FF)
 
+/* Message types */
+#define CONNECT 0x10
+#define CONNACK 0x20
+#define PUBLISH 0x30
+#define PUBACK 0x40
+#define PUBREC 0x50
+#define PUBREL 0x60
+#define PUBCOMP 0x70
+#define SUBSCRIBE 0x80
+#define SUBACK 0x90
+#define UNSUBSCRIBE 0xA0
+#define UNSUBACK 0xB0
+#define PINGREQ 0xC0
+#define PINGRESP 0xD0
+#define DISCONNECT 0xE0
 
 #endif
