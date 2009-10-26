@@ -35,7 +35,7 @@ uint16_t mqtt_raw_publish(int sock, bool dup, uint8_t qos, bool retain, const ch
 	packet = (uint8_t *)malloc(packetlen);
 
 	/* Fixed header */
-	packet[0] = PUBLISH | (dup<<3) | (qos<<2) | retain;
+	packet[0] = PUBLISH | (dup<<3) | (qos<<1) | retain;
 	packet[1] = packetlen-2; /* Don't include fixed header length */
 
 	/* Variable header (topic string) */
