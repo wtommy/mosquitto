@@ -111,18 +111,17 @@ void mqtt_send_simple(int sock, uint8_t command)
 	write(sock, packet, 2);
 }
 
-void mqtt_raw_disconnect(int sock)
-{
-	mqtt_send_simple(sock, DISCONNECT);
-}
+#define mqtt_raw_disconnect(A) mqtt_send_simple(A, DISCONNECT)
 
 void mqtt_raw_pingreq(int sock)
 {
+	/* FIXME - Update keepalive information or turn into a macro like m_r_disconnect() */
 	mqtt_send_simple(sock, PINGREQ);
 }
 
 void mqtt_raw_pingresp(int sock)
 {
+	/* FIXME - Update keepalive information or turn into a macro like m_r_disconnect() */
 	mqtt_send_simple(sock, PINGRESP);
 }
 
