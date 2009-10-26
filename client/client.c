@@ -13,6 +13,7 @@
 #define CONNECT 0x10
 #define PUBLISH 0x30
 #define SUBSCRIBE 0x80
+#define DISCONNECT 0xE0
 
 #define MQTT_MSB(A) (uint8_t)((A & 0xFF00) >> 8)
 #define MQTT_LSB(A) (uint8_t)(A & 0x00FF)
@@ -104,6 +105,16 @@ void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool w
 	}
 	write(sock, packet, packetlen);
 	free(packet);
+}
+
+void mqtt_raw_disconnect(int sock)
+{
+	uint8_t packet[2];
+
+	packet[0] = DISCONNECT;
+	packet[1] = 0;
+
+	write(sock, packet, 2);
 }
 
 void mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen, char topic_qos)
@@ -218,6 +229,8 @@ int main(int argc, char *argv[])
 			printf("%c\n", buf);
 		}
 	}
+
+	mqtt_raw_disconnect(sock);
 	sleep(2);
 	close(sock);
 
