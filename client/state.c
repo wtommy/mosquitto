@@ -111,6 +111,7 @@ int main(int argc, char *argv[])
 	int fdcount;
 	int run = 1;
 	int sock;
+	int timed = 0;
 
 	sock = mqtt_connect_socket("127.0.0.1", 1883);
 	if(sock == -1){
@@ -160,6 +161,11 @@ int main(int argc, char *argv[])
 				default:
 					fprintf(stderr, "Error: Unknown state\n");
 					break;
+			}
+			timed++;
+			if(timed == 5){
+				mqtt_raw_pingreq(sock);
+				timed = 0;
 			}
 		}else{
 			printf("fdcount=%d\n", fdcount);
