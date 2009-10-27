@@ -61,7 +61,7 @@ uint32_t mqtt_read_remaining_length(int sock)
 		digit = mqtt_read_byte(sock);
 		value += (digit & 127) * multiplier;
 		multiplier *= 128;
-	while((digit & 128) != 0);
+	}while((digit & 128) != 0);
 
 	return value;
 }
