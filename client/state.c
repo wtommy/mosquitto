@@ -25,15 +25,14 @@ static stateType state = stStart;
 void mqtt_handle_publish(int sock, uint8_t header)
 {
 	uint8_t *topic, *payload;
-	uint8_t remaining_length;
+	uint32_t remaining_length;
 	uint8_t dup, qos, retain;
 
 	dup = (header & 0x08)>>3;
 	qos = (header & 0x06)>>1;
 	retain = (header & 0x01);
 
-	remaining_length = mqtt_read_byte(sock);
-	//read(sock, &byte, 1); // Remaining length (should be 12)
+	remaining_length = mqtt_read_remaining_length(sock);
 
 	topic = mqtt_read_string(sock);
 	remaining_length -= strlen((char *)topic) - 2;
