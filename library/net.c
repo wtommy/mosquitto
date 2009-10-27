@@ -51,6 +51,21 @@ int mqtt_read_bytes(int sock, uint8_t *bytes, uint32_t count)
 	}
 }
 
+uint32_t mqtt_read_remaining_length(int sock)
+{
+	uint32_t value = 0;
+	uint32_t multiplier = 1;
+	uint8_t digit;
+
+	do{
+		digit = mqtt_read_byte(sock);
+		value += (digit & 127) * multiplier;
+		multiplier *= 128;
+	while((digit & 128) != 0);
+
+	return value;
+}
+
 uint8_t *mqtt_read_string(int sock)
 {
 	uint8_t msb, lsb;
