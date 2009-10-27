@@ -65,6 +65,18 @@ void handle_read(int sock)
 			printf("%d\n", buf);
 			state = stConnAckd;
 			break;
+		case SUBACK:
+			printf("Received SUBACK\n");
+			read(sock, &buf, 1); // Remaining length
+			printf("%d ", buf);
+			read(sock, &buf, 1); // Message ID MSB
+			printf("%d ", buf);
+			read(sock, &buf, 1); // Message ID LSB
+			printf("%d ", buf);
+			read(sock, &buf, 1); // Granted QoS
+			printf("%d\n", buf);
+			state = stSubAckd;
+			break;
 		default:
 			printf("Unknown command: %s\n", mqtt_command_to_string(buf&0xF0));
 			break;
