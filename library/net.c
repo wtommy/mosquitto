@@ -3,8 +3,10 @@
 #include <netinet/in.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 int mqtt_connect_socket(const char *ip, uint16_t port)
 {
@@ -29,5 +31,45 @@ int mqtt_connect_socket(const char *ip, uint16_t port)
 	}
 
 	return sock;
+}
+
+uint8_t mqtt_read_byte(int sock)
+{
+	uint8_t byte;
+
+	read(sock, &byte, 1);
+
+	return byte;
+}
+
+int mqtt_read_bytes(int sock, uint8_t *bytes, uint32_t count)
+{
+	if(read(sock, &bytes, count) == count){
+		return 0;
+	}else{
+		return 1;
+	}
+}
+
+uint8_t *mqtt_read_string(int sock)
+{
+	uint8_t msb, lsb;
+	uint16_t len;
+	uint8_t *str;
+
+	msb = mqtt_read_byte(sock);
+	lsb = mqtt_read_byte(sock);
+
+	len = (msb<<8) + lsb;
+
+	str = calloc(len+1, sizeof(uint8_t));
+	if(str){
+		if(mqtt_read_bytes(sock, str, len)){
+			free(str);
+			return NULL;
+		}
+	}
+
+	return str;
 }
 
