@@ -48,6 +48,31 @@ void mqtt_handle_publish(int sock, uint8_t header)
 	free(payload);
 }
 
+int mqtt_handle_connack(int sock)
+{
+	uint32_t remaining_length;
+	uint8_t rc;
+
+	printf("Received CONNACK\n");
+	remaining_length = mqtt_read_remaining_length(sock);
+	mqtt_read_byte(sock); // Reserved byte, not used
+	rc = mqtt_read_byte(sock);
+	switch(rc){
+		case 0:
+			return 0;
+		case 1:
+			fprintf(stderr, "Connection Refused: unacceptable protocol version\n");
+			return 1;
+		case 2:
+			fprintf(stderr, "Connection Refused: identifier rejected\n");
+			return 1;
+		case 3:
+			fprintf(stderr, "Connection Refused: broker unavailable\n");
+			return 1;
+	}
+	return 1;
+}
+
 int handle_read(int sock)
 {
 	uint8_t buf;
@@ -64,13 +89,9 @@ int handle_read(int sock)
 
 	switch(buf&0xF0){
 		case CONNACK:
-			printf("Received CONNACK\n");
-			read(sock, &buf, 1); // Remaining length
-			printf("%d ", buf);
-			read(sock, &buf, 1);//Reserved
-			printf("%d ", buf);
-			read(sock, &buf, 1); // Return code
-			printf("%d\n", buf);
+			if(mqtt_handle_connack(sock)){
+				return 3;
+			}
 			state = stConnAckd;
 			break;
 		case SUBACK:
