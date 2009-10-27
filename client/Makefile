@@ -1,5 +1,5 @@
 CC=cc
-CFLAGS=-I../library -Wall
+CFLAGS=-I../library -Wall -ggdb
 LDFLAGS=
 
 .PHONY: all clean
