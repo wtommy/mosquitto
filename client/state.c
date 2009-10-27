@@ -84,10 +84,12 @@ int handle_read(int sock)
 			break;
 		case PINGREQ:
 			printf("Received PINGREQ\n");
+			mqtt_read_remaining_length(sock);
 			mqtt_raw_pingresp(sock);
 			break;
 		case PINGRESP:
 			printf("Received PINGRESP\n");
+			mqtt_read_remaining_length(sock);
 			//FIXME - do something!
 			break;
 		case PUBLISH:
