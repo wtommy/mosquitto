@@ -46,10 +46,19 @@ void mqtt_handle_publish(int sock, uint8_t header)
 	free(payload);
 }
 
-void handle_read(int sock)
+int handle_read(int sock)
 {
 	uint8_t buf;
-	read(sock, &buf, 1);
+	int rc;
+
+	rc = read(sock, &buf, 1);
+	printf("rc: %d\n", rc);
+	if(rc == -1){
+		printf("Error: %s\n", strerror(errno));
+		return 1;
+	}else if(rc == 0){
+		return 2;
+	}
 
 	switch(buf&0xF0){
 		case CONNACK:
@@ -90,6 +99,7 @@ void handle_read(int sock)
 			printf("Unknown command: %s (%d)\n", mqtt_command_to_string(buf&0xF0), buf&0xF0);
 			break;
 	}
+	return 0;
 }
 
 /* pselect loop test */
@@ -154,7 +164,11 @@ int main(int argc, char *argv[])
 			printf("fdcount=%d\n", fdcount);
 
 			if(FD_ISSET(sock, &readfds)){
-				handle_read(sock);
+				if(handle_read(sock)){
+					fprintf(stderr, "Socket closed on remote side\n");
+					close(sock);
+					run = 0;
+				}
 			}
 		}
 	}
