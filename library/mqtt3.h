@@ -1,6 +1,7 @@
 #ifndef MQTT3_H
 #define MQTT3_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 /* For version 3 of the MQTT protocol */
@@ -27,5 +28,16 @@
 
 /* Utility functions */
 const char *mqtt_command_to_string(uint8_t command);
+uint16_t mqtt_generate_message_id(void);
+
+/* Raw send functions - just construct the packet and send */
+void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool cleanstart);
+#define mqtt_raw_disconnect(A) mqtt_send_simple(A, DISCONNECT)
+void mqtt_raw_pingreq(int sock);
+void mqtt_raw_pingresp(int sock);
+uint16_t mqtt_raw_publish(int sock, bool dup, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const char *payload, int payloadlen);
+void mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen, char topic_qos);
+void mqtt_raw_unsubscribe(int sock, bool dup, const char *topic, uint16_t topiclen);
+void mqtt_send_simple(int sock, uint8_t command);
 
 #endif
