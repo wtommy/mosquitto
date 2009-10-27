@@ -16,7 +16,8 @@ typedef enum {
 	stConnSent,
 	stConnAckd,
 	stSubSent,
-	stSubAckd
+	stSubAckd,
+	stPause
 } stateType;
 
 static stateType state = stStart;
@@ -48,6 +49,35 @@ void handle_read(int sock)
 			read(sock, &buf, 1); // Granted QoS
 			printf("%d\n", buf);
 			state = stSubAckd;
+			break;
+		case PUBLISH:
+			printf("Received PUBLISH\n");
+			read(sock, &buf, 1); // Remaining length (should be 12)
+			printf("%d ", buf);
+			read(sock, &buf, 1); // Topic MSB
+			printf("%d ", buf);
+			read(sock, &buf, 1); // Topic LSB
+			printf("%d ", buf);
+			read(sock, &buf, 1); // Topic
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c ", buf);
+			read(sock, &buf, 1); // Payload
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c", buf);
+			read(sock, &buf, 1);
+			printf("%c\n", buf);
 			break;
 		default:
 			printf("Unknown command: %s\n", mqtt_command_to_string(buf&0xF0));
@@ -102,6 +132,12 @@ int main(int argc, char *argv[])
 					printf("Waiting for SUBACK\n");
 					break;
 				case stSubAckd:
+					printf("SUBACK received\n");
+					mqtt_raw_publish(sock, false, 0, false, "a/b/c", 5, "Roger", 5);
+					state = stPause;
+					break;
+				case stPause:
+					printf("Pause\n");
 					break;
 				default:
 					fprintf(stderr, "Error: Unknown state\n");
