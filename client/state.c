@@ -32,16 +32,19 @@ void mqtt_handle_publish(int sock, uint8_t header)
 	qos = (header & 0x06)>>1;
 	retain = (header & 0x01);
 
+	printf("dup=%d\nqos=%d\nretain=%d\n", dup, qos, retain);
 	remaining_length = mqtt_read_remaining_length(sock);
 
+	printf("Remaining length: %d\n", remaining_length);
 	topic = mqtt_read_string(sock);
-	remaining_length -= strlen((char *)topic) - 2;
-	printf("Topic: %s\n", topic);
+	remaining_length -= strlen((char *)topic) + 2;
+	printf("Topic: '%s'\n", topic);
 	free(topic);
 
-	payload = malloc(remaining_length*sizeof(uint8_t));
+	printf("Remaining length: %d\n", remaining_length);
+	payload = calloc((remaining_length+1), sizeof(uint8_t));
 	mqtt_read_bytes(sock, payload, remaining_length);
-	printf("Payload: %s\n", payload);
+	printf("Payload: '%s'\n", payload);
 	free(payload);
 }
 
@@ -144,7 +147,7 @@ int main(int argc, char *argv[])
 					break;
 				case stConnAckd:
 					printf("CONNACK received\n");
-					mqtt_raw_subscribe(sock, false, "$SYS/broker/log", 15, 0);
+					mqtt_raw_subscribe(sock, false, "$SYS/#", 6, 0);
 					state = stSubSent;
 					break;
 				case stSubSent:
