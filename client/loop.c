@@ -7,6 +7,7 @@ int main(int argc, char *argv[])
 	struct timespec timeout;
 	fd_set readfds;
 	int fdcount;
+	char buf[1024];
 
 	while(1){
 		FD_ZERO(&readfds);
@@ -16,6 +17,11 @@ int main(int argc, char *argv[])
 
 		fdcount = pselect(1, &readfds, NULL, NULL, &timeout, NULL);
 		printf("loop %d\n", fdcount);
+
+		if(FD_ISSET(0, &readfds)){
+			read(0, buf, 1024);
+			printf("buf: %s\n", buf);
+		}
 	}
 	return 0;
 }
