@@ -4,7 +4,7 @@ LDFLAGS=
 
 .PHONY: all clean
 
-all : client
+all : client state
 
 state : state.o net.o raw_send.o util.o
 	${CC} $(LDFLAGS) $^ -o $@
