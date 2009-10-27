@@ -40,4 +40,7 @@ void mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen
 void mqtt_raw_unsubscribe(int sock, bool dup, const char *topic, uint16_t topiclen);
 void mqtt_send_simple(int sock, uint8_t command);
 
+/* Network functions */
+int mqtt_connect_socket(const char *ip, uint16_t port);
+
 #endif

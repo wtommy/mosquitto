@@ -6,16 +6,19 @@ LDFLAGS=
 
 all : client
 
-state : state.o raw_send.o util.o
+state : state.o net.o raw_send.o util.o
 	${CC} $(LDFLAGS) $^ -o $@
 
-client : client.o raw_send.o util.o
+client : client.o net.o raw_send.o util.o
 	${CC} $(LDFLAGS) $^ -o $@
 
 state.o : state.c ../library/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 client.o : client.c ../library/mqtt3.h
+	${CC} $(CFLAGS) -c $< -o $@
+
+net.o : ../library/net.c ../library/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 raw_send.o : ../library/raw_send.c ../library/mqtt3.h

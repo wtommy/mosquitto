@@ -1,13 +1,10 @@
-#include <arpa/inet.h>
 #include <errno.h>
-#include <netinet/in.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <unistd.h>
 
 #include <mqtt3.h>
@@ -15,23 +12,11 @@
 int main(int argc, char *argv[])
 {
 	int sock;
-	struct sockaddr_in addr;
 	unsigned char buf;
 
-	sock = socket(AF_INET, SOCK_STREAM, 0);
+	sock = mqtt_connect_socket("127.0.0.1", 1883);
 	if(sock == -1){
 		fprintf(stderr, "Error: %s\n", strerror(errno));
-		return 1;
-	}
-
-	memset(&addr, 0, sizeof(struct sockaddr_in));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(1883);
-	inet_aton("127.0.0.1", &(addr.sin_addr));
-
-	if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_in)) == -1){
-		fprintf(stderr, "Error: %s\n", strerror(errno));
-		fflush(stderr);
 		return 1;
 	}
 
