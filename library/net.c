@@ -44,7 +44,7 @@ uint8_t mqtt_read_byte(int sock)
 
 int mqtt_read_bytes(int sock, uint8_t *bytes, uint32_t count)
 {
-	if(read(sock, &bytes, count) == count){
+	if(read(sock, bytes, count) == count){
 		return 0;
 	}else{
 		return 1;
