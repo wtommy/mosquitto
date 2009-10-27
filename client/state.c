@@ -74,6 +74,14 @@ void handle_read(int sock)
 			printf("%d\n", buf);
 			state = stSubAckd;
 			break;
+		case PINGREQ:
+			printf("Received PINGREQ\n");
+			mqtt_raw_pingresp(sock);
+			break;
+		case PINGRESP:
+			printf("Received PINGRESP\n");
+			//FIXME - do something!
+			break;
 		case PUBLISH:
 			printf("Received PUBLISH\n");
 			mqtt_handle_publish(sock, buf);
