@@ -8,6 +8,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <mqtt3.h>
+
 int mqtt_connect_socket(const char *ip, uint16_t port)
 {
 	int sock;
