@@ -22,6 +22,13 @@ typedef enum {
 
 static stateType state = stStart;
 
+void mqtt_check_keepalive(mqtt_context *context)
+{
+	if(time(NULL) - context->last_message >= context->keepalive){
+		mqtt_raw_pingreq(context);
+	}
+}
+
 void mqtt_handle_publish(mqtt_context *context, uint8_t header)
 {
 	uint8_t *topic, *payload;
@@ -148,7 +155,6 @@ int main(int argc, char *argv[])
 	fd_set readfds, writefds;
 	int fdcount;
 	int run = 1;
-	int timed = 0;
 	mqtt_context context;
 
 	context.sock = mqtt_connect_socket("127.0.0.1", 1883);
@@ -200,11 +206,6 @@ int main(int argc, char *argv[])
 					fprintf(stderr, "Error: Unknown state\n");
 					break;
 			}
-			timed++;
-			if(timed == 5){
-				mqtt_raw_pingreq(&context);
-				timed = 0;
-			}
 		}else{
 			printf("fdcount=%d\n", fdcount);
 
@@ -216,6 +217,7 @@ int main(int argc, char *argv[])
 				}
 			}
 		}
+		mqtt_check_keepalive(&context);
 	}
 	return 0;
 }
