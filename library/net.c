@@ -56,6 +56,15 @@ int mqtt_read_bytes(int sock, uint8_t *bytes, uint32_t count)
 	}
 }
 
+int mqtt_write_bytes(int sock, uint8_t *bytes, uint32_t count)
+{
+	if(write(sock, bytes, count) == count){
+		return 0;
+	}else{
+		return 1;
+	}
+}
+
 uint32_t mqtt_read_remaining_length(int sock)
 {
 	uint32_t value = 0;
