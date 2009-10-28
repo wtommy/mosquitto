@@ -38,7 +38,7 @@ int mqtt_raw_publish(int sock, bool dup, uint8_t qos, bool retain, const char *t
 	return 0;
 }
 
-void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool cleanstart)
+int mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool cleanstart)
 {
 	int payloadlen;
 
@@ -46,22 +46,24 @@ void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool w
 	if(will) payloadlen += 2+will_topic_len + 2+will_msg_len;
 
 	/* Fixed header */
-	mqtt_write_byte(sock, CONNECT);
-	mqtt_write_remaining_length(sock, 12+payloadlen);
+	if(mqtt_write_byte(sock, CONNECT)) return 1;
+	if(mqtt_write_remaining_length(sock, 12+payloadlen)) return 1;
 
 	/* Variable header */
-	mqtt_write_string(sock, PROTOCOL_NAME, strlen(PROTOCOL_NAME));
-	mqtt_write_byte(sock, PROTOCOL_VERSION);
-	mqtt_write_byte(sock, (will_retain<<5) | (will_qos<<3) | (will<<2) | (cleanstart<<1));
-	mqtt_write_byte(sock, MQTT_MSB(keepalive));
-	mqtt_write_byte(sock, MQTT_LSB(keepalive));
+	if(mqtt_write_string(sock, PROTOCOL_NAME, strlen(PROTOCOL_NAME))) return 1;
+	if(mqtt_write_byte(sock, PROTOCOL_VERSION)) return 1;
+	if(mqtt_write_byte(sock, (will_retain<<5) | (will_qos<<3) | (will<<2) | (cleanstart<<1))) return 1;
+	if(mqtt_write_byte(sock, MQTT_MSB(keepalive))) return 1;
+	if(mqtt_write_byte(sock, MQTT_LSB(keepalive))) return 1;
 
 	/* Payload */
-	mqtt_write_string(sock, client_id, client_id_len);
+	if(mqtt_write_string(sock, client_id, client_id_len)) return 1;
 	if(will){
-		mqtt_write_string(sock, will_topic, will_topic_len);
-		mqtt_write_string(sock, will_msg, will_msg_len);
+		if(mqtt_write_string(sock, will_topic, will_topic_len)) return 1;
+		if(mqtt_write_string(sock, will_msg, will_msg_len)) return 1;
 	}
+
+	return 0;
 }
 
 int mqtt_send_simple_command(int sock, uint8_t command)

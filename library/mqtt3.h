@@ -34,7 +34,7 @@ const char *mqtt_command_to_string(uint8_t command);
 uint16_t mqtt_generate_message_id(void);
 
 /* Raw send functions - just construct the packet and send */
-void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool cleanstart);
+int mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool cleanstart);
 #define mqtt_raw_disconnect(A) mqtt_send_simple_command(A, DISCONNECT)
 int mqtt_raw_pingreq(int sock);
 int mqtt_raw_pingresp(int sock);
