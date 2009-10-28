@@ -64,10 +64,8 @@ void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool w
 	packet[1] = packetlen - 2; // Remaining bytes
 
 	/* Variable header */
-	packet[2] = 0; // Protocol name UTF-8 MSB
-	packet[3] = 6; // Protocol name UTF-8 LSB
-	sprintf(&(packet[4]), "MQIsdp"); // Protocol name
-	packet[10] = 3; // Protocol version
+	mqtt_write_string(sock, PROTOCOL_NAME, strlen(PROTOCOL_NAME));
+	packet[10] = PROTOCOL_VERSION;
 	packet[11] = (will_retain<<5) | (will_qos<<3) | (will<<2) | (cleanstart<<1);
 	packet[12] = MQTT_MSB(keepalive);
 	packet[13] = MQTT_LSB(keepalive);

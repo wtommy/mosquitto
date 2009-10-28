@@ -6,6 +6,9 @@
 
 /* For version 3 of the MQTT protocol */
 
+#define PROTOCOL_NAME "MQIsdp"
+#define PROTOCOL_VERSION 3
+
 /* Macros for accessing the MSB and LSB of a uint16_t */
 #define MQTT_MSB(A) (uint8_t)((A & 0xFF00) >> 8)
 #define MQTT_LSB(A) (uint8_t)(A & 0x00FF)
