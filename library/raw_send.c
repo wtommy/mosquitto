@@ -64,22 +64,24 @@ void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool w
 	}
 }
 
-void mqtt_send_simple_command(int sock, uint8_t command)
+int mqtt_send_simple_command(int sock, uint8_t command)
 {
-	mqtt_write_byte(sock, command);
-	mqtt_write_byte(sock, 0);
+	if(mqtt_write_byte(sock, command)) return 1;
+	if(mqtt_write_byte(sock, 0)) return 1;
+
+	return 0;
 }
 
-void mqtt_raw_pingreq(int sock)
+int mqtt_raw_pingreq(int sock)
 {
 	/* FIXME - Update keepalive information or turn into a macro like m_r_disconnect() */
-	mqtt_send_simple_command(sock, PINGREQ);
+	return mqtt_send_simple_command(sock, PINGREQ);
 }
 
-void mqtt_raw_pingresp(int sock)
+int mqtt_raw_pingresp(int sock)
 {
 	/* FIXME - Update keepalive information or turn into a macro like m_r_disconnect() */
-	mqtt_send_simple_command(sock, PINGRESP);
+	return mqtt_send_simple_command(sock, PINGRESP);
 }
 
 int mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen, uint8_t topic_qos)

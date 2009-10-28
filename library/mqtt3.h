@@ -36,12 +36,12 @@ uint16_t mqtt_generate_message_id(void);
 /* Raw send functions - just construct the packet and send */
 void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool cleanstart);
 #define mqtt_raw_disconnect(A) mqtt_send_simple_command(A, DISCONNECT)
-void mqtt_raw_pingreq(int sock);
-void mqtt_raw_pingresp(int sock);
+int mqtt_raw_pingreq(int sock);
+int mqtt_raw_pingresp(int sock);
 int mqtt_raw_publish(int sock, bool dup, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen);
 int mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen, uint8_t topic_qos);
 int mqtt_raw_unsubscribe(int sock, bool dup, const char *topic, uint16_t topiclen);
-void mqtt_send_simple_command(int sock, uint8_t command);
+int mqtt_send_simple_command(int sock, uint8_t command);
 
 /* Network functions */
 int mqtt_connect_socket(const char *ip, uint16_t port);
