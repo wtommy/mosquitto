@@ -42,6 +42,11 @@ uint8_t mqtt_read_byte(int sock)
 	return byte;
 }
 
+void mqtt_write_byte(int sock, uint8_t byte)
+{
+	write(sock, &byte, 1);
+}
+
 int mqtt_read_bytes(int sock, uint8_t *bytes, uint32_t count)
 {
 	if(read(sock, bytes, count) == count){
@@ -57,6 +62,9 @@ uint32_t mqtt_read_remaining_length(int sock)
 	uint32_t multiplier = 1;
 	uint8_t digit;
 
+	/* Algorithm for decoding taken from pseudo code at
+	 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
+	 */
 	do{
 		digit = mqtt_read_byte(sock);
 		value += (digit & 127) * multiplier;
@@ -64,6 +72,24 @@ uint32_t mqtt_read_remaining_length(int sock)
 	}while((digit & 128) != 0);
 
 	return value;
+}
+
+void mqtt_write_remaining_length(int sock, uint32_t length)
+{
+	uint8_t digit;
+
+	/* Algorithm for encoding taken from pseudo code at
+	 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
+	 */
+	do{
+		digit = length % 128;
+		length = length / 128;
+		/* If there are more digits to encode, set the top bit of this digit */
+		if(length>0){
+			digit = digit | 0x80;
+		}
+		mqtt_write_byte(sock, digit);
+	}while(length > 0);
 }
 
 uint8_t *mqtt_read_string(int sock)

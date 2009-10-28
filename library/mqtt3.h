@@ -42,9 +42,13 @@ void mqtt_send_simple(int sock, uint8_t command);
 
 /* Network functions */
 int mqtt_connect_socket(const char *ip, uint16_t port);
+
 uint8_t mqtt_read_byte(int sock);
 int mqtt_read_bytes(int sock, uint8_t *bytes, uint32_t count);
 uint8_t *mqtt_read_string(int sock);
 uint32_t mqtt_read_remaining_length(int sock);
+
+void mqtt_write_byte(int sock, uint8_t byte);
+void mqtt_write_remaining_length(int sock, uint32_t length);
 
 #endif
