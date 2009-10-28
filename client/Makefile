@@ -4,7 +4,7 @@ LDFLAGS=
 
 .PHONY: all clean
 
-all : client state
+all : state
 
 state : state.o net.o raw_send.o util.o
 	${CC} $(LDFLAGS) $^ -o $@
@@ -22,4 +22,4 @@ util.o : ../library/util.c ../library/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 clean : 
-	-rm -f *.o client state
+	-rm -f *.o state
