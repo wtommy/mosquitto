@@ -107,31 +107,26 @@ int mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen,
 }
 
 
-void mqtt_raw_unsubscribe(int sock, bool dup, const char *topic, uint16_t topiclen)
+int mqtt_raw_unsubscribe(int sock, bool dup, const char *topic, uint16_t topiclen)
 {
 	/* FIXME - only deals with a single topic */
-	uint8_t *packet = NULL;
-	int packetlen;
-	int pos;
+	uint32_t packetlen;
 	uint16_t mid;
 
-	/* FIXME - deal with packetlen > 127 */
-	packetlen = 2 + 2 + 2+topiclen;
-
-	packet = (uint8_t *)malloc(packetlen);
+	packetlen = 2 + 2+topiclen;
 
 	/* Fixed header */
-	packet[0] = UNSUBSCRIBE | (dup<<3) | (1<<1);
-	packet[1] = packetlen - 2; // Remaining bytes
+	if(mqtt_write_byte(sock, UNSUBSCRIBE | (dup<<3) | (1<<1))) return 1;
+	if(mqtt_write_remaining_length(sock, packetlen)) return 1;
+	
+	/* Variable header */
 	mid = mqtt_generate_message_id();
-	packet[2] = MQTT_MSB(mid);
-	packet[3] = MQTT_LSB(mid);
-	packet[4] = MQTT_MSB(topiclen);
-	packet[5] = MQTT_LSB(topiclen);
-	pos = 6;
-	memcpy(&(packet[pos]), topic, topiclen);
+	if(mqtt_write_byte(sock, MQTT_MSB(mid))) return 1;
+	if(mqtt_write_byte(sock, MQTT_LSB(mid))) return 1;
 
-	write(sock, packet, packetlen);
-	free(packet);
+	/* Payload */
+	if(mqtt_write_string(sock, topic, topiclen)) return 1;
+
+	return 0;
 }
 
