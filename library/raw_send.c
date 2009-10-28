@@ -82,34 +82,29 @@ void mqtt_raw_pingresp(int sock)
 	mqtt_send_simple_command(sock, PINGRESP);
 }
 
-void mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen, char topic_qos)
+int mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen, uint8_t topic_qos)
 {
 	/* FIXME - only deals with a single topic */
-	uint8_t *packet = NULL;
-	int packetlen;
-	int pos;
+	uint32_t packetlen;
 	uint16_t mid;
 
 	/* FIXME - deal with packetlen > 127 */
 	packetlen = 2 + 2 + 2+topiclen + 1;
 
-	packet = (uint8_t *)malloc(packetlen);
-
 	/* Fixed header */
-	packet[0] = SUBSCRIBE | (dup<<3) | (1<<1);
-	packet[1] = packetlen - 2; // Remaining bytes
-	mid = mqtt_generate_message_id();
-	packet[2] = MQTT_MSB(mid);
-	packet[3] = MQTT_LSB(mid);
-	packet[4] = MQTT_MSB(topiclen);
-	packet[5] = MQTT_LSB(topiclen);
-	pos = 6;
-	memcpy(&(packet[pos]), topic, topiclen);
-	pos += topiclen;
-	packet[pos] = topic_qos;
+	if(mqtt_write_byte(sock, SUBSCRIBE | (dup<<3) | (1<<1))) return 1;
+	if(mqtt_write_remaining_length(sock, packetlen)) return 1;
 
-	write(sock, packet, packetlen);
-	free(packet);
+	/* Variable header */
+	mid = mqtt_generate_message_id();
+	if(mqtt_write_byte(sock, MQTT_MSB(mid))) return 1;
+	if(mqtt_write_byte(sock, MQTT_LSB(mid))) return 1;
+
+	/* Payload */
+	if(mqtt_write_string(sock, topic, topiclen)) return 1;
+	if(mqtt_write_byte(sock, topic_qos)) return 1;
+
+	return 0;
 }
 
 
