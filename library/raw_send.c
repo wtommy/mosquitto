@@ -88,8 +88,7 @@ int mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen,
 	uint32_t packetlen;
 	uint16_t mid;
 
-	/* FIXME - deal with packetlen > 127 */
-	packetlen = 2 + 2 + 2+topiclen + 1;
+	packetlen = 2 + 2+topiclen + 1;
 
 	/* Fixed header */
 	if(mqtt_write_byte(sock, SUBSCRIBE | (dup<<3) | (1<<1))) return 1;
