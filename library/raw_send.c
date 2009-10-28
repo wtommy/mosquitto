@@ -66,6 +66,7 @@ int mqtt_raw_connect(mqtt_context *context, const char *client_id, int client_id
 	}
 
 	context->last_message = time(NULL);
+	context->keepalive = keepalive;
 	return 0;
 }
 
