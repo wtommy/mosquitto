@@ -79,8 +79,6 @@ void mqtt_send_simple_command(int sock, uint8_t command)
 	mqtt_write_byte(sock, 0);
 }
 
-#define mqtt_raw_disconnect(A) mqtt_send_simple_command(A, DISCONNECT)
-
 void mqtt_raw_pingreq(int sock)
 {
 	/* FIXME - Update keepalive information or turn into a macro like m_r_disconnect() */
