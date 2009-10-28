@@ -44,9 +44,13 @@ uint8_t mqtt_read_byte(int sock)
 	return byte;
 }
 
-void mqtt_write_byte(int sock, uint8_t byte)
+int mqtt_write_byte(int sock, uint8_t byte)
 {
-	write(sock, &byte, 1);
+	if(write(sock, &byte, 1) == 1){
+		return 0;
+	}else{
+		return 1;
+	}
 }
 
 int mqtt_read_bytes(int sock, uint8_t *bytes, uint32_t count)
@@ -85,7 +89,7 @@ uint32_t mqtt_read_remaining_length(int sock)
 	return value;
 }
 
-void mqtt_write_remaining_length(int sock, uint32_t length)
+int mqtt_write_remaining_length(int sock, uint32_t length)
 {
 	uint8_t digit;
 
@@ -99,8 +103,10 @@ void mqtt_write_remaining_length(int sock, uint32_t length)
 		if(length>0){
 			digit = digit | 0x80;
 		}
-		mqtt_write_byte(sock, digit);
+		if(mqtt_write_byte(sock, digit)) return 1;
 	}while(length > 0);
+
+	return 0;
 }
 
 uint8_t *mqtt_read_string(int sock)
