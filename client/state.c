@@ -73,6 +73,28 @@ int mqtt_handle_connack(int sock)
 	return 1;
 }
 
+int mqtt_handle_suback(int sock)
+{
+	uint32_t remaining_length;
+	uint16_t mid;
+	uint8_t granted_qos;
+
+	printf("Received SUBACK\n");
+	remaining_length = mqtt_read_remaining_length(sock);
+
+	mid = mqtt_read_uint16(sock);
+	remaining_length -= 2;
+
+	while(remaining_length){
+		/* FIXME - Need to do something with this */
+		granted_qos = mqtt_read_byte(sock);
+		printf("Granted QoS %d\n", granted_qos);
+		remaining_length--;
+	}
+
+	return 0;
+}
+
 int handle_read(int sock)
 {
 	uint8_t buf;
@@ -95,15 +117,7 @@ int handle_read(int sock)
 			state = stConnAckd;
 			break;
 		case SUBACK:
-			printf("Received SUBACK\n");
-			read(sock, &buf, 1); // Remaining length
-			printf("%d ", buf);
-			read(sock, &buf, 1); // Message ID MSB
-			printf("%d ", buf);
-			read(sock, &buf, 1); // Message ID LSB
-			printf("%d ", buf);
-			read(sock, &buf, 1); // Granted QoS
-			printf("%d\n", buf);
+			mqtt_handle_suback(sock);
 			state = stSubAckd;
 			break;
 		case PINGREQ:
