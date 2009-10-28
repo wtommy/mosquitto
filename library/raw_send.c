@@ -73,28 +73,24 @@ void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool w
 	}
 }
 
-void mqtt_send_simple(int sock, uint8_t command)
+void mqtt_send_simple_command(int sock, uint8_t command)
 {
-	uint8_t packet[2];
-
-	packet[0] = command;
-	packet[1] = 0;
-
-	write(sock, packet, 2);
+	mqtt_write_byte(sock, command);
+	mqtt_write_byte(sock, 0);
 }
 
-#define mqtt_raw_disconnect(A) mqtt_send_simple(A, DISCONNECT)
+#define mqtt_raw_disconnect(A) mqtt_send_simple_command(A, DISCONNECT)
 
 void mqtt_raw_pingreq(int sock)
 {
 	/* FIXME - Update keepalive information or turn into a macro like m_r_disconnect() */
-	mqtt_send_simple(sock, PINGREQ);
+	mqtt_send_simple_command(sock, PINGREQ);
 }
 
 void mqtt_raw_pingresp(int sock)
 {
 	/* FIXME - Update keepalive information or turn into a macro like m_r_disconnect() */
-	mqtt_send_simple(sock, PINGRESP);
+	mqtt_send_simple_command(sock, PINGRESP);
 }
 
 void mqtt_raw_subscribe(int sock, bool dup, const char *topic, uint16_t topiclen, char topic_qos)
