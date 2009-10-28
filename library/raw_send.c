@@ -12,39 +12,30 @@
 
 #include <mqtt3.h>
 
-uint16_t mqtt_raw_publish(int sock, bool dup, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const char *payload, int payloadlen)
+int mqtt_raw_publish(int sock, bool dup, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen)
 {
-	uint8_t *packet = NULL;
-	int packetlen, bytes;
-	int pos;
+	int packetlen;
 	uint16_t mid;
 
-	/* FIXME - deal with packetlen > 127 */
-	packetlen = 2+2+topiclen + payloadlen;
+	packetlen = 2+topiclen + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
 
-	packet = (uint8_t *)malloc(packetlen);
-
 	/* Fixed header */
-	packet[0] = PUBLISH | (dup<<3) | (qos<<1) | retain;
-	packet[1] = packetlen-2; /* Don't include fixed header length */
+	if(mqtt_write_byte(sock, PUBLISH | (dup<<3) | (qos<<1) | retain)) return 1;
+	if(mqtt_write_remaining_length(sock, packetlen)) return 1;
 
 	/* Variable header (topic string) */
-	packet[2] = MQTT_MSB(topiclen);
-	packet[3] = MQTT_LSB(topiclen);
-	memcpy(&(packet[4]), topic, topiclen);
-	pos = 4+topiclen;
+	if(mqtt_write_string(sock, topic, topiclen)) return 1;
 	if(qos > 0){
 		mid = mqtt_generate_message_id();
-		packet[pos] = MQTT_MSB(mid);
-		pos++;
-		packet[pos] = MQTT_LSB(mid);
-		pos++;
+		if(mqtt_write_byte(sock, MQTT_MSB(mid))) return 1;
+		if(mqtt_write_byte(sock, MQTT_LSB(mid))) return 1;
 	}
-	memcpy(&(packet[pos]), payload, payloadlen);
-	bytes = write(sock, packet, packetlen);
-	free(packet);
-	return bytes-packetlen;
+
+	/* Payload */
+	if(mqtt_write_bytes(sock, payload, payloadlen)) return 1;
+
+	return 0;
 }
 
 void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool cleanstart)

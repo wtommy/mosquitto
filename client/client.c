@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 			printf("%d\n", buf);
 
 
-			mqtt_raw_publish(sock, false, 0, false, "a/b/c", 5, "Roger", 5);
+			mqtt_raw_publish(sock, false, 0, false, "a/b/c", 5, (uint8_t *)"Roger", 5);
 			read(sock, &buf, 1); // Should be 00110000 = 48 = PUBLISH
 			printf("%s ", mqtt_command_to_string(buf&0xF0));
 			read(sock, &buf, 1); // Remaining length (should be 12)

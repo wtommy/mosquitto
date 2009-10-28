@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
 					break;
 				case stSubAckd:
 					printf("SUBACK received\n");
-					mqtt_raw_publish(sock, false, 0, false, "a/b/c", 5, "Roger", 5);
+					mqtt_raw_publish(sock, false, 0, false, "a/b/c", 5, (uint8_t *)"Roger", 5);
 					state = stPause;
 					break;
 				case stPause:
