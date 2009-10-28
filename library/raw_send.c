@@ -69,6 +69,7 @@ int mqtt_raw_connect(mqtt_context *context, const char *client_id, int client_id
 	return 0;
 }
 
+/* For DISCONNECT, PINGREQ and PINGRESP */
 int mqtt_send_simple_command(mqtt_context *context, uint8_t command)
 {
 	if(mqtt_write_byte(context, command)) return 1;
@@ -76,18 +77,6 @@ int mqtt_send_simple_command(mqtt_context *context, uint8_t command)
 
 	context->last_message = time(NULL);
 	return 0;
-}
-
-int mqtt_raw_pingreq(mqtt_context *context)
-{
-	/* FIXME - Update keepalive information or turn into a macro like m_r_disconnect() */
-	return mqtt_send_simple_command(context, PINGREQ);
-}
-
-int mqtt_raw_pingresp(mqtt_context *context)
-{
-	/* FIXME - Update keepalive information or turn into a macro like m_r_disconnect() */
-	return mqtt_send_simple_command(context, PINGRESP);
 }
 
 int mqtt_raw_subscribe(mqtt_context *context, bool dup, const char *topic, uint16_t topiclen, uint8_t topic_qos)
