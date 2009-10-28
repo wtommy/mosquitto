@@ -123,3 +123,12 @@ uint8_t *mqtt_read_string(int sock)
 	return str;
 }
 
+int mqtt_write_string(int sock, const char *str, uint16_t length)
+{
+	if(mqtt_write_byte(sock, MQTT_MSB(length))) return 1;
+	if(mqtt_write_byte(sock, MQTT_LSB(length))) return 1;
+	if(mqtt_write_bytes(sock, (uint8_t *)str, length)) return 1;
+
+	return 0;
+}
+

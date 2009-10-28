@@ -49,6 +49,7 @@ uint8_t *mqtt_read_string(int sock);
 uint32_t mqtt_read_remaining_length(int sock);
 
 void mqtt_write_byte(int sock, uint8_t byte);
+int mqtt_write_string(int sock, const char *str, uint16_t length);
 void mqtt_write_remaining_length(int sock, uint32_t length);
 
 #endif
