@@ -49,47 +49,28 @@ uint16_t mqtt_raw_publish(int sock, bool dup, uint8_t qos, bool retain, const ch
 
 void mqtt_raw_connect(int sock, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool cleanstart)
 {
-	uint8_t *packet = NULL;
-	int packetlen;
-	int pos;
+	int payloadlen;
 
-	/* FIXME - deal with packetlen > 127 */
-	packetlen = 2 + 12 + 2+client_id_len;
-	if(will) packetlen += 2+will_topic_len + 2+will_msg_len;
-
-	packet = (uint8_t *)malloc(packetlen);
+	payloadlen = 2+client_id_len;
+	if(will) payloadlen += 2+will_topic_len + 2+will_msg_len;
 
 	/* Fixed header */
-	packet[0] = CONNECT;
-	packet[1] = packetlen - 2; // Remaining bytes
+	mqtt_write_byte(sock, CONNECT);
+	mqtt_write_remaining_length(sock, 12+payloadlen);
 
 	/* Variable header */
 	mqtt_write_string(sock, PROTOCOL_NAME, strlen(PROTOCOL_NAME));
-	packet[10] = PROTOCOL_VERSION;
-	packet[11] = (will_retain<<5) | (will_qos<<3) | (will<<2) | (cleanstart<<1);
-	packet[12] = MQTT_MSB(keepalive);
-	packet[13] = MQTT_LSB(keepalive);
+	mqtt_write_byte(sock, PROTOCOL_VERSION);
+	mqtt_write_byte(sock, (will_retain<<5) | (will_qos<<3) | (will<<2) | (cleanstart<<1));
+	mqtt_write_byte(sock, MQTT_MSB(keepalive));
+	mqtt_write_byte(sock, MQTT_LSB(keepalive));
 
 	/* Payload */
-	packet[14] = MQTT_MSB(client_id_len);
-	packet[15] = MQTT_LSB(client_id_len);
-	memcpy(&(packet[16]), client_id, client_id_len);
-	pos = 16+client_id_len;
+	mqtt_write_string(sock, client_id, client_id_len);
 	if(will){
-		packet[pos] = MQTT_MSB(will_topic_len);
-		pos++;
-		packet[pos] = MQTT_LSB(will_topic_len);
-		pos++;
-		memcpy(&(packet[pos]), will_topic, will_topic_len);
-		pos+=will_topic_len;
-		packet[pos] = MQTT_MSB(will_msg_len);
-		pos++;
-		packet[pos] = MQTT_LSB(will_msg_len);
-		pos++;
-		memcpy(&(packet[pos]), will_msg, will_msg_len);
+		mqtt_write_string(sock, will_topic, will_topic_len);
+		mqtt_write_string(sock, will_msg, will_msg_len);
 	}
-	write(sock, packet, packetlen);
-	free(packet);
 }
 
 void mqtt_send_simple(int sock, uint8_t command)
