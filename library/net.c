@@ -35,43 +35,43 @@ int mqtt_connect_socket(const char *ip, uint16_t port)
 	return sock;
 }
 
-uint8_t mqtt_read_byte(int sock)
+uint8_t mqtt_read_byte(mqtt_context *context)
 {
 	uint8_t byte;
 
-	read(sock, &byte, 1);
+	read(context->sock, &byte, 1);
 
 	return byte;
 }
 
-int mqtt_write_byte(int sock, uint8_t byte)
+int mqtt_write_byte(mqtt_context *context, uint8_t byte)
 {
-	if(write(sock, &byte, 1) == 1){
+	if(write(context->sock, &byte, 1) == 1){
 		return 0;
 	}else{
 		return 1;
 	}
 }
 
-int mqtt_read_bytes(int sock, uint8_t *bytes, uint32_t count)
+int mqtt_read_bytes(mqtt_context *context, uint8_t *bytes, uint32_t count)
 {
-	if(read(sock, bytes, count) == count){
+	if(read(context->sock, bytes, count) == count){
 		return 0;
 	}else{
 		return 1;
 	}
 }
 
-int mqtt_write_bytes(int sock, const uint8_t *bytes, uint32_t count)
+int mqtt_write_bytes(mqtt_context *context, const uint8_t *bytes, uint32_t count)
 {
-	if(write(sock, bytes, count) == count){
+	if(write(context->sock, bytes, count) == count){
 		return 0;
 	}else{
 		return 1;
 	}
 }
 
-uint32_t mqtt_read_remaining_length(int sock)
+uint32_t mqtt_read_remaining_length(mqtt_context *context)
 {
 	uint32_t value = 0;
 	uint32_t multiplier = 1;
@@ -81,7 +81,7 @@ uint32_t mqtt_read_remaining_length(int sock)
 	 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
 	 */
 	do{
-		digit = mqtt_read_byte(sock);
+		digit = mqtt_read_byte(context);
 		value += (digit & 127) * multiplier;
 		multiplier *= 128;
 	}while((digit & 128) != 0);
@@ -89,7 +89,7 @@ uint32_t mqtt_read_remaining_length(int sock)
 	return value;
 }
 
-int mqtt_write_remaining_length(int sock, uint32_t length)
+int mqtt_write_remaining_length(mqtt_context *context, uint32_t length)
 {
 	uint8_t digit;
 
@@ -103,26 +103,26 @@ int mqtt_write_remaining_length(int sock, uint32_t length)
 		if(length>0){
 			digit = digit | 0x80;
 		}
-		if(mqtt_write_byte(sock, digit)) return 1;
+		if(mqtt_write_byte(context, digit)) return 1;
 	}while(length > 0);
 
 	return 0;
 }
 
-uint8_t *mqtt_read_string(int sock)
+uint8_t *mqtt_read_string(mqtt_context *context)
 {
 	uint8_t msb, lsb;
 	uint16_t len;
 	uint8_t *str;
 
-	msb = mqtt_read_byte(sock);
-	lsb = mqtt_read_byte(sock);
+	msb = mqtt_read_byte(context);
+	lsb = mqtt_read_byte(context);
 
 	len = (msb<<8) + lsb;
 
 	str = calloc(len+1, sizeof(uint8_t));
 	if(str){
-		if(mqtt_read_bytes(sock, str, len)){
+		if(mqtt_read_bytes(context, str, len)){
 			free(str);
 			return NULL;
 		}
@@ -131,21 +131,21 @@ uint8_t *mqtt_read_string(int sock)
 	return str;
 }
 
-int mqtt_write_string(int sock, const char *str, uint16_t length)
+int mqtt_write_string(mqtt_context *context, const char *str, uint16_t length)
 {
-	if(mqtt_write_byte(sock, MQTT_MSB(length))) return 1;
-	if(mqtt_write_byte(sock, MQTT_LSB(length))) return 1;
-	if(mqtt_write_bytes(sock, (uint8_t *)str, length)) return 1;
+	if(mqtt_write_byte(context, MQTT_MSB(length))) return 1;
+	if(mqtt_write_byte(context, MQTT_LSB(length))) return 1;
+	if(mqtt_write_bytes(context, (uint8_t *)str, length)) return 1;
 
 	return 0;
 }
 
-uint16_t mqtt_read_uint16(int sock)
+uint16_t mqtt_read_uint16(mqtt_context *context)
 {
 	uint8_t msb, lsb;
 
-	msb = mqtt_read_byte(sock);
-	lsb = mqtt_read_byte(sock);
+	msb = mqtt_read_byte(context);
+	lsb = mqtt_read_byte(context);
 
 	return (msb<<8) + lsb;
 }
