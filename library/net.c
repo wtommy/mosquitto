@@ -140,3 +140,13 @@ int mqtt_write_string(int sock, const char *str, uint16_t length)
 	return 0;
 }
 
+uint16_t mqtt_read_uint16(int sock)
+{
+	uint8_t msb, lsb;
+
+	msb = mqtt_read_byte(sock);
+	lsb = mqtt_read_byte(sock);
+
+	return (msb<<8) + lsb;
+}
+

@@ -50,6 +50,7 @@ uint8_t mqtt_read_byte(int sock);
 int mqtt_read_bytes(int sock, uint8_t *bytes, uint32_t count);
 uint8_t *mqtt_read_string(int sock);
 uint32_t mqtt_read_remaining_length(int sock);
+uint16_t mqtt_read_uint16(int sock);
 
 int mqtt_write_byte(int sock, uint8_t byte);
 int mqtt_write_bytes(int sock, const uint8_t *bytes, uint32_t count);
