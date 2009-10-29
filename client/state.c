@@ -80,6 +80,19 @@ int mqtt_handle_connack(mqtt_context *context)
 	return 1;
 }
 
+int mqtt_handle_puback(mqtt_context *context)
+{
+	uint32_t remaining_length;
+	uint16_t mid;
+
+	/* FIXME - deal with mid and check that there are no more remaining bytes */
+	printf("Received PUBACK\n");
+	remaining_length = mqtt_read_remaining_length(context);
+	mid = mqtt_read_uint16(context);
+
+	return 0;
+}
+
 int mqtt_handle_suback(mqtt_context *context)
 {
 	uint32_t remaining_length;
@@ -136,6 +149,9 @@ int handle_read(mqtt_context *context)
 			printf("Received PINGRESP\n");
 			mqtt_read_remaining_length(context);
 			//FIXME - do something!
+			break;
+		case PUBACK:
+			mqtt_handle_puback(context);
 			break;
 		case PUBLISH:
 			printf("Received PUBLISH\n");
