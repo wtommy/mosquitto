@@ -47,6 +47,7 @@ int mqtt_raw_connect(mqtt_context *context, const char *client_id, int client_id
 #define mqtt_raw_pingreq(A) mqtt_send_simple_command(A, PINGREQ)
 #define mqtt_raw_pingresp(A) mqtt_send_simple_command(A, PINGRESP)
 int mqtt_raw_publish(mqtt_context *context, bool dup, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen);
+int mqtt_raw_pubrel(mqtt_context *context, uint16_t mid);
 int mqtt_raw_subscribe(mqtt_context *context, bool dup, const char *topic, uint16_t topiclen, uint8_t topic_qos);
 int mqtt_raw_unsubscribe(mqtt_context *context, bool dup, const char *topic, uint16_t topiclen);
 int mqtt_send_simple_command(mqtt_context *context, uint8_t command);

@@ -68,6 +68,15 @@ int mqtt_raw_connect(mqtt_context *context, const char *client_id, int client_id
 	return 0;
 }
 
+int mqtt_raw_pubrel(mqtt_context *context, uint16_t mid)
+{
+	if(mqtt_write_byte(context, PUBREL)) return 1;
+	if(mqtt_write_remaining_length(context, 2)) return 1;
+	if(mqtt_write_uint16(context, mid)) return 1;
+
+	return 0;
+}
+
 /* For DISCONNECT, PINGREQ and PINGRESP */
 int mqtt_send_simple_command(mqtt_context *context, uint8_t command)
 {

@@ -93,6 +93,34 @@ int mqtt_handle_puback(mqtt_context *context)
 	return 0;
 }
 
+int mqtt_handle_pubcomp(mqtt_context *context)
+{
+	uint32_t remaining_length;
+	uint16_t mid;
+
+	/* FIXME - deal with mid and check that there are no more remaining bytes */
+	printf("Received PUBCOMP\n");
+	remaining_length = mqtt_read_remaining_length(context);
+	mid = mqtt_read_uint16(context);
+
+	return 0;
+}
+
+int mqtt_handle_pubrec(mqtt_context *context)
+{
+	uint32_t remaining_length;
+	uint16_t mid;
+
+	/* FIXME - deal with mid properly */
+	printf("Received PUBREC\n");
+	remaining_length = mqtt_read_remaining_length(context);
+	mid = mqtt_read_uint16(context);
+
+	mqtt_raw_pubrel(context, mid);
+
+	return 0;
+}
+
 int mqtt_handle_suback(mqtt_context *context)
 {
 	uint32_t remaining_length;
@@ -153,9 +181,15 @@ int handle_read(mqtt_context *context)
 		case PUBACK:
 			mqtt_handle_puback(context);
 			break;
+		case PUBCOMP:
+			mqtt_handle_pubcomp(context);
+			break;
 		case PUBLISH:
 			printf("Received PUBLISH\n");
 			mqtt_handle_publish(context, buf);
+			break;
+		case PUBREC:
+			mqtt_handle_pubrec(context);
 			break;
 		default:
 			printf("Unknown command: %s (%d)\n", mqtt_command_to_string(buf&0xF0), buf&0xF0);
