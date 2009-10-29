@@ -127,7 +127,6 @@ int mqtt_raw_unsubscribe(mqtt_context *context, bool dup, const char *topic, uin
 	/* Variable header */
 	mid = mqtt_generate_message_id();
 	if(mqtt_write_uint16(context, mid)) return 1;
-	if(mqtt_write_byte(context, MQTT_LSB(mid))) return 1;
 
 	/* Payload */
 	if(mqtt_write_string(context, topic, topiclen)) return 1;
