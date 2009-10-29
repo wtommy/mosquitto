@@ -64,5 +64,6 @@ int mqtt_write_byte(mqtt_context *context, uint8_t byte);
 int mqtt_write_bytes(mqtt_context *context, const uint8_t *bytes, uint32_t count);
 int mqtt_write_string(mqtt_context *context, const char *str, uint16_t length);
 int mqtt_write_remaining_length(mqtt_context *context, uint32_t length);
+int mqtt_write_uint16(mqtt_context *context, uint16_t word);
 
 #endif

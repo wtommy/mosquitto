@@ -133,8 +133,7 @@ uint8_t *mqtt_read_string(mqtt_context *context)
 
 int mqtt_write_string(mqtt_context *context, const char *str, uint16_t length)
 {
-	if(mqtt_write_byte(context, MQTT_MSB(length))) return 1;
-	if(mqtt_write_byte(context, MQTT_LSB(length))) return 1;
+	if(mqtt_write_uint16(context, length)) return 1;
 	if(mqtt_write_bytes(context, (uint8_t *)str, length)) return 1;
 
 	return 0;
@@ -148,5 +147,13 @@ uint16_t mqtt_read_uint16(mqtt_context *context)
 	lsb = mqtt_read_byte(context);
 
 	return (msb<<8) + lsb;
+}
+
+int mqtt_write_uint16(mqtt_context *context, uint16_t word)
+{
+	if(mqtt_write_byte(context, MQTT_MSB(word))) return 1;
+	if(mqtt_write_byte(context, MQTT_LSB(word))) return 1;
+
+	return 0;
 }
 

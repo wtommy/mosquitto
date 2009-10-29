@@ -29,8 +29,7 @@ int mqtt_raw_publish(mqtt_context *context, bool dup, uint8_t qos, bool retain, 
 	if(mqtt_write_string(context, topic, topiclen)) return 1;
 	if(qos > 0){
 		mid = mqtt_generate_message_id();
-		if(mqtt_write_byte(context, MQTT_MSB(mid))) return 1;
-		if(mqtt_write_byte(context, MQTT_LSB(mid))) return 1;
+		if(mqtt_write_uint16(context, mid)) return 1;
 	}
 
 	/* Payload */
@@ -55,8 +54,7 @@ int mqtt_raw_connect(mqtt_context *context, const char *client_id, int client_id
 	if(mqtt_write_string(context, PROTOCOL_NAME, strlen(PROTOCOL_NAME))) return 1;
 	if(mqtt_write_byte(context, PROTOCOL_VERSION)) return 1;
 	if(mqtt_write_byte(context, (will_retain<<5) | (will_qos<<3) | (will<<2) | (cleanstart<<1))) return 1;
-	if(mqtt_write_byte(context, MQTT_MSB(keepalive))) return 1;
-	if(mqtt_write_byte(context, MQTT_LSB(keepalive))) return 1;
+	if(mqtt_write_uint16(context, keepalive)) return 1;
 
 	/* Payload */
 	if(mqtt_write_string(context, client_id, client_id_len)) return 1;
@@ -94,8 +92,7 @@ int mqtt_raw_subscribe(mqtt_context *context, bool dup, const char *topic, uint1
 
 	/* Variable header */
 	mid = mqtt_generate_message_id();
-	if(mqtt_write_byte(context, MQTT_MSB(mid))) return 1;
-	if(mqtt_write_byte(context, MQTT_LSB(mid))) return 1;
+	if(mqtt_write_uint16(context, mid)) return 1;
 
 	/* Payload */
 	if(mqtt_write_string(context, topic, topiclen)) return 1;
@@ -120,7 +117,7 @@ int mqtt_raw_unsubscribe(mqtt_context *context, bool dup, const char *topic, uin
 	
 	/* Variable header */
 	mid = mqtt_generate_message_id();
-	if(mqtt_write_byte(context, MQTT_MSB(mid))) return 1;
+	if(mqtt_write_uint16(context, mid)) return 1;
 	if(mqtt_write_byte(context, MQTT_LSB(mid))) return 1;
 
 	/* Payload */
