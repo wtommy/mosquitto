@@ -19,6 +19,7 @@ int mqtt_raw_puback(mqtt_context *context, uint16_t mid)
 	if(mqtt_write_remaining_length(context, 2)) return 1;
 	if(mqtt_write_uint16(context, mid)) return 1;
 
+	context->last_message = time(NULL);
 	return 0;
 }
 
@@ -83,6 +84,7 @@ int mqtt_raw_pubrel(mqtt_context *context, uint16_t mid)
 	if(mqtt_write_remaining_length(context, 2)) return 1;
 	if(mqtt_write_uint16(context, mid)) return 1;
 
+	context->last_message = time(NULL);
 	return 0;
 }
 
