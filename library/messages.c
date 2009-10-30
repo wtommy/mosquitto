@@ -32,6 +32,9 @@ int mqtt_remove_message(mqtt_context *context, uint16_t mid)
 
 	while(pointer){
 		if(pointer->message_id != mid){
+			prev = pointer;
+			pointer = pointer->next;
+		}else{
 			if(prev){
 				prev->next = pointer->next;
 			}else{
@@ -39,9 +42,6 @@ int mqtt_remove_message(mqtt_context *context, uint16_t mid)
 			}
 			mqtt_cleanup_message(pointer);
 			break;
-		}else{
-			prev = pointer;
-			pointer = pointer->next;
 		}
 	}
 
