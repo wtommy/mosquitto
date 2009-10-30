@@ -229,6 +229,7 @@ int main(int argc, char *argv[])
 	if(context.sock == -1){
 		return 1;
 	}
+	context.messages = NULL;
 
 	state = stSocketOpened;
 
