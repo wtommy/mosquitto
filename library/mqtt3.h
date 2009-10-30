@@ -49,6 +49,7 @@ typedef struct _mqtt_message {
 typedef struct _mqtt_subscription {
 	struct _mqtt_subscription *next;
 	char *topic;
+	uint8_t qos;
 } mqtt_subscription;
 
 typedef struct{
