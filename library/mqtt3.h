@@ -90,4 +90,10 @@ int mqtt_write_string(mqtt_context *context, const char *str, uint16_t length);
 int mqtt_write_remaining_length(mqtt_context *context, uint32_t length);
 int mqtt_write_uint16(mqtt_context *context, uint16_t word);
 
+/* Message list handling */
+int mqtt_add_message(mqtt_context *context, mqtt_message *message);
+int mqtt_remove_message(mqtt_context *context, uint16_t mid);
+void mqtt_cleanup_message(mqtt_message *message);
+void mqtt_cleanup_messages(mqtt_context *context);
+
 #endif
