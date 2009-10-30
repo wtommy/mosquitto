@@ -85,11 +85,14 @@ int mqtt_handle_puback(mqtt_context *context)
 	uint32_t remaining_length;
 	uint16_t mid;
 
-	/* FIXME - deal with mid and check that there are no more remaining bytes */
 	printf("Received PUBACK\n");
 	remaining_length = mqtt_read_remaining_length(context);
 	mid = mqtt_read_uint16(context);
 
+	if(mid){
+		printf("Removing message %d\n", mid);
+		mqtt_remove_message(context, mid);
+	}
 	return 0;
 }
 
