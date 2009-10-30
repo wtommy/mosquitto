@@ -46,11 +46,17 @@ typedef struct _mqtt_message {
 	uint32_t payload_len;
 } mqtt_message;
 
+typedef struct _mqtt_subscription {
+	struct _mqtt_subscription *next;
+	char *topic;
+} mqtt_subscription;
+
 typedef struct{
 	int sock;
 	time_t last_message;
 	uint16_t keepalive;
 	mqtt_message *messages;
+	mqtt_subscription *subscriptions;
 } mqtt_context;
 
 /* Utility functions */
