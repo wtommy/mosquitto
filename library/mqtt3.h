@@ -31,10 +31,26 @@
 #define DISCONNECT 0xE0
 
 /* Data types */
+typedef struct _mqtt_message {
+	struct _mqtt_message *next;
+	time_t timestamp;
+	uint16_t message_id;
+	uint8_t command;
+	uint8_t dup;
+	uint8_t qos;
+	uint8_t retain;
+	uint32_t remaining_length;
+	uint8_t *variable_header;
+	uint32_t variable_header_len;
+	uint8_t *payload;
+	uint32_t payload_len;
+} mqtt_message;
+
 typedef struct{
 	int sock;
 	time_t last_message;
 	uint16_t keepalive;
+	mqtt_message *messages;
 } mqtt_context;
 
 /* Utility functions */
