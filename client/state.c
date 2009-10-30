@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
 			if(FD_ISSET(context.sock, &readfds)){
 				if(handle_read(&context)){
 					fprintf(stderr, "Socket closed on remote side\n");
-					close(context.sock);
+					mqtt_close_socket(&context);
 					run = 0;
 				}
 			}

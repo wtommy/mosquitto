@@ -10,6 +10,19 @@
 
 #include <mqtt3.h>
 
+int mqtt_close_socket(mqtt_context *context)
+{
+	int rc = -1;
+
+	if(!context) return -1;
+	if(context->sock != -1){
+		rc = close(context->sock);
+		context->sock = -1;
+	}
+
+	return rc;
+}
+
 int mqtt_connect_socket(const char *ip, uint16_t port)
 {
 	int sock;

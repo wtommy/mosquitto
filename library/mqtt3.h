@@ -78,6 +78,7 @@ int mqtt_send_simple_command(mqtt_context *context, uint8_t command);
 
 /* Network functions */
 int mqtt_connect_socket(const char *ip, uint16_t port);
+int mqtt_close_socket(mqtt_context *context);
 
 uint8_t mqtt_read_byte(mqtt_context *context);
 int mqtt_read_bytes(mqtt_context *context, uint8_t *bytes, uint32_t count);
