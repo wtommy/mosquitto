@@ -236,7 +236,6 @@ int main(int argc, char *argv[])
 	int fdcount;
 	int run = 1;
 	mqtt_context context;
-	int mcount;
 	mqtt_message *pointer;
 
 	context.sock = mqtt_connect_socket("127.0.0.1", 1883);
@@ -261,13 +260,11 @@ int main(int argc, char *argv[])
 			run = 0;
 		}else if(fdcount == 0){
 			printf("loop timeout\n");
-			mcount = 0;
 			pointer = context.messages;
 			while(pointer){
-				mcount++;
+				printf("Message: %s\n", mqtt_command_to_string(pointer->command));
 				pointer = pointer->next;
 			}
-			printf("Message list: %d\n", mcount);
 			switch(state){
 				case stSocketOpened:
 					mqtt_raw_connect(&context, "Roger", 5, false, 0, false, "", 0, "", 0, 10, false);
@@ -286,7 +283,7 @@ int main(int argc, char *argv[])
 					break;
 				case stSubAckd:
 					printf("SUBACK received\n");
-					mqtt_managed_publish(&context, 1, false, "a/b/c", 5, (uint8_t *)"Roger", 5);
+					mqtt_managed_publish(&context, 2, false, "a/b/c", 5, (uint8_t *)"Roger", 5);
 					state = stPause;
 					break;
 				case stPause:
@@ -298,13 +295,11 @@ int main(int argc, char *argv[])
 			}
 		}else{
 			printf("fdcount=%d\n", fdcount);
-			mcount = 0;
 			pointer = context.messages;
 			while(pointer){
-				mcount++;
+				printf("Message: %s\n", mqtt_command_to_string(pointer->command));
 				pointer = pointer->next;
 			}
-			printf("Message list: %d\n", mcount);
 
 			if(FD_ISSET(context.sock, &readfds)){
 				if(handle_read(&context)){
