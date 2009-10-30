@@ -87,6 +87,21 @@ int mqtt_send_simple_command(mqtt_context *context, uint8_t command)
 	return 0;
 }
 
+int mqtt_raw_disconnect(mqtt_context *context)
+{
+	return mqtt_send_simple_command(context, DISCONNECT);
+}
+
+int mqtt_raw_pingreq(mqtt_context *context)
+{
+	return mqtt_send_simple_command(context, PINGREQ);
+}
+
+int mqtt_raw_pingresp(mqtt_context *context)
+{
+	return mqtt_send_simple_command(context, PINGRESP);
+}
+
 int mqtt_raw_subscribe(mqtt_context *context, bool dup, const char *topic, uint16_t topiclen, uint8_t topic_qos)
 {
 	/* FIXME - only deals with a single topic */
