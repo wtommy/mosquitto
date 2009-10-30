@@ -6,10 +6,13 @@ LDFLAGS=
 
 all : state
 
-state : state.o messages.o net.o raw_send.o util.o
+state : state.o managed_send.o messages.o net.o raw_send.o util.o
 	${CC} $(LDFLAGS) $^ -o $@
 
 state.o : state.c ../library/mqtt3.h
+	${CC} $(CFLAGS) -c $< -o $@
+
+managed_send.o : ../library/managed_send.c ../library/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 messages.o : ../library/messages.c ../library/mqtt3.h

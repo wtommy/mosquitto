@@ -96,4 +96,8 @@ int mqtt_remove_message(mqtt_context *context, uint16_t mid);
 void mqtt_cleanup_message(mqtt_message *message);
 void mqtt_cleanup_messages(mqtt_context *context);
 
+/* Managed send functions */
+int mqtt_managed_send(mqtt_context *context, mqtt_message *message);
+int mqtt_managed_publish(mqtt_context *context, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen);
+
 #endif
