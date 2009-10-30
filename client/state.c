@@ -58,6 +58,10 @@ void mqtt_handle_publish(mqtt_context *context, uint8_t header)
 	mqtt_read_bytes(context, payload, remaining_length);
 	printf("Payload: '%s'\n", payload);
 	free(payload);
+
+	if(qos == 1){
+		mqtt_raw_puback(context, mid);
+	}
 }
 
 int mqtt_handle_connack(mqtt_context *context)
