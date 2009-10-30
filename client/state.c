@@ -34,6 +34,7 @@ void mqtt_handle_publish(mqtt_context *context, uint8_t header)
 	uint8_t *topic, *payload;
 	uint32_t remaining_length;
 	uint8_t dup, qos, retain;
+	uint16_t mid;
 
 	dup = (header & 0x08)>>3;
 	qos = (header & 0x06)>>1;
@@ -47,6 +48,10 @@ void mqtt_handle_publish(mqtt_context *context, uint8_t header)
 	remaining_length -= strlen((char *)topic) + 2;
 	printf("Topic: '%s'\n", topic);
 	free(topic);
+
+	if(qos > 0){
+		mid = mqtt_read_uint16(context);
+	}
 
 	printf("Remaining length: %d\n", remaining_length);
 	payload = calloc((remaining_length+1), sizeof(uint8_t));
