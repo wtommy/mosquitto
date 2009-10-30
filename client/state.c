@@ -143,6 +143,18 @@ int mqtt_handle_suback(mqtt_context *context)
 	return 0;
 }
 
+int mqtt_handle_unsuback(mqtt_context *context)
+{
+	uint32_t remaining_length;
+	uint16_t mid;
+
+	printf("Received UNSUBACK\n");
+	remaining_length = mqtt_read_remaining_length(context);
+	mid = mqtt_read_uint16(context);
+
+	return 0;
+}
+
 int handle_read(mqtt_context *context)
 {
 	uint8_t buf;
@@ -190,6 +202,9 @@ int handle_read(mqtt_context *context)
 			break;
 		case PUBREC:
 			mqtt_handle_pubrec(context);
+			break;
+		case UNSUBACK:
+			mqtt_handle_unsuback(context);
 			break;
 		default:
 			printf("Unknown command: %s (%d)\n", mqtt_command_to_string(buf&0xF0), buf&0xF0);
