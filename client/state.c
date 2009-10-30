@@ -266,7 +266,7 @@ int main(int argc, char *argv[])
 				case stSubAckd:
 					printf("SUBACK received\n");
 					mqtt_raw_unsubscribe(&context, false, "$SYS/#", 6);
-					mqtt_raw_publish(&context, false, 2, false, "a/b/c", 5, (uint8_t *)"Roger", 5);
+					mqtt_managed_publish(&context, 1, false, "a/b/c", 5, (uint8_t *)"Roger", 5);
 					state = stPause;
 					break;
 				case stPause:
