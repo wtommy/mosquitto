@@ -44,14 +44,57 @@ int mqtt_listen_socket(uint16_t port)
 
 int main(int argc, char *argv[])
 {
-	int sock;
+	struct timespec timeout;
+	fd_set readfds, writefds;
+	int fdcount;
+	int listensock;
+	mqtt_context clientctxt;
+	int sockmax;
+	uint8_t byte;
 
-	sock = mqtt_listen_socket(1883);
-	if(sock == -1){
+	clientctxt.sock = -1;
+
+	listensock = mqtt_listen_socket(1883);
+	if(listensock == -1){
 		return 1;
 	}
 
-	close(sock);
+	while(1){
+		FD_ZERO(&readfds);
+		FD_SET(listensock, &readfds);
+		if(clientctxt.sock != -1){
+			FD_SET(clientctxt.sock, &readfds);
+		}
+		if(clientctxt.sock > listensock){
+			sockmax = clientctxt.sock;
+		}else{
+			sockmax = listensock;
+		}
+
+		FD_ZERO(&writefds);
+		timeout.tv_sec = 1;
+		timeout.tv_nsec = 0;
+
+		fdcount = pselect(sockmax+1, &readfds, &writefds, NULL, &timeout, NULL);
+		if(fdcount == -1){
+			fprintf(stderr, "Error in pselect: %s\n", strerror(errno));
+		}else if(fdcount == 0){
+			printf("loop timeout\n");
+		}else{
+			if(clientctxt.sock != -1 && FD_ISSET(clientctxt.sock, &readfds)){
+				byte = mqtt_read_byte(&clientctxt);
+            	printf("Received command: %s (%d)\n", mqtt_command_to_string(byte&0xF0), byte&0xF0);
+			}
+			if(FD_ISSET(listensock, &readfds)){
+				clientctxt.sock = accept(listensock, NULL, 0);
+			}
+		}
+	}
+
+	if(clientctxt.sock != -1){
+		close(clientctxt.sock);
+	}
+	close(listensock);
 
 	return 0;
 }
