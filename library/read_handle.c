@@ -70,7 +70,7 @@ int mqtt_handle_connect(mqtt_context *context)
 		will_message = mqtt_read_string(context);
 	}
 
-	return 0;
+	return mqtt_raw_connack(context, 0);
 }
 
 int mqtt_handle_puback(mqtt_context *context)

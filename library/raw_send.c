@@ -13,6 +13,16 @@
 
 #include <mqtt3.h>
 
+int mqtt_raw_connack(mqtt_context *context, uint8_t result)
+{
+	if(mqtt_write_byte(context, CONNACK)) return 1;
+	if(mqtt_write_remaining_length(context, 2)) return 1;
+	if(mqtt_write_byte(context, 0)) return 1;
+	if(mqtt_write_byte(context, result)) return 1;
+
+	return 0;
+}
+
 int mqtt_raw_puback(mqtt_context *context, uint16_t mid)
 {
 	if(mqtt_write_byte(context, PUBACK)) return 1;
