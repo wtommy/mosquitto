@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	int sockmax;
 	uint8_t byte;
 
-	if(mqtt_open_db("mqtt_broker.db")){
+	if(mqtt_db_open("mqtt_broker.db")){
 		fprintf(stderr, "Error: Couldn't open database.\n");
 	}
 	clientctxt.sock = -1;
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
 	}
 	close(listensock);
 
-	mqtt_close_db();
+	mqtt_db_close();
 
 	return 0;
 }

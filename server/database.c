@@ -3,19 +3,19 @@
 
 static sqlite3 *db;
 
-int _mqtt_create_tables(void);
+int _mqtt_db_create_tables(void);
 
-int mqtt_open_db(const char *filename)
+int mqtt_db_open(const char *filename)
 {
 	if(sqlite3_open(filename, &db) != SQLITE_OK){
 		fprintf(stderr, "Error: %s\n", sqlite3_errmsg(db));
 		return 1;
 	}
 
-	return _mqtt_create_tables();
+	return _mqtt_db_create_tables();
 }
 
-int mqtt_close_db(void)
+int mqtt_db_close(void)
 {
 	sqlite3_close(db);
 	db = NULL;
@@ -23,7 +23,7 @@ int mqtt_close_db(void)
 	return 0;
 }
 
-int _mqtt_create_tables(void)
+int _mqtt_db_create_tables(void)
 {
 	int rc;
 	char *errmsg = NULL;
@@ -43,4 +43,5 @@ int _mqtt_create_tables(void)
 		return 1;
 	}
 }
+
 
