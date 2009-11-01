@@ -42,20 +42,55 @@ int mqtt_listen_socket(uint16_t port)
 	return sock;
 }
 
+mqtt_context *mqtt_init_context(int sock)
+{
+	mqtt_context *context;
+
+	context = malloc(sizeof(mqtt_context));
+	if(!context) return NULL;
+	
+	context->next = NULL;
+	context->sock = sock;
+	context->last_message = time(NULL);
+	context->keepalive = 60; /* Default to 60s */
+	context->messages = NULL;
+	context->subscriptions = NULL;
+
+	return context;
+}
+
+int handle_read(mqtt_context *context)
+{
+	uint8_t byte;
+
+	byte = mqtt_read_byte(context);
+	switch(byte&0xF0){
+		case CONNECT:
+			mqtt_handle_connect(context);
+			break;
+		default:
+			printf("Received command: %s (%d)\n", mqtt_command_to_string(byte&0xF0), byte&0xF0);
+			break;
+	}
+
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	struct timespec timeout;
 	fd_set readfds, writefds;
 	int fdcount;
 	int listensock;
-	mqtt_context clientctxt;
+	int new_sock;
+	mqtt_context *contexts = NULL;
+	mqtt_context *ctxt_ptr;
+	mqtt_context *new_context;
 	int sockmax;
-	uint8_t byte;
 
 	if(mqtt_db_open("mqtt_broker.db")){
 		fprintf(stderr, "Error: Couldn't open database.\n");
 	}
-	clientctxt.sock = -1;
 
 	listensock = mqtt_listen_socket(1883);
 	if(listensock == -1){
@@ -65,13 +100,17 @@ int main(int argc, char *argv[])
 	while(1){
 		FD_ZERO(&readfds);
 		FD_SET(listensock, &readfds);
-		if(clientctxt.sock != -1){
-			FD_SET(clientctxt.sock, &readfds);
-		}
-		if(clientctxt.sock > listensock){
-			sockmax = clientctxt.sock;
-		}else{
-			sockmax = listensock;
+
+		sockmax = listensock;
+		ctxt_ptr = contexts;
+		while(ctxt_ptr){
+			if(ctxt_ptr->sock != -1){
+				FD_SET(ctxt_ptr->sock, &readfds);
+				if(ctxt_ptr->sock > sockmax){
+					sockmax = ctxt_ptr->sock;
+				}
+			}
+			ctxt_ptr = ctxt_ptr->next;
 		}
 
 		FD_ZERO(&writefds);
@@ -84,25 +123,32 @@ int main(int argc, char *argv[])
 		}else if(fdcount == 0){
 			printf("loop timeout\n");
 		}else{
-			if(clientctxt.sock != -1 && FD_ISSET(clientctxt.sock, &readfds)){
-				byte = mqtt_read_byte(&clientctxt);
-				switch(byte&0xF0){
-					case CONNECT:
-						mqtt_handle_connect(&clientctxt);
-						break;
-					default:
-            			printf("Received command: %s (%d)\n", mqtt_command_to_string(byte&0xF0), byte&0xF0);
-						break;
+			ctxt_ptr = contexts;
+			while(ctxt_ptr){
+				if(ctxt_ptr->sock != -1 && FD_ISSET(ctxt_ptr->sock, &readfds)){
+					handle_read(ctxt_ptr);
 				}
+				ctxt_ptr = ctxt_ptr->next;
 			}
 			if(FD_ISSET(listensock, &readfds)){
-				clientctxt.sock = accept(listensock, NULL, 0);
+				new_sock = accept(listensock, NULL, 0);
+				new_context = mqtt_init_context(new_sock);
+				if(contexts){
+					ctxt_ptr = contexts;
+					while(ctxt_ptr->next){
+						ctxt_ptr = ctxt_ptr->next;
+					}
+					ctxt_ptr->next = new_context;
+				}else{
+					contexts = new_context;
+				}
 			}
 		}
 	}
 
-	if(clientctxt.sock != -1){
-		close(clientctxt.sock);
+	ctxt_ptr = contexts;
+	while(ctxt_ptr){
+		mqtt_close_socket(ctxt_ptr);
 	}
 	close(listensock);
 
