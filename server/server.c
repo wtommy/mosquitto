@@ -83,7 +83,14 @@ int main(int argc, char *argv[])
 		}else{
 			if(clientctxt.sock != -1 && FD_ISSET(clientctxt.sock, &readfds)){
 				byte = mqtt_read_byte(&clientctxt);
-            	printf("Received command: %s (%d)\n", mqtt_command_to_string(byte&0xF0), byte&0xF0);
+				switch(byte&0xF0){
+					case CONNECT:
+						mqtt_handle_connect(&clientctxt);
+						break;
+					default:
+            			printf("Received command: %s (%d)\n", mqtt_command_to_string(byte&0xF0), byte&0xF0);
+						break;
+				}
 			}
 			if(FD_ISSET(listensock, &readfds)){
 				clientctxt.sock = accept(listensock, NULL, 0);
