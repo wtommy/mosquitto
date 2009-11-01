@@ -54,7 +54,7 @@ int mqtt_handle_connect(mqtt_context *context)
 		return 1;
 	}
 	protocol_version = mqtt_read_byte(context);
-	if(protocol_version != PROTOCOL_VERSION+1){
+	if(protocol_version != PROTOCOL_VERSION){
 		free(protocol_name);
 		return 1;
 	}
