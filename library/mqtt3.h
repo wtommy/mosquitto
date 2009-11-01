@@ -52,7 +52,8 @@ typedef struct _mqtt_subscription {
 	uint8_t qos;
 } mqtt_subscription;
 
-typedef struct{
+typedef struct _mqtt_context{
+	struct _mqtt_context *next;
 	int sock;
 	time_t last_message;
 	uint16_t keepalive;
