@@ -35,6 +35,44 @@ int mqtt_handle_connack(mqtt_context *context)
 	return 1;
 }
 
+int mqtt_handle_connect(mqtt_context *context)
+{
+	uint32_t remaining_length;
+	char *protocol_name;
+	uint8_t protocol_version;
+	uint8_t connect_flags;
+	char *client_id;
+	char *will_topic, *will_message;
+	
+	remaining_length = mqtt_read_remaining_length(context);
+	protocol_name = mqtt_read_string(context);
+	if(!protocol_name){
+		return 3;
+	}
+	if(strcmp(protocol_name, PROTOCOL_NAME)){
+		free(protocol_name);
+		return 1;
+	}
+	protocol_version = mqtt_read_byte(context);
+	if(protocol_version != PROTOCOL_VERSION+1){
+		free(protocol_name);
+		return 1;
+	}
+
+	printf("Received CONNECT for protocol %s version %d\n", protocol_name, protocol_version);
+
+	connect_flags = mqtt_read_byte(context);
+	context->keepalive = mqtt_read_uint16(context);
+
+	client_id = mqtt_read_string(context);
+	if(connect_flags & 0x04){
+		will_topic = mqtt_read_string(context);
+		will_message = mqtt_read_string(context);
+	}
+
+	return 0;
+}
+
 int mqtt_handle_puback(mqtt_context *context)
 {
 	uint32_t remaining_length;

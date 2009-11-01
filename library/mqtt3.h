@@ -104,6 +104,7 @@ int mqtt_managed_publish(mqtt_context *context, uint8_t qos, bool retain, const 
 
 /* Read handling functions */
 int mqtt_handle_connack(mqtt_context *context);
+int mqtt_handle_connect(mqtt_context *context);
 int mqtt_handle_puback(mqtt_context *context);
 int mqtt_handle_pubcomp(mqtt_context *context);
 int mqtt_handle_publish(mqtt_context *context, uint8_t header);
