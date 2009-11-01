@@ -1,15 +1,18 @@
 CC=cc
 CFLAGS=-I../library -Wall -ggdb
-LDFLAGS=
+LDFLAGS=-lsqlite3
 
 .PHONY: all clean
 
 all : server
 
-server : server.o managed_send.o messages.o net.o raw_send.o read_handle.o util.o
+server : server.o database.o managed_send.o messages.o net.o raw_send.o read_handle.o util.o
 	${CC} $(LDFLAGS) $^ -o $@
 
 server.o : server.c ../library/mqtt3.h
+	${CC} $(CFLAGS) -c $< -o $@
+
+database.o : database.c ../library/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 managed_send.o : ../library/managed_send.c ../library/mqtt3.h

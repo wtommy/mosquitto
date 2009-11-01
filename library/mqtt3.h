@@ -111,4 +111,8 @@ int mqtt_handle_pubrec(mqtt_context *context);
 int mqtt_handle_suback(mqtt_context *context);
 int mqtt_handle_unsuback(mqtt_context *context);
 
+/* Database handling */
+int mqtt_open_db(const char *filename);
+int mqtt_close_db(void);
+
 #endif
