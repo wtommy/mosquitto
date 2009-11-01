@@ -102,4 +102,13 @@ void mqtt_cleanup_messages(mqtt_context *context);
 int mqtt_managed_send(mqtt_context *context, mqtt_message *message);
 int mqtt_managed_publish(mqtt_context *context, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen);
 
+/* Read handling functions */
+int mqtt_handle_connack(mqtt_context *context);
+int mqtt_handle_puback(mqtt_context *context);
+int mqtt_handle_pubcomp(mqtt_context *context);
+int mqtt_handle_publish(mqtt_context *context, uint8_t header);
+int mqtt_handle_pubrec(mqtt_context *context);
+int mqtt_handle_suback(mqtt_context *context);
+int mqtt_handle_unsuback(mqtt_context *context);
+
 #endif
