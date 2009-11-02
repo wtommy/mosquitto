@@ -61,14 +61,18 @@ int mqtt_handle_connect(mqtt_context *context)
 	}
 
 	printf("Received CONNECT for protocol %s version %d\n", protocol_name, protocol_version);
+	free(protocol_name);
 
 	if(mqtt_read_byte(context, &connect_flags)) return 1;
 	if(mqtt_read_uint16(context, &(context->keepalive))) return 1;
 
 	if(mqtt_read_string(context, &client_id)) return 1;
+	free(client_id);
 	if(connect_flags & 0x04){
 		if(mqtt_read_string(context, &will_topic)) return 1;
+		free(will_topic);
 		if(mqtt_read_string(context, &will_message)) return 1;
+		free(will_message);
 	}
 
 	return mqtt_raw_connack(context, 0);
