@@ -1,6 +1,6 @@
 CC=cc
 CFLAGS=-I../library -Wall -ggdb
-LDFLAGS=-lsqlite3
+LDFLAGS=-lsqlite3 -nopie
 
 .PHONY: all clean
 
