@@ -59,6 +59,17 @@ mqtt_context *mqtt_init_context(int sock)
 	return context;
 }
 
+void mqtt_cleanup_context(mqtt_context *context)
+{
+	if(!context) return;
+
+	if(context->sock != -1){
+		mqtt_close_socket(context);
+	}
+	/* FIXME - clean messages and subscriptions */
+	free(context);
+}
+
 int handle_read(mqtt_context *context)
 {
 	uint8_t byte;
@@ -66,7 +77,7 @@ int handle_read(mqtt_context *context)
 	if(mqtt_read_byte(context, &byte)) return 1;
 	switch(byte&0xF0){
 		case CONNECT:
-			mqtt_handle_connect(context);
+			if(mqtt_handle_connect(context)) return 1;
 			break;
 		default:
 			printf("Received command: %s (%d)\n", mqtt_command_to_string(byte&0xF0), byte&0xF0);
@@ -80,12 +91,12 @@ int main(int argc, char *argv[])
 {
 	struct timespec timeout;
 	fd_set readfds, writefds;
-	int fdcount;
-	int listensock;
+	int fdcount; int listensock;
 	int new_sock;
 	mqtt_context *contexts = NULL;
-	mqtt_context *ctxt_ptr;
+	mqtt_context *ctxt_ptr, *ctxt_last;
 	mqtt_context *new_context;
+	mqtt_context *ctxt_reap;
 	int sockmax;
 
 	if(mqtt_db_open("mqtt_broker.db")){
@@ -124,10 +135,32 @@ int main(int argc, char *argv[])
 			printf("loop timeout\n");
 		}else{
 			ctxt_ptr = contexts;
+			ctxt_last = NULL;
 			while(ctxt_ptr){
 				if(ctxt_ptr->sock != -1 && FD_ISSET(ctxt_ptr->sock, &readfds)){
-					handle_read(ctxt_ptr);
+					if(handle_read(ctxt_ptr)){
+						printf("Connection error for socket %d\n", ctxt_ptr->sock);
+						/* Read error or other that means we should disconnect */
+						ctxt_reap = ctxt_ptr;
+						if(ctxt_last){
+							ctxt_last->next = ctxt_ptr->next;
+							ctxt_ptr = ctxt_last;
+							mqtt_cleanup_context(ctxt_reap);
+						}else{
+							/* In this case, the reaped context is at index 0.
+							 * We can't reference index -1, so ctxt_ptr =
+							 * ctxt_ptr->next means that index 1 will be
+							 * skipped over for index 2. This should get caught
+							 * next time round though.
+							 */
+							contexts = ctxt_ptr->next;
+							ctxt_ptr = contexts;
+							mqtt_cleanup_context(ctxt_reap);
+							if(!contexts) break;
+						}
+					}
 				}
+				ctxt_last = ctxt_ptr;
 				ctxt_ptr = ctxt_ptr->next;
 			}
 			if(FD_ISSET(listensock, &readfds)){
