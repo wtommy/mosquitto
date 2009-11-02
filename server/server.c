@@ -63,7 +63,7 @@ int handle_read(mqtt_context *context)
 {
 	uint8_t byte;
 
-	byte = mqtt_read_byte(context);
+	if(mqtt_read_byte(context, &byte)) return 1;
 	switch(byte&0xF0){
 		case CONNECT:
 			mqtt_handle_connect(context);

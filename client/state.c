@@ -32,6 +32,7 @@ void mqtt_check_keepalive(mqtt_context *context)
 int handle_read(mqtt_context *context)
 {
 	uint8_t buf;
+	uint32_t remaining;
 	int rc;
 
 	rc = read(context->sock, &buf, 1);
@@ -56,12 +57,12 @@ int handle_read(mqtt_context *context)
 			break;
 		case PINGREQ:
 			printf("Received PINGREQ\n");
-			mqtt_read_remaining_length(context);
+			mqtt_read_remaining_length(context, &remaining);
 			mqtt_raw_pingresp(context);
 			break;
 		case PINGRESP:
 			printf("Received PINGRESP\n");
-			mqtt_read_remaining_length(context);
+			mqtt_read_remaining_length(context, &remaining);
 			//FIXME - do something!
 			break;
 		case PUBACK:

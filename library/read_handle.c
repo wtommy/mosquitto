@@ -13,12 +13,13 @@
 int mqtt_handle_connack(mqtt_context *context)
 {
 	uint32_t remaining_length;
+	uint8_t byte;
 	uint8_t rc;
 
 	printf("Received CONNACK\n");
-	remaining_length = mqtt_read_remaining_length(context);
-	mqtt_read_byte(context); // Reserved byte, not used
-	rc = mqtt_read_byte(context);
+	if(mqtt_read_remaining_length(context, &remaining_length)) return 1;
+	if(mqtt_read_byte(context, &byte)) return 1; // Reserved byte, not used
+	if(mqtt_read_byte(context, &rc)) return 1;
 	switch(rc){
 		case 0:
 			return 0;
@@ -38,14 +39,14 @@ int mqtt_handle_connack(mqtt_context *context)
 int mqtt_handle_connect(mqtt_context *context)
 {
 	uint32_t remaining_length;
-	char *protocol_name;
+	uint8_t *protocol_name;
 	uint8_t protocol_version;
 	uint8_t connect_flags;
-	char *client_id;
-	char *will_topic, *will_message;
+	uint8_t *client_id;
+	uint8_t *will_topic, *will_message;
 	
-	remaining_length = mqtt_read_remaining_length(context);
-	protocol_name = mqtt_read_string(context);
+	if(mqtt_read_remaining_length(context, &remaining_length)) return 1;
+	if(mqtt_read_string(context, &protocol_name)) return 1;
 	if(!protocol_name){
 		return 3;
 	}
@@ -53,7 +54,7 @@ int mqtt_handle_connect(mqtt_context *context)
 		free(protocol_name);
 		return 1;
 	}
-	protocol_version = mqtt_read_byte(context);
+	if(mqtt_read_byte(context, &protocol_version)) return 1;
 	if(protocol_version != PROTOCOL_VERSION){
 		free(protocol_name);
 		return 1;
@@ -61,13 +62,13 @@ int mqtt_handle_connect(mqtt_context *context)
 
 	printf("Received CONNECT for protocol %s version %d\n", protocol_name, protocol_version);
 
-	connect_flags = mqtt_read_byte(context);
-	context->keepalive = mqtt_read_uint16(context);
+	if(mqtt_read_byte(context, &connect_flags)) return 1;
+	if(mqtt_read_uint16(context, &(context->keepalive))) return 1;
 
-	client_id = mqtt_read_string(context);
+	if(mqtt_read_string(context, &client_id)) return 1;
 	if(connect_flags & 0x04){
-		will_topic = mqtt_read_string(context);
-		will_message = mqtt_read_string(context);
+		if(mqtt_read_string(context, &will_topic)) return 1;
+		if(mqtt_read_string(context, &will_message)) return 1;
 	}
 
 	return mqtt_raw_connack(context, 0);
@@ -79,8 +80,8 @@ int mqtt_handle_puback(mqtt_context *context)
 	uint16_t mid;
 
 	printf("Received PUBACK\n");
-	remaining_length = mqtt_read_remaining_length(context);
-	mid = mqtt_read_uint16(context);
+	if(mqtt_read_remaining_length(context, &remaining_length)) return 1;
+	if(mqtt_read_uint16(context, &mid)) return 1;
 
 	if(mid){
 		printf("Removing message %d\n", mid);
@@ -95,8 +96,8 @@ int mqtt_handle_pubcomp(mqtt_context *context)
 	uint16_t mid;
 
 	printf("Received PUBCOMP\n");
-	remaining_length = mqtt_read_remaining_length(context);
-	mid = mqtt_read_uint16(context);
+	if(mqtt_read_remaining_length(context, &remaining_length)) return 1;
+	if(mqtt_read_uint16(context, &mid)) return 1;
 
 	if(mid){
 		printf("Removing message %d\n", mid);
@@ -117,21 +118,21 @@ int mqtt_handle_publish(mqtt_context *context, uint8_t header)
 	retain = (header & 0x01);
 
 	printf("dup=%d\nqos=%d\nretain=%d\n", dup, qos, retain);
-	remaining_length = mqtt_read_remaining_length(context);
+	if(mqtt_read_remaining_length(context, &remaining_length)) return 1;
 
 	printf("Remaining length: %d\n", remaining_length);
-	topic = mqtt_read_string(context);
+	if(mqtt_read_string(context, &topic)) return 1;
 	remaining_length -= strlen((char *)topic) + 2;
 	printf("Topic: '%s'\n", topic);
 	free(topic);
 
 	if(qos > 0){
-		mid = mqtt_read_uint16(context);
+		if(mqtt_read_uint16(context, &mid)) return 1;
 	}
 
 	printf("Remaining length: %d\n", remaining_length);
 	payload = calloc((remaining_length+1), sizeof(uint8_t));
-	mqtt_read_bytes(context, payload, remaining_length);
+	if(mqtt_read_bytes(context, payload, remaining_length)) return 1;
 	printf("Payload: '%s'\n", payload);
 	free(payload);
 
@@ -149,8 +150,8 @@ int mqtt_handle_pubrec(mqtt_context *context)
 
 	/* FIXME - deal with mid properly */
 	printf("Received PUBREC\n");
-	remaining_length = mqtt_read_remaining_length(context);
-	mid = mqtt_read_uint16(context);
+	if(mqtt_read_remaining_length(context, &remaining_length)) return 1;
+	if(mqtt_read_uint16(context, &mid)) return 1;
 
 	mqtt_raw_pubrel(context, mid);
 
@@ -164,14 +165,14 @@ int mqtt_handle_suback(mqtt_context *context)
 	uint8_t granted_qos;
 
 	printf("Received SUBACK\n");
-	remaining_length = mqtt_read_remaining_length(context);
+	if(mqtt_read_remaining_length(context, &remaining_length)) return 1;
 
-	mid = mqtt_read_uint16(context);
+	if(mqtt_read_uint16(context, &mid)) return 1;
 	remaining_length -= 2;
 
 	while(remaining_length){
 		/* FIXME - Need to do something with this */
-		granted_qos = mqtt_read_byte(context);
+		if(mqtt_read_byte(context, &granted_qos)) return 1;
 		printf("Granted QoS %d\n", granted_qos);
 		remaining_length--;
 	}
@@ -185,8 +186,8 @@ int mqtt_handle_unsuback(mqtt_context *context)
 	uint16_t mid;
 
 	printf("Received UNSUBACK\n");
-	remaining_length = mqtt_read_remaining_length(context);
-	mid = mqtt_read_uint16(context);
+	if(mqtt_read_remaining_length(context, &remaining_length)) return 1;
+	if(mqtt_read_uint16(context, &mid)) return 1;
 
 	return 0;
 }

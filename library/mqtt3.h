@@ -82,11 +82,11 @@ int mqtt_send_simple_command(mqtt_context *context, uint8_t command);
 int mqtt_connect_socket(const char *ip, uint16_t port);
 int mqtt_close_socket(mqtt_context *context);
 
-uint8_t mqtt_read_byte(mqtt_context *context);
+int mqtt_read_byte(mqtt_context *context, uint8_t *byte);
 int mqtt_read_bytes(mqtt_context *context, uint8_t *bytes, uint32_t count);
-uint8_t *mqtt_read_string(mqtt_context *context);
-uint32_t mqtt_read_remaining_length(mqtt_context *context);
-uint16_t mqtt_read_uint16(mqtt_context *context);
+int mqtt_read_string(mqtt_context *context, uint8_t **str);
+int mqtt_read_remaining_length(mqtt_context *context, uint32_t *remaining);
+int mqtt_read_uint16(mqtt_context *context, uint16_t *word);
 
 int mqtt_write_byte(mqtt_context *context, uint8_t byte);
 int mqtt_write_bytes(mqtt_context *context, const uint8_t *bytes, uint32_t count);
