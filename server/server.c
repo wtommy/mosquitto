@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -11,6 +12,13 @@
 #include <unistd.h>
 
 #include <mqtt3.h>
+
+static int run;
+
+void handle_sigint(int signal)
+{
+	run = 0;
+}
 
 int mqtt_listen_socket(uint16_t port)
 {
@@ -99,6 +107,8 @@ int main(int argc, char *argv[])
 	mqtt_context *ctxt_reap;
 	int sockmax;
 
+	signal(SIGINT, handle_sigint);
+
 	if(mqtt_db_open("mqtt_broker.db")){
 		fprintf(stderr, "Error: Couldn't open database.\n");
 	}
@@ -108,7 +118,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	while(1){
+	run = 1;
+	while(run){
 		FD_ZERO(&readfds);
 		FD_SET(listensock, &readfds);
 
