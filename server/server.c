@@ -193,6 +193,7 @@ int main(int argc, char *argv[])
 	ctxt_ptr = contexts;
 	while(ctxt_ptr){
 		mqtt3_close_socket(ctxt_ptr);
+		ctxt_ptr = ctxt_ptr->next;
 	}
 	close(listensock);
 
