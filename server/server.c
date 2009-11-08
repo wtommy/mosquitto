@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 
 	signal(SIGINT, handle_sigint);
 
-	if(mqtt3_db_open("mqtt3_broker.db")){
+	if(mqtt3_db_open("mosquitto.db")){
 		fprintf(stderr, "Error: Couldn't open database.\n");
 	}
 
