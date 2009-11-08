@@ -68,7 +68,7 @@ int mqtt3_db_insert_sub(mqtt3_context *context, uint8_t *sub, int qos)
 			"(SELECT * FROM subs WHERE client_id='%s' AND sub='%s')",
 			context->id, sub, qos, context->id, sub) == 1024) return 1;
 	
-	printf("%s\n", query);
+	/* FIXME - sql injection! */
 	if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
 		rc = 1;
 	}
