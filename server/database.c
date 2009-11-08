@@ -25,23 +25,32 @@ int mqtt_db_close(void)
 
 int _mqtt_db_create_tables(void)
 {
-	int rc;
+	int rc = 0;
 	char *errmsg = NULL;
 
-	rc = sqlite3_exec(db,
+	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS clients("
 		"id TEXT, "
 		"will INTEGER, will_retain INTEGER, will_qos "
 		"will_topic TEXT, will_message TEXT)",
-		NULL, NULL, &errmsg);
+		NULL, NULL, &errmsg) != SQLITE_OK){
+
+		rc = 1;
+	}
 
 	if(errmsg) sqlite3_free(errmsg);
 
-	if(rc == SQLITE_OK){
-		return 0;
-	}else{
-		return 1;
+	if(sqlite3_exec(db,
+		"CREATE TABLE IF NOT EXISTS subs("
+		"client_id TEXT, sub TEXT, qos INTEGER)",
+		NULL, NULL, &errmsg) != SQLITE_OK){
+
+		rc = 1;
 	}
+
+	if(errmsg) sqlite3_free(errmsg);
+
+	return rc;
 }
 
 
