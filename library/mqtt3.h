@@ -31,8 +31,8 @@
 #define DISCONNECT 0xE0
 
 /* Data types */
-typedef struct _mqtt_message {
-	struct _mqtt_message *next;
+typedef struct _mqtt3_message {
+	struct _mqtt3_message *next;
 	time_t timestamp;
 	uint16_t message_id;
 	uint8_t command;
@@ -44,78 +44,78 @@ typedef struct _mqtt_message {
 	uint32_t variable_header_len;
 	uint8_t *payload;
 	uint32_t payload_len;
-} mqtt_message;
+} mqtt3_message;
 
-typedef struct _mqtt_subscription {
-	struct _mqtt_subscription *next;
+typedef struct _mqtt3_subscription {
+	struct _mqtt3_subscription *next;
 	char *topic;
 	uint8_t qos;
-} mqtt_subscription;
+} mqtt3_subscription;
 
-typedef struct _mqtt_context{
-	struct _mqtt_context *next;
+typedef struct _mqtt3_context{
+	struct _mqtt3_context *next;
 	int sock;
 	time_t last_message;
 	uint16_t keepalive;
-	mqtt_message *messages;
-	mqtt_subscription *subscriptions;
-} mqtt_context;
+	mqtt3_message *messages;
+	mqtt3_subscription *subscriptions;
+} mqtt3_context;
 
 /* Utility functions */
-const char *mqtt_command_to_string(uint8_t command);
-uint16_t mqtt_generate_message_id(void);
+const char *mqtt3_command_to_string(uint8_t command);
+uint16_t mqtt3_generate_message_id(void);
 
 /* Raw send functions - just construct the packet and send */
-int mqtt_raw_connack(mqtt_context *context, uint8_t result);
-int mqtt_raw_connect(mqtt_context *context, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool cleanstart);
-int mqtt_raw_disconnect(mqtt_context *context);
-int mqtt_raw_pingreq(mqtt_context *context);
-int mqtt_raw_pingresp(mqtt_context *context);
-int mqtt_raw_puback(mqtt_context *context, uint16_t mid);
-int mqtt_raw_publish(mqtt_context *context, bool dup, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen);
-int mqtt_raw_pubrel(mqtt_context *context, uint16_t mid);
-int mqtt_raw_subscribe(mqtt_context *context, bool dup, const char *topic, uint16_t topiclen, uint8_t topic_qos);
-int mqtt_raw_unsubscribe(mqtt_context *context, bool dup, const char *topic, uint16_t topiclen);
-int mqtt_send_simple_command(mqtt_context *context, uint8_t command);
+int mqtt3_raw_connack(mqtt3_context *context, uint8_t result);
+int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool cleanstart);
+int mqtt3_raw_disconnect(mqtt3_context *context);
+int mqtt3_raw_pingreq(mqtt3_context *context);
+int mqtt3_raw_pingresp(mqtt3_context *context);
+int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid);
+int mqtt3_raw_publish(mqtt3_context *context, bool dup, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen);
+int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid);
+int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uint16_t topiclen, uint8_t topic_qos);
+int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic, uint16_t topiclen);
+int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command);
 
 /* Network functions */
-int mqtt_connect_socket(const char *ip, uint16_t port);
-int mqtt_close_socket(mqtt_context *context);
+int mqtt3_connect_socket(const char *ip, uint16_t port);
+int mqtt3_close_socket(mqtt3_context *context);
 
-int mqtt_read_byte(mqtt_context *context, uint8_t *byte);
-int mqtt_read_bytes(mqtt_context *context, uint8_t *bytes, uint32_t count);
-int mqtt_read_string(mqtt_context *context, uint8_t **str);
-int mqtt_read_remaining_length(mqtt_context *context, uint32_t *remaining);
-int mqtt_read_uint16(mqtt_context *context, uint16_t *word);
+int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte);
+int mqtt3_read_bytes(mqtt3_context *context, uint8_t *bytes, uint32_t count);
+int mqtt3_read_string(mqtt3_context *context, uint8_t **str);
+int mqtt3_read_remaining_length(mqtt3_context *context, uint32_t *remaining);
+int mqtt3_read_uint16(mqtt3_context *context, uint16_t *word);
 
-int mqtt_write_byte(mqtt_context *context, uint8_t byte);
-int mqtt_write_bytes(mqtt_context *context, const uint8_t *bytes, uint32_t count);
-int mqtt_write_string(mqtt_context *context, const char *str, uint16_t length);
-int mqtt_write_remaining_length(mqtt_context *context, uint32_t length);
-int mqtt_write_uint16(mqtt_context *context, uint16_t word);
+int mqtt3_write_byte(mqtt3_context *context, uint8_t byte);
+int mqtt3_write_bytes(mqtt3_context *context, const uint8_t *bytes, uint32_t count);
+int mqtt3_write_string(mqtt3_context *context, const char *str, uint16_t length);
+int mqtt3_write_remaining_length(mqtt3_context *context, uint32_t length);
+int mqtt3_write_uint16(mqtt3_context *context, uint16_t word);
 
 /* Message list handling */
-int mqtt_add_message(mqtt_context *context, mqtt_message *message);
-int mqtt_remove_message(mqtt_context *context, uint16_t mid);
-void mqtt_cleanup_message(mqtt_message *message);
-void mqtt_cleanup_messages(mqtt_context *context);
+int mqtt3_add_message(mqtt3_context *context, mqtt3_message *message);
+int mqtt3_remove_message(mqtt3_context *context, uint16_t mid);
+void mqtt3_cleanup_message(mqtt3_message *message);
+void mqtt3_cleanup_messages(mqtt3_context *context);
 
 /* Managed send functions */
-int mqtt_managed_send(mqtt_context *context, mqtt_message *message);
-int mqtt_managed_publish(mqtt_context *context, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen);
+int mqtt3_managed_send(mqtt3_context *context, mqtt3_message *message);
+int mqtt3_managed_publish(mqtt3_context *context, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen);
 
 /* Read handling functions */
-int mqtt_handle_connack(mqtt_context *context);
-int mqtt_handle_connect(mqtt_context *context);
-int mqtt_handle_puback(mqtt_context *context);
-int mqtt_handle_pubcomp(mqtt_context *context);
-int mqtt_handle_publish(mqtt_context *context, uint8_t header);
-int mqtt_handle_pubrec(mqtt_context *context);
-int mqtt_handle_suback(mqtt_context *context);
-int mqtt_handle_unsuback(mqtt_context *context);
+int mqtt3_handle_connack(mqtt3_context *context);
+int mqtt3_handle_connect(mqtt3_context *context);
+int mqtt3_handle_puback(mqtt3_context *context);
+int mqtt3_handle_pubcomp(mqtt3_context *context);
+int mqtt3_handle_publish(mqtt3_context *context, uint8_t header);
+int mqtt3_handle_pubrec(mqtt3_context *context);
+int mqtt3_handle_suback(mqtt3_context *context);
+int mqtt3_handle_unsuback(mqtt3_context *context);
 
 /* Database handling */
-int mqtt_db_open(const char *filename);
-int mqtt_db_close(void);
+int mqtt3_db_open(const char *filename);
+int mqtt3_db_close(void);
 
 #endif

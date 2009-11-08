@@ -20,7 +20,7 @@ void handle_sigint(int signal)
 	run = 0;
 }
 
-int mqtt_listen_socket(uint16_t port)
+int mqtt3_listen_socket(uint16_t port)
 {
 	int sock;
 	struct sockaddr_in addr;
@@ -50,11 +50,11 @@ int mqtt_listen_socket(uint16_t port)
 	return sock;
 }
 
-mqtt_context *mqtt_init_context(int sock)
+mqtt3_context *mqtt3_init_context(int sock)
 {
-	mqtt_context *context;
+	mqtt3_context *context;
 
-	context = malloc(sizeof(mqtt_context));
+	context = malloc(sizeof(mqtt3_context));
 	if(!context) return NULL;
 	
 	context->next = NULL;
@@ -67,28 +67,28 @@ mqtt_context *mqtt_init_context(int sock)
 	return context;
 }
 
-void mqtt_cleanup_context(mqtt_context *context)
+void mqtt3_cleanup_context(mqtt3_context *context)
 {
 	if(!context) return;
 
 	if(context->sock != -1){
-		mqtt_close_socket(context);
+		mqtt3_close_socket(context);
 	}
 	/* FIXME - clean messages and subscriptions */
 	free(context);
 }
 
-int handle_read(mqtt_context *context)
+int handle_read(mqtt3_context *context)
 {
 	uint8_t byte;
 
-	if(mqtt_read_byte(context, &byte)) return 1;
+	if(mqtt3_read_byte(context, &byte)) return 1;
 	switch(byte&0xF0){
 		case CONNECT:
-			if(mqtt_handle_connect(context)) return 1;
+			if(mqtt3_handle_connect(context)) return 1;
 			break;
 		default:
-			printf("Received command: %s (%d)\n", mqtt_command_to_string(byte&0xF0), byte&0xF0);
+			printf("Received command: %s (%d)\n", mqtt3_command_to_string(byte&0xF0), byte&0xF0);
 			break;
 	}
 
@@ -101,19 +101,19 @@ int main(int argc, char *argv[])
 	fd_set readfds, writefds;
 	int fdcount; int listensock;
 	int new_sock;
-	mqtt_context *contexts = NULL;
-	mqtt_context *ctxt_ptr, *ctxt_last;
-	mqtt_context *new_context;
-	mqtt_context *ctxt_reap;
+	mqtt3_context *contexts = NULL;
+	mqtt3_context *ctxt_ptr, *ctxt_last;
+	mqtt3_context *new_context;
+	mqtt3_context *ctxt_reap;
 	int sockmax;
 
 	signal(SIGINT, handle_sigint);
 
-	if(mqtt_db_open("mqtt_broker.db")){
+	if(mqtt3_db_open("mqtt3_broker.db")){
 		fprintf(stderr, "Error: Couldn't open database.\n");
 	}
 
-	listensock = mqtt_listen_socket(1883);
+	listensock = mqtt3_listen_socket(1883);
 	if(listensock == -1){
 		return 1;
 	}
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 						if(ctxt_last){
 							ctxt_last->next = ctxt_ptr->next;
 							ctxt_ptr = ctxt_last;
-							mqtt_cleanup_context(ctxt_reap);
+							mqtt3_cleanup_context(ctxt_reap);
 						}else{
 							/* In this case, the reaped context is at index 0.
 							 * We can't reference index -1, so ctxt_ptr =
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 							 */
 							contexts = ctxt_ptr->next;
 							ctxt_ptr = contexts;
-							mqtt_cleanup_context(ctxt_reap);
+							mqtt3_cleanup_context(ctxt_reap);
 							if(!contexts) break;
 						}
 					}
@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
 			}
 			if(FD_ISSET(listensock, &readfds)){
 				new_sock = accept(listensock, NULL, 0);
-				new_context = mqtt_init_context(new_sock);
+				new_context = mqtt3_init_context(new_sock);
 				if(contexts){
 					ctxt_ptr = contexts;
 					while(ctxt_ptr->next){
@@ -192,11 +192,11 @@ int main(int argc, char *argv[])
 
 	ctxt_ptr = contexts;
 	while(ctxt_ptr){
-		mqtt_close_socket(ctxt_ptr);
+		mqtt3_close_socket(ctxt_ptr);
 	}
 	close(listensock);
 
-	mqtt_db_close();
+	mqtt3_db_close();
 
 	return 0;
 }

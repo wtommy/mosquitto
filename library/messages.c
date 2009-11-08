@@ -2,9 +2,9 @@
 
 #include <mqtt3.h>
 
-int mqtt_add_message(mqtt_context *context, mqtt_message *message)
+int mqtt3_add_message(mqtt3_context *context, mqtt3_message *message)
 {
-	mqtt_message *pointer;
+	mqtt3_message *pointer;
 	if(!context || !message) return 0;
 
 	message->next = NULL;
@@ -22,9 +22,9 @@ int mqtt_add_message(mqtt_context *context, mqtt_message *message)
 	return 1;
 }
 
-int mqtt_remove_message(mqtt_context *context, uint16_t mid)
+int mqtt3_remove_message(mqtt3_context *context, uint16_t mid)
 {
-	mqtt_message *pointer, *prev;
+	mqtt3_message *pointer, *prev;
 
 	if(!context || !(context->messages)) return 0;
 	prev = NULL;
@@ -40,7 +40,7 @@ int mqtt_remove_message(mqtt_context *context, uint16_t mid)
 			}else{
 				context->messages = pointer->next;
 			}
-			mqtt_cleanup_message(pointer);
+			mqtt3_cleanup_message(pointer);
 			break;
 		}
 	}
@@ -48,7 +48,7 @@ int mqtt_remove_message(mqtt_context *context, uint16_t mid)
 	return 1;
 }
 
-void mqtt_cleanup_message(mqtt_message *message)
+void mqtt3_cleanup_message(mqtt3_message *message)
 {
 	if(!message) return;
 	if(message->variable_header) free(message->variable_header);
@@ -56,16 +56,16 @@ void mqtt_cleanup_message(mqtt_message *message)
 	free(message);
 }
 
-void mqtt_cleanup_messages(mqtt_context *context)
+void mqtt3_cleanup_messages(mqtt3_context *context)
 {
-	mqtt_message *pointer, *next;
+	mqtt3_message *pointer, *next;
 
 	if(!context || !(context->messages)) return;
 
 	pointer = context->messages;
 	while(pointer){
 		next = pointer->next;
-		mqtt_cleanup_message(pointer);
+		mqtt3_cleanup_message(pointer);
 		pointer = next;
 	}
 }
