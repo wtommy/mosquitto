@@ -75,6 +75,7 @@ void mqtt3_cleanup_context(mqtt3_context *context)
 	if(context->sock != -1){
 		mqtt3_close_socket(context);
 	}
+	if(context->id) free(context->id);
 	/* FIXME - clean messages and subscriptions */
 	free(context);
 }
