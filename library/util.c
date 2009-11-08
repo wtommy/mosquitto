@@ -2,7 +2,7 @@
 
 #include <mqtt3.h>
 
-const char *mqtt_command_to_string(uint8_t command)
+const char *mqtt3_command_to_string(uint8_t command)
 {
 	switch(command){
 		case CONNACK:
@@ -37,7 +37,7 @@ const char *mqtt_command_to_string(uint8_t command)
 	return "UNKNOWN";
 }
 
-uint16_t mqtt_generate_message_id(void)
+uint16_t mqtt3_generate_message_id(void)
 {
 	static uint16_t mid = 123;
 

@@ -10,7 +10,20 @@
 
 #include <mqtt3.h>
 
-int mqtt_connect_socket(const char *ip, uint16_t port)
+int mqtt3_close_socket(mqtt3_context *context)
+{
+	int rc = -1;
+
+	if(!context) return -1;
+	if(context->sock != -1){
+		rc = close(context->sock);
+		context->sock = -1;
+	}
+
+	return rc;
+}
+
+int mqtt3_connect_socket(const char *ip, uint16_t port)
 {
 	int sock;
 	struct sockaddr_in addr;
@@ -35,16 +48,16 @@ int mqtt_connect_socket(const char *ip, uint16_t port)
 	return sock;
 }
 
-uint8_t mqtt_read_byte(mqtt_context *context)
+int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte)
 {
-	uint8_t byte;
-
-	read(context->sock, &byte, 1);
-
-	return byte;
+	if(read(context->sock, byte, 1) == 1){
+		return 0;
+	}else{
+		return 1;
+	}
 }
 
-int mqtt_write_byte(mqtt_context *context, uint8_t byte)
+int mqtt3_write_byte(mqtt3_context *context, uint8_t byte)
 {
 	if(write(context->sock, &byte, 1) == 1){
 		return 0;
@@ -53,7 +66,7 @@ int mqtt_write_byte(mqtt_context *context, uint8_t byte)
 	}
 }
 
-int mqtt_read_bytes(mqtt_context *context, uint8_t *bytes, uint32_t count)
+int mqtt3_read_bytes(mqtt3_context *context, uint8_t *bytes, uint32_t count)
 {
 	if(read(context->sock, bytes, count) == count){
 		return 0;
@@ -62,7 +75,7 @@ int mqtt_read_bytes(mqtt_context *context, uint8_t *bytes, uint32_t count)
 	}
 }
 
-int mqtt_write_bytes(mqtt_context *context, const uint8_t *bytes, uint32_t count)
+int mqtt3_write_bytes(mqtt3_context *context, const uint8_t *bytes, uint32_t count)
 {
 	if(write(context->sock, bytes, count) == count){
 		return 0;
@@ -71,25 +84,25 @@ int mqtt_write_bytes(mqtt_context *context, const uint8_t *bytes, uint32_t count
 	}
 }
 
-uint32_t mqtt_read_remaining_length(mqtt_context *context)
+int mqtt3_read_remaining_length(mqtt3_context *context, uint32_t *remaining)
 {
-	uint32_t value = 0;
 	uint32_t multiplier = 1;
 	uint8_t digit;
 
 	/* Algorithm for decoding taken from pseudo code at
 	 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
 	 */
+	(*remaining) = 0;
 	do{
-		digit = mqtt_read_byte(context);
-		value += (digit & 127) * multiplier;
+		if(mqtt3_read_byte(context, &digit)) return 1;
+		(*remaining) += (digit & 127) * multiplier;
 		multiplier *= 128;
 	}while((digit & 128) != 0);
 
-	return value;
+	return 0;
 }
 
-int mqtt_write_remaining_length(mqtt_context *context, uint32_t length)
+int mqtt3_write_remaining_length(mqtt3_context *context, uint32_t length)
 {
 	uint8_t digit;
 
@@ -103,56 +116,57 @@ int mqtt_write_remaining_length(mqtt_context *context, uint32_t length)
 		if(length>0){
 			digit = digit | 0x80;
 		}
-		if(mqtt_write_byte(context, digit)) return 1;
+		if(mqtt3_write_byte(context, digit)) return 1;
 	}while(length > 0);
 
 	return 0;
 }
 
-uint8_t *mqtt_read_string(mqtt_context *context)
+int mqtt3_read_string(mqtt3_context *context, uint8_t **str)
 {
 	uint8_t msb, lsb;
 	uint16_t len;
-	uint8_t *str;
 
-	msb = mqtt_read_byte(context);
-	lsb = mqtt_read_byte(context);
+	if(mqtt3_read_byte(context, &msb)) return 1;
+	if(mqtt3_read_byte(context, &lsb)) return 1;
 
 	len = (msb<<8) + lsb;
 
-	str = calloc(len+1, sizeof(uint8_t));
-	if(str){
-		if(mqtt_read_bytes(context, str, len)){
-			free(str);
-			return NULL;
+	*str = calloc(len+1, sizeof(uint8_t));
+	if(*str){
+		if(mqtt3_read_bytes(context, *str, len)){
+			free(*str);
+			return 1;
 		}
 	}
-
-	return str;
-}
-
-int mqtt_write_string(mqtt_context *context, const char *str, uint16_t length)
-{
-	if(mqtt_write_uint16(context, length)) return 1;
-	if(mqtt_write_bytes(context, (uint8_t *)str, length)) return 1;
 
 	return 0;
 }
 
-uint16_t mqtt_read_uint16(mqtt_context *context)
+int mqtt3_write_string(mqtt3_context *context, const char *str, uint16_t length)
+{
+	if(mqtt3_write_uint16(context, length)) return 1;
+	if(mqtt3_write_bytes(context, (uint8_t *)str, length)) return 1;
+
+	return 0;
+}
+
+int mqtt3_read_uint16(mqtt3_context *context, uint16_t *word)
 {
 	uint8_t msb, lsb;
 
-	msb = mqtt_read_byte(context);
-	lsb = mqtt_read_byte(context);
+	if(mqtt3_read_byte(context, &msb)) return 1;
+	if(mqtt3_read_byte(context, &lsb)) return 1;
 
-	return (msb<<8) + lsb;
+	*word = (msb<<8) + lsb;
+
+	return 0;
 }
 
-int mqtt_write_uint16(mqtt_context *context, uint16_t word)
+int mqtt3_write_uint16(mqtt3_context *context, uint16_t word)
 {
-	if(mqtt_write_byte(context, MQTT_MSB(word))) return 1;
-	if(mqtt_write_byte(context, MQTT_LSB(word))) return 1;
+	if(mqtt3_write_byte(context, MQTT_MSB(word))) return 1;
+	if(mqtt3_write_byte(context, MQTT_LSB(word))) return 1;
 
 	return 0;
 }

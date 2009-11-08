@@ -13,20 +13,20 @@
 
 #include <mqtt3.h>
 
-int mqtt_managed_publish(mqtt_context *context, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen)
+int mqtt3_managed_publish(mqtt3_context *context, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen)
 {
 	int packetlen;
 	uint16_t mid;
-	mqtt_message *message;
+	mqtt3_message *message;
 
 	if(qos == 0){
-		mqtt_raw_publish(context, 0, qos, retain, topic, topiclen, payload, payloadlen);
+		mqtt3_raw_publish(context, 0, qos, retain, topic, topiclen, payload, payloadlen);
 	}
 
 	packetlen = 2+topiclen + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
 
-	message = calloc(sizeof(mqtt_message), 1);
+	message = calloc(sizeof(mqtt3_message), 1);
 	
 	message->command = PUBLISH;
 	message->dup = 0;
@@ -34,7 +34,7 @@ int mqtt_managed_publish(mqtt_context *context, uint8_t qos, bool retain, const 
 	message->retain = retain;
 	message->remaining_length = packetlen;
 	if(qos > 0){
-		mid = mqtt_generate_message_id();
+		mid = mqtt3_generate_message_id();
 	}else{
 		mid = 0;
 	}
@@ -56,26 +56,26 @@ int mqtt_managed_publish(mqtt_context *context, uint8_t qos, bool retain, const 
 	message->payload_len = payloadlen;
 
 	if(message->qos){
-		mqtt_add_message(context, message);
+		mqtt3_add_message(context, message);
 	}
-	mqtt_managed_send(context, message);
+	mqtt3_managed_send(context, message);
 	return 0;
 }
 
-int mqtt_managed_send(mqtt_context *context, mqtt_message *message)
+int mqtt3_managed_send(mqtt3_context *context, mqtt3_message *message)
 {
 	if(!context || !message) return 1;
 
-	if(mqtt_write_byte(context, message->command | (message->dup<<3) | (message->qos<<1) | message->retain)) return 1;
-	if(mqtt_write_remaining_length(context, message->remaining_length)) return 1;
+	if(mqtt3_write_byte(context, message->command | (message->dup<<3) | (message->qos<<1) | message->retain)) return 1;
+	if(mqtt3_write_remaining_length(context, message->remaining_length)) return 1;
 
-	if(mqtt_write_bytes(context, message->variable_header, message->variable_header_len)) return 1;
-	if(mqtt_write_bytes(context, message->payload, message->payload_len)) return 1;
+	if(mqtt3_write_bytes(context, message->variable_header, message->variable_header_len)) return 1;
+	if(mqtt3_write_bytes(context, message->payload, message->payload_len)) return 1;
 	
 	if(message->qos){
 		message->timestamp = time(NULL);
 	}else{
-		mqtt_cleanup_message(message);
+		mqtt3_cleanup_message(message);
 	}
 
 	context->last_message = time(NULL);
