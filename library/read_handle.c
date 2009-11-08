@@ -43,7 +43,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	uint8_t protocol_version;
 	uint8_t connect_flags;
 	uint8_t *client_id;
-	uint8_t *will_topic, *will_message;
+	uint8_t *will_topic = NULL, *will_message = NULL;
 	
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_string(context, &protocol_name)) return 1;
@@ -67,13 +67,21 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	if(mqtt3_read_uint16(context, &(context->keepalive))) return 1;
 
 	if(mqtt3_read_string(context, &client_id)) return 1;
-	free(client_id);
 	if(connect_flags & 0x04){
 		if(mqtt3_read_string(context, &will_topic)) return 1;
-		free(will_topic);
 		if(mqtt3_read_string(context, &will_message)) return 1;
-		free(will_message);
 	}
+	if(context->id){
+		/* FIXME - second CONNECT!
+		 * FIXME - Need to check for existing client with same name
+		 * FIXME - Need to check for valid name
+		 */
+		free(context->id);
+	}
+	context->id = client_id;
+	/* FIXME - save will */
+	if(will_topic) free(will_topic);
+	if(will_message) free(will_message);
 
 	return mqtt3_raw_connack(context, 0);
 }
