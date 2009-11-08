@@ -1,6 +1,8 @@
 #include <sqlite3.h>
 #include <stdio.h>
 
+#include <mqtt3.h>
+
 static sqlite3 *db;
 
 int _mqtt3_db_create_tables(void);
@@ -53,4 +55,28 @@ int _mqtt3_db_create_tables(void)
 	return rc;
 }
 
+int mqtt3_db_insert_sub(mqtt3_context *context, uint8_t *sub, int qos)
+{
+	int rc = 0;
+	char query[1024];
+	char *errmsg;
+
+	if(!context || !sub) return 1;
+
+	if(snprintf(query, 1024, "INSERT INTO subs (client_id,sub,qos) "
+			"SELECT '%s','%s',%d WHERE NOT EXISTS "
+			"(SELECT * FROM subs WHERE client_id='%s' AND sub='%s')",
+			context->id, sub, qos, context->id, sub) == 1024) return 1;
+	
+	printf("%s\n", query);
+	if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+		rc = 1;
+	}
+	if(errmsg){
+		fprintf(stderr, "Error: %s\n", errmsg);
+		sqlite3_free(errmsg);
+	}
+
+	return rc;
+}
 

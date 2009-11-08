@@ -61,6 +61,7 @@ mqtt3_context *mqtt3_init_context(int sock)
 	context->sock = sock;
 	context->last_message = time(NULL);
 	context->keepalive = 60; /* Default to 60s */
+	context->id = NULL;
 	context->messages = NULL;
 	context->subscriptions = NULL;
 
@@ -86,6 +87,9 @@ int handle_read(mqtt3_context *context)
 	switch(byte&0xF0){
 		case CONNECT:
 			if(mqtt3_handle_connect(context)) return 1;
+			break;
+		case SUBSCRIBE:
+			if(mqtt3_handle_subscribe(context)) return 1;
 			break;
 		default:
 			printf("Received command: %s (%d)\n", mqtt3_command_to_string(byte&0xF0), byte&0xF0);

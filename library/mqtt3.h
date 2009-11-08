@@ -57,6 +57,7 @@ typedef struct _mqtt3_context{
 	int sock;
 	time_t last_message;
 	uint16_t keepalive;
+	uint8_t *id;
 	mqtt3_message *messages;
 	mqtt3_subscription *subscriptions;
 } mqtt3_context;
@@ -112,10 +113,12 @@ int mqtt3_handle_pubcomp(mqtt3_context *context);
 int mqtt3_handle_publish(mqtt3_context *context, uint8_t header);
 int mqtt3_handle_pubrec(mqtt3_context *context);
 int mqtt3_handle_suback(mqtt3_context *context);
+int mqtt3_handle_subscribe(mqtt3_context *context);
 int mqtt3_handle_unsuback(mqtt3_context *context);
 
 /* Database handling */
 int mqtt3_db_open(const char *filename);
 int mqtt3_db_close(void);
+int mqtt3_db_insert_sub(mqtt3_context *context, uint8_t *sub, int qos);
 
 #endif
