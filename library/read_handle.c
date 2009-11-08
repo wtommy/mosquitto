@@ -198,6 +198,8 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 	uint16_t mid;
 	uint8_t *sub;
 	uint8_t qos;
+	uint8_t *payload = NULL;
+	uint8_t payloadlen = 0;
 
 	if(!context) return 1;
 
@@ -213,6 +215,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 			if(sub) free(sub);
 			return 1;
 		}
+
 		remaining_length -= strlen(sub) + 2;
 		if(mqtt3_read_byte(context, &qos)) return 1;
 		remaining_length -= 1;
@@ -220,7 +223,19 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 			mqtt3_db_insert_sub(context, sub, qos);
 			free(sub);
 		}
+
+		payload = realloc(payload, payloadlen + 1);
+		payload[payloadlen] = qos;
+		payloadlen++;
 	}
+
+	if(mqtt3_write_byte(context, SUBACK)) return 1;
+	if(mqtt3_write_remaining_length(context, payloadlen+2)) return 1;
+	if(mqtt3_write_uint16(context, mid)) return 1;
+	if(mqtt3_write_bytes(context, payload, payloadlen)) return 1;
+
+	free(payload);
+	
 	return 0;
 }
 
