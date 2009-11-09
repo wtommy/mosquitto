@@ -9,6 +9,10 @@ int _mqtt3_db_create_tables(void);
 
 int mqtt3_db_open(const char *filename)
 {
+	if(sqlite3_initialize() != SQLITE_OK){
+		return 1;
+	}
+
 	if(sqlite3_open(filename, &db) != SQLITE_OK){
 		fprintf(stderr, "Error: %s\n", sqlite3_errmsg(db));
 		return 1;
@@ -21,6 +25,8 @@ int mqtt3_db_close(void)
 {
 	sqlite3_close(db);
 	db = NULL;
+
+	sqlite3_shutdown();
 
 	return 0;
 }
