@@ -58,6 +58,7 @@ typedef struct _mqtt3_context{
 	time_t last_message;
 	uint16_t keepalive;
 	uint8_t *id;
+	uint16_t last_mid;
 	mqtt3_message *messages;
 	mqtt3_subscription *subscriptions;
 } mqtt3_context;
