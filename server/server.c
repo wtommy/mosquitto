@@ -199,7 +199,9 @@ int main(int argc, char *argv[])
 	ctxt_ptr = contexts;
 	while(ctxt_ptr){
 		mqtt3_close_socket(ctxt_ptr);
+		ctxt_last = ctxt_ptr;
 		ctxt_ptr = ctxt_ptr->next;
+		mqtt3_cleanup_context(ctxt_last);
 	}
 	close(listensock);
 
