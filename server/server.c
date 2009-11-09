@@ -61,6 +61,7 @@ mqtt3_context *mqtt3_init_context(int sock)
 	context->sock = sock;
 	context->last_message = time(NULL);
 	context->keepalive = 60; /* Default to 60s */
+	context->last_mid = 0;
 	context->id = NULL;
 	context->messages = NULL;
 	context->subscriptions = NULL;
@@ -198,7 +199,9 @@ int main(int argc, char *argv[])
 	ctxt_ptr = contexts;
 	while(ctxt_ptr){
 		mqtt3_close_socket(ctxt_ptr);
+		ctxt_last = ctxt_ptr;
 		ctxt_ptr = ctxt_ptr->next;
+		mqtt3_cleanup_context(ctxt_last);
 	}
 	close(listensock);
 
