@@ -69,12 +69,11 @@ int mqtt3_db_insert_sub(mqtt3_context *context, uint8_t *sub, int qos)
 
 	if(!context || !sub) return 1;
 
-	if(snprintf(query, 1024, "INSERT INTO subs (client_id,sub,qos) "
-			"SELECT '%s','%s',%d WHERE NOT EXISTS "
-			"(SELECT * FROM subs WHERE client_id='%s' AND sub='%s')",
-			context->id, sub, qos, context->id, sub) == 1024) return 1;
+	sqlite3_snprintf(1024, query, "INSERT INTO subs (client_id,sub,qos) "
+			"SELECT '%q','%q',%d WHERE NOT EXISTS "
+			"(SELECT * FROM subs WHERE client_id='%q' AND sub='%q')",
+			context->id, sub, qos, context->id, sub);
 	
-	/* FIXME - sql injection! */
 	if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
 		rc = 1;
 	}
