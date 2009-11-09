@@ -140,6 +140,7 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 
 	if(qos > 0){
 		if(mqtt3_read_uint16(context, &mid)) return 1;
+		remaining_length -= 2;
 	}
 
 	printf("Remaining length: %d\n", remaining_length);
