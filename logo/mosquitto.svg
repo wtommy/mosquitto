@@ -15,9 +15,9 @@
    inkscape:version="0.46"
    sodipodi:docname="mosquitto.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
-   inkscape:export-filename="mosquitto.png"
-   inkscape:export-xdpi="5.3400002"
-   inkscape:export-ydpi="5.3400002">
+   inkscape:export-filename="mosquitto-14x14.png"
+   inkscape:export-xdpi="4.6700001"
+   inkscape:export-ydpi="4.6700001">
   <defs
      id="defs4">
     <inkscape:perspective
@@ -45,9 +45,9 @@
      objecttolerance="10"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.979899"
-     inkscape:cx="285.90954"
-     inkscape:cy="691.89959"
+     inkscape:zoom="1.4"
+     inkscape:cx="251.61096"
+     inkscape:cy="634.88337"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -56,7 +56,7 @@
      inkscape:window-width="1272"
      inkscape:window-height="753"
      inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-y="197"
      inkscape:snap-global="false">
     <inkscape:grid
        type="xygrid"
@@ -80,11 +80,7 @@
      inkscape:groupmode="layer"
      id="layer1">
     <path
-       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:8.14260197;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 270.92519,324.92602 C 386.31832,308.51079 405.06276,321.40568 414.0446,332.49728 C 423.02642,343.58891 427.12695,353.77886 407.60172,350.17225 C 388.0765,346.56566 271.67029,325.07279 270.92519,324.92602 z"
-       id="path3335" />
-    <path
-       style="opacity:1;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="opacity:1;fill:#b4b4b4;fill-rule:evenodd;stroke:#000000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;fill-opacity:1"
        d="M 260.86695,304.28645 C 344.54685,263.18666 363.31847,267.21909 373.94821,272.53203 C 384.57796,277.84498 400.64729,294.03063 384.36356,296.59165 C 368.07984,299.1527 261.4914,304.19501 260.86695,304.28645 z"
        id="path3615"
        inkscape:export-xdpi="5.4099998"
@@ -128,6 +124,10 @@
        transform="matrix(0.2815869,-0.5987297,0.9000736,0.4233112,18.341889,318.68209)"
        inkscape:transform-center-x="-1.6537315"
        inkscape:transform-center-y="-28.100021" />
+    <path
+       style="fill:#b4b4b4;fill-rule:evenodd;stroke:#000000;stroke-width:8.14260196999999941;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;fill-opacity:1"
+       d="M 270.92519,324.92602 C 386.31832,308.51079 405.06276,321.40568 414.0446,332.49728 C 423.02642,343.58891 427.12695,353.77886 407.60172,350.17225 C 388.0765,346.56566 271.67029,325.07279 270.92519,324.92602 z"
+       id="path3335" />
     <path
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:6;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M 265.35024,357.10581 C 279.69288,380.33932 285.91337,387.36181 292.21826,395.18703 C 298.52314,403.01225 331.37829,432.56303 332.82486,445.99412"
