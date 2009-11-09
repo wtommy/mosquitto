@@ -39,7 +39,7 @@ int _mqtt3_db_create_tables(void)
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS clients("
 		"id TEXT, "
-		"will INTEGER, will_retain INTEGER, will_qos "
+		"will INTEGER, will_retain INTEGER, will_qos INTEGER"
 		"will_topic TEXT, will_message TEXT)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
