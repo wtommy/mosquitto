@@ -99,6 +99,9 @@ int handle_read(mqtt3_context *context)
 		case SUBSCRIBE:
 			if(mqtt3_handle_subscribe(context)) return 1;
 			break;
+		case UNSUBSCRIBE:
+			if(mqtt3_handle_unsubscribe(context)) return 1;
+			break;
 		default:
 			printf("Received command: %s (%d)\n", mqtt3_command_to_string(byte&0xF0), byte&0xF0);
 			break;

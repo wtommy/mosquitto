@@ -261,3 +261,39 @@ int mqtt3_handle_unsuback(mqtt3_context *context)
 
 	return 0;
 }
+
+int mqtt3_handle_unsubscribe(mqtt3_context *context)
+{
+	uint32_t remaining_length;
+	uint16_t mid;
+	uint8_t *sub;
+
+	if(!context) return 1;
+
+	printf("Received UNSUBSCRIBE\n");
+	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
+	if(mqtt3_read_uint16(context, &mid)) return 1;
+	remaining_length -= 2;
+
+	while(remaining_length){
+		/* FIXME - Need to do something with this */
+		sub = NULL;
+		if(mqtt3_read_string(context, &sub)){
+			if(sub) free(sub);
+			return 1;
+		}
+
+		remaining_length -= strlen(sub) + 2;
+		if(sub){
+			mqtt3_db_delete_sub(context, sub);
+			free(sub);
+		}
+	}
+
+	if(mqtt3_write_byte(context, UNSUBACK)) return 1;
+	if(mqtt3_write_remaining_length(context, 2)) return 1;
+	if(mqtt3_write_uint16(context, mid)) return 1;
+
+	return 0;
+}
+

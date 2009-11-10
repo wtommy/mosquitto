@@ -117,10 +117,12 @@ int mqtt3_handle_pubrec(mqtt3_context *context);
 int mqtt3_handle_suback(mqtt3_context *context);
 int mqtt3_handle_subscribe(mqtt3_context *context);
 int mqtt3_handle_unsuback(mqtt3_context *context);
+int mqtt3_handle_unsubscribe(mqtt3_context *context);
 
 /* Database handling */
 int mqtt3_db_open(const char *filename);
 int mqtt3_db_close(void);
 int mqtt3_db_insert_sub(mqtt3_context *context, uint8_t *sub, int qos);
+int mqtt3_db_delete_sub(mqtt3_context *context, uint8_t *sub);
 
 #endif
