@@ -86,6 +86,16 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	return mqtt3_raw_connack(context, 0);
 }
 
+int mqtt3_handle_disconnect(mqtt3_context *context)
+{
+	uint32_t remaining_length;
+
+	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
+
+	/* FIXME - handle this correctly */
+	return 0;
+}
+
 int mqtt3_handle_puback(mqtt3_context *context)
 {
 	uint32_t remaining_length;

@@ -109,6 +109,7 @@ int mqtt3_managed_publish(mqtt3_context *context, uint8_t qos, bool retain, cons
 /* Read handling functions */
 int mqtt3_handle_connack(mqtt3_context *context);
 int mqtt3_handle_connect(mqtt3_context *context);
+int mqtt3_handle_disconnect(mqtt3_context *context);
 int mqtt3_handle_pingreq(mqtt3_context *context);
 int mqtt3_handle_puback(mqtt3_context *context);
 int mqtt3_handle_pubcomp(mqtt3_context *context);

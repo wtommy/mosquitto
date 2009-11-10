@@ -90,6 +90,9 @@ int handle_read(mqtt3_context *context)
 		case CONNECT:
 			if(mqtt3_handle_connect(context)) return 1;
 			break;
+		case DISCONNECT:
+			if(mqtt3_handle_disconnect(context)) return 1;
+			break;
 		case PINGREQ:
 			if(mqtt3_handle_pingreq(context)) return 1;
 			break;
