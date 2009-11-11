@@ -32,7 +32,6 @@ void mqtt3_check_keepalive(mqtt3_context *context)
 int handle_read(mqtt3_context *context)
 {
 	uint8_t buf;
-	uint32_t remaining;
 	int rc;
 
 	rc = read(context->sock, &buf, 1);
@@ -46,40 +45,33 @@ int handle_read(mqtt3_context *context)
 
 	switch(buf&0xF0){
 		case CONNACK:
-			if(mqtt3_handle_connack(context)){
-				return 3;
-			}
+			if(mqtt3_handle_connack(context)) return 3;
 			state = stConnAckd;
 			break;
 		case SUBACK:
-			mqtt3_handle_suback(context);
+			if(mqtt3_handle_suback(context)) return 3;
 			state = stSubAckd;
 			break;
 		case PINGREQ:
-			printf("Received PINGREQ\n");
-			mqtt3_read_remaining_length(context, &remaining);
-			mqtt3_raw_pingresp(context);
+			if(mqtt3_handle_pingreq(context)) return 3;
 			break;
 		case PINGRESP:
-			printf("Received PINGRESP\n");
-			mqtt3_read_remaining_length(context, &remaining);
-			//FIXME - do something!
+			if(mqtt3_handle_pingresp(context)) return 3;
 			break;
 		case PUBACK:
-			mqtt3_handle_puback(context);
+			if(mqtt3_handle_puback(context)) return 3;
 			break;
 		case PUBCOMP:
-			mqtt3_handle_pubcomp(context);
+			if(mqtt3_handle_pubcomp(context)) return 3;
 			break;
 		case PUBLISH:
-			printf("Received PUBLISH\n");
-			mqtt3_handle_publish(context, buf);
+			if(mqtt3_handle_publish(context, buf)) return 3;
 			break;
 		case PUBREC:
-			mqtt3_handle_pubrec(context);
+			if(mqtt3_handle_pubrec(context)) return 3;
 			break;
 		case UNSUBACK:
-			mqtt3_handle_unsuback(context);
+			if(mqtt3_handle_unsuback(context)) return 3;
 			break;
 		default:
 			printf("Unknown command: %s (%d)\n", mqtt3_command_to_string(buf&0xF0), buf&0xF0);
