@@ -6,7 +6,7 @@ LDFLAGS=-lsqlite3
 
 all : state
 
-state : state.o database.o managed_send.o messages.o net.o raw_send.o read_handle.o util.o
+state : state.o database.o managed_send.o messages.o net.o raw_send.o read_handle.o read_handle_client.o util.o
 	${CC} $(LDFLAGS) $^ -o $@
 
 state.o : state.c ../library/mqtt3.h
@@ -28,6 +28,9 @@ raw_send.o : ../library/raw_send.c ../library/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 read_handle.o : ../library/read_handle.c ../library/mqtt3.h
+	${CC} $(CFLAGS) -c $< -o $@
+
+read_handle_client.o : ../library/read_handle_client.c ../library/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 util.o : ../library/util.c ../library/mqtt3.h
