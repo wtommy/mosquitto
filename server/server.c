@@ -64,7 +64,6 @@ mqtt3_context *mqtt3_init_context(int sock)
 	context->last_mid = 0;
 	context->id = NULL;
 	context->messages = NULL;
-	context->subscriptions = NULL;
 
 	return context;
 }

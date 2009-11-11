@@ -46,12 +46,6 @@ typedef struct _mqtt3_message {
 	uint32_t payload_len;
 } mqtt3_message;
 
-typedef struct _mqtt3_subscription {
-	struct _mqtt3_subscription *next;
-	char *topic;
-	uint8_t qos;
-} mqtt3_subscription;
-
 typedef struct _mqtt3_context{
 	struct _mqtt3_context *next;
 	int sock;
@@ -60,7 +54,6 @@ typedef struct _mqtt3_context{
 	uint8_t *id;
 	uint16_t last_mid;
 	mqtt3_message *messages;
-	mqtt3_subscription *subscriptions;
 } mqtt3_context;
 
 /* Utility functions */
