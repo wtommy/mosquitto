@@ -36,6 +36,16 @@ int mqtt3_handle_pingreq(mqtt3_context *context)
 	return mqtt3_raw_pingresp(context);
 }
 
+int mqtt3_handle_pingresp(mqtt3_context *context)
+{
+	uint32_t remaining_length;
+
+	printf("Received PINGRESP\n");
+	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
+
+	return 0;
+}
+
 int mqtt3_handle_pubcomp(mqtt3_context *context)
 {
 	uint32_t remaining_length;

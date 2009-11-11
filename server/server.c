@@ -96,6 +96,9 @@ int handle_read(mqtt3_context *context)
 		case PINGREQ:
 			if(mqtt3_handle_pingreq(context)) return 1;
 			break;
+		case PINGRESP:
+			if(mqtt3_handle_pingresp(context)) return 1;
+			break;
 		case PUBLISH:
 			if(mqtt3_handle_publish(context, byte)) return 1;
 			break;
