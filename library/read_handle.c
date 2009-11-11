@@ -44,6 +44,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	uint8_t connect_flags;
 	uint8_t *client_id;
 	uint8_t *will_topic = NULL, *will_message = NULL;
+	uint8_t will, will_retain, will_qos, clean_start;
 	
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_string(context, &protocol_name)) return 1;
@@ -64,6 +65,11 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	free(protocol_name);
 
 	if(mqtt3_read_byte(context, &connect_flags)) return 1;
+	clean_start = connect_flags & 0x02;
+	will = connect_flags & 0x04;
+	will_qos = (connect_flags & 0x18) >> 2;
+	will_retain = connect_flags & 0x20;
+
 	if(mqtt3_read_uint16(context, &(context->keepalive))) return 1;
 
 	if(mqtt3_read_string(context, &client_id)) return 1;
@@ -80,6 +86,10 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	}
 	context->id = client_id;
 	/* FIXME - save will */
+
+	/* FIXME - act on return value */
+	mqtt3_db_insert_client(context, will, will_retain, will_qos, will_topic, will_message);
+
 	if(will_topic) free(will_topic);
 	if(will_message) free(will_message);
 

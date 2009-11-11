@@ -61,6 +61,31 @@ int _mqtt3_db_create_tables(void)
 	return rc;
 }
 
+int mqtt3_db_insert_client(mqtt3_context *context, int will, int will_retain, int will_qos, int8_t *will_topic, int8_t *will_message)
+{
+	int rc = 0;
+	char query[1024];
+	char *errmsg;
+
+	if(!context) return 1;
+
+	sqlite3_snprintf(1024, query, "INSERT INTO clients "
+			"(id,will,will_retain,will_qos,will_topic,will_message) "
+			"SELECT '%q',%d,%d,%d,'%q','%q',%d WHERE NOT EXISTS "
+			"(SELECT * FROM clients WHERE id='%q')",
+			context->id, will, will_retain, will_qos, will_topic, will_message);
+	
+	if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+		rc = 1;
+	}
+	if(errmsg){
+		fprintf(stderr, "Error: %s\n", errmsg);
+		sqlite3_free(errmsg);
+	}
+
+	return rc;
+}
+
 int mqtt3_db_insert_sub(mqtt3_context *context, uint8_t *sub, int qos)
 {
 	int rc = 0;
