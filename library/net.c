@@ -51,6 +51,7 @@ int mqtt3_connect_socket(const char *ip, uint16_t port)
 int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte)
 {
 	if(read(context->sock, byte, 1) == 1){
+		context->last_message = time(NULL);
 		return 0;
 	}else{
 		return 1;
@@ -69,6 +70,7 @@ int mqtt3_write_byte(mqtt3_context *context, uint8_t byte)
 int mqtt3_read_bytes(mqtt3_context *context, uint8_t *bytes, uint32_t count)
 {
 	if(read(context->sock, bytes, count) == count){
+		context->last_message = time(NULL);
 		return 0;
 	}else{
 		return 1;
