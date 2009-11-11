@@ -121,5 +121,7 @@ int mqtt3_db_insert_client(mqtt3_context *context, int will, int will_retain, in
 int mqtt3_db_delete_client(mqtt3_context *context);
 int mqtt3_db_insert_sub(mqtt3_context *context, uint8_t *sub, int qos);
 int mqtt3_db_delete_sub(mqtt3_context *context, uint8_t *sub);
+int mqtt3_db_search_sub_start(mqtt3_context *context, uint8_t *sub);
+int mqtt3_db_search_sub_next(uint8_t *client_id, uint8_t *qos);
 
 #endif

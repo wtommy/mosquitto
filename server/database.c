@@ -1,9 +1,11 @@
 #include <sqlite3.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <mqtt3.h>
 
-static sqlite3 *db;
+static sqlite3 *db = NULL;
+static sqlite3_stmt *sub_search_stmt = NULL;
 
 int _mqtt3_db_create_tables(void);
 
@@ -23,6 +25,10 @@ int mqtt3_db_open(const char *filename)
 
 int mqtt3_db_close(void)
 {
+	if(sub_search_stmt){
+		sqlite3_finalize(sub_search_stmt);
+	}
+
 	sqlite3_close(db);
 	db = NULL;
 
@@ -154,5 +160,36 @@ int mqtt3_db_delete_sub(mqtt3_context *context, uint8_t *sub)
 	}
 
 	return rc;
+}
+
+int mqtt3_db_search_sub_start(mqtt3_context *context, uint8_t *sub)
+{
+	char query[1024];
+
+	if(!context || !sub) return 1;
+
+	if(sub_search_stmt){
+		sqlite3_finalize(sub_search_stmt);
+	}
+
+	sqlite3_snprintf(1024, query, "SELECT id,qos FROM subs where sub='%q'", sub);
+	
+	if(sqlite3_prepare_v2(db, query, 1024, &sub_search_stmt, NULL) != SQLITE_OK) return 1;
+
+	return 0;
+}
+
+int mqtt3_db_search_sub_next(uint8_t *client_id, uint8_t *qos)
+{
+	if(!sub_search_stmt) return 1;
+	if(sqlite3_step(sub_search_stmt) != SQLITE_ROW){
+		sqlite3_finalize(sub_search_stmt);
+		sub_search_stmt = NULL;
+		return 1;
+	}
+	client_id = strdup(sqlite3_column_text(sub_search_stmt, 0));
+	*qos = sqlite3_column_int(sub_search_stmt, 1);
+
+	return 0;
 }
 
