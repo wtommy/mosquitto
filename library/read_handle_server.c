@@ -10,6 +10,7 @@
 
 #include <mqtt3.h>
 
+/* FIXME - Incomplete */
 int mqtt3_handle_connect(mqtt3_context *context)
 {
 	uint32_t remaining_length;
@@ -70,6 +71,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	return mqtt3_raw_connack(context, 0);
 }
 
+/* FIXME - Incomplete */
 int mqtt3_handle_disconnect(mqtt3_context *context)
 {
 	uint32_t remaining_length;
@@ -98,7 +100,6 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 	remaining_length -= 2;
 
 	while(remaining_length){
-		/* FIXME - Need to do something with this */
 		sub = NULL;
 		if(mqtt3_read_string(context, &sub)){
 			if(sub) free(sub);
@@ -136,13 +137,11 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 
 	if(!context) return 1;
 
-	printf("Received UNSUBSCRIBE\n");
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 	remaining_length -= 2;
 
 	while(remaining_length){
-		/* FIXME - Need to do something with this */
 		sub = NULL;
 		if(mqtt3_read_string(context, &sub)){
 			if(sub) free(sub);
