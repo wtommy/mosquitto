@@ -50,7 +50,7 @@ int mqtt3_raw_publish(mqtt3_context *context, bool dup, uint8_t qos, bool retain
 	/* Payload */
 	if(mqtt3_write_bytes(context, payload, payloadlen)) return 1;
 
-	context->last_message = time(NULL);
+	context->last_msg_out = time(NULL);
 	return 0;
 }
 
@@ -78,7 +78,7 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, int client_
 		if(mqtt3_write_string(context, will_msg, will_msg_len)) return 1;
 	}
 
-	context->last_message = time(NULL);
+	context->last_msg_out = time(NULL);
 	context->keepalive = keepalive;
 	return 0;
 }
@@ -105,7 +105,7 @@ int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_
 	if(mqtt3_write_remaining_length(context, 2)) return 1;
 	if(mqtt3_write_uint16(context, mid)) return 1;
 
-	context->last_message = time(NULL);
+	context->last_msg_out = time(NULL);
 	return 0;
 }
 
@@ -115,7 +115,7 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command)
 	if(mqtt3_write_byte(context, command)) return 1;
 	if(mqtt3_write_byte(context, 0)) return 1;
 
-	context->last_message = time(NULL);
+	context->last_msg_out = time(NULL);
 	return 0;
 }
 
@@ -154,7 +154,7 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 	if(mqtt3_write_string(context, topic, topiclen)) return 1;
 	if(mqtt3_write_byte(context, topic_qos)) return 1;
 
-	context->last_message = time(NULL);
+	context->last_msg_out = time(NULL);
 	return 0;
 }
 
@@ -178,7 +178,7 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic, u
 	/* Payload */
 	if(mqtt3_write_string(context, topic, topiclen)) return 1;
 
-	context->last_message = time(NULL);
+	context->last_msg_out = time(NULL);
 	return 0;
 }
 

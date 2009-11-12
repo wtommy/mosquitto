@@ -59,7 +59,8 @@ mqtt3_context *mqtt3_init_context(int sock)
 	
 	context->next = NULL;
 	context->sock = sock;
-	context->last_message = time(NULL);
+	context->last_msg_in = time(NULL);
+	context->last_msg_out = time(NULL);
 	context->keepalive = 60; /* Default to 60s */
 	context->last_mid = 0;
 	context->id = NULL;

@@ -78,7 +78,7 @@ int mqtt3_managed_send(mqtt3_context *context, mqtt3_message *message)
 		mqtt3_cleanup_message(message);
 	}
 
-	context->last_message = time(NULL);
+	context->last_msg_out = time(NULL);
 
 	return 0;
 }
