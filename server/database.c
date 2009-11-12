@@ -45,7 +45,7 @@ int _mqtt3_db_create_tables(void)
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS clients("
 		"id TEXT, "
-		"will INTEGER, will_retain INTEGER, will_qos INTEGER"
+		"will INTEGER, will_retain INTEGER, will_qos INTEGER, "
 		"will_topic TEXT, will_message TEXT)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
@@ -77,7 +77,7 @@ int mqtt3_db_insert_client(mqtt3_context *context, int will, int will_retain, in
 
 	sqlite3_snprintf(1024, query, "INSERT INTO clients "
 			"(id,will,will_retain,will_qos,will_topic,will_message) "
-			"SELECT '%q',%d,%d,%d,'%q','%q',%d WHERE NOT EXISTS "
+			"SELECT '%q',%d,%d,%d,'%q','%q' WHERE NOT EXISTS "
 			"(SELECT * FROM clients WHERE id='%q')",
 			context->id, will, will_retain, will_qos, will_topic, will_message);
 	
