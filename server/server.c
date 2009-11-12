@@ -98,8 +98,20 @@ int handle_read(mqtt3_context *context)
 		case PINGRESP:
 			if(mqtt3_handle_pingresp(context)) return 1;
 			break;
+		case PUBACK:
+			if(mqtt3_handle_puback(context)) return 1;
+			break;
+		case PUBCOMP:
+			if(mqtt3_handle_puback(context)) return 1;
+			break;
 		case PUBLISH:
 			if(mqtt3_handle_publish(context, byte)) return 1;
+			break;
+		case PUBREC:
+			if(mqtt3_handle_pubrec(context)) return 1;
+			break;
+		case PUBREL:
+			if(mqtt3_handle_pubrel(context)) return 1;
 			break;
 		case SUBSCRIBE:
 			if(mqtt3_handle_subscribe(context)) return 1;
