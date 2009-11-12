@@ -70,46 +70,53 @@ int _mqtt3_db_create_tables(void)
 int mqtt3_db_insert_client(mqtt3_context *context, int will, int will_retain, int will_qos, int8_t *will_topic, int8_t *will_message)
 {
 	int rc = 0;
-	char query[1024];
+	char *query = NULL;
 	char *errmsg;
 
 	if(!context) return 1;
 
-	sqlite3_snprintf(1024, query, "INSERT INTO clients "
+	query = sqlite3_mprintf("INSERT INTO clients "
 			"(id,will,will_retain,will_qos,will_topic,will_message) "
 			"SELECT '%q',%d,%d,%d,'%q','%q' WHERE NOT EXISTS "
 			"(SELECT * FROM clients WHERE id='%q')",
 			context->id, will, will_retain, will_qos, will_topic, will_message);
 	
-	if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
-		rc = 1;
+	if(query){
+		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+			rc = 1;
+		}
+		sqlite3_free(query);
+		if(errmsg){
+			fprintf(stderr, "Error: %s\n", errmsg);
+			sqlite3_free(errmsg);
+		}
+	}else{
+		return 1;
 	}
-	if(errmsg){
-		fprintf(stderr, "Error: %s\n", errmsg);
-		sqlite3_free(errmsg);
-	}
-
 	return rc;
 }
 
 int mqtt3_db_delete_client(mqtt3_context *context)
 {
 	int rc = 0;
-	char query[1024];
+	char *query = NULL;
 	char *errmsg;
 
 	if(!context || !(context->id)) return 1;
 
-	sqlite3_snprintf(1024, query, "DELETE FROM clients "
-			"WHERE client_id='%q'",
-			context->id);
+	query = sqlite3_mprintf("DELETE FROM clients WHERE client_id='%q'", context->id);
 	
-	if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
-		rc = 1;
-	}
-	if(errmsg){
-		fprintf(stderr, "Error: %s\n", errmsg);
-		sqlite3_free(errmsg);
+	if(query){
+		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+			rc = 1;
+		}
+		sqlite3_free(query);
+		if(errmsg){
+			fprintf(stderr, "Error: %s\n", errmsg);
+			sqlite3_free(errmsg);
+		}
+	}else{
+		return 1;
 	}
 
 	return rc;
@@ -118,22 +125,27 @@ int mqtt3_db_delete_client(mqtt3_context *context)
 int mqtt3_db_insert_sub(mqtt3_context *context, uint8_t *sub, int qos)
 {
 	int rc = 0;
-	char query[1024];
+	char *query = NULL;
 	char *errmsg;
 
 	if(!context || !sub) return 1;
 
-	sqlite3_snprintf(1024, query, "INSERT INTO subs (client_id,sub,qos) "
+	query = sqlite3_mprintf("INSERT INTO subs (client_id,sub,qos) "
 			"SELECT '%q','%q',%d WHERE NOT EXISTS "
 			"(SELECT * FROM subs WHERE client_id='%q' AND sub='%q')",
 			context->id, sub, qos, context->id, sub);
 	
-	if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
-		rc = 1;
-	}
-	if(errmsg){
-		fprintf(stderr, "Error: %s\n", errmsg);
-		sqlite3_free(errmsg);
+	if(query){
+		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+			rc = 1;
+		}
+		sqlite3_free(query);
+		if(errmsg){
+			fprintf(stderr, "Error: %s\n", errmsg);
+			sqlite3_free(errmsg);
+		}
+	}else{
+		return 1;
 	}
 
 	return rc;
@@ -142,21 +154,25 @@ int mqtt3_db_insert_sub(mqtt3_context *context, uint8_t *sub, int qos)
 int mqtt3_db_delete_sub(mqtt3_context *context, uint8_t *sub)
 {
 	int rc = 0;
-	char query[1024];
+	char *query = NULL;
 	char *errmsg;
 
 	if(!context || !sub) return 1;
 
-	sqlite3_snprintf(1024, query, "DELETE FROM subs "
-			"WHERE client_id='%q' AND sub='%q'",
+	query = sqlite3_mprintf("DELETE FROM subs WHERE client_id='%q' AND sub='%q'",
 			context->id, sub);
 	
-	if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
-		rc = 1;
-	}
-	if(errmsg){
-		fprintf(stderr, "Error: %s\n", errmsg);
-		sqlite3_free(errmsg);
+	if(query){
+		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+			rc = 1;
+		}
+		sqlite3_free(query);
+		if(errmsg){
+			fprintf(stderr, "Error: %s\n", errmsg);
+			sqlite3_free(errmsg);
+		}
+	}else{
+		return 1;
 	}
 
 	return rc;
@@ -164,7 +180,8 @@ int mqtt3_db_delete_sub(mqtt3_context *context, uint8_t *sub)
 
 int mqtt3_db_search_sub_start(mqtt3_context *context, uint8_t *sub)
 {
-	char query[1024];
+	char *query = NULL;
+	int rc = 0;
 
 	if(!context || !sub) return 1;
 
@@ -172,11 +189,16 @@ int mqtt3_db_search_sub_start(mqtt3_context *context, uint8_t *sub)
 		sqlite3_finalize(sub_search_stmt);
 	}
 
-	sqlite3_snprintf(1024, query, "SELECT id,qos FROM subs where sub='%q'", sub);
+	query = sqlite3_mprintf("SELECT id,qos FROM subs where sub='%q'", sub);
 	
-	if(sqlite3_prepare_v2(db, query, 1024, &sub_search_stmt, NULL) != SQLITE_OK) return 1;
+	if(query){
+		if(sqlite3_prepare_v2(db, query, -1, &sub_search_stmt, NULL) != SQLITE_OK) rc = 1;
+		sqlite3_free(query);
+	}else{
+		return 1;
+	}
 
-	return 0;
+	return rc;
 }
 
 int mqtt3_db_search_sub_next(uint8_t *client_id, uint8_t *qos)
