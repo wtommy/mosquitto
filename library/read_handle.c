@@ -109,3 +109,16 @@ int mqtt3_handle_pubrec(mqtt3_context *context)
 	return 0;
 }
 
+int mqtt3_handle_pubrel(mqtt3_context *context)
+{
+	uint32_t remaining_length;
+	uint16_t mid;
+
+	/* FIXME - deal with mid properly */
+	printf("Received PUBREL\n");
+	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
+	if(mqtt3_read_uint16(context, &mid)) return 1;
+
+	return 0;
+}
+
