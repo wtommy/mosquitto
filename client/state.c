@@ -24,7 +24,7 @@ static stateType state = stStart;
 
 void mqtt3_check_keepalive(mqtt3_context *context)
 {
-	if(time(NULL) - context->last_message >= context->keepalive){
+	if(time(NULL) - context->last_msg_out >= context->keepalive){
 		mqtt3_raw_pingreq(context);
 	}
 }
