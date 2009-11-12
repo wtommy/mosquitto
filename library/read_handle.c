@@ -62,6 +62,7 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 	uint32_t remaining_length;
 	uint8_t dup, qos, retain;
 	uint16_t mid;
+	int rc = 0;
 
 	dup = (header & 0x08)>>3;
 	qos = (header & 0x06)>>1;
@@ -74,24 +75,40 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 	if(mqtt3_read_string(context, &topic)) return 1;
 	remaining_length -= strlen((char *)topic) + 2;
 	printf("Topic: '%s'\n", topic);
-	free(topic);
 
 	if(qos > 0){
-		if(mqtt3_read_uint16(context, &mid)) return 1;
+		if(mqtt3_read_uint16(context, &mid)){
+			free(topic);
+			return 1;
+		}
 		remaining_length -= 2;
 	}
 
 	printf("Remaining length: %d\n", remaining_length);
 	payload = calloc((remaining_length+1), sizeof(uint8_t));
-	if(mqtt3_read_bytes(context, payload, remaining_length)) return 1;
+	if(mqtt3_read_bytes(context, payload, remaining_length)){
+		free(topic);
+		return 1;
+	}
 	printf("Payload: '%s'\n", payload);
+
+	switch(qos){
+		case 0:
+			// FIXME - implement: mqtt3_pub_to_subs(qos, retain, topic, payload, payloadlen);
+			break;
+		case 1:
+			/* FIXME - need to store message somewhere */
+			if(mqtt3_raw_puback(context, mid)) rc = 1;
+			break;
+		case 2:
+			/* FIXME - need to store message somewhere */
+			if(mqtt3_raw_pubrec(context, mid)) rc = 1;
+			break;
+	}
+	free(topic);
 	free(payload);
 
-	if(qos == 1){
-		mqtt3_raw_puback(context, mid);
-	}
-
-	return 0;
+	return rc;
 }
 
 int mqtt3_handle_pubrec(mqtt3_context *context)
