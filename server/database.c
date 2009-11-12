@@ -79,7 +79,7 @@ int mqtt3_db_insert_client(mqtt3_context *context, int will, int will_retain, in
 			"(id,will,will_retain,will_qos,will_topic,will_message) "
 			"SELECT '%q',%d,%d,%d,'%q','%q' WHERE NOT EXISTS "
 			"(SELECT * FROM clients WHERE id='%q')",
-			context->id, will, will_retain, will_qos, will_topic, will_message);
+			context->id, will, will_retain, will_qos, will_topic, will_message, context->id);
 	
 	if(query){
 		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
