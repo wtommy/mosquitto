@@ -121,7 +121,7 @@ int mqtt3_handle_pubrec(mqtt3_context *context)
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 
-	mqtt3_raw_pubrel(context, mid);
+	if(mqtt3_raw_pubrel(context, mid)) return 1;
 
 	return 0;
 }
