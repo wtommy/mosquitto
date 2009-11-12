@@ -25,12 +25,7 @@ int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 {
-	if(mqtt3_write_byte(context, PUBACK)) return 1;
-	if(mqtt3_write_remaining_length(context, 2)) return 1;
-	if(mqtt3_write_uint16(context, mid)) return 1;
-
-	context->last_message = time(NULL);
-	return 0;
+	return mqtt3_send_command_with_mid(context, PUBACK, mid);
 }
 
 int mqtt3_raw_publish(mqtt3_context *context, bool dup, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen)
@@ -88,9 +83,25 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, int client_
 	return 0;
 }
 
+int mqtt3_raw_pubcomp(mqtt3_context *context, uint16_t mid)
+{
+	return mqtt3_send_command_with_mid(context, PUBCOMP, mid);
+}
+
+int mqtt3_raw_pubrec(mqtt3_context *context, uint16_t mid)
+{
+	return mqtt3_send_command_with_mid(context, PUBREC, mid);
+}
+
 int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid)
 {
-	if(mqtt3_write_byte(context, PUBREL)) return 1;
+	return mqtt3_send_command_with_mid(context, PUBREL, mid);
+}
+
+/* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
+int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid)
+{
+	if(mqtt3_write_byte(context, command)) return 1;
 	if(mqtt3_write_remaining_length(context, 2)) return 1;
 	if(mqtt3_write_uint16(context, mid)) return 1;
 

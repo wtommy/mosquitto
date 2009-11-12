@@ -61,13 +61,16 @@ const char *mqtt3_command_to_string(uint8_t command);
 uint16_t mqtt3_generate_message_id(void);
 
 /* Raw send functions - just construct the packet and send */
+int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid);
 int mqtt3_raw_connack(mqtt3_context *context, uint8_t result);
 int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool cleanstart);
 int mqtt3_raw_disconnect(mqtt3_context *context);
 int mqtt3_raw_pingreq(mqtt3_context *context);
 int mqtt3_raw_pingresp(mqtt3_context *context);
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid);
+int mqtt3_raw_pubcomp(mqtt3_context *context, uint16_t mid);
 int mqtt3_raw_publish(mqtt3_context *context, bool dup, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen);
+int mqtt3_raw_pubrec(mqtt3_context *context, uint16_t mid);
 int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid);
 int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uint16_t topiclen, uint8_t topic_qos);
 int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic, uint16_t topiclen);
