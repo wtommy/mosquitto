@@ -102,7 +102,7 @@ int handle_read(mqtt3_context *context)
 			if(mqtt3_handle_puback(context)) return 1;
 			break;
 		case PUBCOMP:
-			if(mqtt3_handle_puback(context)) return 1;
+			if(mqtt3_handle_pubcomp(context)) return 1;
 			break;
 		case PUBLISH:
 			if(mqtt3_handle_publish(context, byte)) return 1;
