@@ -132,6 +132,7 @@ int main(int argc, char *argv[])
 {
 	struct timespec timeout;
 	fd_set readfds, writefds;
+	sigset_t sigblock;
 	int fdcount; int listensock;
 	int new_sock;
 	mqtt3_context *contexts = NULL;
@@ -141,6 +142,9 @@ int main(int argc, char *argv[])
 	int sockmax;
 
 	signal(SIGINT, handle_sigint);
+
+	sigemptyset(&sigblock);
+	sigaddset(&sigblock, SIGINT);
 
 	if(mqtt3_db_open("mosquitto.db")){
 		fprintf(stderr, "Error: Couldn't open database.\n");
@@ -172,7 +176,7 @@ int main(int argc, char *argv[])
 		timeout.tv_sec = 1;
 		timeout.tv_nsec = 0;
 
-		fdcount = pselect(sockmax+1, &readfds, &writefds, NULL, &timeout, NULL);
+		fdcount = pselect(sockmax+1, &readfds, &writefds, NULL, &timeout, &sigblock);
 		if(fdcount == -1){
 			fprintf(stderr, "Error in pselect: %s\n", strerror(errno));
 		}else if(fdcount == 0){
