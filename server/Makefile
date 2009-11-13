@@ -37,4 +37,4 @@ util.o : ../library/util.c ../library/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 clean : 
-	-rm -f *.o state
+	-rm -f *.o server
