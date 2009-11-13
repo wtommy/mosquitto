@@ -7,7 +7,7 @@ LDFLAGS=-lsqlite3 -nopie
 all : server
 
 server : server.o database.o managed_send.o messages.o net.o raw_send.o read_handle.o read_handle_server.o util.o
-	${CC} $(LDFLAGS) $^ -o $@
+	${CC} $^ -o $@ ${LDFLAGS}
 
 server.o : server.c ../library/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
