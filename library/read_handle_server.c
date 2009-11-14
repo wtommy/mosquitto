@@ -33,7 +33,8 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	if(mqtt3_read_byte(context, &protocol_version)) return 1;
 	if(protocol_version != PROTOCOL_VERSION){
 		free(protocol_name);
-		return 1;
+		// FIXME - should disconnect as well
+		return mqtt3_raw_connack(context, 1);
 	}
 
 	printf("Received CONNECT for protocol %s version %d\n", protocol_name, protocol_version);
