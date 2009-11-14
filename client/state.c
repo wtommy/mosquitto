@@ -111,7 +111,6 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "Error in pselect: %s\n", strerror(errno));
 			run = 0;
 		}else if(fdcount == 0){
-			printf("loop timeout\n");
 			pointer = context.messages;
 			while(pointer){
 				printf("Message: %s\n", mqtt3_command_to_string(pointer->command));

@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 		if(fdcount == -1){
 			fprintf(stderr, "Error in pselect: %s\n", strerror(errno));
 		}else if(fdcount == 0){
-			printf("loop timeout\n");
+			// FIXME - update server topics here
 		}else{
 			ctxt_ptr = contexts;
 			ctxt_last = NULL;
