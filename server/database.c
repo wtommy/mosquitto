@@ -128,6 +128,34 @@ int mqtt3_db_delete_client(mqtt3_context *context)
 	return rc;
 }
 
+int mqtt3_db_find_client_sock(const char *client_id, int *sock)
+{
+	int rc = 0;
+	char *query = NULL;
+	char *errmsg;
+	sqlite3_stmt *stmt;
+
+	if(!client_id || !sock) return 1;
+
+	query = sqlite3_mprintf("SELECT sock FROM clients WHERE id='%q'", client_id);
+
+	if(query){
+		if(sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) rc = 1;
+		sqlite3_free(query);
+
+		if(sqlite3_step(stmt) == SQLITE_ROW){
+			*sock = sqlite3_column_int(stmt, 0);
+			sqlite3_finalize(stmt);
+		}else{
+			rc = 1;
+		}
+	}else{
+		return 1;
+	}
+
+	return rc;
+}
+
 int _mqtt3_db_invalidate_socks(void)
 {
 	int rc = 0;

@@ -20,6 +20,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	uint8_t *client_id;
 	uint8_t *will_topic = NULL, *will_message = NULL;
 	uint8_t will, will_retain, will_qos, clean_start;
+	int oldsock;
 	
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_string(context, &protocol_name)) return 1;
@@ -53,6 +54,17 @@ int mqtt3_handle_connect(mqtt3_context *context)
 		if(mqtt3_read_string(context, &will_topic)) return 1;
 		if(mqtt3_read_string(context, &will_message)) return 1;
 	}
+
+	if(!mqtt3_db_find_client_sock(client_id, &oldsock)){
+		if(oldsock == -1){
+			/* Client is reconnecting after a disconnect */
+		}else{
+			/* Client is already connected, disconnect old version */
+			fprintf(stderr, "Client %s already connected, closing old connection.\n", client_id);
+			close(oldsock);
+		}
+	}
+
 	if(context->id){
 		/* FIXME - second CONNECT!
 		 * FIXME - Need to check for existing client with same name

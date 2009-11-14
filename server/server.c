@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <sys/select.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <mqtt3.h>
@@ -75,10 +76,11 @@ int main(int argc, char *argv[])
 	int fdcount; int listensock;
 	int new_sock;
 	mqtt3_context *contexts = NULL;
-	mqtt3_context *ctxt_ptr, *ctxt_last;
+	mqtt3_context *ctxt_ptr, *ctxt_last, *ctxt_next;
 	mqtt3_context *new_context;
 	mqtt3_context *ctxt_reap;
 	int sockmax;
+	struct stat statbuf;
 
 	signal(SIGINT, handle_sigint);
 
@@ -103,6 +105,7 @@ int main(int argc, char *argv[])
 		ctxt_ptr = contexts;
 		while(ctxt_ptr){
 			if(ctxt_ptr->sock != -1){
+				printf("sock: %d\n", ctxt_ptr->sock);
 				FD_SET(ctxt_ptr->sock, &readfds);
 				if(ctxt_ptr->sock > sockmax){
 					sockmax = ctxt_ptr->sock;
@@ -117,6 +120,34 @@ int main(int argc, char *argv[])
 
 		fdcount = pselect(sockmax+1, &readfds, &writefds, NULL, &timeout, &sigblock);
 		if(fdcount == -1){
+			/* Error ocurred, probably an fd has been closed. 
+			 * Loop through and check them all.
+			 */
+			
+			if(contexts){
+				ctxt_ptr = contexts;
+				ctxt_last = NULL;
+				while(ctxt_ptr){
+					ctxt_next = ctxt_ptr->next;
+					if(fstat(ctxt_ptr->sock, &statbuf) == -1){
+						if(errno == EBADF){
+							ctxt_reap = ctxt_ptr;
+							if(ctxt_last){
+								ctxt_last->next = ctxt_ptr->next;
+							}else{
+								contexts = ctxt_ptr->next;
+							}
+							ctxt_reap->sock = -1;
+							mqtt3_cleanup_context(ctxt_reap);
+							ctxt_next = contexts;
+							ctxt_last = NULL;
+						}
+					}else{
+						ctxt_last = ctxt_ptr;
+					}
+					ctxt_ptr = ctxt_next;
+				}
+			}
 			fprintf(stderr, "Error in pselect: %s\n", strerror(errno));
 		}else if(fdcount == 0){
 			// FIXME - update server topics here

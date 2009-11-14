@@ -125,6 +125,7 @@ int mqtt3_db_open(const char *filename);
 int mqtt3_db_close(void);
 int mqtt3_db_insert_client(mqtt3_context *context, int will, int will_retain, int will_qos, int8_t *will_topic, int8_t *will_message);
 int mqtt3_db_delete_client(mqtt3_context *context);
+int mqtt3_db_find_client_sock(const char *client_id, int *sock);
 int mqtt3_db_insert_sub(mqtt3_context *context, uint8_t *sub, int qos);
 int mqtt3_db_delete_sub(mqtt3_context *context, uint8_t *sub);
 int mqtt3_db_search_sub_start(mqtt3_context *context, uint8_t *sub);
