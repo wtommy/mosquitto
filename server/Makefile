@@ -6,10 +6,13 @@ LDFLAGS=-lsqlite3 -nopie
 
 all : server
 
-server : server.o database.o managed_send.o messages.o net.o raw_send.o read_handle.o read_handle_server.o util.o
+server : server.o context.o database.o managed_send.o messages.o net.o raw_send.o read_handle.o read_handle_server.o util.o
 	${CC} $^ -o $@ ${LDFLAGS}
 
 server.o : server.c ../library/mqtt3.h
+	${CC} $(CFLAGS) -c $< -o $@
+
+context.o : ../library/context.c ../library/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 database.o : database.c ../library/mqtt3.h
