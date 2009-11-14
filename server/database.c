@@ -8,6 +8,7 @@ static sqlite3 *db = NULL;
 static sqlite3_stmt *sub_search_stmt = NULL;
 
 int _mqtt3_db_create_tables(void);
+int _mqtt3_db_invalidate_socks(void);
 
 int mqtt3_db_open(const char *filename)
 {
@@ -20,7 +21,11 @@ int mqtt3_db_open(const char *filename)
 		return 1;
 	}
 
-	return _mqtt3_db_create_tables();
+	if(!_mqtt3_db_create_tables()){
+		return _mqtt3_db_invalidate_socks();
+	}
+	
+	return 1;
 }
 
 int mqtt3_db_close(void)
@@ -44,6 +49,7 @@ int _mqtt3_db_create_tables(void)
 
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS clients("
+		"sock INTEGER, "
 		"id TEXT, "
 		"will INTEGER, will_retain INTEGER, will_qos INTEGER, "
 		"will_topic TEXT, will_message TEXT)",
@@ -76,10 +82,10 @@ int mqtt3_db_insert_client(mqtt3_context *context, int will, int will_retain, in
 	if(!context) return 1;
 
 	query = sqlite3_mprintf("INSERT INTO clients "
-			"(id,will,will_retain,will_qos,will_topic,will_message) "
-			"SELECT '%q',%d,%d,%d,'%q','%q' WHERE NOT EXISTS "
+			"(sock,id,will,will_retain,will_qos,will_topic,will_message) "
+			"SELECT %d,'%q',%d,%d,%d,'%q','%q' WHERE NOT EXISTS "
 			"(SELECT * FROM clients WHERE id='%q')",
-			context->id, will, will_retain, will_qos, will_topic, will_message, context->id);
+			context->sock, context->id, will, will_retain, will_qos, will_topic, will_message, context->id);
 	
 	if(query){
 		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
@@ -106,6 +112,31 @@ int mqtt3_db_delete_client(mqtt3_context *context)
 
 	query = sqlite3_mprintf("DELETE FROM clients WHERE client_id='%q'", context->id);
 	
+	if(query){
+		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+			rc = 1;
+		}
+		sqlite3_free(query);
+		if(errmsg){
+			fprintf(stderr, "Error: %s\n", errmsg);
+			sqlite3_free(errmsg);
+		}
+	}else{
+		return 1;
+	}
+
+	return rc;
+}
+
+int _mqtt3_db_invalidate_socks(void)
+{
+	int rc = 0;
+	char *query = NULL;
+	char *errmsg;
+
+	if(!db) return 1;
+
+	query = sqlite3_mprintf("UPDATE clients SET sock=-1");
 	if(query){
 		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
 			rc = 1;
