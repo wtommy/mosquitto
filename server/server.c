@@ -20,36 +20,6 @@ void handle_sigint(int signal)
 	run = 0;
 }
 
-int mqtt3_listen_socket(uint16_t port)
-{
-	int sock;
-	struct sockaddr_in addr;
-
-	sock = socket(AF_INET, SOCK_STREAM, 0);
-	if(sock == -1){
-		fprintf(stderr, "Error: %s\n", strerror(errno));
-		return -1;
-	}
-
-	memset(&addr, 0, sizeof(struct sockaddr_in));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
-
-	if(bind(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_in)) == -1){
-		fprintf(stderr, "Error: %s\n", strerror(errno));
-		fflush(stderr);
-		return -1;
-	}
-
-	if(listen(sock, 100) == -1){
-		fprintf(stderr, "Error: %s\n", strerror(errno));
-		fflush(stderr);
-		return -1;
-	}
-
-	return sock;
-}
-
 mqtt3_context *mqtt3_init_context(int sock)
 {
 	mqtt3_context *context;

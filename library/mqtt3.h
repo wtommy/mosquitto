@@ -80,6 +80,7 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command);
 /* Network functions */
 int mqtt3_connect_socket(const char *ip, uint16_t port);
 int mqtt3_close_socket(mqtt3_context *context);
+int mqtt3_listen_socket(uint16_t port);
 
 int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte);
 int mqtt3_read_bytes(mqtt3_context *context, uint8_t *bytes, uint32_t count);
