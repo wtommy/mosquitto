@@ -330,3 +330,29 @@ int mqtt3_db_search_sub_next(uint8_t *client_id, uint8_t *qos)
 	return 0;
 }
 
+int mqtt3_db_clean_start_subs(mqtt3_context *context)
+{
+	int rc = 0;
+	char *query = NULL;
+	char *errmsg;
+
+	if(!context || !(context->id)) return 1;
+
+	query = sqlite3_mprintf("DELETE FROM subs WHERE client_id='%q'", context->id);
+	
+	if(query){
+		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+			rc = 1;
+		}
+		sqlite3_free(query);
+		if(errmsg){
+			fprintf(stderr, "Error: %s\n", errmsg);
+			sqlite3_free(errmsg);
+		}
+	}else{
+		return 1;
+	}
+
+	return rc;
+}
+
