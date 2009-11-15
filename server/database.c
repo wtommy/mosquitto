@@ -132,7 +132,6 @@ int mqtt3_db_find_client_sock(const char *client_id, int *sock)
 {
 	int rc = 0;
 	char *query = NULL;
-	char *errmsg;
 	sqlite3_stmt *stmt;
 
 	if(!client_id || !sock) return 1;
