@@ -25,17 +25,21 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_string(context, &protocol_name)) return 1;
 	if(!protocol_name){
+		mqtt3_cleanup_context(context);
 		return 3;
 	}
 	if(strcmp(protocol_name, PROTOCOL_NAME)){
 		free(protocol_name);
+		mqtt3_cleanup_context(context);
 		return 1;
 	}
 	if(mqtt3_read_byte(context, &protocol_version)) return 1;
 	if(protocol_version != PROTOCOL_VERSION){
 		free(protocol_name);
 		// FIXME - should disconnect as well
-		return mqtt3_raw_connack(context, 1);
+		mqtt3_raw_connack(context, 1);
+		mqtt3_cleanup_context(context);
+		return 1;
 	}
 
 	printf("Received CONNECT for protocol %s version %d\n", protocol_name, protocol_version);
