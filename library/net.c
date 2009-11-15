@@ -16,6 +16,7 @@ int mqtt3_close_socket(mqtt3_context *context)
 
 	if(!context) return -1;
 	if(context->sock != -1){
+		mqtt3_db_invalidate_sock(context->id, context->sock);
 		rc = close(context->sock);
 		context->sock = -1;
 	}

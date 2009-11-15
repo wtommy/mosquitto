@@ -181,6 +181,33 @@ int _mqtt3_db_invalidate_socks(void)
 	return rc;
 }
 
+int mqtt3_db_invalidate_sock(const char *client_id, int sock)
+{
+	int rc = 0;
+	char *query = NULL;
+	char *errmsg;
+
+	if(!db || !client_id) return 1;
+
+	query = sqlite3_mprintf("UPDATE clients SET sock=-1 "
+			"WHERE id='%q' AND sock=%d",
+			client_id, sock);
+	if(query){
+		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+			rc = 1;
+		}
+		sqlite3_free(query);
+		if(errmsg){
+			fprintf(stderr, "Error: %s\n", errmsg);
+			sqlite3_free(errmsg);
+		}
+	}else{
+		return 1;
+	}
+
+	return rc;
+}
+
 int mqtt3_db_insert_sub(mqtt3_context *context, uint8_t *sub, int qos)
 {
 	int rc = 0;
