@@ -138,6 +138,7 @@ int main(int argc, char *argv[])
 					state = stPause;
 					break;
 				case stPause:
+					mqtt3_raw_disconnect(&context);
 					printf("Pause\n");
 					break;
 				default:
