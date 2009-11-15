@@ -102,6 +102,36 @@ int mqtt3_db_insert_client(mqtt3_context *context, int will, int will_retain, in
 	return rc;
 }
 
+int mqtt3_db_update_client(mqtt3_context *context, int will, int will_retain, int will_qos, int8_t *will_topic, int8_t *will_message)
+{
+	int rc = 0;
+	char *query = NULL;
+	char *errmsg;
+
+	if(!context) return 1;
+
+	query = sqlite3_mprintf("UPDATE clients SET "
+			"sock=%d,will=%d,will_retain=%d,will_qos=%d,"
+			"will_topic='%q',will_message='%q' "
+			"WHERE id='%q'",
+			context->sock, will, will_retain, will_qos,
+			will_topic, will_message, context->id);
+	
+	if(query){
+		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+			rc = 1;
+		}
+		sqlite3_free(query);
+		if(errmsg){
+			fprintf(stderr, "Error: %s\n", errmsg);
+			sqlite3_free(errmsg);
+		}
+	}else{
+		return 1;
+	}
+	return rc;
+}
+
 int mqtt3_db_delete_client(mqtt3_context *context)
 {
 	int rc = 0;
