@@ -81,6 +81,7 @@ int main(int argc, char *argv[])
 	mqtt3_context *ctxt_reap;
 	int sockmax;
 	struct stat statbuf;
+	time_t now;
 
 	signal(SIGINT, handle_sigint);
 
@@ -103,12 +104,19 @@ int main(int argc, char *argv[])
 
 		sockmax = listensock;
 		ctxt_ptr = contexts;
+		now = time(NULL);
 		while(ctxt_ptr){
 			if(ctxt_ptr->sock != -1){
 				printf("sock: %d\n", ctxt_ptr->sock);
 				FD_SET(ctxt_ptr->sock, &readfds);
 				if(ctxt_ptr->sock > sockmax){
 					sockmax = ctxt_ptr->sock;
+				}
+				if(now - ctxt_ptr->last_msg_in > ctxt_ptr->keepalive*3/2){
+					/* Client has exceeded keepalive*1.5 
+					 * Close socket - it is still in the fd set so will get reaped on the 
+					 * pselect error. FIXME - Better to remove it properly. */
+					close(ctxt_ptr->sock);
 				}
 			}
 			ctxt_ptr = ctxt_ptr->next;
