@@ -56,7 +56,7 @@ int mqtt3_managed_publish(mqtt3_context *context, uint8_t qos, bool retain, cons
 	message->payload_len = payloadlen;
 
 	if(message->qos){
-		mqtt3_add_message(context, message);
+		mqtt3_message_add(context, message);
 	}
 	mqtt3_managed_send(context, message);
 	return 0;
@@ -75,7 +75,7 @@ int mqtt3_managed_send(mqtt3_context *context, mqtt3_message *message)
 	if(message->qos){
 		message->timestamp = time(NULL);
 	}else{
-		mqtt3_cleanup_message(message);
+		mqtt3_message_cleanup(message);
 	}
 
 	context->last_msg_out = time(NULL);

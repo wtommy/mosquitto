@@ -2,7 +2,7 @@
 
 #include <mqtt3.h>
 
-mqtt3_context *mqtt3_init_context(int sock)
+mqtt3_context *mqtt3_context_init(int sock)
 {
 	mqtt3_context *context;
 
@@ -21,12 +21,12 @@ mqtt3_context *mqtt3_init_context(int sock)
 	return context;
 }
 
-void mqtt3_cleanup_context(mqtt3_context *context)
+void mqtt3_context_cleanup(mqtt3_context *context)
 {
 	if(!context) return;
 
 	if(context->sock != -1){
-		mqtt3_close_socket(context);
+		mqtt3_socket_close(context);
 	}
 	if(context->id) free(context->id);
 	/* FIXME - clean messages and subscriptions */

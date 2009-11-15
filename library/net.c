@@ -10,13 +10,13 @@
 
 #include <mqtt3.h>
 
-int mqtt3_close_socket(mqtt3_context *context)
+int mqtt3_socket_close(mqtt3_context *context)
 {
 	int rc = -1;
 
 	if(!context) return -1;
 	if(context->sock != -1){
-		mqtt3_db_invalidate_sock(context->id, context->sock);
+		mqtt3_db_client_invalidate_socket(context->id, context->sock);
 		rc = close(context->sock);
 		context->sock = -1;
 	}
@@ -24,7 +24,7 @@ int mqtt3_close_socket(mqtt3_context *context)
 	return rc;
 }
 
-int mqtt3_connect_socket(const char *ip, uint16_t port)
+int mqtt3_socket_connect(const char *ip, uint16_t port)
 {
 	int sock;
 	struct sockaddr_in addr;
@@ -49,7 +49,7 @@ int mqtt3_connect_socket(const char *ip, uint16_t port)
 	return sock;
 }
 
-int mqtt3_listen_socket(uint16_t port)
+int mqtt3_socket_listen(uint16_t port)
 {
 	int sock;
 	struct sockaddr_in addr;

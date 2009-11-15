@@ -25,12 +25,12 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_string(context, &protocol_name)) return 1;
 	if(!protocol_name){
-		mqtt3_cleanup_context(context);
+		mqtt3_context_cleanup(context);
 		return 3;
 	}
 	if(strcmp(protocol_name, PROTOCOL_NAME)){
 		free(protocol_name);
-		mqtt3_cleanup_context(context);
+		mqtt3_context_cleanup(context);
 		return 1;
 	}
 	if(mqtt3_read_byte(context, &protocol_version)) return 1;
@@ -38,7 +38,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 		free(protocol_name);
 		// FIXME - should disconnect as well
 		mqtt3_raw_connack(context, 1);
-		mqtt3_cleanup_context(context);
+		mqtt3_context_cleanup(context);
 		return 1;
 	}
 
@@ -69,7 +69,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 
 	context->id = client_id;
 
-	if(!mqtt3_db_find_client_sock(client_id, &oldsock)){
+	if(!mqtt3_db_client_find_socket(client_id, &oldsock)){
 		if(oldsock == -1){
 			/* Client is reconnecting after a disconnect */
 		}else{
@@ -77,14 +77,14 @@ int mqtt3_handle_connect(mqtt3_context *context)
 			fprintf(stderr, "Client %s already connected, closing old connection.\n", client_id);
 			close(oldsock);
 		}
-		mqtt3_db_update_client(context, will, will_retain, will_qos, will_topic, will_message);
+		mqtt3_db_client_update(context, will, will_retain, will_qos, will_topic, will_message);
 	}else{
 		/* FIXME - act on return value */
-		mqtt3_db_insert_client(context, will, will_retain, will_qos, will_topic, will_message);
+		mqtt3_db_client_insert(context, will, will_retain, will_qos, will_topic, will_message);
 	}
 
 	if(clean_start){
-		mqtt3_db_clean_start_subs(context);
+		mqtt3_db_subs_clean_start(context);
 	}
 	/* FIXME - save will */
 
@@ -99,7 +99,7 @@ int mqtt3_handle_disconnect(mqtt3_context *context)
 	uint32_t remaining_length;
 
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
-	return mqtt3_close_socket(context);
+	return mqtt3_socket_close(context);
 }
 
 
@@ -130,7 +130,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 		if(mqtt3_read_byte(context, &qos)) return 1;
 		remaining_length -= 1;
 		if(sub){
-			mqtt3_db_insert_sub(context, sub, qos);
+			mqtt3_db_sub_insert(context, sub, qos);
 			free(sub);
 		}
 
@@ -170,7 +170,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 
 		remaining_length -= strlen(sub) + 2;
 		if(sub){
-			mqtt3_db_delete_sub(context, sub);
+			mqtt3_db_sub_delete(context, sub);
 			free(sub);
 		}
 	}

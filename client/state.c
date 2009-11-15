@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 	mqtt3_context context;
 	mqtt3_message *pointer;
 
-	context.sock = mqtt3_connect_socket("127.0.0.1", 1883);
+	context.sock = mqtt3_socket_connect("127.0.0.1", 1883);
 	if(context.sock == -1){
 		return 1;
 	}
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 			if(FD_ISSET(context.sock, &readfds)){
 				if(handle_read(&context)){
 					fprintf(stderr, "Socket closed on remote side\n");
-					mqtt3_close_socket(&context);
+					mqtt3_socket_close(&context);
 					run = 0;
 				}
 			}

@@ -21,7 +21,7 @@ int mqtt3_handle_puback(mqtt3_context *context)
 
 	if(mid){
 		printf("Removing message %d\n", mid);
-		mqtt3_remove_message(context, mid);
+		mqtt3_message_remove(context, mid);
 	}
 	return 0;
 }
@@ -51,7 +51,7 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 
 	if(mid){
 		printf("Removing message %d\n", mid);
-		mqtt3_remove_message(context, mid);
+		mqtt3_message_remove(context, mid);
 	}
 	return 0;
 }

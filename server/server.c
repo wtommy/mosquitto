@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Error: Couldn't open database.\n");
 	}
 
-	listensock = mqtt3_listen_socket(1883);
+	listensock = mqtt3_socket_listen(1883);
 	if(listensock == -1){
 		return 1;
 	}
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
 								contexts = ctxt_ptr->next;
 							}
 							ctxt_reap->sock = -1;
-							mqtt3_cleanup_context(ctxt_reap);
+							mqtt3_context_cleanup(ctxt_reap);
 							ctxt_next = contexts;
 							ctxt_last = NULL;
 						}
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 						if(ctxt_last){
 							ctxt_last->next = ctxt_ptr->next;
 							ctxt_ptr = ctxt_last;
-							mqtt3_cleanup_context(ctxt_reap);
+							mqtt3_context_cleanup(ctxt_reap);
 						}else{
 							/* In this case, the reaped context is at index 0.
 							 * We can't reference index -1, so ctxt_ptr =
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
 							 */
 							contexts = ctxt_ptr->next;
 							ctxt_ptr = contexts;
-							mqtt3_cleanup_context(ctxt_reap);
+							mqtt3_context_cleanup(ctxt_reap);
 							if(!contexts) break;
 						}
 					}
@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
 			}
 			if(FD_ISSET(listensock, &readfds)){
 				new_sock = accept(listensock, NULL, 0);
-				new_context = mqtt3_init_context(new_sock);
+				new_context = mqtt3_context_init(new_sock);
 				if(contexts){
 					ctxt_ptr = contexts;
 					while(ctxt_ptr->next){
@@ -199,10 +199,10 @@ int main(int argc, char *argv[])
 
 	ctxt_ptr = contexts;
 	while(ctxt_ptr){
-		mqtt3_close_socket(ctxt_ptr);
+		mqtt3_socket_close(ctxt_ptr);
 		ctxt_last = ctxt_ptr;
 		ctxt_ptr = ctxt_ptr->next;
-		mqtt3_cleanup_context(ctxt_last);
+		mqtt3_context_cleanup(ctxt_last);
 	}
 	close(listensock);
 

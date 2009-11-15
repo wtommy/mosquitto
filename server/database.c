@@ -7,8 +7,8 @@
 static sqlite3 *db = NULL;
 static sqlite3_stmt *sub_search_stmt = NULL;
 
-int _mqtt3_db_create_tables(void);
-int _mqtt3_db_invalidate_socks(void);
+int _mqtt3_db_tables_create(void);
+int _mqtt3_db_invalidate_sockets(void);
 
 int mqtt3_db_open(const char *filename)
 {
@@ -21,8 +21,8 @@ int mqtt3_db_open(const char *filename)
 		return 1;
 	}
 
-	if(!_mqtt3_db_create_tables()){
-		return _mqtt3_db_invalidate_socks();
+	if(!_mqtt3_db_tables_create()){
+		return _mqtt3_db_invalidate_sockets();
 	}
 	
 	return 1;
@@ -42,7 +42,7 @@ int mqtt3_db_close(void)
 	return 0;
 }
 
-int _mqtt3_db_create_tables(void)
+int _mqtt3_db_tables_create(void)
 {
 	int rc = 0;
 	char *errmsg = NULL;
@@ -73,7 +73,7 @@ int _mqtt3_db_create_tables(void)
 	return rc;
 }
 
-int mqtt3_db_insert_client(mqtt3_context *context, int will, int will_retain, int will_qos, int8_t *will_topic, int8_t *will_message)
+int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, int8_t *will_topic, int8_t *will_message)
 {
 	int rc = 0;
 	char *query = NULL;
@@ -102,7 +102,7 @@ int mqtt3_db_insert_client(mqtt3_context *context, int will, int will_retain, in
 	return rc;
 }
 
-int mqtt3_db_update_client(mqtt3_context *context, int will, int will_retain, int will_qos, int8_t *will_topic, int8_t *will_message)
+int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, int8_t *will_topic, int8_t *will_message)
 {
 	int rc = 0;
 	char *query = NULL;
@@ -132,7 +132,7 @@ int mqtt3_db_update_client(mqtt3_context *context, int will, int will_retain, in
 	return rc;
 }
 
-int mqtt3_db_delete_client(mqtt3_context *context)
+int mqtt3_db_client_delete(mqtt3_context *context)
 {
 	int rc = 0;
 	char *query = NULL;
@@ -158,7 +158,7 @@ int mqtt3_db_delete_client(mqtt3_context *context)
 	return rc;
 }
 
-int mqtt3_db_find_client_sock(const char *client_id, int *sock)
+int mqtt3_db_client_find_socket(const char *client_id, int *sock)
 {
 	int rc = 0;
 	char *query = NULL;
@@ -185,7 +185,7 @@ int mqtt3_db_find_client_sock(const char *client_id, int *sock)
 	return rc;
 }
 
-int _mqtt3_db_invalidate_socks(void)
+int _mqtt3_db_invalidate_sockets(void)
 {
 	int rc = 0;
 	char *query = NULL;
@@ -210,7 +210,7 @@ int _mqtt3_db_invalidate_socks(void)
 	return rc;
 }
 
-int mqtt3_db_invalidate_sock(const char *client_id, int sock)
+int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
 {
 	int rc = 0;
 	char *query = NULL;
@@ -237,7 +237,7 @@ int mqtt3_db_invalidate_sock(const char *client_id, int sock)
 	return rc;
 }
 
-int mqtt3_db_insert_sub(mqtt3_context *context, uint8_t *sub, int qos)
+int mqtt3_db_sub_insert(mqtt3_context *context, uint8_t *sub, int qos)
 {
 	int rc = 0;
 	char *query = NULL;
@@ -266,7 +266,7 @@ int mqtt3_db_insert_sub(mqtt3_context *context, uint8_t *sub, int qos)
 	return rc;
 }
 
-int mqtt3_db_delete_sub(mqtt3_context *context, uint8_t *sub)
+int mqtt3_db_sub_delete(mqtt3_context *context, uint8_t *sub)
 {
 	int rc = 0;
 	char *query = NULL;
@@ -293,7 +293,7 @@ int mqtt3_db_delete_sub(mqtt3_context *context, uint8_t *sub)
 	return rc;
 }
 
-int mqtt3_db_search_sub_start(mqtt3_context *context, uint8_t *sub)
+int mqtt3_db_sub_search_start(mqtt3_context *context, uint8_t *sub)
 {
 	char *query = NULL;
 	int rc = 0;
@@ -316,7 +316,7 @@ int mqtt3_db_search_sub_start(mqtt3_context *context, uint8_t *sub)
 	return rc;
 }
 
-int mqtt3_db_search_sub_next(uint8_t *client_id, uint8_t *qos)
+int mqtt3_db_sub_search_next(uint8_t *client_id, uint8_t *qos)
 {
 	if(!sub_search_stmt) return 1;
 	if(sqlite3_step(sub_search_stmt) != SQLITE_ROW){
@@ -330,7 +330,7 @@ int mqtt3_db_search_sub_next(uint8_t *client_id, uint8_t *qos)
 	return 0;
 }
 
-int mqtt3_db_clean_start_subs(mqtt3_context *context)
+int mqtt3_db_subs_clean_start(mqtt3_context *context)
 {
 	int rc = 0;
 	char *query = NULL;
