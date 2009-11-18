@@ -58,7 +58,8 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 
 int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 {
-	uint8_t *topic, *payload;
+	char *topic;
+	uint8_t *payload;
 	uint32_t remaining_length;
 	uint8_t dup, qos, retain;
 	uint16_t mid;

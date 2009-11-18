@@ -52,7 +52,7 @@ typedef struct _mqtt3_context{
 	time_t last_msg_in;
 	time_t last_msg_out;
 	uint16_t keepalive;
-	uint8_t *id;
+	char *id;
 	uint16_t last_mid;
 	mqtt3_message *messages;
 } mqtt3_context;
@@ -84,7 +84,7 @@ int mqtt3_socket_listen(uint16_t port);
 
 int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte);
 int mqtt3_read_bytes(mqtt3_context *context, uint8_t *bytes, uint32_t count);
-int mqtt3_read_string(mqtt3_context *context, uint8_t **str);
+int mqtt3_read_string(mqtt3_context *context, char **str);
 int mqtt3_read_remaining_length(mqtt3_context *context, uint32_t *remaining);
 int mqtt3_read_uint16(mqtt3_context *context, uint16_t *word);
 
@@ -123,15 +123,15 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context);
 /* Database handling */
 int mqtt3_db_open(const char *filename);
 int mqtt3_db_close(void);
-int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, int8_t *will_topic, int8_t *will_message);
-int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, int8_t *will_topic, int8_t *will_message);
+int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message);
+int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message);
 int mqtt3_db_client_delete(mqtt3_context *context);
 int mqtt3_db_client_find_socket(const char *client_id, int *sock);
 int mqtt3_db_client_invalidate_socket(const char *client_id, int sock);
-int mqtt3_db_sub_insert(mqtt3_context *context, uint8_t *sub, int qos);
-int mqtt3_db_sub_delete(mqtt3_context *context, uint8_t *sub);
-int mqtt3_db_sub_search_start(mqtt3_context *context, uint8_t *sub);
-int mqtt3_db_sub_search_next(uint8_t *client_id, uint8_t *qos);
+int mqtt3_db_sub_insert(mqtt3_context *context, const char *sub, int qos);
+int mqtt3_db_sub_delete(mqtt3_context *context, const char *sub);
+int mqtt3_db_sub_search_start(mqtt3_context *context, const char *sub);
+int mqtt3_db_sub_search_next(char *client_id, uint8_t *qos);
 int mqtt3_db_subs_clean_start(mqtt3_context *context);
 
 /* Context functions */

@@ -73,7 +73,7 @@ int _mqtt3_db_tables_create(void)
 	return rc;
 }
 
-int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, int8_t *will_topic, int8_t *will_message)
+int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
 {
 	int rc = 0;
 	char *query = NULL;
@@ -102,7 +102,7 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 	return rc;
 }
 
-int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, int8_t *will_topic, int8_t *will_message)
+int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
 {
 	int rc = 0;
 	char *query = NULL;
@@ -237,7 +237,7 @@ int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
 	return rc;
 }
 
-int mqtt3_db_sub_insert(mqtt3_context *context, uint8_t *sub, int qos)
+int mqtt3_db_sub_insert(mqtt3_context *context, const char *sub, int qos)
 {
 	int rc = 0;
 	char *query = NULL;
@@ -266,7 +266,7 @@ int mqtt3_db_sub_insert(mqtt3_context *context, uint8_t *sub, int qos)
 	return rc;
 }
 
-int mqtt3_db_sub_delete(mqtt3_context *context, uint8_t *sub)
+int mqtt3_db_sub_delete(mqtt3_context *context, const char *sub)
 {
 	int rc = 0;
 	char *query = NULL;
@@ -293,7 +293,7 @@ int mqtt3_db_sub_delete(mqtt3_context *context, uint8_t *sub)
 	return rc;
 }
 
-int mqtt3_db_sub_search_start(mqtt3_context *context, uint8_t *sub)
+int mqtt3_db_sub_search_start(mqtt3_context *context, const char *sub)
 {
 	char *query = NULL;
 	int rc = 0;
@@ -316,7 +316,7 @@ int mqtt3_db_sub_search_start(mqtt3_context *context, uint8_t *sub)
 	return rc;
 }
 
-int mqtt3_db_sub_search_next(uint8_t *client_id, uint8_t *qos)
+int mqtt3_db_sub_search_next(char *client_id, uint8_t *qos)
 {
 	if(!sub_search_stmt) return 1;
 	if(sqlite3_step(sub_search_stmt) != SQLITE_ROW){
@@ -324,7 +324,7 @@ int mqtt3_db_sub_search_next(uint8_t *client_id, uint8_t *qos)
 		sub_search_stmt = NULL;
 		return 1;
 	}
-	client_id = strdup(sqlite3_column_text(sub_search_stmt, 0));
+	client_id = strdup((char *)sqlite3_column_text(sub_search_stmt, 0));
 	*qos = sqlite3_column_int(sub_search_stmt, 1);
 
 	return 0;

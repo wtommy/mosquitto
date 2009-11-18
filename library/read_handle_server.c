@@ -14,11 +14,11 @@
 int mqtt3_handle_connect(mqtt3_context *context)
 {
 	uint32_t remaining_length;
-	uint8_t *protocol_name;
+	char *protocol_name;
 	uint8_t protocol_version;
 	uint8_t connect_flags;
-	uint8_t *client_id;
-	uint8_t *will_topic = NULL, *will_message = NULL;
+	char *client_id;
+	char *will_topic = NULL, *will_message = NULL;
 	uint8_t will, will_retain, will_qos, clean_start;
 	int oldsock;
 	
@@ -107,7 +107,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 {
 	uint32_t remaining_length;
 	uint16_t mid;
-	uint8_t *sub;
+	char *sub;
 	uint8_t qos;
 	uint8_t *payload = NULL;
 	uint8_t payloadlen = 0;
@@ -153,7 +153,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 {
 	uint32_t remaining_length;
 	uint16_t mid;
-	uint8_t *sub;
+	char *sub;
 
 	if(!context) return 1;
 

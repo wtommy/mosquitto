@@ -155,7 +155,7 @@ int mqtt3_write_remaining_length(mqtt3_context *context, uint32_t length)
 	return 0;
 }
 
-int mqtt3_read_string(mqtt3_context *context, uint8_t **str)
+int mqtt3_read_string(mqtt3_context *context, char **str)
 {
 	uint8_t msb, lsb;
 	uint16_t len;
@@ -165,9 +165,9 @@ int mqtt3_read_string(mqtt3_context *context, uint8_t **str)
 
 	len = (msb<<8) + lsb;
 
-	*str = calloc(len+1, sizeof(uint8_t));
+	*str = calloc(len+1, sizeof(char));
 	if(*str){
-		if(mqtt3_read_bytes(context, *str, len)){
+		if(mqtt3_read_bytes(context, (uint8_t *)*str, len)){
 			free(*str);
 			return 1;
 		}
