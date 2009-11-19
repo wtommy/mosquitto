@@ -64,7 +64,7 @@ uint16_t mqtt3_generate_message_id(void);
 /* Raw send functions - just construct the packet and send */
 int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid);
 int mqtt3_raw_connack(mqtt3_context *context, uint8_t result);
-int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool cleanstart);
+int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool clean_start);
 int mqtt3_raw_disconnect(mqtt3_context *context);
 int mqtt3_raw_pingreq(mqtt3_context *context);
 int mqtt3_raw_pingresp(mqtt3_context *context);

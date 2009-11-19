@@ -54,7 +54,7 @@ int mqtt3_raw_publish(mqtt3_context *context, bool dup, uint8_t qos, bool retain
 	return 0;
 }
 
-int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool cleanstart)
+int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool clean_start)
 {
 	int payloadlen;
 
@@ -68,7 +68,7 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, int client_
 	/* Variable header */
 	if(mqtt3_write_string(context, PROTOCOL_NAME, strlen(PROTOCOL_NAME))) return 1;
 	if(mqtt3_write_byte(context, PROTOCOL_VERSION)) return 1;
-	if(mqtt3_write_byte(context, (will_retain<<5) | (will_qos<<3) | (will<<2) | (cleanstart<<1))) return 1;
+	if(mqtt3_write_byte(context, (will_retain<<5) | (will_qos<<3) | (will<<2) | (clean_start<<1))) return 1;
 	if(mqtt3_write_uint16(context, keepalive)) return 1;
 
 	/* Payload */
