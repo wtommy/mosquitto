@@ -28,6 +28,10 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 	if(context->sock != -1){
 		mqtt3_socket_close(context);
 	}
+	if(context->clean_start){
+		mqtt3_db_subs_clean_start(context);
+		mqtt3_db_client_delete(context);
+	}
 	if(context->id) free(context->id);
 	/* FIXME - clean messages and subscriptions */
 	free(context);
