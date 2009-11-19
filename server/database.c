@@ -51,6 +51,7 @@ int _mqtt3_db_tables_create(void)
 		"CREATE TABLE IF NOT EXISTS clients("
 		"sock INTEGER, "
 		"id TEXT, "
+		"clean_start INTEGER, "
 		"will INTEGER, will_retain INTEGER, will_qos INTEGER, "
 		"will_topic TEXT, will_message TEXT)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
@@ -82,10 +83,10 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 	if(!context) return 1;
 
 	query = sqlite3_mprintf("INSERT INTO clients "
-			"(sock,id,will,will_retain,will_qos,will_topic,will_message) "
-			"SELECT %d,'%q',%d,%d,%d,'%q','%q' WHERE NOT EXISTS "
+			"(sock,id,clean_start,will,will_retain,will_qos,will_topic,will_message) "
+			"SELECT %d,'%q',%d,%d,%d,%d,'%q','%q' WHERE NOT EXISTS "
 			"(SELECT * FROM clients WHERE id='%q')",
-			context->sock, context->id, will, will_retain, will_qos, will_topic, will_message, context->id);
+			context->sock, context->id, context->clean_start, will, will_retain, will_qos, will_topic, will_message, context->id);
 	
 	if(query){
 		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
@@ -111,10 +112,10 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 	if(!context) return 1;
 
 	query = sqlite3_mprintf("UPDATE clients SET "
-			"sock=%d,will=%d,will_retain=%d,will_qos=%d,"
+			"sock=%d,clean_start=%d,will=%d,will_retain=%d,will_qos=%d,"
 			"will_topic='%q',will_message='%q' "
 			"WHERE id='%q'",
-			context->sock, will, will_retain, will_qos,
+			context->sock, context->clean_start, will, will_retain, will_qos,
 			will_topic, will_message, context->id);
 	
 	if(query){

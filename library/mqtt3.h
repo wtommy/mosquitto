@@ -52,6 +52,7 @@ typedef struct _mqtt3_context{
 	time_t last_msg_in;
 	time_t last_msg_out;
 	uint16_t keepalive;
+	bool clean_start;
 	char *id;
 	uint16_t last_mid;
 	mqtt3_message *messages;

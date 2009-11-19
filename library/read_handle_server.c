@@ -68,6 +68,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	}
 
 	context->id = client_id;
+	context->clean_start = clean_start;
 
 	if(!mqtt3_db_client_find_socket(client_id, &oldsock)){
 		if(oldsock == -1){
