@@ -73,7 +73,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	if(!mqtt3_db_client_find_socket(client_id, &oldsock)){
 		if(oldsock == -1){
 			/* Client is reconnecting after a disconnect */
-		}else{
+		}else if(oldsock != context->sock){
 			/* Client is already connected, disconnect old version */
 			fprintf(stderr, "Client %s already connected, closing old connection.\n", client_id);
 			close(oldsock);
