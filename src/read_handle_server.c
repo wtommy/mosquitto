@@ -28,13 +28,13 @@ int mqtt3_handle_connect(mqtt3_context *context)
 		return 3;
 	}
 	if(strcmp(protocol_name, PROTOCOL_NAME)){
-		free(protocol_name);
+		mqtt3_free(protocol_name);
 		mqtt3_context_cleanup(context);
 		return 1;
 	}
 	if(mqtt3_read_byte(context, &protocol_version)) return 1;
 	if(protocol_version != PROTOCOL_VERSION){
-		free(protocol_name);
+		mqtt3_free(protocol_name);
 		// FIXME - should disconnect as well
 		mqtt3_raw_connack(context, 1);
 		mqtt3_context_cleanup(context);
@@ -42,7 +42,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	}
 
 	printf("Received CONNECT for protocol %s version %d\n", protocol_name, protocol_version);
-	free(protocol_name);
+	mqtt3_free(protocol_name);
 
 	if(mqtt3_read_byte(context, &connect_flags)) return 1;
 	clean_start = connect_flags & 0x02;
@@ -63,7 +63,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 		 * FIXME - Need to check for existing client with same name
 		 * FIXME - Need to check for valid name
 		 */
-		free(context->id);
+		mqtt3_free(context->id);
 	}
 
 	context->id = client_id;
@@ -76,8 +76,8 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	}
 	/* FIXME - save will */
 
-	if(will_topic) free(will_topic);
-	if(will_message) free(will_message);
+	if(will_topic) mqtt3_free(will_topic);
+	if(will_message) mqtt3_free(will_message);
 
 	return mqtt3_raw_connack(context, 0);
 }
@@ -110,7 +110,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 	while(remaining_length){
 		sub = NULL;
 		if(mqtt3_read_string(context, &sub)){
-			if(sub) free(sub);
+			if(sub) mqtt3_free(sub);
 			return 1;
 		}
 
@@ -119,10 +119,10 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 		remaining_length -= 1;
 		if(sub){
 			mqtt3_db_sub_insert(context, sub, qos);
-			free(sub);
+			mqtt3_free(sub);
 		}
 
-		payload = realloc(payload, payloadlen + 1);
+		payload = mqtt3_realloc(payload, payloadlen + 1);
 		payload[payloadlen] = qos;
 		payloadlen++;
 	}
@@ -132,7 +132,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 	if(mqtt3_write_uint16(context, mid)) return 1;
 	if(mqtt3_write_bytes(context, payload, payloadlen)) return 1;
 
-	free(payload);
+	mqtt3_free(payload);
 	
 	return 0;
 }
@@ -152,14 +152,14 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 	while(remaining_length){
 		sub = NULL;
 		if(mqtt3_read_string(context, &sub)){
-			if(sub) free(sub);
+			if(sub) mqtt3_free(sub);
 			return 1;
 		}
 
 		remaining_length -= strlen(sub) + 2;
 		if(sub){
 			mqtt3_db_sub_delete(context, sub);
-			free(sub);
+			mqtt3_free(sub);
 		}
 	}
 

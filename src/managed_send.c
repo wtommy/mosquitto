@@ -26,7 +26,7 @@ int mqtt3_managed_publish(mqtt3_context *context, uint8_t qos, bool retain, cons
 	packetlen = 2+topiclen + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
 
-	message = calloc(sizeof(mqtt3_message), 1);
+	message = mqtt3_calloc(sizeof(mqtt3_message), 1);
 	
 	message->command = PUBLISH;
 	message->dup = 0;
@@ -40,18 +40,18 @@ int mqtt3_managed_publish(mqtt3_context *context, uint8_t qos, bool retain, cons
 	}
 	message->message_id = mid;
 	if(qos > 0){
-		message->variable_header = malloc((2+2+topiclen)*sizeof(uint8_t));
+		message->variable_header = mqtt3_malloc((2+2+topiclen)*sizeof(uint8_t));
 		message->variable_header[2+topiclen] = MQTT_MSB(mid);
 		message->variable_header[2+topiclen+1] = MQTT_LSB(mid);
 		message->variable_header_len = 2+2+topiclen;
 	}else{
-		message->variable_header = malloc((2+topiclen)*sizeof(uint8_t));
+		message->variable_header = mqtt3_malloc((2+topiclen)*sizeof(uint8_t));
 		message->variable_header_len = 2+topiclen;
 	}
 	message->variable_header[0] = MQTT_MSB(topiclen);
 	message->variable_header[1] = MQTT_LSB(topiclen);
 	memcpy(&(message->variable_header[2]), topic, topiclen);
-	message->payload = malloc(payloadlen*sizeof(uint8_t));
+	message->payload = mqtt3_malloc(payloadlen*sizeof(uint8_t));
 	memcpy(message->payload, payload, payloadlen);
 	message->payload_len = payloadlen;
 

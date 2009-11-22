@@ -79,16 +79,16 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 
 	if(qos > 0){
 		if(mqtt3_read_uint16(context, &mid)){
-			free(topic);
+			mqtt3_free(topic);
 			return 1;
 		}
 		remaining_length -= 2;
 	}
 
 	printf("Remaining length: %d\n", remaining_length);
-	payload = calloc((remaining_length+1), sizeof(uint8_t));
+	payload = mqtt3_calloc((remaining_length+1), sizeof(uint8_t));
 	if(mqtt3_read_bytes(context, payload, remaining_length)){
-		free(topic);
+		mqtt3_free(topic);
 		return 1;
 	}
 	printf("Payload: '%s'\n", payload);
@@ -106,8 +106,8 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 			if(mqtt3_raw_pubrec(context, mid)) rc = 1;
 			break;
 	}
-	free(topic);
-	free(payload);
+	mqtt3_free(topic);
+	mqtt3_free(payload);
 
 	return rc;
 }

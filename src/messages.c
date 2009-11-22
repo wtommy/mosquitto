@@ -51,9 +51,9 @@ int mqtt3_message_remove(mqtt3_context *context, uint16_t mid)
 void mqtt3_message_cleanup(mqtt3_message *message)
 {
 	if(!message) return;
-	if(message->variable_header) free(message->variable_header);
-	if(message->payload) free(message->payload);
-	free(message);
+	if(message->variable_header) mqtt3_free(message->variable_header);
+	if(message->payload) mqtt3_free(message->payload);
+	mqtt3_free(message);
 }
 
 void mqtt3_messages_cleanup(mqtt3_context *context)

@@ -346,7 +346,7 @@ int mqtt3_db_sub_search_next(char *client_id, uint8_t *qos)
 		sub_search_stmt = NULL;
 		return 1;
 	}
-	client_id = strdup((char *)sqlite3_column_text(sub_search_stmt, 0));
+	client_id = mqtt3_strdup((char *)sqlite3_column_text(sub_search_stmt, 0));
 	*qos = sqlite3_column_int(sub_search_stmt, 1);
 
 	return 0;

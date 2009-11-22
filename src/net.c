@@ -165,10 +165,10 @@ int mqtt3_read_string(mqtt3_context *context, char **str)
 
 	len = (msb<<8) + lsb;
 
-	*str = calloc(len+1, sizeof(char));
+	*str = mqtt3_calloc(len+1, sizeof(char));
 	if(*str){
 		if(mqtt3_read_bytes(context, (uint8_t *)*str, len)){
-			free(*str);
+			mqtt3_free(*str);
 			return 1;
 		}
 	}

@@ -139,4 +139,12 @@ int mqtt3_db_subs_clean_start(mqtt3_context *context);
 mqtt3_context *mqtt3_context_init(int sock);
 void mqtt3_context_cleanup(mqtt3_context *context);
 
+/* Memory functions */
+void *mqtt3_calloc(size_t nmemb, size_t size);
+void mqtt3_free(void *mem);
+void *mqtt3_malloc(size_t size);
+uint32_t mqtt3_memory_used(void);
+void *mqtt3_realloc(void *ptr, size_t size);
+char *mqtt3_strdup(const char *s);
+
 #endif
