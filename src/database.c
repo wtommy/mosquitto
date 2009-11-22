@@ -69,6 +69,14 @@ int _mqtt3_db_tables_create(void)
 		rc = 1;
 	}
 
+	if(sqlite3_exec(db,
+		"CREATE TABLE IF NOT EXISTS retain("
+		"sub TEXT, qos INTEGER, payloadlen INTEGER, payload BLOB)",
+		NULL, NULL, &errmsg) != SQLITE_OK){
+
+		rc = 1;
+	}
+
 	if(errmsg) sqlite3_free(errmsg);
 
 	return rc;
