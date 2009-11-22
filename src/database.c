@@ -315,12 +315,12 @@ int mqtt3_db_sub_delete(mqtt3_context *context, const char *sub)
 	return rc;
 }
 
-int mqtt3_db_sub_search_start(mqtt3_context *context, const char *sub)
+int mqtt3_db_sub_search_start(const char *sub)
 {
 	char *query = NULL;
 	int rc = 0;
 
-	if(!context || !sub) return 1;
+	if( sub) return 1;
 
 	if(sub_search_stmt){
 		sqlite3_finalize(sub_search_stmt);

@@ -131,7 +131,7 @@ int mqtt3_db_client_find_socket(const char *client_id, int *sock);
 int mqtt3_db_client_invalidate_socket(const char *client_id, int sock);
 int mqtt3_db_sub_insert(mqtt3_context *context, const char *sub, int qos);
 int mqtt3_db_sub_delete(mqtt3_context *context, const char *sub);
-int mqtt3_db_sub_search_start(mqtt3_context *context, const char *sub);
+int mqtt3_db_sub_search_start(const char *sub);
 int mqtt3_db_sub_search_next(char *client_id, uint8_t *qos);
 int mqtt3_db_subs_clean_start(mqtt3_context *context);
 
