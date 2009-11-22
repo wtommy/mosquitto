@@ -20,7 +20,6 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	char *client_id;
 	char *will_topic = NULL, *will_message = NULL;
 	uint8_t will, will_retain, will_qos, clean_start;
-	int oldsock;
 	
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_string(context, &protocol_name)) return 1;
@@ -70,19 +69,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	context->id = client_id;
 	context->clean_start = clean_start;
 
-	if(!mqtt3_db_client_find_socket(client_id, &oldsock)){
-		if(oldsock == -1){
-			/* Client is reconnecting after a disconnect */
-		}else if(oldsock != context->sock){
-			/* Client is already connected, disconnect old version */
-			fprintf(stderr, "Client %s already connected, closing old connection.\n", client_id);
-			close(oldsock);
-		}
-		mqtt3_db_client_update(context, will, will_retain, will_qos, will_topic, will_message);
-	}else{
-		/* FIXME - act on return value */
-		mqtt3_db_client_insert(context, will, will_retain, will_qos, will_topic, will_message);
-	}
+	mqtt3_db_client_insert(context, will, will_retain, will_qos, will_topic, will_message);
 
 	if(clean_start){
 		mqtt3_db_subs_clean_start(context);

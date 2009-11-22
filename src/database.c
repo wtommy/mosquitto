@@ -1,6 +1,7 @@
 #include <sqlite3.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <mqtt3.h>
 
@@ -87,26 +88,38 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 	int rc = 0;
 	char *query = NULL;
 	char *errmsg;
+	int oldsock;
 
 	if(!context) return 1;
 
-	query = sqlite3_mprintf("INSERT INTO clients "
-			"(sock,id,clean_start,will,will_retain,will_qos,will_topic,will_message) "
-			"SELECT %d,'%q',%d,%d,%d,%d,'%q','%q' WHERE NOT EXISTS "
-			"(SELECT * FROM clients WHERE id='%q')",
-			context->sock, context->id, context->clean_start, will, will_retain, will_qos, will_topic, will_message, context->id);
+	if(!mqtt3_db_client_find_socket(context->id, &oldsock)){
+		if(oldsock == -1){
+			/* Client is reconnecting after a disconnect */
+		}else if(oldsock != context->sock){
+			/* Client is already connected, disconnect old version */
+			fprintf(stderr, "Client %s already connected, closing old connection.\n", context->id);
+			close(oldsock);
+		}
+		mqtt3_db_client_update(context, will, will_retain, will_qos, will_topic, will_message);
+	}else{
+		query = sqlite3_mprintf("INSERT INTO clients "
+				"(sock,id,clean_start,will,will_retain,will_qos,will_topic,will_message) "
+				"SELECT %d,'%q',%d,%d,%d,%d,'%q','%q' WHERE NOT EXISTS "
+				"(SELECT * FROM clients WHERE id='%q')",
+				context->sock, context->id, context->clean_start, will, will_retain, will_qos, will_topic, will_message, context->id);
 	
-	if(query){
-		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+		if(query){
+			if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+				rc = 1;
+			}
+			sqlite3_free(query);
+			if(errmsg){
+				fprintf(stderr, "Error: %s\n", errmsg);
+				sqlite3_free(errmsg);
+			}
+		}else{
 			rc = 1;
 		}
-		sqlite3_free(query);
-		if(errmsg){
-			fprintf(stderr, "Error: %s\n", errmsg);
-			sqlite3_free(errmsg);
-		}
-	}else{
-		return 1;
 	}
 	return rc;
 }
