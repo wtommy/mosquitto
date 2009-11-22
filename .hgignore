@@ -1,6 +1,10 @@
 syntax: glob
 
 *.o
-client/client
 *.exe
 *.db
+
+man/mosquitto.8
+src/mosquitto
+test/test_client
+
