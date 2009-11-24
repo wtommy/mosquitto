@@ -129,6 +129,7 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 int mqtt3_db_client_delete(mqtt3_context *context);
 int mqtt3_db_client_find_socket(const char *client_id, int *sock);
 int mqtt3_db_client_invalidate_socket(const char *client_id, int sock);
+int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, uint8_t *payload);
 int mqtt3_db_sub_insert(mqtt3_context *context, const char *sub, int qos);
 int mqtt3_db_sub_delete(mqtt3_context *context, const char *sub);
 int mqtt3_db_sub_search_start(const char *sub);

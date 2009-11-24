@@ -7,9 +7,13 @@
 
 static sqlite3 *db = NULL;
 static sqlite3_stmt *sub_search_stmt = NULL;
+static sqlite3_stmt *stmt_retain_insert = NULL;
+static sqlite3_stmt *stmt_retain_update = NULL;
 
 int _mqtt3_db_tables_create(void);
 int _mqtt3_db_invalidate_sockets(void);
+int _mqtt3_db_statements_prepare(void);
+void _mqtt3_db_statements_finalize(void);
 
 int mqtt3_db_open(const char *filename)
 {
@@ -26,11 +30,15 @@ int mqtt3_db_open(const char *filename)
 		return _mqtt3_db_invalidate_sockets();
 	}
 	
+	_mqtt3_db_statements_prepare();
+
 	return 1;
 }
 
 int mqtt3_db_close(void)
 {
+	_mqtt3_db_statements_finalize();
+
 	if(sub_search_stmt){
 		sqlite3_finalize(sub_search_stmt);
 	}
@@ -81,6 +89,22 @@ int _mqtt3_db_tables_create(void)
 	if(errmsg) sqlite3_free(errmsg);
 
 	return rc;
+}
+
+int _mqtt3_db_statements_prepare(void)
+{
+	int rc = 0;
+
+	if(sqlite3_prepare_v2(db, "INSERT INTO retain VALUES (?,?,?,?)", -1, &stmt_retain_insert, NULL) != SQLITE_OK) rc = 1;
+	if(sqlite3_prepare_v2(db, "UPDATE retain SET qos=?,payloadlen=?,payload=? WHERE sub=?", -1, &stmt_retain_update, NULL) != SQLITE_OK) rc = 1;
+
+	return rc;
+}
+
+void _mqtt3_db_statements_finalize(void)
+{
+	if(stmt_retain_insert) sqlite3_finalize(stmt_retain_insert);
+	if(stmt_retain_update) sqlite3_finalize(stmt_retain_update);
 }
 
 int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
@@ -255,6 +279,23 @@ int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
 	}else{
 		return 1;
 	}
+
+	return rc;
+}
+
+int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, uint8_t *payload)
+{
+	int rc = 0;
+
+	if(!sub || !payloadlen || !payload) return 1;
+
+	if(sqlite3_bind_text(stmt_retain_insert, 0, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt_retain_insert, 1, qos) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt_retain_insert, 2, payloadlen) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_blob(stmt_retain_insert, 3, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_step(stmt_retain_insert) != SQLITE_DONE) rc = 1;
+	sqlite3_reset(stmt_retain_insert);
+	sqlite3_clear_bindings(stmt_retain_insert);
 
 	return rc;
 }
