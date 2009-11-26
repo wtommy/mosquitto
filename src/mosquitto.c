@@ -90,6 +90,7 @@ int main(int argc, char *argv[])
 
 	if(mqtt3_db_open("mosquitto.db")){
 		fprintf(stderr, "Error: Couldn't open database.\n");
+		return 1;
 	}
 
 	listensock = mqtt3_socket_listen(1883);
