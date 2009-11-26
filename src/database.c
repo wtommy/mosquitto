@@ -104,7 +104,7 @@ int _mqtt3_db_statements_prepare(void)
 			"sock=?,clean_start=?,will=?,will_retain=?,will_qos=?,"
 			"will_topic=?,will_message=? WHERE id=?",
 			-1, &stmt_client_update, NULL) != SQLITE_OK) rc = 1;
-	if(sqlite3_prepare_v2(db, "DELETE FROM clients WHERE client_id=?",
+	if(sqlite3_prepare_v2(db, "DELETE FROM clients WHERE id=?",
 			-1, &stmt_client_delete, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "INSERT INTO clients "
 				"(sock,id,clean_start,will,will_retain,will_qos,will_topic,will_message) "
@@ -118,7 +118,7 @@ int _mqtt3_db_statements_prepare(void)
 	if(sqlite3_prepare_v2(db, "INSERT INTO subs (client_id,sub,qos) "
 			"SELECT ?,?,? WHERE NOT EXISTS (SELECT * FROM subs WHERE client_id=? AND sub=?)",
 			-1, &stmt_sub_insert, NULL) != SQLITE_OK) rc = 1;
-	if(sqlite3_prepare_v2(db, "SELECT id,qos FROM subs where sub=?", -1, &stmt_sub_search, NULL) != SQLITE_OK) rc = 1;
+	if(sqlite3_prepare_v2(db, "SELECT client_id,qos FROM subs where sub=?", -1, &stmt_sub_search, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "DELETE FROM subs WHERE client_id=?", -1, &stmt_subs_delete, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "UPDATE clients SET sock=-1 WHERE id=? AND sock=?",
 			-1, &stmt_sock_invalidate, NULL) != SQLITE_OK) rc = 1;
