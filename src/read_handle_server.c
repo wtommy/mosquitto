@@ -71,11 +71,6 @@ int mqtt3_handle_connect(mqtt3_context *context)
 
 	mqtt3_db_client_insert(context, will, will_retain, will_qos, will_topic, will_message);
 
-	if(clean_start){
-		mqtt3_db_subs_clean_start(context);
-	}
-	/* FIXME - save will */
-
 	if(will_topic) mqtt3_free(will_topic);
 	if(will_message) mqtt3_free(will_message);
 
