@@ -7,6 +7,7 @@
 
 static sqlite3 *db = NULL;
 static sqlite3_stmt *stmt_client_delete = NULL;
+static sqlite3_stmt *stmt_client_insert = NULL;
 static sqlite3_stmt *stmt_client_update = NULL;
 static sqlite3_stmt *stmt_retain_insert = NULL;
 static sqlite3_stmt *stmt_retain_update = NULL;
@@ -104,6 +105,11 @@ int _mqtt3_db_statements_prepare(void)
 			-1, &stmt_client_update, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "DELETE FROM clients WHERE client_id=?",
 			-1, &stmt_client_delete, NULL) != SQLITE_OK) rc = 1;
+	if(sqlite3_prepare_v2(db, "INSERT INTO clients "
+				"(sock,id,clean_start,will,will_retain,will_qos,will_topic,will_message) "
+				"SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS "
+				"(SELECT 1 FROM clients WHERE id=?)",
+				-1, &stmt_client_insert, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "INSERT INTO retain VALUES (?,?,?,?)", -1, &stmt_retain_insert, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "UPDATE retain SET qos=?,payloadlen=?,payload=? WHERE sub=?", -1, &stmt_retain_update, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "DELETE FROM subs WHERE client_id=? AND sub=?", -1, &stmt_sub_delete, NULL) != SQLITE_OK) rc = 1;
@@ -123,6 +129,7 @@ void _mqtt3_db_statements_finalize(void)
 {
 	if(stmt_client_update) sqlite3_finalize(stmt_client_update);
 	if(stmt_client_delete) sqlite3_finalize(stmt_client_delete);
+	if(stmt_client_insert) sqlite3_finalize(stmt_client_insert);
 	if(stmt_retain_insert) sqlite3_finalize(stmt_retain_insert);
 	if(stmt_retain_update) sqlite3_finalize(stmt_retain_update);
 	if(stmt_sub_insert) sqlite3_finalize(stmt_sub_insert);
@@ -136,8 +143,6 @@ void _mqtt3_db_statements_finalize(void)
 int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
 {
 	int rc = 0;
-	char *query = NULL;
-	char *errmsg;
 	int oldsock;
 
 	if(!context) return 1;
@@ -152,24 +157,18 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 		}
 		mqtt3_db_client_update(context, will, will_retain, will_qos, will_topic, will_message);
 	}else{
-		query = sqlite3_mprintf("INSERT INTO clients "
-				"(sock,id,clean_start,will,will_retain,will_qos,will_topic,will_message) "
-				"SELECT %d,'%q',%d,%d,%d,%d,'%q','%q' WHERE NOT EXISTS "
-				"(SELECT * FROM clients WHERE id='%q')",
-				context->sock, context->id, context->clean_start, will, will_retain, will_qos, will_topic, will_message, context->id);
-	
-		if(query){
-			if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
-				rc = 1;
-			}
-			sqlite3_free(query);
-			if(errmsg){
-				fprintf(stderr, "Error: %s\n", errmsg);
-				sqlite3_free(errmsg);
-			}
-		}else{
-			rc = 1;
-		}
+		if(sqlite3_bind_int(stmt_client_update, 0, context->sock) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt_client_update, 1, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt_client_update, 2, context->clean_start) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt_client_update, 4, will) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt_client_update, 5, will_retain) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt_client_update, 6, will_qos) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt_client_update, 7, will_topic, strlen(will_topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt_client_update, 8, will_message, strlen(will_message), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt_client_update, 9, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_step(stmt_client_update) != SQLITE_DONE) rc = 1;
+		sqlite3_reset(stmt_client_update);
+		sqlite3_clear_bindings(stmt_client_update);
 	}
 	return rc;
 }
