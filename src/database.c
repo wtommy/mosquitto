@@ -12,6 +12,7 @@ static sqlite3_stmt *stmt_sub_delete = NULL;
 static sqlite3_stmt *stmt_sub_insert = NULL;
 static sqlite3_stmt *stmt_sub_search = NULL;
 static sqlite3_stmt *stmt_subs_delete = NULL;
+static sqlite3_stmt *stmt_sock_invalidate = NULL;
 
 int _mqtt3_db_tables_create(void);
 int _mqtt3_db_invalidate_sockets(void);
@@ -102,6 +103,8 @@ int _mqtt3_db_statements_prepare(void)
 			-1, &stmt_sub_insert, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "SELECT id,qos FROM subs where sub=?", -1, &stmt_sub_search, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "DELETE FROM subs WHERE client_id=?", -1, &stmt_subs_delete, NULL) != SQLITE_OK) rc = 1;
+	if(sqlite3_prepare_v2(db, "UPDATE clients SET sock=-1 WHERE id=? AND sock=?",
+			-1, &stmt_sock_invalidate, NULL) != SQLITE_OK) rc = 1;
 
 	return rc;
 }
@@ -114,6 +117,7 @@ void _mqtt3_db_statements_finalize(void)
 	if(stmt_sub_delete) sqlite3_finalize(stmt_subs_delete);
 	if(stmt_sub_search) sqlite3_finalize(stmt_sub_search);
 	if(stmt_subs_delete) sqlite3_finalize(stmt_subs_delete);
+	if(stmt_sock_invalidate) sqlite3_finalize(stmt_sock_invalidate);
 }
 
 int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
@@ -268,26 +272,14 @@ int _mqtt3_db_invalidate_sockets(void)
 int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
 {
 	int rc = 0;
-	char *query = NULL;
-	char *errmsg;
 
 	if(!db || !client_id) return 1;
 
-	query = sqlite3_mprintf("UPDATE clients SET sock=-1 "
-			"WHERE id='%q' AND sock=%d",
-			client_id, sock);
-	if(query){
-		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
-			rc = 1;
-		}
-		sqlite3_free(query);
-		if(errmsg){
-			fprintf(stderr, "Error: %s\n", errmsg);
-			sqlite3_free(errmsg);
-		}
-	}else{
-		return 1;
-	}
+	if(sqlite3_bind_text(stmt_sock_invalidate, 0, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt_sock_invalidate, 1, sock) != SQLITE_OK) rc = 1;
+	if(sqlite3_step(stmt_sock_invalidate) != SQLITE_DONE) rc = 1;
+	sqlite3_reset(stmt_sock_invalidate);
+	sqlite3_clear_bindings(stmt_sock_invalidate);
 
 	return rc;
 }
