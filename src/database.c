@@ -6,10 +6,10 @@
 #include <mqtt3.h>
 
 static sqlite3 *db = NULL;
-static sqlite3_stmt *sub_search_stmt = NULL;
 static sqlite3_stmt *stmt_retain_insert = NULL;
 static sqlite3_stmt *stmt_retain_update = NULL;
 static sqlite3_stmt *stmt_sub_insert = NULL;
+static sqlite3_stmt *stmt_sub_search = NULL;
 static sqlite3_stmt *stmt_subs_delete = NULL;
 
 int _mqtt3_db_tables_create(void);
@@ -40,10 +40,6 @@ int mqtt3_db_open(const char *filename)
 int mqtt3_db_close(void)
 {
 	_mqtt3_db_statements_finalize();
-
-	if(sub_search_stmt){
-		sqlite3_finalize(sub_search_stmt);
-	}
 
 	sqlite3_close(db);
 	db = NULL;
@@ -102,6 +98,7 @@ int _mqtt3_db_statements_prepare(void)
 	if(sqlite3_prepare_v2(db, "INSERT INTO subs (client_id,sub,qos) "
 			"SELECT ?,?,? WHERE NOT EXISTS (SELECT * FROM subs WHERE client_id=? AND sub=?)",
 			-1, &stmt_sub_insert, NULL) != SQLITE_OK) rc = 1;
+	if(sqlite3_prepare_v2(db, "SELECT id,qos FROM subs where sub=?", -1, &stmt_sub_search, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "DELETE FROM subs WHERE client_id=?", -1, &stmt_subs_delete, NULL) != SQLITE_OK) rc = 1;
 
 	return rc;
@@ -112,6 +109,7 @@ void _mqtt3_db_statements_finalize(void)
 	if(stmt_retain_insert) sqlite3_finalize(stmt_retain_insert);
 	if(stmt_retain_update) sqlite3_finalize(stmt_retain_update);
 	if(stmt_sub_insert) sqlite3_finalize(stmt_sub_insert);
+	if(stmt_sub_search) sqlite3_finalize(stmt_sub_search);
 	if(stmt_subs_delete) sqlite3_finalize(stmt_subs_delete);
 }
 
@@ -355,37 +353,25 @@ int mqtt3_db_sub_delete(mqtt3_context *context, const char *sub)
 
 int mqtt3_db_sub_search_start(const char *sub)
 {
-	char *query = NULL;
 	int rc = 0;
 
-	if( sub) return 1;
+	if(!sub) return 1;
 
-	if(sub_search_stmt){
-		sqlite3_finalize(sub_search_stmt);
-	}
+	sqlite3_reset(stmt_sub_search);
+	sqlite3_clear_bindings(stmt_sub_search);
 
-	query = sqlite3_mprintf("SELECT id,qos FROM subs where sub='%q'", sub);
-	
-	if(query){
-		if(sqlite3_prepare_v2(db, query, -1, &sub_search_stmt, NULL) != SQLITE_OK) rc = 1;
-		sqlite3_free(query);
-	}else{
-		return 1;
-	}
+	if(sqlite3_bind_text(stmt_sub_search, 0, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 
 	return rc;
 }
 
 int mqtt3_db_sub_search_next(char *client_id, uint8_t *qos)
 {
-	if(!sub_search_stmt) return 1;
-	if(sqlite3_step(sub_search_stmt) != SQLITE_ROW){
-		sqlite3_finalize(sub_search_stmt);
-		sub_search_stmt = NULL;
+	if(sqlite3_step(stmt_sub_search) != SQLITE_ROW){
 		return 1;
 	}
-	client_id = mqtt3_strdup((char *)sqlite3_column_text(sub_search_stmt, 0));
-	*qos = sqlite3_column_int(sub_search_stmt, 1);
+	client_id = mqtt3_strdup((char *)sqlite3_column_text(stmt_sub_search, 0));
+	*qos = sqlite3_column_int(stmt_sub_search, 1);
 
 	return 0;
 }
