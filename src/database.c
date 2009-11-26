@@ -23,6 +23,7 @@ int _mqtt3_db_tables_create(void);
 int _mqtt3_db_invalidate_sockets(void);
 int _mqtt3_db_statements_prepare(void);
 void _mqtt3_db_statements_finalize(void);
+int _mqtt3_db_version_check(void);
 
 int mqtt3_db_open(const char *filename)
 {
@@ -30,18 +31,27 @@ int mqtt3_db_open(const char *filename)
 		return 1;
 	}
 
-	if(sqlite3_open(filename, &db) != SQLITE_OK){
-		fprintf(stderr, "Error: %s\n", sqlite3_errmsg(db));
-		return 1;
+	/* Open without creating first. If found, check for db version.
+	 * If not found, open with create.
+	 */
+	if(sqlite3_open_v2(filename, &db, SQLITE_OPEN_READWRITE, NULL) == SQLITE_OK){
+		if(_mqtt3_db_version_check()){
+			fprintf(stderr, "Error: Invalid database version.\n");
+			return 1;
+		}
+	}else{
+		if(sqlite3_open_v2(filename, &db,
+				SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL) != SQLITE_OK){
+			fprintf(stderr, "Error: %s\n", sqlite3_errmsg(db));
+			return 1;
+		}
+		if(_mqtt3_db_tables_create()) return 1;
 	}
 
-	if(!_mqtt3_db_tables_create()){
-		return _mqtt3_db_invalidate_sockets();
-	}
-	
-	_mqtt3_db_statements_prepare();
+	if(_mqtt3_db_invalidate_sockets()) return 1;
+	if(_mqtt3_db_statements_prepare()) return 1;
 
-	return 1;
+	return 0;
 }
 
 int mqtt3_db_close(void)
@@ -60,6 +70,32 @@ int _mqtt3_db_tables_create(void)
 {
 	int rc = 0;
 	char *errmsg = NULL;
+	char *query;
+
+	if(sqlite3_exec(db,
+		"CREATE TABLE IF NOT EXISTS config(key TEXT UNIQUE, value TEXT)",
+		NULL, NULL, &errmsg) != SQLITE_OK){
+
+		rc = 1;
+	}
+	if(errmsg){
+		sqlite3_free(errmsg);
+		errmsg = NULL;
+	}
+
+	query = sqlite3_mprintf("INSERT INTO config (key, value) VALUES('version','%d')", MQTT_DB_VERSION);
+	if(query){
+		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+			rc = 1;
+		}
+		sqlite3_free(query);
+		if(errmsg){
+			sqlite3_free(errmsg);
+			errmsg = NULL;
+		}
+	}else{
+		return 1;
+	}
 
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS clients("
@@ -72,8 +108,10 @@ int _mqtt3_db_tables_create(void)
 
 		rc = 1;
 	}
-
-	if(errmsg) sqlite3_free(errmsg);
+	if(errmsg){
+		sqlite3_free(errmsg);
+		errmsg = NULL;
+	}
 
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS subs("
@@ -81,6 +119,10 @@ int _mqtt3_db_tables_create(void)
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
 		rc = 1;
+	}
+	if(errmsg){
+		sqlite3_free(errmsg);
+		errmsg = NULL;
 	}
 
 	if(sqlite3_exec(db,
@@ -90,8 +132,35 @@ int _mqtt3_db_tables_create(void)
 
 		rc = 1;
 	}
+	if(errmsg){
+		sqlite3_free(errmsg);
+		errmsg = NULL;
+	}
 
-	if(errmsg) sqlite3_free(errmsg);
+	return rc;
+}
+
+int _mqtt3_db_version_check(void)
+{
+	int rc = 0;
+	int version;
+	sqlite3_stmt *stmt;
+
+	if(!db) return 1;
+
+	if(sqlite3_prepare_v2(db, "SELECT value FROM config WHERE key='version'",
+			-1, &stmt, NULL) == SQLITE_OK){
+
+		if(sqlite3_step(stmt) == SQLITE_ROW){
+			version = sqlite3_column_int(stmt, 0);
+			if(version != MQTT_DB_VERSION) rc = 1;
+		}else{
+			rc = 1;
+		}
+		sqlite3_finalize(stmt);
+	}else{
+		rc = 1;
+	}
 
 	return rc;
 }
