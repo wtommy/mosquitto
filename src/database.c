@@ -9,6 +9,7 @@ static sqlite3 *db = NULL;
 static sqlite3_stmt *stmt_client_delete = NULL;
 static sqlite3_stmt *stmt_client_insert = NULL;
 static sqlite3_stmt *stmt_client_update = NULL;
+static sqlite3_stmt *stmt_retain_find = NULL;
 static sqlite3_stmt *stmt_retain_insert = NULL;
 static sqlite3_stmt *stmt_retain_update = NULL;
 static sqlite3_stmt *stmt_sub_delete = NULL;
@@ -110,6 +111,7 @@ int _mqtt3_db_statements_prepare(void)
 				"SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS "
 				"(SELECT 1 FROM clients WHERE id=?)",
 				-1, &stmt_client_insert, NULL) != SQLITE_OK) rc = 1;
+	if(sqlite3_prepare_v2(db, "SELECT qos,payloadlen,payload FROM retain WHERE sub=?", -1, &stmt_retain_find, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "INSERT INTO retain VALUES (?,?,?,?)", -1, &stmt_retain_insert, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "UPDATE retain SET qos=?,payloadlen=?,payload=? WHERE sub=?", -1, &stmt_retain_update, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "DELETE FROM subs WHERE client_id=? AND sub=?", -1, &stmt_sub_delete, NULL) != SQLITE_OK) rc = 1;
@@ -131,6 +133,7 @@ void _mqtt3_db_statements_finalize(void)
 	if(stmt_client_delete) sqlite3_finalize(stmt_client_delete);
 	if(stmt_client_insert) sqlite3_finalize(stmt_client_insert);
 	if(stmt_retain_insert) sqlite3_finalize(stmt_retain_insert);
+	if(stmt_retain_find) sqlite3_finalize(stmt_retain_find);
 	if(stmt_retain_update) sqlite3_finalize(stmt_retain_update);
 	if(stmt_sub_insert) sqlite3_finalize(stmt_sub_insert);
 	if(stmt_sub_delete) sqlite3_finalize(stmt_subs_delete);
@@ -266,19 +269,55 @@ int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
 	return rc;
 }
 
+int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload)
+{
+	int rc = 0;
+	const uint8_t *payloadtmp;
+
+	if(!sub) return 1;
+
+	if(sqlite3_bind_text(stmt_retain_find, 0, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_step(stmt_retain_find) == SQLITE_ROW){
+	if(sqlite3_prepare_v2(db, "SELECT qos,payloadlen,payload FROM retain WHERE sub=?", -1, &stmt_retain_find, NULL) != SQLITE_OK) rc = 1;
+		if(qos) *qos = sqlite3_column_int(stmt_retain_find, 0);
+		if(payloadlen) *payloadlen = sqlite3_column_int(stmt_retain_find, 1);
+		if(payload && payloadlen && *payloadlen){
+			*payload = mqtt3_malloc(*payloadlen);
+			payloadtmp = sqlite3_column_blob(stmt_retain_find, 2);
+			memcpy(*payload, payloadtmp, *payloadlen);
+		}
+	}else{
+		rc = 1;
+	}
+	sqlite3_reset(stmt_retain_find);
+	sqlite3_clear_bindings(stmt_retain_find);
+
+	return rc;
+}
+
 int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, uint8_t *payload)
 {
 	int rc = 0;
 
 	if(!sub || !payloadlen || !payload) return 1;
 
-	if(sqlite3_bind_text(stmt_retain_insert, 0, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt_retain_insert, 1, qos) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt_retain_insert, 2, payloadlen) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_blob(stmt_retain_insert, 3, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt_retain_insert) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt_retain_insert);
-	sqlite3_clear_bindings(stmt_retain_insert);
+	if(!mqtt3_db_retain_find(sub, NULL, NULL, NULL)){
+		if(sqlite3_bind_int(stmt_retain_update, 0, qos) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt_retain_update, 1, payloadlen) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_blob(stmt_retain_update, 2, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt_retain_update, 3, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_step(stmt_retain_update) != SQLITE_DONE) rc = 1;
+		sqlite3_reset(stmt_retain_update);
+		sqlite3_clear_bindings(stmt_retain_update);
+	}else{
+		if(sqlite3_bind_text(stmt_retain_insert, 0, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt_retain_insert, 1, qos) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt_retain_insert, 2, payloadlen) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_blob(stmt_retain_insert, 3, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_step(stmt_retain_insert) != SQLITE_DONE) rc = 1;
+		sqlite3_reset(stmt_retain_insert);
+		sqlite3_clear_bindings(stmt_retain_insert);
+	}
 
 	return rc;
 }
