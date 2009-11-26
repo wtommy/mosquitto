@@ -136,7 +136,7 @@ void _mqtt3_db_statements_finalize(void)
 	if(stmt_retain_find) sqlite3_finalize(stmt_retain_find);
 	if(stmt_retain_update) sqlite3_finalize(stmt_retain_update);
 	if(stmt_sub_insert) sqlite3_finalize(stmt_sub_insert);
-	if(stmt_sub_delete) sqlite3_finalize(stmt_subs_delete);
+	if(stmt_sub_delete) sqlite3_finalize(stmt_sub_delete);
 	if(stmt_sub_search) sqlite3_finalize(stmt_sub_search);
 	if(stmt_subs_delete) sqlite3_finalize(stmt_subs_delete);
 	if(stmt_sock_invalidate) sqlite3_finalize(stmt_sock_invalidate);
