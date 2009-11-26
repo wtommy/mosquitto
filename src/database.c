@@ -7,6 +7,7 @@
 
 static sqlite3 *db = NULL;
 static sqlite3_stmt *stmt_client_delete = NULL;
+static sqlite3_stmt *stmt_client_update = NULL;
 static sqlite3_stmt *stmt_retain_insert = NULL;
 static sqlite3_stmt *stmt_retain_update = NULL;
 static sqlite3_stmt *stmt_sub_delete = NULL;
@@ -97,6 +98,10 @@ int _mqtt3_db_statements_prepare(void)
 {
 	int rc = 0;
 
+	if(sqlite3_prepare_v2(db, "UPDATE clients SET "
+			"sock=?,clean_start=?,will=?,will_retain=?,will_qos=?,"
+			"will_topic=?,will_message=? WHERE id=?",
+			-1, &stmt_client_update, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "DELETE FROM clients WHERE client_id=?",
 			-1, &stmt_client_delete, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "INSERT INTO retain VALUES (?,?,?,?)", -1, &stmt_retain_insert, NULL) != SQLITE_OK) rc = 1;
@@ -116,6 +121,7 @@ int _mqtt3_db_statements_prepare(void)
 
 void _mqtt3_db_statements_finalize(void)
 {
+	if(stmt_client_update) sqlite3_finalize(stmt_client_update);
 	if(stmt_client_delete) sqlite3_finalize(stmt_client_delete);
 	if(stmt_retain_insert) sqlite3_finalize(stmt_retain_insert);
 	if(stmt_retain_update) sqlite3_finalize(stmt_retain_update);
@@ -171,30 +177,21 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
 {
 	int rc = 0;
-	char *query = NULL;
-	char *errmsg;
 
 	if(!context) return 1;
 
-	query = sqlite3_mprintf("UPDATE clients SET "
-			"sock=%d,clean_start=%d,will=%d,will_retain=%d,will_qos=%d,"
-			"will_topic='%q',will_message='%q' "
-			"WHERE id='%q'",
-			context->sock, context->clean_start, will, will_retain, will_qos,
-			will_topic, will_message, context->id);
-	
-	if(query){
-		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
-			rc = 1;
-		}
-		sqlite3_free(query);
-		if(errmsg){
-			fprintf(stderr, "Error: %s\n", errmsg);
-			sqlite3_free(errmsg);
-		}
-	}else{
-		return 1;
-	}
+	if(sqlite3_bind_int(stmt_client_update, 0, context->sock) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt_client_update, 1, context->clean_start) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt_client_update, 2, will) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt_client_update, 3, will_retain) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt_client_update, 4, will_qos) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt_client_update, 5, will_topic, strlen(will_topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt_client_update, 6, will_message, strlen(will_message), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt_client_update, 7, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_step(stmt_client_update) != SQLITE_DONE) rc = 1;
+	sqlite3_reset(stmt_client_update);
+	sqlite3_clear_bindings(stmt_client_update);
+
 	return rc;
 }
 
