@@ -374,9 +374,9 @@ int mqtt3_db_subs_clean_start(mqtt3_context *context)
 	if(!context || !(context->id)) return 1;
 
 	if(sqlite3_bind_text(stmt_subs_delete, 0, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt_sub_insert) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt_retain_insert);
-	sqlite3_clear_bindings(stmt_retain_insert);
+	if(sqlite3_step(stmt_subs_delete) != SQLITE_DONE) rc = 1;
+	sqlite3_reset(stmt_subs_delete);
+	sqlite3_clear_bindings(stmt_subs_delete);
 
 	return rc;
 }
