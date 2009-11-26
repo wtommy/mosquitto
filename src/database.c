@@ -6,6 +6,7 @@
 #include <mqtt3.h>
 
 static sqlite3 *db = NULL;
+static sqlite3_stmt *stmt_client_delete = NULL;
 static sqlite3_stmt *stmt_retain_insert = NULL;
 static sqlite3_stmt *stmt_retain_update = NULL;
 static sqlite3_stmt *stmt_sub_delete = NULL;
@@ -96,6 +97,8 @@ int _mqtt3_db_statements_prepare(void)
 {
 	int rc = 0;
 
+	if(sqlite3_prepare_v2(db, "DELETE FROM clients WHERE client_id=?",
+			-1, &stmt_client_delete, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "INSERT INTO retain VALUES (?,?,?,?)", -1, &stmt_retain_insert, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "UPDATE retain SET qos=?,payloadlen=?,payload=? WHERE sub=?", -1, &stmt_retain_update, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "DELETE FROM subs WHERE client_id=? AND sub=?", -1, &stmt_sub_delete, NULL) != SQLITE_OK) rc = 1;
@@ -113,6 +116,7 @@ int _mqtt3_db_statements_prepare(void)
 
 void _mqtt3_db_statements_finalize(void)
 {
+	if(stmt_client_delete) sqlite3_finalize(stmt_client_delete);
 	if(stmt_retain_insert) sqlite3_finalize(stmt_retain_insert);
 	if(stmt_retain_update) sqlite3_finalize(stmt_retain_update);
 	if(stmt_sub_insert) sqlite3_finalize(stmt_sub_insert);
@@ -197,25 +201,13 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 int mqtt3_db_client_delete(mqtt3_context *context)
 {
 	int rc = 0;
-	char *query = NULL;
-	char *errmsg;
 
 	if(!context || !(context->id)) return 1;
 
-	query = sqlite3_mprintf("DELETE FROM clients WHERE client_id='%q'", context->id);
-	
-	if(query){
-		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
-			rc = 1;
-		}
-		sqlite3_free(query);
-		if(errmsg){
-			fprintf(stderr, "Error: %s\n", errmsg);
-			sqlite3_free(errmsg);
-		}
-	}else{
-		return 1;
-	}
+	if(sqlite3_bind_text(stmt_client_delete, 0, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_step(stmt_client_delete) != SQLITE_DONE) rc = 1;
+	sqlite3_reset(stmt_client_delete);
+	sqlite3_clear_bindings(stmt_client_delete);
 
 	return rc;
 }
