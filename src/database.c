@@ -183,6 +183,7 @@ int _mqtt3_db_statements_prepare(void)
 {
 	int rc = 0;
 
+	/* Clients */
 	if(sqlite3_prepare_v2(db, "UPDATE clients SET "
 			"sock=?,clean_start=?,will=?,will_retain=?,will_qos=?,"
 			"will_topic=?,will_message=? WHERE id=?",
@@ -194,21 +195,28 @@ int _mqtt3_db_statements_prepare(void)
 				"SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS "
 				"(SELECT 1 FROM clients WHERE id=?)",
 				-1, &stmt_client_insert, NULL) != SQLITE_OK) rc = 1;
+	if(sqlite3_prepare_v2(db, "UPDATE clients SET sock=-1 WHERE id=? AND sock=?",
+			-1, &stmt_sock_invalidate, NULL) != SQLITE_OK) rc = 1;
+	if(sqlite3_prepare_v2(db, "SELECT sock FROM clients WHERE id=?",
+			-1, &stmt_sock_find, NULL) != SQLITE_OK) rc = 1;
+	
+	/* Messages */
 	if(sqlite3_prepare_v2(db, "DELETE FROM messages WHERE client_id=?",
 			-1, &stmt_messages_delete, NULL) != SQLITE_OK) rc = 1;
+	
+	/* Retain */
 	if(sqlite3_prepare_v2(db, "SELECT qos,payloadlen,payload FROM retain WHERE sub=?", -1, &stmt_retain_find, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "INSERT INTO retain VALUES (?,?,?,?)", -1, &stmt_retain_insert, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "UPDATE retain SET qos=?,payloadlen=?,payload=? WHERE sub=?", -1, &stmt_retain_update, NULL) != SQLITE_OK) rc = 1;
+
+	/* Subs */
 	if(sqlite3_prepare_v2(db, "DELETE FROM subs WHERE client_id=? AND sub=?", -1, &stmt_sub_delete, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "INSERT INTO subs (client_id,sub,qos) "
 			"SELECT ?,?,? WHERE NOT EXISTS (SELECT * FROM subs WHERE client_id=? AND sub=?)",
 			-1, &stmt_sub_insert, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "SELECT client_id,qos FROM subs where sub=?", -1, &stmt_sub_search, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "DELETE FROM subs WHERE client_id=?", -1, &stmt_subs_delete, NULL) != SQLITE_OK) rc = 1;
-	if(sqlite3_prepare_v2(db, "UPDATE clients SET sock=-1 WHERE id=? AND sock=?",
-			-1, &stmt_sock_invalidate, NULL) != SQLITE_OK) rc = 1;
-	if(sqlite3_prepare_v2(db, "SELECT sock FROM clients WHERE id=?",
-			-1, &stmt_sock_find, NULL) != SQLITE_OK) rc = 1;
+
 	return rc;
 }
 
