@@ -61,6 +61,15 @@ typedef struct _mqtt3_context{
 	mqtt3_message *messages;
 } mqtt3_context;
 
+typedef enum {
+	ms_invalid,
+	ms_publish,
+	ms_wait_puback,
+	ms_wait_pubrec,
+	ms_wait_pubrel,
+	ms_wait_pubcomp
+} mqtt3_msg_status;
+
 /* Utility functions */
 const char *mqtt3_command_to_string(uint8_t command);
 uint16_t mqtt3_generate_message_id(void);
