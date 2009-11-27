@@ -82,6 +82,19 @@ int main(int argc, char *argv[])
 	int sockmax;
 	struct stat statbuf;
 	time_t now;
+	int daemon = 0;
+
+	if(daemon){
+		switch(fork()){
+			case 0:
+				break;
+			case -1:
+				fprintf(stderr, "Error in fork: %s\n", strerror(errno));
+				return 1;
+			default:
+				return 0;
+		}
+	}
 
 	signal(SIGINT, handle_sigint);
 
