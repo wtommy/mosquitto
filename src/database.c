@@ -9,6 +9,7 @@ static sqlite3 *db = NULL;
 static sqlite3_stmt *stmt_client_delete = NULL;
 static sqlite3_stmt *stmt_client_insert = NULL;
 static sqlite3_stmt *stmt_client_update = NULL;
+static sqlite3_stmt *stmt_messages_delete = NULL;
 static sqlite3_stmt *stmt_retain_find = NULL;
 static sqlite3_stmt *stmt_retain_insert = NULL;
 static sqlite3_stmt *stmt_retain_update = NULL;
@@ -193,6 +194,8 @@ int _mqtt3_db_statements_prepare(void)
 				"SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS "
 				"(SELECT 1 FROM clients WHERE id=?)",
 				-1, &stmt_client_insert, NULL) != SQLITE_OK) rc = 1;
+	if(sqlite3_prepare_v2(db, "DELETE FROM messages WHERE client_id=?",
+			-1, &stmt_messages_delete, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "SELECT qos,payloadlen,payload FROM retain WHERE sub=?", -1, &stmt_retain_find, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "INSERT INTO retain VALUES (?,?,?,?)", -1, &stmt_retain_insert, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "UPDATE retain SET qos=?,payloadlen=?,payload=? WHERE sub=?", -1, &stmt_retain_update, NULL) != SQLITE_OK) rc = 1;
@@ -214,6 +217,7 @@ void _mqtt3_db_statements_finalize(void)
 	if(stmt_client_update) sqlite3_finalize(stmt_client_update);
 	if(stmt_client_delete) sqlite3_finalize(stmt_client_delete);
 	if(stmt_client_insert) sqlite3_finalize(stmt_client_insert);
+	if(stmt_messages_delete) sqlite3_finalize(stmt_messages_delete);
 	if(stmt_retain_insert) sqlite3_finalize(stmt_retain_insert);
 	if(stmt_retain_find) sqlite3_finalize(stmt_retain_find);
 	if(stmt_retain_update) sqlite3_finalize(stmt_retain_update);
@@ -347,6 +351,20 @@ int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
 	if(sqlite3_step(stmt_sock_invalidate) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt_sock_invalidate);
 	sqlite3_clear_bindings(stmt_sock_invalidate);
+
+	return rc;
+}
+
+int mqtt3_db_messages_delete(mqtt3_context *context)
+{
+	int rc = 0;
+
+	if(!context || !(context->id)) return 1;
+
+	if(sqlite3_bind_text(stmt_messages_delete, 0, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_step(stmt_messages_delete) != SQLITE_DONE) rc = 1;
+	sqlite3_reset(stmt_messages_delete);
+	sqlite3_clear_bindings(stmt_messages_delete);
 
 	return rc;
 }
