@@ -43,7 +43,7 @@ int mqtt3_raw_publish(mqtt3_context *context, bool dup, uint8_t qos, bool retain
 	/* Variable header (topic string) */
 	if(mqtt3_write_string(context, topic, topiclen)) return 1;
 	if(qos > 0){
-		mid = mqtt3_generate_message_id();
+		mid = mqtt3_generate_message_id(context);
 		if(mqtt3_write_uint16(context, mid)) return 1;
 	}
 
@@ -147,7 +147,7 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 	if(mqtt3_write_remaining_length(context, packetlen)) return 1;
 
 	/* Variable header */
-	mid = mqtt3_generate_message_id();
+	mid = mqtt3_generate_message_id(context);
 	if(mqtt3_write_uint16(context, mid)) return 1;
 
 	/* Payload */
@@ -172,7 +172,7 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic, u
 	if(mqtt3_write_remaining_length(context, packetlen)) return 1;
 	
 	/* Variable header */
-	mid = mqtt3_generate_message_id();
+	mid = mqtt3_generate_message_id(context);
 	if(mqtt3_write_uint16(context, mid)) return 1;
 
 	/* Payload */
