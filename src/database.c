@@ -10,6 +10,7 @@ static sqlite3_stmt *stmt_client_delete = NULL;
 static sqlite3_stmt *stmt_client_insert = NULL;
 static sqlite3_stmt *stmt_client_update = NULL;
 static sqlite3_stmt *stmt_message_delete = NULL;
+static sqlite3_stmt *stmt_message_delete_by_oid = NULL;
 static sqlite3_stmt *stmt_messages_delete = NULL;
 static sqlite3_stmt *stmt_retain_find = NULL;
 static sqlite3_stmt *stmt_retain_insert = NULL;
@@ -202,6 +203,8 @@ int _mqtt3_db_statements_prepare(void)
 			-1, &stmt_sock_find, NULL) != SQLITE_OK) rc = 1;
 	
 	/* Messages */
+	if(sqlite3_prepare_v2(db, "DELETE FROM messages WHERE OID=?",
+			-1, &stmt_message_delete_by_oid, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "DELETE FROM messages WHERE client_id=? AND mid=?",
 			-1, &stmt_message_delete, NULL) != SQLITE_OK) rc = 1;
 	if(sqlite3_prepare_v2(db, "DELETE FROM messages WHERE client_id=?",
@@ -229,6 +232,7 @@ void _mqtt3_db_statements_finalize(void)
 	if(stmt_client_delete) sqlite3_finalize(stmt_client_delete);
 	if(stmt_client_insert) sqlite3_finalize(stmt_client_insert);
 	if(stmt_message_delete) sqlite3_finalize(stmt_message_delete);
+	if(stmt_message_delete_by_oid) sqlite3_finalize(stmt_message_delete_by_oid);
 	if(stmt_messages_delete) sqlite3_finalize(stmt_messages_delete);
 	if(stmt_retain_insert) sqlite3_finalize(stmt_retain_insert);
 	if(stmt_retain_find) sqlite3_finalize(stmt_retain_find);
@@ -378,6 +382,20 @@ int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid)
 	if(sqlite3_step(stmt_message_delete) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt_message_delete);
 	sqlite3_clear_bindings(stmt_message_delete);
+
+	return rc;
+}
+
+int mqtt3_db_message_delete_by_oid(mqtt3_context *context, uint64_t oid)
+{
+	int rc = 0;
+
+	if(!context) return 1;
+
+	if(sqlite3_bind_int(stmt_message_delete_by_oid, 0, oid) != SQLITE_OK) rc = 1;
+	if(sqlite3_step(stmt_message_delete_by_oid) != SQLITE_DONE) rc = 1;
+	sqlite3_reset(stmt_message_delete_by_oid);
+	sqlite3_clear_bindings(stmt_message_delete_by_oid);
 
 	return rc;
 }
