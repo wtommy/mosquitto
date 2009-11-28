@@ -367,7 +367,7 @@ int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
 	return rc;
 }
 
-int mqtt3_db_message_delete(mqtt3_context, *context, uint16_t mid)
+int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid)
 {
 	int rc = 0;
 
