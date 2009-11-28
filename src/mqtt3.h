@@ -72,7 +72,6 @@ typedef enum {
 
 /* Utility functions */
 const char *mqtt3_command_to_string(uint8_t command);
-uint16_t mqtt3_generate_message_id(void);
 
 /* Raw send functions - just construct the packet and send */
 int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid);

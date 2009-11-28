@@ -37,10 +37,3 @@ const char *mqtt3_command_to_string(uint8_t command)
 	return "UNKNOWN";
 }
 
-uint16_t mqtt3_generate_message_id(void)
-{
-	static uint16_t mid = 123;
-
-	return ++mid;
-}
-
