@@ -404,6 +404,32 @@ int mqtt3_db_message_delete_by_oid(mqtt3_context *context, uint64_t oid)
 	return rc;
 }
 
+int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, int direction, mqtt3_msg_status status)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt = NULL;
+
+	if(!context || !mid) return 1;
+
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("UPDATE messages SET status=?,timestamp=? "
+				"WHERE client_id=? AND mid=? AND direction=?");
+		if(!stmt){
+			return 1;
+		}
+	}
+	if(sqlite3_bind_int(stmt, 0, status) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 1, time(NULL)) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 2, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 3, mid) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 4, direction) != SQLITE_OK) rc = 1;
+	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+
+	return rc;
+}
+
 int mqtt3_db_messages_delete(mqtt3_context *context)
 {
 	int rc = 0;
