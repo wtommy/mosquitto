@@ -156,7 +156,7 @@ int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, uint8_
 int mqtt3_db_sub_insert(mqtt3_context *context, const char *sub, int qos);
 int mqtt3_db_sub_delete(mqtt3_context *context, const char *sub);
 int mqtt3_db_sub_search_start(const char *sub);
-int mqtt3_db_sub_search_next(char *client_id, uint8_t *qos);
+int mqtt3_db_sub_search_next(char **client_id, uint8_t *qos);
 int mqtt3_db_subs_clean_start(mqtt3_context *context);
 
 /* Context functions */

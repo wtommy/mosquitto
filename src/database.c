@@ -687,12 +687,12 @@ int mqtt3_db_sub_search_start(const char *sub)
 	return rc;
 }
 
-int mqtt3_db_sub_search_next(char *client_id, uint8_t *qos)
+int mqtt3_db_sub_search_next(char **client_id, uint8_t *qos)
 {
 	if(sqlite3_step(stmt_sub_search) != SQLITE_ROW){
 		return 1;
 	}
-	client_id = mqtt3_strdup((char *)sqlite3_column_text(stmt_sub_search, 0));
+	*client_id = mqtt3_strdup((char *)sqlite3_column_text(stmt_sub_search, 0));
 	*qos = sqlite3_column_int(stmt_sub_search, 1);
 
 	return 0;
