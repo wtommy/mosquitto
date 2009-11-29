@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <mqtt3.h>
+
 static uint32_t memcount = 0;
 
 void *mqtt3_calloc(size_t nmemb, size_t size)
