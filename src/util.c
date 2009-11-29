@@ -37,11 +37,3 @@ const char *mqtt3_command_to_string(uint8_t command)
 	return "UNKNOWN";
 }
 
-uint16_t mqtt3_generate_mid(mqtt3_context *context)
-{
-	if(context->last_mid == 65535) context->last_mid = 0;
-	context->last_mid++;
-
-	return context->last_mid;
-}
-

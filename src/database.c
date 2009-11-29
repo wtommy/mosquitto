@@ -100,7 +100,8 @@ int _mqtt3_db_tables_create(void)
 		"id TEXT, "
 		"clean_start INTEGER, "
 		"will INTEGER, will_retain INTEGER, will_qos INTEGER, "
-		"will_topic TEXT, will_message TEXT)",
+		"will_topic TEXT, will_message TEXT, "
+		"last_mid INTEGER)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
 		rc = 1;
@@ -206,8 +207,8 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 	}else{
 		if(!stmt){
 			stmt = _mqtt3_db_statement_prepare("INSERT INTO clients "
-					"(sock,id,clean_start,will,will_retain,will_qos,will_topic,will_message) "
-					"SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS "
+					"(sock,id,clean_start,will,will_retain,will_qos,will_topic,will_message,last_mid) "
+					"SELECT ?,?,?,?,?,?,?,?,0 WHERE NOT EXISTS "
 					"(SELECT 1 FROM clients WHERE id=?)");
 			if(!stmt){
 				return 1;
@@ -496,6 +497,48 @@ int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, uint8
 	// FIXME - need to actually queue messages
 
 	return rc;
+}
+
+uint16_t mqtt3_db_mid_generate(mqtt3_context *context)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt_select = NULL;
+	static sqlite3_stmt *stmt_update = NULL;
+	uint16_t mid = 0;
+
+	if(!context || !context->id) return 1;
+
+	if(!stmt_select){
+		stmt_select = _mqtt3_db_statement_prepare("SELECT last_mid FROM clients WHERE client_id=?");
+		if(!stmt_select){
+			return 1;
+		}
+	}
+	if(!stmt_update){
+		stmt_update = _mqtt3_db_statement_prepare("UPDATE clients SET last_mid=? WHERE client_id=?");
+		if(!stmt_update){
+			return 1;
+		}
+	}
+
+	if(sqlite3_bind_text(stmt_select, 0, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_step(stmt_select) == SQLITE_ROW){
+		mid = sqlite3_column_int(stmt_select, 0);
+		if(mid == 65535) mid = 0;
+		mid++;
+
+		if(sqlite3_bind_int(stmt_update, 0, mid) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt_update, 1, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_step(stmt_update) != SQLITE_DONE) rc = 1;
+		sqlite3_reset(stmt_update);
+		sqlite3_clear_bindings(stmt_update);
+	}else{
+		rc = 1;
+	}
+	sqlite3_reset(stmt_select);
+	sqlite3_clear_bindings(stmt_select);
+
+	return mid;
 }
 
 int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload)

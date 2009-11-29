@@ -34,7 +34,7 @@ int mqtt3_managed_publish(mqtt3_context *context, uint8_t qos, bool retain, cons
 	message->retain = retain;
 	message->remaining_length = packetlen;
 	if(qos > 0){
-		mid = mqtt3_generate_mid(context);
+		mid = mqtt3_db_mid_generate(context);
 	}else{
 		mid = 0;
 	}

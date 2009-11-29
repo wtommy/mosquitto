@@ -57,7 +57,6 @@ typedef struct _mqtt3_context{
 	uint16_t keepalive;
 	bool clean_start;
 	char *id;
-	uint16_t last_mid;
 	mqtt3_message *messages;
 } mqtt3_context;
 
@@ -77,7 +76,6 @@ typedef enum {
 
 /* Utility functions */
 const char *mqtt3_command_to_string(uint8_t command);
-uint16_t mqtt3_generate_mid(mqtt3_context *context);
 
 /* Raw send functions - just construct the packet and send */
 int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid);
@@ -152,6 +150,7 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, mqtt3_msg_dire
 int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status);
 int mqtt3_db_messages_delete(mqtt3_context *context);
 int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, uint8_t *payload, int retain);
+uint16_t mqtt3_db_mid_generate(mqtt3_context *context);
 int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload);
 int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, uint8_t *payload);
 int mqtt3_db_sub_insert(mqtt3_context *context, const char *sub, int qos);
