@@ -6,7 +6,7 @@ LDFLAGS=-lsqlite3
 
 all : test_client
 
-test_client : test_client.o database.o managed_send.o memory.o messages.o net.o raw_send.o read_handle.o read_handle_client.o util.o
+test_client : test_client.o database.o managed_send.o memory.o messages.o net.o raw_send.o raw_send_client.o read_handle.o read_handle_client.o util.o
 	${CC} $(LDFLAGS) $^ -o $@
 
 test_client.o : test_client.c ../src/mqtt3.h
@@ -28,6 +28,9 @@ net.o : ../src/net.c ../src/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 raw_send.o : ../src/raw_send.c ../src/mqtt3.h
+	${CC} $(CFLAGS) -c $< -o $@
+
+raw_send_client.o : ../src/raw_send_client.c ../src/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 read_handle.o : ../src/read_handle.c ../src/mqtt3.h

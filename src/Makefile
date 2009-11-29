@@ -6,7 +6,7 @@ LDFLAGS=-lsqlite3 -nopie
 
 all : mosquitto
 
-mosquitto : mosquitto.o context.o database.o managed_send.o memory.o messages.o net.o raw_send.o read_handle.o read_handle_server.o util.o
+mosquitto : mosquitto.o context.o database.o managed_send.o memory.o messages.o net.o raw_send.o raw_send_server.o read_handle.o read_handle_server.o util.o
 	${CC} $^ -o $@ ${LDFLAGS}
 
 mosquitto.o : mosquitto.c mqtt3.h
@@ -31,6 +31,9 @@ net.o : net.c mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 raw_send.o : raw_send.c mqtt3.h
+	${CC} $(CFLAGS) -c $< -o $@
+
+raw_send_server.o : raw_send_server.c mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 read_handle.o : read_handle.c mqtt3.h
