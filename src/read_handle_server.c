@@ -35,7 +35,6 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	if(mqtt3_read_byte(context, &protocol_version)) return 1;
 	if(protocol_version != PROTOCOL_VERSION){
 		mqtt3_free(protocol_name);
-		// FIXME - should disconnect as well
 		mqtt3_raw_connack(context, 1);
 		mqtt3_context_cleanup(context);
 		return 1;
