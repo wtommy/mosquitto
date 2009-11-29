@@ -58,9 +58,10 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 
 int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 {
-	char *topic;
+	char *sub;
 	uint8_t *payload;
 	uint32_t remaining_length;
+	uint32_t payloadlen;
 	uint8_t dup, qos, retain;
 	uint16_t mid;
 	int rc = 0;
@@ -73,29 +74,30 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 
 	printf("Remaining length: %d\n", remaining_length);
-	if(mqtt3_read_string(context, &topic)) return 1;
-	remaining_length -= strlen((char *)topic) + 2;
-	printf("Topic: '%s'\n", topic);
+	if(mqtt3_read_string(context, &sub)) return 1;
+	remaining_length -= strlen((char *)sub) + 2;
+	printf("Topic: '%s'\n", sub);
 
 	if(qos > 0){
 		if(mqtt3_read_uint16(context, &mid)){
-			mqtt3_free(topic);
+			mqtt3_free(sub);
 			return 1;
 		}
 		remaining_length -= 2;
 	}
 
 	printf("Remaining length: %d\n", remaining_length);
-	payload = mqtt3_calloc((remaining_length+1), sizeof(uint8_t));
-	if(mqtt3_read_bytes(context, payload, remaining_length)){
-		mqtt3_free(topic);
+	payloadlen = remaining_length;
+	payload = mqtt3_calloc(payloadlen, sizeof(uint8_t));
+	if(mqtt3_read_bytes(context, payload, payloadlen)){
+		mqtt3_free(sub);
 		return 1;
 	}
 	printf("Payload: '%s'\n", payload);
 
 	switch(qos){
 		case 0:
-			// FIXME - implement: mqtt3_pub_to_subs(qos, retain, topic, payload, payloadlen);
+			if(mqtt3_db_messages_queue(sub, qos, payloadlen, payload, retain)) rc = 1;
 			break;
 		case 1:
 			/* FIXME - need to store message somewhere */
@@ -106,7 +108,7 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 			if(mqtt3_raw_pubrec(context, mid)) rc = 1;
 			break;
 	}
-	mqtt3_free(topic);
+	mqtt3_free(sub);
 	mqtt3_free(payload);
 
 	return rc;
