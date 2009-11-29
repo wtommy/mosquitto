@@ -404,6 +404,37 @@ int mqtt3_db_message_delete_by_oid(mqtt3_context *context, uint64_t oid)
 	return rc;
 }
 
+int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, int direction, mqtt3_msg_status status, const char *sub, int qos, uint32_t payloadlen, uint8_t *payload)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt = NULL;
+
+	if(!context || !mid) return 1;
+
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("INSERT INTO messages "
+				"(client_id, timestamp, direction, status, mid, sub, qos, payloadlen, payload) "
+				"VALUES (?,?,?,?,?,?,?,?,?)");
+		if(!stmt){
+			return 1;
+		}
+	}
+	if(sqlite3_bind_text(stmt, 0, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 1, time(NULL)) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 2, direction) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 3, status) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 4, mid) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 5, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 6, qos) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 7, payloadlen) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_blob(stmt, 8, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+
+	return rc;
+}
+
 int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, int direction, mqtt3_msg_status status)
 {
 	int rc = 0;
