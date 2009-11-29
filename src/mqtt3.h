@@ -70,6 +70,11 @@ typedef enum {
 	ms_wait_pubcomp
 } mqtt3_msg_status;
 
+typedef enum {
+	md_in,
+	md_out
+} mqtt3_msg_direction;
+
 /* Utility functions */
 const char *mqtt3_command_to_string(uint8_t command);
 uint16_t mqtt3_generate_mid(mqtt3_context *context);
@@ -143,8 +148,8 @@ int mqtt3_db_client_find_socket(const char *client_id, int *sock);
 int mqtt3_db_client_invalidate_socket(const char *client_id, int sock);
 int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid);
 int mqtt3_db_message_delete_by_oid(mqtt3_context *context, uint64_t oid);
-int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, int direction, mqtt3_msg_status status, const char *sub, int qos, uint32_t payloadlen, uint8_t *payload);
-int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, int direction, mqtt3_msg_status status);
+int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, const char *sub, int qos, uint32_t payloadlen, uint8_t *payload);
+int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status);
 int mqtt3_db_messages_delete(mqtt3_context *context);
 int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload);
 int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, uint8_t *payload);
