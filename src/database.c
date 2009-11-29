@@ -482,6 +482,22 @@ int mqtt3_db_messages_delete(mqtt3_context *context)
 	return rc;
 }
 
+int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, uint8_t *payload, int retain)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt_select = NULL;
+
+	/* Find all clients that subscribe to sub and put messages into the db for them. */
+	if(!sub || !payloadlen || !payload) return 1;
+
+	if(retain){
+		if(mqtt3_db_retain_insert(sub, qos, payloadlen, payload)) rc = 1;
+	}
+	// FIXME - need to actually queue messages
+
+	return rc;
+}
+
 int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload)
 {
 	int rc = 0;

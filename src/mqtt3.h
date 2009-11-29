@@ -151,6 +151,7 @@ int mqtt3_db_message_delete_by_oid(mqtt3_context *context, uint64_t oid);
 int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, const char *sub, int qos, uint32_t payloadlen, uint8_t *payload);
 int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status);
 int mqtt3_db_messages_delete(mqtt3_context *context);
+int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, uint8_t *payload, int retain);
 int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload);
 int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, uint8_t *payload);
 int mqtt3_db_sub_insert(mqtt3_context *context, const char *sub, int qos);
