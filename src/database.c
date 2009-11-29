@@ -22,6 +22,9 @@ int _mqtt3_db_invalidate_sockets(void);
 sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query);
 void _mqtt3_db_statements_finalize(void);
 int _mqtt3_db_version_check(void);
+int _mqtt3_db_transaction_begin(void);
+int _mqtt3_db_transaction_end(void);
+int _mqtt3_db_transaction_rollback(void);
 
 int mqtt3_db_open(const char *filename)
 {
@@ -735,3 +738,55 @@ sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query)
 	}
 	return stmt;
 }
+
+int _mqtt3_db_transaction_begin(void)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt = NULL;
+
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("BEGIN TRANSACTION");
+		if(!stmt){
+			return 1;
+		}
+	}
+	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
+	sqlite3_reset(stmt);
+
+	return rc;
+}
+
+int _mqtt3_db_transaction_end(void)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt = NULL;
+
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("END TRANSACTION");
+		if(!stmt){
+			return 1;
+		}
+	}
+	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
+	sqlite3_reset(stmt);
+
+	return rc;
+}
+
+int _mqtt3_db_transaction_rollback(void)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt = NULL;
+
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("ROLLBACK TRANSACTION");
+		if(!stmt){
+			return 1;
+		}
+	}
+	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
+	sqlite3_reset(stmt);
+
+	return rc;
+}
+
