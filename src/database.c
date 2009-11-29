@@ -605,7 +605,6 @@ sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query)
 	struct stmt_array *tmp;
 	sqlite3_stmt *stmt;
 
-	printf("Prep: %s\n", query);
 	if(sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK){
 		return NULL;
 	}
