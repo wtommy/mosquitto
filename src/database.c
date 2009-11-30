@@ -217,23 +217,23 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 				return 1;
 			}
 		}
-		if(sqlite3_bind_int(stmt, 0, context->sock) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_text(stmt, 1, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt, 2, context->clean_start) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt, 3, will) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt, 4, will_retain) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt, 5, will_qos) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt, 1, context->sock) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt, 2, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt, 3, context->clean_start) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt, 4, will) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt, 5, will_retain) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt, 6, will_qos) != SQLITE_OK) rc = 1;
 		if(will_topic){
-			if(sqlite3_bind_text(stmt, 6, will_topic, strlen(will_topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		}else{
-			if(sqlite3_bind_text(stmt, 6, "", 0, SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		}
-		if(will_message){
-			if(sqlite3_bind_text(stmt, 7, will_message, strlen(will_message), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+			if(sqlite3_bind_text(stmt, 7, will_topic, strlen(will_topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		}else{
 			if(sqlite3_bind_text(stmt, 7, "", 0, SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		}
-		if(sqlite3_bind_text(stmt, 8, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(will_message){
+			if(sqlite3_bind_text(stmt, 8, will_message, strlen(will_message), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		}else{
+			if(sqlite3_bind_text(stmt, 8, "", 0, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		}
+		if(sqlite3_bind_text(stmt, 9, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 		sqlite3_reset(stmt);
 		sqlite3_clear_bindings(stmt);
@@ -256,22 +256,22 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 			return 1;
 		}
 	}
-	if(sqlite3_bind_int(stmt, 0, context->sock) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 1, context->clean_start) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 2, will) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 3, will_retain) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 4, will_qos) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 1, context->sock) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 2, context->clean_start) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 3, will) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 4, will_retain) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 5, will_qos) != SQLITE_OK) rc = 1;
 	if(will_topic){
-		if(sqlite3_bind_text(stmt, 5, will_topic, strlen(will_topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	}else{
-		if(sqlite3_bind_text(stmt, 5, "", 0, SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	}
-	if(will_message){
-		if(sqlite3_bind_text(stmt, 6, will_message, strlen(will_message), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt, 6, will_topic, strlen(will_topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	}else{
 		if(sqlite3_bind_text(stmt, 6, "", 0, SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	}
-	if(sqlite3_bind_text(stmt, 7, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(will_message){
+		if(sqlite3_bind_text(stmt, 7, will_message, strlen(will_message), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	}else{
+		if(sqlite3_bind_text(stmt, 7, "", 0, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	}
+	if(sqlite3_bind_text(stmt, 8, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -292,7 +292,7 @@ int mqtt3_db_client_delete(mqtt3_context *context)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 0, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -313,7 +313,7 @@ int mqtt3_db_client_find_socket(const char *client_id, int *sock)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 0, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) == SQLITE_ROW){
 		*sock = sqlite3_column_int(stmt, 0);
 	}else{
@@ -364,8 +364,8 @@ int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 0, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 1, sock) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 2, sock) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -386,8 +386,8 @@ int mqtt3_db_message_delete(const char *client_id, uint16_t mid)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 0, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 1, mid) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 2, mid) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -406,7 +406,7 @@ int mqtt3_db_message_delete_by_oid(uint64_t oid)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_int(stmt, 0, oid) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 1, oid) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -429,15 +429,15 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direc
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 0, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 1, time(NULL)) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 2, dir) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 3, status) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 4, mid) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_text(stmt, 5, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 6, qos) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 7, payloadlen) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_blob(stmt, 8, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 2, time(NULL)) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 3, dir) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 4, status) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 5, mid) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 6, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 7, qos) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 8, payloadlen) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_blob(stmt, 9, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -460,11 +460,11 @@ int mqtt3_db_message_update(const char *client_id, uint16_t mid, mqtt3_msg_direc
 			return 1;
 		}
 	}
-	if(sqlite3_bind_int(stmt, 0, status) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 1, time(NULL)) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_text(stmt, 2, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 3, mid) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 4, dir) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 1, status) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 2, time(NULL)) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 3, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 4, mid) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 5, dir) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -485,7 +485,7 @@ int mqtt3_db_messages_delete(const char *client_id)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 0, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -561,14 +561,14 @@ uint16_t mqtt3_db_mid_generate(const char *client_id)
 		}
 	}
 
-	if(sqlite3_bind_text(stmt_select, 0, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt_select, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt_select) == SQLITE_ROW){
 		mid = sqlite3_column_int(stmt_select, 0);
 		if(mid == 65535) mid = 0;
 		mid++;
 
-		if(sqlite3_bind_int(stmt_update, 0, mid) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_text(stmt_update, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt_update, 1, mid) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt_update, 2, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_step(stmt_update) != SQLITE_DONE) rc = 1;
 		sqlite3_reset(stmt_update);
 		sqlite3_clear_bindings(stmt_update);
@@ -599,7 +599,7 @@ int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 0, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) == SQLITE_ROW){
 	if(sqlite3_prepare_v2(db, "SELECT qos,payloadlen,payload FROM retain WHERE sub=?", -1, &stmt, NULL) != SQLITE_OK) rc = 1;
 		if(qos) *qos = sqlite3_column_int(stmt, 0);
@@ -633,10 +633,10 @@ int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, uint8_
 				return 1;
 			}
 		}
-		if(sqlite3_bind_int(stmt_update, 0, qos) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt_update, 1, payloadlen) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_blob(stmt_update, 2, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_text(stmt_update, 3, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt_update, 1, qos) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt_update, 2, payloadlen) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_blob(stmt_update, 3, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt_update, 4, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_step(stmt_update) != SQLITE_DONE) rc = 1;
 		sqlite3_reset(stmt_update);
 		sqlite3_clear_bindings(stmt_update);
@@ -647,10 +647,10 @@ int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, uint8_
 				return 1;
 			}
 		}
-		if(sqlite3_bind_text(stmt_insert, 0, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt_insert, 1, qos) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt_insert, 2, payloadlen) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_blob(stmt_insert, 3, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt_insert, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt_insert, 2, qos) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt_insert, 3, payloadlen) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_blob(stmt_insert, 4, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_step(stmt_insert) != SQLITE_DONE) rc = 1;
 		sqlite3_reset(stmt_insert);
 		sqlite3_clear_bindings(stmt_insert);
@@ -673,11 +673,11 @@ int mqtt3_db_sub_insert(const char *client_id, const char *sub, int qos)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 0, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_text(stmt, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 2, qos) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_text(stmt, 3, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_text(stmt, 4, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 2, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 3, qos) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 4, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 5, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -698,8 +698,8 @@ int mqtt3_db_sub_delete(const char *client_id, const char *sub)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 0, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_text(stmt, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 2, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -723,7 +723,7 @@ int mqtt3_db_sub_search_start(const char *sub)
 	sqlite3_reset(stmt_sub_search);
 	sqlite3_clear_bindings(stmt_sub_search);
 
-	if(sqlite3_bind_text(stmt_sub_search, 0, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt_sub_search, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 
 	return rc;
 }
@@ -752,7 +752,7 @@ int mqtt3_db_subs_clean_start(const char *client_id)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 0, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
