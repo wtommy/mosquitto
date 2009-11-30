@@ -141,7 +141,7 @@ int _mqtt3_db_tables_create(void)
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS messages("
 		"client_id TEXT, timestamp INTEGER, direction INTEGER, status INTEGER, "
-		"mid INTEGER, sub TEXT, qos INTEGER, payloadlen INTEGER, payload BLOB)",
+		"mid INTEGER, retain INTEGER, sub TEXT, qos INTEGER, payloadlen INTEGER, payload BLOB)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
 		rc = 1;
@@ -414,7 +414,7 @@ int mqtt3_db_message_delete_by_oid(uint64_t oid)
 	return rc;
 }
 
-int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, const char *sub, int qos, uint32_t payloadlen, uint8_t *payload)
+int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, int retain, const char *sub, int qos, uint32_t payloadlen, uint8_t *payload)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
@@ -423,7 +423,7 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direc
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("INSERT INTO messages "
-				"(client_id, timestamp, direction, status, mid, sub, qos, payloadlen, payload) "
+				"(client_id, timestamp, direction, status, mid, retain, sub, qos, payloadlen, payload) "
 				"VALUES (?,?,?,?,?,?,?,?,?)");
 		if(!stmt){
 			return 1;
@@ -434,10 +434,11 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direc
 	if(sqlite3_bind_int(stmt, 3, dir) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 4, status) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 5, mid) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_text(stmt, 6, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 7, qos) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 8, payloadlen) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_blob(stmt, 9, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 6, retain) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 7, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 8, qos) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 9, payloadlen) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_blob(stmt, 10, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -521,13 +522,13 @@ int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, uint8
 			}
 			switch(msg_qos){
 				case 0:
-					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_publish, sub, msg_qos, payloadlen, payload)) rc = 1;
+					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_publish, retain, sub, msg_qos, payloadlen, payload)) rc = 1;
 					break;
 				case 1:
-					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_wait_puback, sub, msg_qos, payloadlen, payload)) rc = 1;
+					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_wait_puback, retain, sub, msg_qos, payloadlen, payload)) rc = 1;
 					break;
 				case 2:
-					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_wait_pubrec, sub, msg_qos, payloadlen, payload)) rc = 1;
+					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_wait_pubrec, retain, sub, msg_qos, payloadlen, payload)) rc = 1;
 					break;
 			}
 			if(client_id) mqtt3_free(client_id);
@@ -545,6 +546,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	static sqlite3_stmt *stmt = NULL;
 	uint64_t OID;
 	uint16_t mid;
+	int retain;
 	const char *sub;
 	int qos;
 	uint32_t payloadlen;
@@ -553,7 +555,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	if(!context || !context->id || context->sock == -1) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT OID,mid,sub,qos,payloadlen,payload FROM messages WHERE status=1 AND direction=1 AND client_id=?");
+		stmt = _mqtt3_db_statement_prepare("SELECT OID,mid,retain,sub,qos,payloadlen,payload FROM messages WHERE status=1 AND direction=1 AND client_id=?");
 		if(!stmt){
 			return 1;
 		}
@@ -563,10 +565,11 @@ int mqtt3_db_message_write(mqtt3_context *context)
 		if(sqlite3_step(stmt) == SQLITE_ROW){
 			OID = sqlite3_column_int(stmt, 0);
 			mid = sqlite3_column_int(stmt, 1);
-			sub = sqlite3_column_text(stmt, 2);
-			qos = sqlite3_column_int(stmt, 3);
-			payloadlen = sqlite3_column_int(stmt, 4);
-			payload = sqlite3_column_blob(stmt, 5);
+			retain = sqlite3_column_int(stmt, 2);
+			sub = sqlite3_column_text(stmt, 3);
+			qos = sqlite3_column_int(stmt, 4);
+			payloadlen = sqlite3_column_int(stmt, 5);
+			payload = sqlite3_column_blob(stmt, 6);
 		}
 	}else{
 		rc = 1;
