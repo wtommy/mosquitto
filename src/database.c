@@ -415,7 +415,7 @@ int mqtt3_db_message_delete_by_oid(uint64_t oid)
 	return rc;
 }
 
-int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, int retain, const char *sub, int qos, uint32_t payloadlen, uint8_t *payload)
+int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, int retain, const char *sub, int qos, uint32_t payloadlen, const uint8_t *payload)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
@@ -495,7 +495,7 @@ int mqtt3_db_messages_delete(const char *client_id)
 	return rc;
 }
 
-int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, uint8_t *payload, int retain)
+int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
 {
 	int rc = 0;
 	char *client_id;
@@ -538,6 +538,48 @@ int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, uint8
 		rc = 1;
 	}
 
+	return rc;
+}
+
+int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_direction dir)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt = NULL;
+	uint64_t OID;
+	const char *sub;
+	int qos;
+	int payloadlen;
+	const uint8_t *payload;
+	int retain;
+
+	if(!client_id) return 1;
+
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("SELECT OID,sub,qos,payloadlen,payload,retain FROM messages WHERE client_id=? AND mid=? AND direction=?");
+		if(!stmt){
+			return 1;
+		}
+	}
+	if(sqlite3_bind_text(stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 2, mid) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 3, dir) != SQLITE_OK) rc = 1;
+	if(sqlite3_step(stmt) == SQLITE_ROW){
+		sub = (const char *)sqlite3_column_text(stmt, 0);
+		qos = sqlite3_column_int(stmt, 1);
+		payloadlen = sqlite3_column_int(stmt, 2);
+		payload = sqlite3_column_blob(stmt, 3);
+		retain = sqlite3_column_int(stmt, 4);
+		if(!mqtt3_db_messages_queue(sub, qos, payloadlen, payload, retain)){
+			if(mqtt3_db_message_delete_by_oid(OID)) rc = 1;
+		}else{
+			rc = 1;
+		}
+
+	}else{
+		rc = 1;
+	}
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
 	return rc;
 }
 
@@ -688,7 +730,7 @@ int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_
 	return rc;
 }
 
-int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, uint8_t *payload)
+int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, const uint8_t *payload)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt_update = NULL;
