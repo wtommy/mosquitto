@@ -20,7 +20,7 @@ int mqtt3_managed_publish(mqtt3_context *context, uint8_t qos, bool retain, cons
 	mqtt3_message *message;
 
 	if(qos == 0){
-		mqtt3_raw_publish(context, 0, qos, retain, topic, topiclen, payload, payloadlen);
+		mqtt3_raw_publish(context, false, qos, retain, 0, topic, payloadlen, payload);
 	}
 
 	packetlen = 2+topiclen + payloadlen;

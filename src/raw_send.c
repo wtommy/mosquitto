@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <string.h>
 
 #include <mqtt3.h>
 
@@ -7,12 +8,13 @@ int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 	return mqtt3_send_command_with_mid(context, PUBACK, mid);
 }
 
-int mqtt3_raw_publish(mqtt3_context *context, bool dup, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen)
+int mqtt3_raw_publish(mqtt3_context *context, bool dup, uint8_t qos, bool retain, uint16_t mid, const char *sub, uint32_t payloadlen, const uint8_t *payload)
 {
 	int packetlen;
-	uint16_t mid;
 
-	packetlen = 2+topiclen + payloadlen;
+	if(!context || context->sock == -1 || !sub || !payload) return 1;
+
+	packetlen = 2+strlen(sub) + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
 
 	/* Fixed header */
@@ -20,9 +22,8 @@ int mqtt3_raw_publish(mqtt3_context *context, bool dup, uint8_t qos, bool retain
 	if(mqtt3_write_remaining_length(context, packetlen)) return 1;
 
 	/* Variable header (topic string) */
-	if(mqtt3_write_string(context, topic, topiclen)) return 1;
+	if(mqtt3_write_string(context, sub, strlen(sub))) return 1;
 	if(qos > 0){
-		mid = mqtt3_db_mid_generate(context->id);
 		if(mqtt3_write_uint16(context, mid)) return 1;
 	}
 
