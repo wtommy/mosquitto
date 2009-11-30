@@ -34,22 +34,6 @@
 #define PINGRESP 0xD0
 #define DISCONNECT 0xE0
 
-/* Data types */
-typedef struct _mqtt3_message {
-	struct _mqtt3_message *next;
-	time_t timestamp;
-	uint16_t message_id;
-	uint8_t command;
-	uint8_t dup;
-	uint8_t qos;
-	uint8_t retain;
-	uint32_t remaining_length;
-	uint8_t *variable_header;
-	uint32_t variable_header_len;
-	uint8_t *payload;
-	uint32_t payload_len;
-} mqtt3_message;
-
 typedef struct _mqtt3_context{
 	struct _mqtt3_context *next;
 	int sock;
@@ -58,7 +42,6 @@ typedef struct _mqtt3_context{
 	uint16_t keepalive;
 	bool clean_start;
 	char *id;
-	mqtt3_message *messages;
 } mqtt3_context;
 
 typedef enum {
@@ -110,12 +93,6 @@ int mqtt3_write_bytes(mqtt3_context *context, const uint8_t *bytes, uint32_t cou
 int mqtt3_write_string(mqtt3_context *context, const char *str, uint16_t length);
 int mqtt3_write_remaining_length(mqtt3_context *context, uint32_t length);
 int mqtt3_write_uint16(mqtt3_context *context, uint16_t word);
-
-/* Message list handling */
-int mqtt3_message_add(mqtt3_context *context, mqtt3_message *message);
-int mqtt3_message_remove(mqtt3_context *context, uint16_t mid);
-void mqtt3_message_cleanup(mqtt3_message *message);
-void mqtt3_messages_cleanup(mqtt3_context *context);
 
 /* Read handling functions */
 int mqtt3_handle_connack(mqtt3_context *context);

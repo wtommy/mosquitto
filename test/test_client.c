@@ -88,14 +88,11 @@ int main(int argc, char *argv[])
 	int fdcount;
 	int run = 1;
 	mqtt3_context context;
-	mqtt3_message *pointer;
 
 	context.sock = mqtt3_socket_connect("127.0.0.1", 1883);
 	if(context.sock == -1){
 		return 1;
 	}
-	context.messages = NULL;
-
 	state = stSocketOpened;
 
 	while(run){
@@ -111,11 +108,6 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "Error in pselect: %s\n", strerror(errno));
 			run = 0;
 		}else if(fdcount == 0){
-			pointer = context.messages;
-			while(pointer){
-				printf("Message: %s\n", mqtt3_command_to_string(pointer->command));
-				pointer = pointer->next;
-			}
 			switch(state){
 				case stSocketOpened:
 					mqtt3_raw_connect(&context, "Roger", 5, false, 0, false, "", 0, "", 0, 10, false);
@@ -147,11 +139,6 @@ int main(int argc, char *argv[])
 			}
 		}else{
 			printf("fdcount=%d\n", fdcount);
-			pointer = context.messages;
-			while(pointer){
-				printf("Message: %s\n", mqtt3_command_to_string(pointer->command));
-				pointer = pointer->next;
-			}
 
 			if(FD_ISSET(context.sock, &readfds)){
 				if(handle_read(&context)){

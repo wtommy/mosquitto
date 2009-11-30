@@ -16,7 +16,6 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context->keepalive = 60; /* Default to 60s */
 	context->clean_start = true;
 	context->id = NULL;
-	context->messages = NULL;
 
 	return context;
 }
@@ -34,7 +33,6 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 		mqtt3_db_client_delete(context);
 	}
 	if(context->id) mqtt3_free(context->id);
-	/* FIXME - clean messages and subscriptions */
 	mqtt3_free(context);
 }
 

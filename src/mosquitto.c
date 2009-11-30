@@ -121,7 +121,6 @@ int main(int argc, char *argv[])
 		now = time(NULL);
 		while(ctxt_ptr){
 			if(ctxt_ptr->sock != -1){
-				//printf("sock: %d\n", ctxt_ptr->sock);
 				FD_SET(ctxt_ptr->sock, &readfds);
 				if(ctxt_ptr->sock > sockmax){
 					sockmax = ctxt_ptr->sock;

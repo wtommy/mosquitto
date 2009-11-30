@@ -688,7 +688,6 @@ int mqtt3_db_outgoing_check(fd_set *writefds, int *sockmax)
 	}
 	while(sqlite3_step(stmt) == SQLITE_ROW){
 		fd = sqlite3_column_int(stmt, 0);
-		printf("fd: %d\n", fd);
 		if(fd > *sockmax) *sockmax = fd;
 		FD_SET(fd, writefds);
 	}
