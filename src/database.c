@@ -585,6 +585,32 @@ uint16_t mqtt3_db_mid_generate(const char *client_id)
 	}
 }
 
+int mqtt3_db_outgoing_check(fd_set *writefds, int *sockmax)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt = NULL;
+	int fd;
+
+	if(!writefds) return 1;
+
+	FD_ZERO(writefds);
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("SELECT sock FROM clients JOIN messages ON clients.id=messages.client_id WHERE messages.status=1 AND messages.direction=1 AND sock<>-1");
+		if(!stmt){
+			return 1;
+		}
+	}
+	while(sqlite3_step(stmt) == SQLITE_ROW){
+		fd = sqlite3_column_int(stmt, 0);
+		printf("fd: %d\n", fd);
+		if(fd > *sockmax) *sockmax = fd;
+		FD_SET(fd, writefds);
+	}
+	sqlite3_reset(stmt);
+
+	return rc;
+}
+
 int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload)
 {
 	int rc = 0;

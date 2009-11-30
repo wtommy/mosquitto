@@ -136,9 +136,7 @@ int main(int argc, char *argv[])
 			ctxt_ptr = ctxt_ptr->next;
 		}
 
-		FD_ZERO(&writefds);
-		timeout.tv_sec = 1;
-		timeout.tv_nsec = 0;
+		mqtt3_db_outgoing_check(&writefds, &sockmax);
 
 		fdcount = pselect(sockmax+1, &readfds, &writefds, NULL, &timeout, &sigblock);
 		if(fdcount == -1){
