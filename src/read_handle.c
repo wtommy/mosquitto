@@ -95,16 +95,15 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 	}
 	printf("Payload: '%s'\n", payload);
 
+	if(mqtt3_db_messages_queue(sub, qos, payloadlen, payload, retain)) rc = 1;
 	switch(qos){
 		case 0:
-			if(mqtt3_db_messages_queue(sub, qos, payloadlen, payload, retain)) rc = 1;
+			/* No response needed */
 			break;
 		case 1:
-			/* FIXME - need to store message somewhere */
 			if(mqtt3_raw_puback(context, mid)) rc = 1;
 			break;
 		case 2:
-			/* FIXME - need to store message somewhere */
 			if(mqtt3_raw_pubrec(context, mid)) rc = 1;
 			break;
 	}
