@@ -489,13 +489,27 @@ int mqtt3_db_messages_delete(mqtt3_context *context)
 int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, uint8_t *payload, int retain)
 {
 	int rc = 0;
-	static sqlite3_stmt *stmt_select = NULL;
+	char *client_id;
+	uint8_t client_qos;
+	uint8_t msg_qos;
 
 	/* Find all clients that subscribe to sub and put messages into the db for them. */
 	if(!sub || !payloadlen || !payload) return 1;
 
 	if(retain){
 		if(mqtt3_db_retain_insert(sub, qos, payloadlen, payload)) rc = 1;
+	}
+	if(!mqtt3_db_sub_search_start(sub)){
+		while(!mqtt3_db_sub_search_next(&client_id, &client_qos)){
+			if(qos > client_qos){
+				msg_qos = client_qos;
+			}else{
+				msg_qos = qos;
+			}
+			if(client_id) mqtt3_free(client_id);
+		}
+	}else{
+		rc = 1;
 	}
 	// FIXME - need to actually queue messages
 
