@@ -144,20 +144,20 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 int mqtt3_db_client_delete(mqtt3_context *context);
 int mqtt3_db_client_find_socket(const char *client_id, int *sock);
 int mqtt3_db_client_invalidate_socket(const char *client_id, int sock);
-int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid);
-int mqtt3_db_message_delete_by_oid(mqtt3_context *context, uint64_t oid);
-int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, const char *sub, int qos, uint32_t payloadlen, uint8_t *payload);
-int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status);
-int mqtt3_db_messages_delete(mqtt3_context *context);
+int mqtt3_db_message_delete(const char *client_id, uint16_t mid);
+int mqtt3_db_message_delete_by_oid(uint64_t oid);
+int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, const char *sub, int qos, uint32_t payloadlen, uint8_t *payload);
+int mqtt3_db_message_update(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status);
+int mqtt3_db_messages_delete(const char *client_id);
 int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, uint8_t *payload, int retain);
 uint16_t mqtt3_db_mid_generate(const char *client_id);
 int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload);
 int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, uint8_t *payload);
-int mqtt3_db_sub_insert(mqtt3_context *context, const char *sub, int qos);
-int mqtt3_db_sub_delete(mqtt3_context *context, const char *sub);
+int mqtt3_db_sub_insert(const char *client_id, const char *sub, int qos);
+int mqtt3_db_sub_delete(const char *client_id, const char *sub);
 int mqtt3_db_sub_search_start(const char *sub);
 int mqtt3_db_sub_search_next(char **client_id, uint8_t *qos);
-int mqtt3_db_subs_clean_start(mqtt3_context *context);
+int mqtt3_db_subs_clean_start(const char *client_id);
 
 /* Context functions */
 mqtt3_context *mqtt3_context_init(int sock);

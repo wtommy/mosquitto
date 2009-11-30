@@ -112,7 +112,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 		if(mqtt3_read_byte(context, &qos)) return 1;
 		remaining_length -= 1;
 		if(sub){
-			mqtt3_db_sub_insert(context, sub, qos);
+			mqtt3_db_sub_insert(context->id, sub, qos);
 			mqtt3_free(sub);
 		}
 
@@ -152,7 +152,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 
 		remaining_length -= strlen(sub) + 2;
 		if(sub){
-			mqtt3_db_sub_delete(context, sub);
+			mqtt3_db_sub_delete(context->id, sub);
 			mqtt3_free(sub);
 		}
 	}

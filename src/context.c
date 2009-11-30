@@ -29,8 +29,8 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 		mqtt3_socket_close(context);
 	}
 	if(context->clean_start){
-		mqtt3_db_subs_clean_start(context);
-		mqtt3_db_messages_delete(context);
+		mqtt3_db_subs_clean_start(context->id);
+		mqtt3_db_messages_delete(context->id);
 		mqtt3_db_client_delete(context);
 	}
 	if(context->id) mqtt3_free(context->id);
