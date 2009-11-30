@@ -539,6 +539,42 @@ int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, uint8
 	return rc;
 }
 
+int mqtt3_db_message_write(mqtt3_context *context)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt = NULL;
+	uint64_t OID;
+	uint16_t mid;
+	const char *sub;
+	int qos;
+	uint32_t payloadlen;
+	const uint8_t *payload;
+
+	if(!context || !context->id || context->sock == -1) return 1;
+
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("SELECT OID,mid,sub,qos,payloadlen,payload FROM messages WHERE status=1 AND direction=1 AND client_id=?");
+		if(!stmt){
+			return 1;
+		}
+	}
+	if(sqlite3_bind_text(stmt, 1, context->id, strlen(context->id), SQLITE_STATIC) == SQLITE_OK){
+		/* Only write a single message per call to this function */
+		if(sqlite3_step(stmt) == SQLITE_ROW){
+			OID = sqlite3_column_int(stmt, 0);
+			mid = sqlite3_column_int(stmt, 1);
+			sub = sqlite3_column_text(stmt, 2);
+			qos = sqlite3_column_int(stmt, 3);
+			payloadlen = sqlite3_column_int(stmt, 4);
+			payload = sqlite3_column_blob(stmt, 5);
+		}
+	}else{
+		rc = 1;
+	}
+	sqlite3_reset(stmt);
+	return rc;
+}
+
 uint16_t mqtt3_db_mid_generate(const char *client_id)
 {
 	int rc = 0;

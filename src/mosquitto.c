@@ -175,6 +175,13 @@ int main(int argc, char *argv[])
 			ctxt_ptr = contexts;
 			ctxt_last = NULL;
 			while(ctxt_ptr){
+				if(ctxt_ptr->sock != -1 && FD_ISSET(ctxt_ptr->sock, &writefds)){
+					printf("Write to %s (%d)\n", ctxt_ptr->id, ctxt_ptr->sock);
+					if(mqtt3_db_message_write(ctxt_ptr)){
+						printf("Connection error for socket %d\n", ctxt_ptr->sock);
+						// FIXME - do something here.
+					}
+				}
 				if(ctxt_ptr->sock != -1 && FD_ISSET(ctxt_ptr->sock, &readfds)){
 					if(handle_read(ctxt_ptr)){
 						printf("Connection error for socket %d\n", ctxt_ptr->sock);
