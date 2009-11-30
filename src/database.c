@@ -373,7 +373,7 @@ int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
 	return rc;
 }
 
-int mqtt3_db_message_delete(const char *client_id, uint16_t mid)
+int mqtt3_db_message_delete(const char *client_id, uint16_t mid, mqtt3_msg_direction dir)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
@@ -381,13 +381,14 @@ int mqtt3_db_message_delete(const char *client_id, uint16_t mid)
 	if(!client_id) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM messages WHERE client_id=? AND mid=?");
+		stmt = _mqtt3_db_statement_prepare("DELETE FROM messages WHERE client_id=? AND mid=? AND direction=?");
 		if(!stmt){
 			return 1;
 		}
 	}
 	if(sqlite3_bind_text(stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 2, mid) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 3, dir) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
