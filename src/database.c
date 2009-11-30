@@ -424,7 +424,7 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direc
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("INSERT INTO messages "
 				"(client_id, timestamp, direction, status, mid, retain, sub, qos, payloadlen, payload) "
-				"VALUES (?,?,?,?,?,?,?,?,?)");
+				"VALUES (?,?,?,?,?,?,?,?,?,?)");
 		if(!stmt){
 			return 1;
 		}
@@ -566,15 +566,19 @@ int mqtt3_db_message_write(mqtt3_context *context)
 			OID = sqlite3_column_int(stmt, 0);
 			mid = sqlite3_column_int(stmt, 1);
 			retain = sqlite3_column_int(stmt, 2);
-			sub = sqlite3_column_text(stmt, 3);
+			sub = (const char *)sqlite3_column_text(stmt, 3);
 			qos = sqlite3_column_int(stmt, 4);
 			payloadlen = sqlite3_column_int(stmt, 5);
 			payload = sqlite3_column_blob(stmt, 6);
+			if(!mqtt3_raw_publish(context, false, qos, retain, mid, sub, payloadlen, payload)){
+				mqtt3_db_message_delete_by_oid(OID);
+			}
 		}
 	}else{
 		rc = 1;
 	}
 	sqlite3_reset(stmt);
+
 	return rc;
 }
 
