@@ -516,14 +516,14 @@ int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, uint8
 	return rc;
 }
 
-uint16_t mqtt3_db_mid_generate(mqtt3_context *context)
+uint16_t mqtt3_db_mid_generate(const char *client_id)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt_select = NULL;
 	static sqlite3_stmt *stmt_update = NULL;
 	uint16_t mid = 0;
 
-	if(!context || !context->id) return 1;
+	if(!client_id) return 1;
 
 	if(!stmt_select){
 		stmt_select = _mqtt3_db_statement_prepare("SELECT last_mid FROM clients WHERE client_id=?");
@@ -538,14 +538,14 @@ uint16_t mqtt3_db_mid_generate(mqtt3_context *context)
 		}
 	}
 
-	if(sqlite3_bind_text(stmt_select, 0, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt_select, 0, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt_select) == SQLITE_ROW){
 		mid = sqlite3_column_int(stmt_select, 0);
 		if(mid == 65535) mid = 0;
 		mid++;
 
 		if(sqlite3_bind_int(stmt_update, 0, mid) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_text(stmt_update, 1, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt_update, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_step(stmt_update) != SQLITE_DONE) rc = 1;
 		sqlite3_reset(stmt_update);
 		sqlite3_clear_bindings(stmt_update);

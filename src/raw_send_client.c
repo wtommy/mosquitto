@@ -60,7 +60,7 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 	if(mqtt3_write_remaining_length(context, packetlen)) return 1;
 
 	/* Variable header */
-	mid = mqtt3_db_mid_generate(context);
+	mid = mqtt3_db_mid_generate(context->id);
 	if(mqtt3_write_uint16(context, mid)) return 1;
 
 	/* Payload */
@@ -85,7 +85,7 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic, u
 	if(mqtt3_write_remaining_length(context, packetlen)) return 1;
 	
 	/* Variable header */
-	mid = mqtt3_db_mid_generate(context);
+	mid = mqtt3_db_mid_generate(context->id);
 	if(mqtt3_write_uint16(context, mid)) return 1;
 
 	/* Payload */
