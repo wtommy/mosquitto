@@ -491,6 +491,7 @@ int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, uint8
 	char *client_id;
 	uint8_t client_qos;
 	uint8_t msg_qos;
+	uint16_t mid;
 
 	/* Find all clients that subscribe to sub and put messages into the db for them. */
 	if(!sub || !payloadlen || !payload) return 1;
@@ -505,12 +506,27 @@ int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, uint8
 			}else{
 				msg_qos = qos;
 			}
+			if(msg_qos){
+				mid = mqtt3_db_mid_generate(client_id);
+			}else{
+				mid = 0;
+			}
+			switch(msg_qos){
+				case 0:
+					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_publish, sub, msg_qos, payloadlen, payload)) rc = 1;
+					break;
+				case 1:
+					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_wait_puback, sub, msg_qos, payloadlen, payload)) rc = 1;
+					break;
+				case 2:
+					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_wait_pubrec, sub, msg_qos, payloadlen, payload)) rc = 1;
+					break;
+			}
 			if(client_id) mqtt3_free(client_id);
 		}
 	}else{
 		rc = 1;
 	}
-	// FIXME - need to actually queue messages
 
 	return rc;
 }
