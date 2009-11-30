@@ -523,18 +523,18 @@ uint16_t mqtt3_db_mid_generate(const char *client_id)
 	static sqlite3_stmt *stmt_update = NULL;
 	uint16_t mid = 0;
 
-	if(!client_id) return 1;
+	if(!client_id) return 0;
 
 	if(!stmt_select){
 		stmt_select = _mqtt3_db_statement_prepare("SELECT last_mid FROM clients WHERE client_id=?");
 		if(!stmt_select){
-			return 1;
+			return 0;
 		}
 	}
 	if(!stmt_update){
 		stmt_update = _mqtt3_db_statement_prepare("UPDATE clients SET last_mid=? WHERE client_id=?");
 		if(!stmt_update){
-			return 1;
+			return 0;
 		}
 	}
 
@@ -555,7 +555,11 @@ uint16_t mqtt3_db_mid_generate(const char *client_id)
 	sqlite3_reset(stmt_select);
 	sqlite3_clear_bindings(stmt_select);
 
-	return mid;
+	if(!rc){
+		return mid;
+	}else{
+		return 0;
+	}
 }
 
 int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload)
