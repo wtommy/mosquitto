@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 		now = time(NULL);
 		while(ctxt_ptr){
 			if(ctxt_ptr->sock != -1){
-				printf("sock: %d\n", ctxt_ptr->sock);
+				//printf("sock: %d\n", ctxt_ptr->sock);
 				FD_SET(ctxt_ptr->sock, &readfds);
 				if(ctxt_ptr->sock > sockmax){
 					sockmax = ctxt_ptr->sock;
@@ -176,7 +176,6 @@ int main(int argc, char *argv[])
 			ctxt_last = NULL;
 			while(ctxt_ptr){
 				if(ctxt_ptr->sock != -1 && FD_ISSET(ctxt_ptr->sock, &writefds)){
-					printf("Write to %s (%d)\n", ctxt_ptr->id, ctxt_ptr->sock);
 					if(mqtt3_db_message_write(ctxt_ptr)){
 						printf("Connection error for socket %d\n", ctxt_ptr->sock);
 						// FIXME - do something here.

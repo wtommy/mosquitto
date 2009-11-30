@@ -117,10 +117,6 @@ int mqtt3_message_remove(mqtt3_context *context, uint16_t mid);
 void mqtt3_message_cleanup(mqtt3_message *message);
 void mqtt3_messages_cleanup(mqtt3_context *context);
 
-/* Managed send functions */
-int mqtt3_managed_send(mqtt3_context *context, mqtt3_message *message);
-int mqtt3_managed_publish(mqtt3_context *context, uint8_t qos, bool retain, const char *topic, uint16_t topiclen, const uint8_t *payload, uint32_t payloadlen);
-
 /* Read handling functions */
 int mqtt3_handle_connack(mqtt3_context *context);
 int mqtt3_handle_connect(mqtt3_context *context);
