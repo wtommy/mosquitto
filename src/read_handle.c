@@ -43,13 +43,11 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 	uint32_t remaining_length;
 	uint16_t mid;
 
-	printf("Received PUBCOMP\n");
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 
 	if(mid){
-		printf("Removing message %d\n", mid);
-		mqtt3_message_remove(context, mid);
+		if(mqtt3_db_message_delete(context->id, mid, md_out)) return 1;
 	}
 	return 0;
 }
