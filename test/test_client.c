@@ -65,7 +65,7 @@ int handle_read(mqtt3_context *context)
 			if(mqtt3_handle_pubcomp(context)) return 3;
 			break;
 		case PUBLISH:
-			if(mqtt3_handle_publish(context, buf)) return 3;
+			if(mqtt3_handle_publish(context, buf)) return 0;
 			break;
 		case PUBREC:
 			if(mqtt3_handle_pubrec(context)) return 3;
@@ -134,11 +134,11 @@ int main(int argc, char *argv[])
 					break;
 				case stSubAckd:
 					printf("SUBACK received\n");
-					mqtt3_managed_publish(&context, 2, false, "a/b/c", 5, (uint8_t *)"Roger", 5);
+					mqtt3_raw_publish(&context, 0, 0, 0, 1, "a/b/c", 5, (uint8_t *)"Roger");
 					state = stPause;
 					break;
 				case stPause:
-					mqtt3_raw_disconnect(&context);
+					//mqtt3_raw_disconnect(&context);
 					printf("Pause\n");
 					break;
 				default:
