@@ -66,13 +66,10 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 	qos = (header & 0x06)>>1;
 	retain = (header & 0x01);
 
-	printf("dup=%d\nqos=%d\nretain=%d\n", dup, qos, retain);
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 
-	printf("Remaining length: %d\n", remaining_length);
 	if(mqtt3_read_string(context, &sub)) return 1;
 	remaining_length -= strlen((char *)sub) + 2;
-	printf("Topic: '%s'\n", sub);
 
 	if(qos > 0){
 		if(mqtt3_read_uint16(context, &mid)){
@@ -82,14 +79,12 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 		remaining_length -= 2;
 	}
 
-	printf("Remaining length: %d\n", remaining_length);
 	payloadlen = remaining_length;
 	payload = mqtt3_calloc(payloadlen, sizeof(uint8_t));
 	if(mqtt3_read_bytes(context, payload, payloadlen)){
 		mqtt3_free(sub);
 		return 1;
 	}
-	printf("Payload: '%s'\n", payload);
 
 	switch(qos){
 		case 0:
