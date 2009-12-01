@@ -39,7 +39,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mqtt3.h>
 
-/* FIXME - Incomplete */
 int mqtt3_handle_connect(mqtt3_context *context)
 {
 	uint32_t remaining_length;
