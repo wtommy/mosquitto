@@ -160,11 +160,11 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 								sub, retain_qos, retain_payloadlen, retain_payload)) rc = 1;
 						break;
 					case 1:
-						if(mqtt3_db_message_insert(context->id, retain_mid, md_out, ms_wait_puback, 1,
+						if(mqtt3_db_message_insert(context->id, retain_mid, md_out, ms_publish_puback, 1,
 								sub, retain_qos, retain_payloadlen, retain_payload)) rc = 1;
 						break;
 					case 2:
-						if(mqtt3_db_message_insert(context->id, retain_mid, md_out, ms_wait_pubrec, 1,
+						if(mqtt3_db_message_insert(context->id, retain_mid, md_out, ms_publish_pubrec, 1,
 								sub, retain_qos, retain_payloadlen, retain_payload)) rc = 1;
 						break;
 				}
