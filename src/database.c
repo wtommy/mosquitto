@@ -712,7 +712,6 @@ int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_
 	}
 	if(sqlite3_bind_text(stmt, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) == SQLITE_ROW){
-	if(sqlite3_prepare_v2(db, "SELECT qos,payloadlen,payload FROM retain WHERE sub=?", -1, &stmt, NULL) != SQLITE_OK) rc = 1;
 		if(qos) *qos = sqlite3_column_int(stmt, 0);
 		if(payloadlen) *payloadlen = sqlite3_column_int(stmt, 1);
 		if(payload && payloadlen && *payloadlen){
