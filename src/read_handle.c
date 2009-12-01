@@ -89,7 +89,9 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 	switch(qos){
 		case 0:
 			if(mqtt3_db_messages_queue(sub, qos, payloadlen, payload, retain)) rc = 1;
+			break;
 		case 1:
+			if(mqtt3_db_messages_queue(sub, qos, payloadlen, payload, retain)) rc = 1;
 			if(mqtt3_raw_puback(context, mid)) rc = 1;
 			break;
 		case 2:
