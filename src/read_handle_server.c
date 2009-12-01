@@ -40,7 +40,6 @@ int mqtt3_handle_connect(mqtt3_context *context)
 		return 1;
 	}
 
-	printf("Received CONNECT for protocol %s version %d\n", protocol_name, protocol_version);
 	mqtt3_free(protocol_name);
 
 	if(mqtt3_read_byte(context, &connect_flags)) return 1;
@@ -103,7 +102,6 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 	/* FIXME - plenty of potential for memory leaks here */
 	if(!context) return 1;
 
-	printf("Received SUBSCRIBE\n");
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 	remaining_length -= 2;

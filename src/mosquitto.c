@@ -61,7 +61,7 @@ int handle_read(mqtt3_context *context)
 			if(mqtt3_handle_unsubscribe(context)) return 1;
 			break;
 		default:
-			printf("Received command: %s (%d)\n", mqtt3_command_to_string(byte&0xF0), byte&0xF0);
+			// FIXME - do something?
 			break;
 	}
 
@@ -168,7 +168,6 @@ int main(int argc, char *argv[])
 					ctxt_ptr = ctxt_next;
 				}
 			}
-			fprintf(stderr, "Error in pselect: %s\n", strerror(errno));
 		}else if(fdcount == 0){
 			// FIXME - update server topics here
 		}else{
@@ -177,13 +176,11 @@ int main(int argc, char *argv[])
 			while(ctxt_ptr){
 				if(ctxt_ptr->sock != -1 && FD_ISSET(ctxt_ptr->sock, &writefds)){
 					if(mqtt3_db_message_write(ctxt_ptr)){
-						printf("Connection error for socket %d\n", ctxt_ptr->sock);
 						// FIXME - do something here.
 					}
 				}
 				if(ctxt_ptr->sock != -1 && FD_ISSET(ctxt_ptr->sock, &readfds)){
 					if(handle_read(ctxt_ptr)){
-						printf("Connection error for socket %d\n", ctxt_ptr->sock);
 						/* Read error or other that means we should disconnect */
 						ctxt_reap = ctxt_ptr;
 						if(ctxt_last){

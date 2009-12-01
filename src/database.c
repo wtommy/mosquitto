@@ -360,7 +360,6 @@ int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("UPDATE clients SET sock=-1 WHERE id=? AND sock=?");
 		if(!stmt){
-			printf("Prep failed\n");
 			return 1;
 		}
 	}
