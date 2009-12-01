@@ -12,7 +12,7 @@ int mqtt3_config_read(mqtt3_config *config)
 	char *token;
 	
 	/* Set defaults */
-	config->port = 1833;
+	config->port = 1883;
 	config->msg_timeout = 10;
 	config->persist = 1;
 	config->sys_interval = 10;
