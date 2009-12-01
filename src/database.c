@@ -554,10 +554,10 @@ int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, const
 					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_publish, retain, sub, msg_qos, payloadlen, payload)) rc = 1;
 					break;
 				case 1:
-					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_wait_puback, retain, sub, msg_qos, payloadlen, payload)) rc = 1;
+					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_publish_puback, retain, sub, msg_qos, payloadlen, payload)) rc = 1;
 					break;
 				case 2:
-					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_wait_pubrec, retain, sub, msg_qos, payloadlen, payload)) rc = 1;
+					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_publish_pubrec, retain, sub, msg_qos, payloadlen, payload)) rc = 1;
 					break;
 			}
 			if(client_id) mqtt3_free(client_id);
@@ -617,6 +617,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 	uint64_t OID;
+	int status;
 	uint16_t mid;
 	int retain;
 	const char *sub;
@@ -627,7 +628,8 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	if(!context || !context->id || context->sock == -1) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT OID,mid,retain,sub,qos,payloadlen,payload FROM messages WHERE status=1 AND direction=1 AND client_id=?");
+		stmt = _mqtt3_db_statement_prepare("SELECT OID,status,mid,retain,sub,qos,payloadlen,payload FROM messages "
+				"WHERE (status=1 OR status=2 OR status=4) AND direction=1 AND client_id=?");
 		if(!stmt){
 			return 1;
 		}
@@ -636,14 +638,25 @@ int mqtt3_db_message_write(mqtt3_context *context)
 		/* Only write a single message per call to this function */
 		if(sqlite3_step(stmt) == SQLITE_ROW){
 			OID = sqlite3_column_int(stmt, 0);
-			mid = sqlite3_column_int(stmt, 1);
-			retain = sqlite3_column_int(stmt, 2);
-			sub = (const char *)sqlite3_column_text(stmt, 3);
-			qos = sqlite3_column_int(stmt, 4);
-			payloadlen = sqlite3_column_int(stmt, 5);
-			payload = sqlite3_column_blob(stmt, 6);
+			status = sqlite3_column_int(stmt, 1);
+			mid = sqlite3_column_int(stmt, 2);
+			retain = sqlite3_column_int(stmt, 3);
+			sub = (const char *)sqlite3_column_text(stmt, 4);
+			qos = sqlite3_column_int(stmt, 5);
+			payloadlen = sqlite3_column_int(stmt, 6);
+			payload = sqlite3_column_blob(stmt, 7);
 			if(!mqtt3_raw_publish(context, false, qos, retain, mid, sub, payloadlen, payload)){
-				mqtt3_db_message_delete_by_oid(OID);
+				switch(status){
+					case ms_publish:
+						mqtt3_db_message_delete_by_oid(OID);
+						break;
+					case ms_publish_puback:
+						mqtt3_db_message_update(context->id, mid, md_out, ms_wait_puback);
+						break;
+					case ms_publish_pubrec:
+						mqtt3_db_message_update(context->id, mid, md_out, ms_wait_pubrec);
+						break;
+				}
 			}
 		}
 	}else{
@@ -661,18 +674,18 @@ uint16_t mqtt3_db_mid_generate(const char *client_id)
 	static sqlite3_stmt *stmt_update = NULL;
 	uint16_t mid = 0;
 
-	if(!client_id) return 0;
+	if(!client_id) return 1;
 
 	if(!stmt_select){
 		stmt_select = _mqtt3_db_statement_prepare("SELECT last_mid FROM clients WHERE client_id=?");
 		if(!stmt_select){
-			return 0;
+			return 1;
 		}
 	}
 	if(!stmt_update){
 		stmt_update = _mqtt3_db_statement_prepare("UPDATE clients SET last_mid=? WHERE client_id=?");
 		if(!stmt_update){
-			return 0;
+			return 1;
 		}
 	}
 
@@ -696,7 +709,7 @@ uint16_t mqtt3_db_mid_generate(const char *client_id)
 	if(!rc){
 		return mid;
 	}else{
-		return 0;
+		return 1;
 	}
 }
 
@@ -710,7 +723,8 @@ int mqtt3_db_outgoing_check(fd_set *writefds, int *sockmax)
 
 	FD_ZERO(writefds);
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT sock FROM clients JOIN messages ON clients.id=messages.client_id WHERE messages.status=1 AND messages.direction=1 AND sock<>-1");
+		stmt = _mqtt3_db_statement_prepare("SELECT sock FROM clients JOIN messages ON clients.id=messages.client_id "
+				"WHERE (messages.status=1 OR messages.status=2 OR messages.status = 4) AND messages.direction=1 AND sock<>-1");
 		if(!stmt){
 			return 1;
 		}

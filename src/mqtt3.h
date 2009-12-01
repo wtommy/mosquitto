@@ -76,10 +76,12 @@ typedef struct _mqtt3_context{
 typedef enum {
 	ms_invalid = 0,
 	ms_publish = 1,
-	ms_wait_puback = 2,
-	ms_wait_pubrec = 3,
-	ms_wait_pubrel = 4,
-	ms_wait_pubcomp = 5
+	ms_publish_puback = 2,
+	ms_wait_puback = 3,
+	ms_publish_pubrec = 4,
+	ms_wait_pubrec = 5,
+	ms_wait_pubrel = 6,
+	ms_wait_pubcomp = 7
 } mqtt3_msg_status;
 
 typedef enum {
