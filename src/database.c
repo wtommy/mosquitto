@@ -592,11 +592,12 @@ int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_dire
 	if(sqlite3_bind_int(stmt, 2, mid) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 3, dir) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) == SQLITE_ROW){
-		sub = (const char *)sqlite3_column_text(stmt, 0);
-		qos = sqlite3_column_int(stmt, 1);
-		payloadlen = sqlite3_column_int(stmt, 2);
-		payload = sqlite3_column_blob(stmt, 3);
-		retain = sqlite3_column_int(stmt, 4);
+		OID = sqlite3_column_int(stmt, 0);
+		sub = (const char *)sqlite3_column_text(stmt, 1);
+		qos = sqlite3_column_int(stmt, 2);
+		payloadlen = sqlite3_column_int(stmt, 3);
+		payload = sqlite3_column_blob(stmt, 4);
+		retain = sqlite3_column_int(stmt, 5);
 		if(!mqtt3_db_messages_queue(sub, qos, payloadlen, payload, retain)){
 			if(mqtt3_db_message_delete_by_oid(OID)) rc = 1;
 		}else{
