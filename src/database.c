@@ -401,6 +401,29 @@ int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
 	return rc;
 }
 
+int mqtt3_db_message_count(int *count)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt = NULL;
+
+	if(!count) return 1;
+
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("SELECT COUNT(client_id) FROM messages");
+		if(!stmt){
+			return 1;
+		}
+	}
+	if(sqlite3_step(stmt) == SQLITE_ROW){
+		*count = sqlite3_column_int(stmt, 0);
+	}else{
+		rc = 1;
+	}
+	sqlite3_reset(stmt);
+
+	return rc;
+}
+
 int mqtt3_db_message_delete(const char *client_id, uint16_t mid, mqtt3_msg_direction dir)
 {
 	int rc = 0;
