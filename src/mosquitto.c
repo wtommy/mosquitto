@@ -113,6 +113,8 @@ int main(int argc, char *argv[])
 	time_t now;
 	int daemon = 0;
 	mqtt3_config config;
+	time_t start_time = time(NULL);
+	char buf[1024];
 
 	if(mqtt3_config_read(&config)){
 		fprintf(stderr, "Error: Unable to open configuration file.\n");
@@ -149,6 +151,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	/* Set static $SYS messages */
+	snprintf(buf, 1024, "mosquitto version %s (build date %s)", VERSION, BUILDDATE);
+	mqtt3_db_messages_queue("$SYS/version", 2, strlen(buf), (uint8_t *)buf, 1);
+
 	listensock = mqtt3_socket_listen(config.port);
 	if(listensock == -1){
 		return 1;
@@ -156,6 +162,8 @@ int main(int argc, char *argv[])
 
 	run = 1;
 	while(run){
+		mqtt3_db_sys_update(config.sys_interval, start_time);
+
 		FD_ZERO(&readfds);
 		FD_SET(listensock, &readfds);
 
@@ -214,8 +222,6 @@ int main(int argc, char *argv[])
 					ctxt_ptr = ctxt_next;
 				}
 			}
-		}else if(fdcount == 0){
-			// FIXME - update server topics here
 		}else{
 			ctxt_ptr = contexts;
 			ctxt_last = NULL;

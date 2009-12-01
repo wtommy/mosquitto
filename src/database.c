@@ -1033,6 +1033,17 @@ int mqtt3_db_subs_clean_start(const char *client_id)
 	return rc;
 }
 
+void mqtt3_db_sys_update(int interval, time_t start_time)
+{
+	static time_t last_update = 0;
+	time_t now = time(NULL);
+
+	if(now - interval > last_update){
+		// Do updates
+		last_update = now;
+	}
+}
+
 sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query)
 {
 	struct stmt_array *tmp;
