@@ -592,6 +592,59 @@ int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, const
 	return rc;
 }
 
+int mqtt3_db_message_timeout_check(unsigned int timeout)
+{
+	int rc = 0;
+	time_t now = time(NULL) - timeout;
+	static sqlite3_stmt *stmt_select = NULL;
+	static sqlite3_stmt *stmt_update = NULL;
+	uint64_t OID;
+	int status;
+	mqtt3_msg_status new_status = ms_invalid;
+
+	if(!stmt_select){
+		stmt_select = _mqtt3_db_statement_prepare("SELECT OID,status FROM messages WHERE timestamp<?");
+		if(!stmt_select){
+			return 1;
+		}
+	}
+	if(!stmt_update){
+		stmt_update = _mqtt3_db_statement_prepare("UPDATE messages SET status=?,dup=1 WHERE OID=?");
+		if(!stmt_update){
+			return 1;
+		}
+	}
+	if(sqlite3_bind_int(stmt_select, 1, now) != SQLITE_OK) rc = 1;
+	while(sqlite3_step(stmt_select) == SQLITE_ROW){
+		OID = sqlite3_column_int(stmt_select, 0);
+		status = sqlite3_column_int(stmt_select, 1);
+		switch(status){
+			case ms_wait_puback:
+				new_status = ms_publish_puback;
+				break;
+			case ms_wait_pubrec:
+				new_status = ms_publish_pubrec;
+				break;
+			case ms_wait_pubrel:
+				new_status = ms_resend_pubrel;
+				break;
+			case ms_wait_pubcomp:
+				new_status = ms_resend_pubcomp;
+				break;
+		}
+		if(new_status != ms_invalid){
+			if(sqlite3_bind_int(stmt_update, 1, new_status) != SQLITE_OK) rc = 1;
+			if(sqlite3_bind_int(stmt_update, 2, OID) != SQLITE_OK) rc = 1;
+			if(sqlite3_step(stmt_update) != SQLITE_DONE) rc = 1;
+			sqlite3_reset(stmt_update);
+			sqlite3_clear_bindings(stmt_update);
+		}
+	}
+	sqlite3_reset(stmt_select);
+	sqlite3_clear_bindings(stmt_select);
+	return 0;
+}
+
 int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_direction dir)
 {
 	int rc = 0;
@@ -652,7 +705,8 @@ int mqtt3_db_message_write(mqtt3_context *context)
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("SELECT OID,status,mid,retain,sub,qos,payloadlen,payload FROM messages "
-				"WHERE (status=1 OR status=2 OR status=4) AND direction=1 AND client_id=?");
+				"WHERE (status=1 OR status=2 OR status=4 OR status=6 OR status=8) "
+				"AND direction=1 AND client_id=?");
 		if(!stmt){
 			return 1;
 		}
@@ -668,18 +722,36 @@ int mqtt3_db_message_write(mqtt3_context *context)
 			qos = sqlite3_column_int(stmt, 5);
 			payloadlen = sqlite3_column_int(stmt, 6);
 			payload = sqlite3_column_blob(stmt, 7);
-			if(!mqtt3_raw_publish(context, false, qos, retain, mid, sub, payloadlen, payload)){
-				switch(status){
-					case ms_publish:
+			switch(status){
+				case ms_publish:
+					if(!mqtt3_raw_publish(context, false, qos, retain, mid, sub, payloadlen, payload)){
 						mqtt3_db_message_delete_by_oid(OID);
-						break;
-					case ms_publish_puback:
+					}
+					break;
+
+				case ms_publish_puback:
+					if(!mqtt3_raw_publish(context, false, qos, retain, mid, sub, payloadlen, payload)){
 						mqtt3_db_message_update(context->id, mid, md_out, ms_wait_puback);
-						break;
-					case ms_publish_pubrec:
+					}
+					break;
+
+				case ms_publish_pubrec:
+					if(!mqtt3_raw_publish(context, false, qos, retain, mid, sub, payloadlen, payload)){
 						mqtt3_db_message_update(context->id, mid, md_out, ms_wait_pubrec);
-						break;
-				}
+					}
+					break;
+				
+				case ms_resend_pubrel:
+					if(!mqtt3_raw_pubrel(context, mid)){
+						mqtt3_db_message_update(context->id, mid, md_out, ms_wait_pubrel);
+					}
+					break;
+
+				case ms_resend_pubcomp:
+					if(!mqtt3_raw_pubcomp(context, mid)){
+						mqtt3_db_message_update(context->id, mid, md_out, ms_wait_pubcomp);
+					}
+					break;
 			}
 		}
 	}else{
@@ -747,7 +819,8 @@ int mqtt3_db_outgoing_check(fd_set *writefds, int *sockmax)
 	FD_ZERO(writefds);
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("SELECT sock FROM clients JOIN messages ON clients.id=messages.client_id "
-				"WHERE (messages.status=1 OR messages.status=2 OR messages.status = 4) AND messages.direction=1 AND sock<>-1");
+				"WHERE (messages.status=1 OR messages.status=2 OR messages.status=4 OR messages.status=6 OR messages.status=8) "
+				"AND messages.direction=1 AND sock<>-1");
 		if(!stmt){
 			return 1;
 		}

@@ -165,6 +165,7 @@ int main(int argc, char *argv[])
 			ctxt_ptr = ctxt_ptr->next;
 		}
 
+		mqtt3_db_message_timeout_check(5);
 		mqtt3_db_outgoing_check(&writefds, &sockmax);
 
 		timeout.tv_sec = 1;

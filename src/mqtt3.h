@@ -80,8 +80,10 @@ typedef enum {
 	ms_wait_puback = 3,
 	ms_publish_pubrec = 4,
 	ms_wait_pubrec = 5,
-	ms_wait_pubrel = 6,
-	ms_wait_pubcomp = 7
+	ms_resend_pubrel = 6,
+	ms_wait_pubrel = 7,
+	ms_resend_pubcomp = 8,
+	ms_wait_pubcomp = 9
 } mqtt3_msg_status;
 
 typedef enum {
@@ -158,6 +160,7 @@ int mqtt3_db_message_update(const char *client_id, uint16_t mid, mqtt3_msg_direc
 int mqtt3_db_message_write(mqtt3_context *context);
 int mqtt3_db_messages_delete(const char *client_id);
 int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, const uint8_t *payload, int retain);
+int mqtt3_db_message_timeout_check(unsigned int timeout);
 uint16_t mqtt3_db_mid_generate(const char *client_id);
 int mqtt3_db_outgoing_check(fd_set *writefds, int *sockmax);
 int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload);
