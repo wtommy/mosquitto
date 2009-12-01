@@ -91,8 +91,18 @@ typedef enum {
 	md_out = 1
 } mqtt3_msg_direction;
 
+typedef struct {
+	int port;
+	int msg_timeout;
+	int persist;
+	int sys_interval;
+} mqtt3_config;
+
 /* Utility functions */
 const char *mqtt3_command_to_string(uint8_t command);
+
+/* Config functions */
+int mqtt3_config_read(mqtt3_config *config);
 
 /* Raw send functions - just construct the packet and send */
 int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid);

@@ -1,43 +1,46 @@
-CC=cc
-CFLAGS=-I. -Wall -ggdb
-LDFLAGS=-lsqlite3 -nopie
+include ../config.mk
+
+CFLAGS_FINAL=${CFLAGS} -DCONFIG_PATH=\"${CONFIG_PATH}\" -DVERSION=\"${VERSION}\" -DBUILDDATE=\"${BUILDDATE}\"
 
 .PHONY: all clean
 
 all : mosquitto
 
-mosquitto : mosquitto.o context.o database.o memory.o net.o raw_send.o raw_send_server.o read_handle.o read_handle_server.o util.o
+mosquitto : mosquitto.o conf.o context.o database.o memory.o net.o raw_send.o raw_send_server.o read_handle.o read_handle_server.o util.o
 	${CC} $^ -o $@ ${LDFLAGS}
 
 mosquitto.o : mosquitto.c mqtt3.h
-	${CC} $(CFLAGS) -c $< -o $@
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
+conf.o : conf.c mqtt3.h
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
+	
 context.o : context.c mqtt3.h
-	${CC} $(CFLAGS) -c $< -o $@
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 database.o : database.c mqtt3.h
-	${CC} $(CFLAGS) -c $< -o $@
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 memory.o : memory.c mqtt3.h
-	${CC} $(CFLAGS) -c $< -o $@
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 net.o : net.c mqtt3.h
-	${CC} $(CFLAGS) -c $< -o $@
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 raw_send.o : raw_send.c mqtt3.h
-	${CC} $(CFLAGS) -c $< -o $@
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 raw_send_server.o : raw_send_server.c mqtt3.h
-	${CC} $(CFLAGS) -c $< -o $@
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 read_handle.o : read_handle.c mqtt3.h
-	${CC} $(CFLAGS) -c $< -o $@
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 read_handle_server.o : read_handle_server.c mqtt3.h
-	${CC} $(CFLAGS) -c $< -o $@
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 util.o : util.c mqtt3.h
-	${CC} $(CFLAGS) -c $< -o $@
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 clean : 
 	-rm -f *.o mosquitto

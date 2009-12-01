@@ -111,7 +111,13 @@ int main(int argc, char *argv[])
 	int sockmax;
 	struct stat statbuf;
 	time_t now;
-	int daemon = 1;
+	int daemon = 0;
+	mqtt3_config config;
+
+	if(mqtt3_config_read(&config)){
+		fprintf(stderr, "Error: Unable to open configuration file.\n");
+		return 1;
+	}
 
 	if(daemon){
 		switch(fork()){
@@ -131,12 +137,19 @@ int main(int argc, char *argv[])
 	sigemptyset(&sigblock);
 	sigaddset(&sigblock, SIGINT);
 
-	if(mqtt3_db_open("mosquitto.db")){
-		fprintf(stderr, "Error: Couldn't open database.\n");
-		return 1;
+	if(config.persist){
+		if(mqtt3_db_open("mosquitto.db")){
+			fprintf(stderr, "Error: Couldn't open database.\n");
+			return 1;
+		}
+	}else{
+		if(mqtt3_db_open(":memory")){
+			fprintf(stderr, "Error: Couldn't open database.\n");
+			return 1;
+		}
 	}
 
-	listensock = mqtt3_socket_listen(1883);
+	listensock = mqtt3_socket_listen(config.port);
 	if(listensock == -1){
 		return 1;
 	}
@@ -165,7 +178,7 @@ int main(int argc, char *argv[])
 			ctxt_ptr = ctxt_ptr->next;
 		}
 
-		mqtt3_db_message_timeout_check(5);
+		mqtt3_db_message_timeout_check(config.msg_timeout);
 		mqtt3_db_outgoing_check(&writefds, &sockmax);
 
 		timeout.tv_sec = 1;

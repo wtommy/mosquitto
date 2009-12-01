@@ -3,8 +3,8 @@ BUILDDATE=2009XXXX
 
 #MANCOUNTRIES=en_GB
 
-CFLAGS=-ggdb -Wall -O2
-LDFLAGS=
+CFLAGS=-I. -ggdb -Wall -O2
+LDFLAGS=-nopie -lsqlite3
 
 CC=gcc
 INSTALL=install
@@ -17,3 +17,5 @@ prefix=/usr/local
 mandir=${prefix}/share/man
 localedir=${prefix}/share/locale
 
+CONFIG_PATH=${prefix}/etc
+#CONFIG_PATH=..
