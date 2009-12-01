@@ -138,6 +138,9 @@ int main(int argc, char *argv[])
 
 		mqtt3_db_outgoing_check(&writefds, &sockmax);
 
+		timeout.tv_sec = 1;
+		timeout.tv_nsec = 0;
+
 		fdcount = pselect(sockmax+1, &readfds, &writefds, NULL, &timeout, &sigblock);
 		if(fdcount == -1){
 			/* Error ocurred, probably an fd has been closed. 
