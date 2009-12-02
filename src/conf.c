@@ -18,6 +18,7 @@ int mqtt3_config_read(mqtt3_config *config)
 	config->sys_interval = 10;
 
 	fptr = fopen(CONFIG_PATH "/mosquitto.conf", "rt");
+	if(!fptr) fptr = fopen("mosquitto.conf", "rt");
 	if(!fptr) return 1;
 
 	while(fgets(buf, 1024, fptr)){
