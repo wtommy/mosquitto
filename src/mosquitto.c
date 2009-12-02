@@ -128,6 +128,9 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	if(argc == 2 && (!strcmp(argv[1], "-f") || !strcmp(argv[1], "--foreground"))){
+		daemon = 0;
+	}
 	if(daemon){
 		switch(fork()){
 			case 0:

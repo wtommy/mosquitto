@@ -16,6 +16,10 @@
 	<refsynopsisdiv>
 		<cmdsynopsis>
 			<command>mosquitto</command>
+			<group choice='opt'>
+				<arg><option>-f</option></arg>
+				<arg><option>--foreground</option></arg>
+			</group>
 		</cmdsynopsis>
 	</refsynopsisdiv>
 
@@ -23,6 +27,19 @@
 		<title>Description</title>
 		<para><command>mosquitto</command> is a broker for the mqtt protocol version 3.</para>
 		<para>It is intended to be a drop in replacement for rsmb, but it's a long way off yet.</para>
+	</refsect1>
+
+	<refsect1>
+		<title>Options</title>
+		<variablelist>
+			<varlistentry>
+				<term><option>-f</option></term>
+				<term><option>--foreground</option></term>
+				<listitem>
+					<para>Run <command>mosquitto</command> in the foreground instead of as a daemon. All other behaviour remains the same.</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
 	</refsect1>
 
 	<refsect1>
