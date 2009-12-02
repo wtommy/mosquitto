@@ -38,7 +38,6 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context = mqtt3_malloc(sizeof(mqtt3_context));
 	if(!context) return NULL;
 	
-	context->next = NULL;
 	context->sock = sock;
 	context->last_msg_in = time(NULL);
 	context->last_msg_out = time(NULL);

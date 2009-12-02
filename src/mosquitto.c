@@ -104,10 +104,10 @@ int main(int argc, char *argv[])
 	sigset_t sigblock;
 	int fdcount; int listensock;
 	int new_sock;
-	mqtt3_context *contexts = NULL;
-	mqtt3_context *ctxt_ptr, *ctxt_last, *ctxt_next;
+	mqtt3_context **contexts = NULL;
+	mqtt3_context **tmp_contexts = NULL;
+	int context_count;
 	mqtt3_context *new_context;
-	mqtt3_context *ctxt_reap;
 	int sockmax;
 	struct stat statbuf;
 	time_t now;
@@ -115,6 +115,7 @@ int main(int argc, char *argv[])
 	mqtt3_config config;
 	time_t start_time = time(NULL);
 	char buf[1024];
+	int i;
 
 	if(geteuid() == 0){
 		fprintf(stderr, "Error: Mosquitto should not be run as root/administrator.\n");
@@ -136,6 +137,13 @@ int main(int argc, char *argv[])
 			default:
 				return 0;
 		}
+	}
+
+	context_count = 100;
+	contexts = mqtt3_malloc(sizeof(mqtt3_context*)*context_count);
+	if(!contexts) return 1;
+	for(i=0; i<context_count; i++){
+		contexts[i] = NULL;
 	}
 
 	signal(SIGINT, handle_sigint);
@@ -173,22 +181,20 @@ int main(int argc, char *argv[])
 		FD_SET(listensock, &readfds);
 
 		sockmax = listensock;
-		ctxt_ptr = contexts;
 		now = time(NULL);
-		while(ctxt_ptr){
-			if(ctxt_ptr->sock != -1){
-				FD_SET(ctxt_ptr->sock, &readfds);
-				if(ctxt_ptr->sock > sockmax){
-					sockmax = ctxt_ptr->sock;
+		for(i=0; i<context_count; i++){
+			if(contexts[i] && contexts[i]->sock != -1){
+				FD_SET(contexts[i]->sock, &readfds);
+				if(contexts[i]->sock > sockmax){
+					sockmax = contexts[i]->sock;
 				}
-				if(now - ctxt_ptr->last_msg_in > ctxt_ptr->keepalive*3/2){
+				if(now - contexts[i]->last_msg_in > contexts[i]->keepalive*3/2){
 					/* Client has exceeded keepalive*1.5 
 					 * Close socket - it is still in the fd set so will get reaped on the 
 					 * pselect error. FIXME - Better to remove it properly. */
-					close(ctxt_ptr->sock);
+					close(contexts[i]->sock);
 				}
 			}
-			ctxt_ptr = ctxt_ptr->next;
 		}
 
 		mqtt3_db_message_timeout_check(config.msg_timeout);
@@ -204,86 +210,59 @@ int main(int argc, char *argv[])
 			 */
 			
 			if(contexts){
-				ctxt_ptr = contexts;
-				ctxt_last = NULL;
-				while(ctxt_ptr){
-					ctxt_next = ctxt_ptr->next;
-					if(fstat(ctxt_ptr->sock, &statbuf) == -1){
+				for(i=0; i<context_count; i++){
+					if(contexts[i] && fstat(contexts[i]->sock, &statbuf) == -1){
 						if(errno == EBADF){
-							ctxt_reap = ctxt_ptr;
-							if(ctxt_last){
-								ctxt_last->next = ctxt_ptr->next;
-							}else{
-								contexts = ctxt_ptr->next;
-							}
-							ctxt_reap->sock = -1;
-							mqtt3_context_cleanup(ctxt_reap);
-							ctxt_next = contexts;
-							ctxt_last = NULL;
+							contexts[i]->sock = -1;
+							mqtt3_context_cleanup(contexts[i]);
+							contexts[i] = NULL;
 						}
-					}else{
-						ctxt_last = ctxt_ptr;
 					}
-					ctxt_ptr = ctxt_next;
 				}
 			}
 		}else{
-			ctxt_ptr = contexts;
-			ctxt_last = NULL;
-			while(ctxt_ptr){
-				if(ctxt_ptr->sock != -1 && FD_ISSET(ctxt_ptr->sock, &writefds)){
-					if(mqtt3_db_message_write(ctxt_ptr)){
+			for(i=0; i<context_count; i++){
+				if(contexts[i] && contexts[i]->sock != -1 && FD_ISSET(contexts[i]->sock, &writefds)){
+					if(mqtt3_db_message_write(contexts[i])){
 						// FIXME - do something here.
 					}
 				}
-				if(ctxt_ptr->sock != -1 && FD_ISSET(ctxt_ptr->sock, &readfds)){
-					if(handle_read(ctxt_ptr)){
+				if(contexts[i] && contexts[i]->sock != -1 && FD_ISSET(contexts[i]->sock, &readfds)){
+					if(handle_read(contexts[i])){
 						/* Read error or other that means we should disconnect */
-						ctxt_reap = ctxt_ptr;
-						if(ctxt_last){
-							ctxt_last->next = ctxt_ptr->next;
-							ctxt_ptr = ctxt_last;
-							mqtt3_context_cleanup(ctxt_reap);
-						}else{
-							/* In this case, the reaped context is at index 0.
-							 * We can't reference index -1, so ctxt_ptr =
-							 * ctxt_ptr->next means that index 1 will be
-							 * skipped over for index 2. This should get caught
-							 * next time round though.
-							 */
-							contexts = ctxt_ptr->next;
-							ctxt_ptr = contexts;
-							mqtt3_context_cleanup(ctxt_reap);
-							if(!contexts) break;
-						}
+						mqtt3_context_cleanup(contexts[i]);
+						contexts[i] = NULL;
 					}
 				}
-				ctxt_last = ctxt_ptr;
-				ctxt_ptr = ctxt_ptr->next;
 			}
 			if(FD_ISSET(listensock, &readfds)){
 				new_sock = accept(listensock, NULL, 0);
 				new_context = mqtt3_context_init(new_sock);
-				if(contexts){
-					ctxt_ptr = contexts;
-					while(ctxt_ptr->next){
-						ctxt_ptr = ctxt_ptr->next;
+				for(i=0; i<context_count; i++){
+					if(contexts[i] == NULL){
+						contexts[i] = new_context;
+						break;
 					}
-					ctxt_ptr->next = new_context;
-				}else{
-					contexts = new_context;
+				}
+				if(i==context_count){
+					context_count++;
+					tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*context_count);
+					if(tmp_contexts){
+						contexts = tmp_contexts;
+						contexts[context_count-1] = new_context;
+					}
 				}
 			}
 		}
 	}
 
-	ctxt_ptr = contexts;
-	while(ctxt_ptr){
-		mqtt3_socket_close(ctxt_ptr);
-		ctxt_last = ctxt_ptr;
-		ctxt_ptr = ctxt_ptr->next;
-		mqtt3_context_cleanup(ctxt_last);
+	for(i=0; i<context_count; i++){
+		if(contexts[i]){
+			mqtt3_context_cleanup(contexts[i]);
+		}
 	}
+	mqtt3_free(contexts);
+
 	close(listensock);
 
 	mqtt3_db_close();

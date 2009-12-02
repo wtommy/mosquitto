@@ -64,7 +64,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #define DISCONNECT 0xE0
 
 typedef struct _mqtt3_context{
-	struct _mqtt3_context *next;
 	int sock;
 	time_t last_msg_in;
 	time_t last_msg_out;
