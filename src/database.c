@@ -116,7 +116,7 @@ int _mqtt3_db_tables_create(void)
 	char *query;
 
 	if(sqlite3_exec(db,
-		"CREATE TABLE IF NOT EXISTS config(key TEXT UNIQUE, value TEXT)",
+		"CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY, value TEXT)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
 		rc = 1;
@@ -143,7 +143,7 @@ int _mqtt3_db_tables_create(void)
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS clients("
 		"sock INTEGER, "
-		"id TEXT, "
+		"id TEXT PRIMARY KEY, "
 		"clean_start INTEGER, "
 		"will INTEGER, will_retain INTEGER, will_qos INTEGER, "
 		"will_topic TEXT, will_message TEXT, "
