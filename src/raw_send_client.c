@@ -42,12 +42,18 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mqtt3.h>
 
-int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, int client_id_len, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, int will_topic_len, const char *will_msg, int will_msg_len, uint16_t keepalive, bool clean_start)
+int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, const char *will_msg, uint16_t keepalive, bool clean_start)
 {
 	int payloadlen;
 
-	payloadlen = 2+client_id_len;
-	if(will) payloadlen += 2+will_topic_len + 2+will_msg_len;
+	if(!context || !client_id) return 1;
+
+	payloadlen = 2+strlen(client_id);
+	if(will && will_topic && will_msg){
+		payloadlen += 2+strlen(will_topic) + 2+strlen(will_msg);
+	}else{
+		will = 0;
+	}
 
 	/* Fixed header */
 	if(mqtt3_write_byte(context, CONNECT)) return 1;
@@ -60,10 +66,10 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, int client_
 	if(mqtt3_write_uint16(context, keepalive)) return 1;
 
 	/* Payload */
-	if(mqtt3_write_string(context, client_id, client_id_len)) return 1;
+	if(mqtt3_write_string(context, client_id, strlen(client_id))) return 1;
 	if(will){
-		if(mqtt3_write_string(context, will_topic, will_topic_len)) return 1;
-		if(mqtt3_write_string(context, will_msg, will_msg_len)) return 1;
+		if(mqtt3_write_string(context, will_topic, strlen(will_topic))) return 1;
+		if(mqtt3_write_string(context, will_msg, strlen(will_msg))) return 1;
 	}
 
 	context->last_msg_out = time(NULL);
@@ -76,13 +82,15 @@ int mqtt3_raw_disconnect(mqtt3_context *context)
 	return mqtt3_send_simple_command(context, DISCONNECT);
 }
 
-int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uint16_t topiclen, uint8_t topic_qos)
+int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uint8_t topic_qos)
 {
 	/* FIXME - only deals with a single topic */
 	uint32_t packetlen;
 	uint16_t mid;
 
-	packetlen = 2 + 2+topiclen + 1;
+	if(!context || !topic) return 1;
+
+	packetlen = 2 + 2+strlen(topic) + 1;
 
 	/* Fixed header */
 	if(mqtt3_write_byte(context, SUBSCRIBE | (dup<<3) | (1<<1))) return 1;
@@ -93,7 +101,7 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 	if(mqtt3_write_uint16(context, mid)) return 1;
 
 	/* Payload */
-	if(mqtt3_write_string(context, topic, topiclen)) return 1;
+	if(mqtt3_write_string(context, topic, strlen(topic))) return 1;
 	if(mqtt3_write_byte(context, topic_qos)) return 1;
 
 	context->last_msg_out = time(NULL);
@@ -101,13 +109,15 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 }
 
 
-int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic, uint16_t topiclen)
+int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic)
 {
 	/* FIXME - only deals with a single topic */
 	uint32_t packetlen;
 	uint16_t mid;
 
-	packetlen = 2 + 2+topiclen;
+	if(!context || !topic) return 1;
+
+	packetlen = 2 + 2+strlen(topic);
 
 	/* Fixed header */
 	if(mqtt3_write_byte(context, UNSUBSCRIBE | (dup<<3) | (1<<1))) return 1;
@@ -118,7 +128,7 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic, u
 	if(mqtt3_write_uint16(context, mid)) return 1;
 
 	/* Payload */
-	if(mqtt3_write_string(context, topic, topiclen)) return 1;
+	if(mqtt3_write_string(context, topic, strlen(topic))) return 1;
 
 	context->last_msg_out = time(NULL);
 	return 0;

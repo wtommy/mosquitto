@@ -117,7 +117,13 @@ int main(int argc, char *argv[])
 	int fdcount;
 	int run = 1;
 	mqtt3_context context;
+	char id[30];
 
+	if(argc == 2){
+		sprintf(id, "test%s", argv[1]);
+	}else{
+		sprintf(id, "test");
+	}
 	context.sock = mqtt3_socket_connect("127.0.0.1", 1883);
 	//context.sock = mqtt3_socket_connect("10.90.100.5", 1883);
 	if(context.sock == -1){
@@ -140,7 +146,7 @@ int main(int argc, char *argv[])
 		}else if(fdcount == 0){
 			switch(state){
 				case stSocketOpened:
-					mqtt3_raw_connect(&context, "Roger", 5, false, 0, false, "", 0, "", 0, 10, false);
+					mqtt3_raw_connect(&context, id, false, 0, false, "", "", 60, true);
 					state = stConnSent;
 					break;
 				case stConnSent:
@@ -148,7 +154,7 @@ int main(int argc, char *argv[])
 					break;
 				case stConnAckd:
 					printf("CONNACK received\n");
-					mqtt3_raw_subscribe(&context, false, "a/b/c", 5, 0);
+					mqtt3_raw_subscribe(&context, false, "a/b/c", 0);
 					state = stSubSent;
 					break;
 				case stSubSent:
