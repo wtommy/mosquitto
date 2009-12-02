@@ -94,7 +94,8 @@ typedef enum {
 typedef struct {
 	int port;
 	int msg_timeout;
-	int persist;
+	int persistence;
+	char *persistence_location;
 	int sys_interval;
 } mqtt3_config;
 
@@ -154,7 +155,7 @@ int mqtt3_handle_unsuback(mqtt3_context *context);
 int mqtt3_handle_unsubscribe(mqtt3_context *context);
 
 /* Database handling */
-int mqtt3_db_open(const char *filename);
+int mqtt3_db_open(const char *location, const char *filename);
 int mqtt3_db_close(void);
 int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message);
 int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message);

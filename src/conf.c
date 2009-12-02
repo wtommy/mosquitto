@@ -14,7 +14,8 @@ int mqtt3_config_read(mqtt3_config *config)
 	/* Set defaults */
 	config->port = 1883;
 	config->msg_timeout = 10;
-	config->persist = 1;
+	config->persistence = 1;
+	config->persistence_location = NULL;
 	config->sys_interval = 10;
 
 	fptr = fopen(CONFIG_PATH "/mosquitto.conf", "rt");
@@ -32,12 +33,22 @@ int mqtt3_config_read(mqtt3_config *config)
 						fprintf(stderr, "Warning: Invalid msg_timeout value (%d). Using default (10).\n", config->msg_timeout);
 					}
 					token = strtok(NULL, " ");
-				}else if(!strcmp(token, "persist")){
+				}else if(!strcmp(token, "persistence")){
 					token = strtok(NULL, " ");
-					config->persist = atoi(token);
-					if(config->persist != 1 && config->persist != 0){
-						fprintf(stderr, "Warning: Invalid persist value (%d). Using default (1).\n", config->persist);
-						config->persist = 1;
+					config->persistence = atoi(token);
+					if(config->persistence != 1 && config->persistence != 0){
+						fprintf(stderr, "Warning: Invalid persistence value (%d). Using default (1).\n", config->persistence);
+						config->persistence = 1;
+					}
+				}else if(!strcmp(token, "persistence_location")){
+					token = strtok(NULL, " ");
+					if(token){
+						while(token[strlen(token)-1] == 10 || token[strlen(token)-1] == 13){
+							token[strlen(token)-1] = 0;
+						}
+						config->persistence_location = mqtt3_strdup(token);
+					}else{
+						fprintf(stderr, "Warning: Invalid persistence_location value. Using default.\n");
 					}
 				}else if(!strcmp(token, "port")){
 					token = strtok(NULL, " ");

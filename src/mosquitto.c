@@ -139,13 +139,13 @@ int main(int argc, char *argv[])
 	sigemptyset(&sigblock);
 	sigaddset(&sigblock, SIGINT);
 
-	if(config.persist){
-		if(mqtt3_db_open("mosquitto.db")){
+	if(config.persistence){
+		if(mqtt3_db_open(config.persistence_location, "mosquitto.db")){
 			fprintf(stderr, "Error: Couldn't open database.\n");
 			return 1;
 		}
 	}else{
-		if(mqtt3_db_open(":memory")){
+		if(mqtt3_db_open(NULL, ":memory")){
 			fprintf(stderr, "Error: Couldn't open database.\n");
 			return 1;
 		}

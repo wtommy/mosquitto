@@ -55,22 +55,33 @@ int _mqtt3_db_transaction_begin(void);
 int _mqtt3_db_transaction_end(void);
 int _mqtt3_db_transaction_rollback(void);
 
-int mqtt3_db_open(const char *filename)
+int mqtt3_db_open(const char *location, const char *filename)
 {
+	char *filepath;
+
+	if(!filename) return 1;
+
 	if(sqlite3_initialize() != SQLITE_OK){
 		return 1;
 	}
 
+	if(location && strlen(location) && strcmp(filename, ":memory:")){
+		filepath = mqtt3_malloc(strlen(location) + strlen(filename) + 1);
+		if(!filepath) return 1;
+		sprintf(filepath, "%s%s", location, filename);
+	}else{
+		filepath = (char *)filename;
+	}
 	/* Open without creating first. If found, check for db version.
 	 * If not found, open with create.
 	 */
-	if(sqlite3_open_v2(filename, &db, SQLITE_OPEN_READWRITE, NULL) == SQLITE_OK){
+	if(sqlite3_open_v2(filepath, &db, SQLITE_OPEN_READWRITE, NULL) == SQLITE_OK){
 		if(_mqtt3_db_version_check()){
 			fprintf(stderr, "Error: Invalid database version.\n");
 			return 1;
 		}
 	}else{
-		if(sqlite3_open_v2(filename, &db,
+		if(sqlite3_open_v2(filepath, &db,
 				SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL) != SQLITE_OK){
 			fprintf(stderr, "Error: %s\n", sqlite3_errmsg(db));
 			return 1;
@@ -78,6 +89,9 @@ int mqtt3_db_open(const char *filename)
 		if(_mqtt3_db_tables_create()) return 1;
 	}
 
+	if(filepath && filepath != filename){
+		mqtt3_free(filepath);
+	}
 	if(_mqtt3_db_invalidate_sockets()) return 1;
 
 	return 0;

@@ -40,9 +40,15 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>persist</option></term>
+				<term><option>persistence</option></term>
 				<listitem>
-					<para>Can be 1 or 0, denoting true or false. If true, connection, subscription and message data will be written to the disk at /var/lib/mosquitto/mosquitto.db. If false, the data will be stored in memory only.</para>
+					<para>Can be 1 or 0, denoting true or false. If true, connection, subscription and message data will be written to the disk in mosquitto.db at the location dictated by persistence_location. If false, the data will be stored in memory only.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>persistence_location</option></term>
+				<listitem>
+					<para>The path where the persistence database should be stored. Must end in a trailing slash. If not given, then the current directory is used.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
