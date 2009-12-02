@@ -1032,11 +1032,10 @@ int mqtt3_db_sub_delete(const char *client_id, const char *sub)
 int mqtt3_db_sub_search_start(const char *sub)
 {
 	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
 
 	if(!sub) return 1;
 
-	if(!stmt){
+	if(!stmt_sub_search){
 		stmt_sub_search = _mqtt3_db_statement_prepare("SELECT client_id,qos FROM subs where sub=?");
 		if(!stmt_sub_search){
 			return 1;
