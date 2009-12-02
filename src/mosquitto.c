@@ -158,6 +158,7 @@ int main(int argc, char *argv[])
 	}
 
 	signal(SIGINT, handle_sigint);
+	signal(SIGTERM, handle_sigint);
 	signal(SIGPIPE, SIG_IGN);
 
 	sigemptyset(&sigblock);
