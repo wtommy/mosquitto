@@ -29,7 +29,7 @@ dist : reallyclean
 	@for d in ${DISTDIRS}; do $(MAKE) -C $${d} dist; done
 	
 	mkdir -p dist/mosquitto-${VERSION}
-	cp -r logo man src windows COPYING Makefile config.mk readme.txt dist/mosquitto-${VERSION}/
+	cp -r logo man src windows COPYING Makefile config.mk readme.txt mosquitto.conf dist/mosquitto-${VERSION}/
 	cd dist; tar -zcf mosquitto-${VERSION}.tar.gz mosquitto-${VERSION}/
 
 distclean : clean
