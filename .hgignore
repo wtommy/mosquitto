@@ -5,6 +5,7 @@ syntax: glob
 *.db
 
 man/mosquitto.8
+man/mosquitto.conf.5
 src/mosquitto
 test/test_client
 
