@@ -7,7 +7,6 @@ DOCBOOK2MAN=docbook2man.pl
 all :  mosquitto.8 mosquitto.conf.5
 
 clean :
-	-rm -f mosquitto*.8 mosquitto.conf*.5
 
 reallyclean : clean
 	-rm -f *.orig
@@ -31,8 +30,8 @@ mosquitto.conf.5 : mosquitto.conf.5.xml
 	$(DOCBOOK2MAN) mosquitto.conf.5.xml
 
 distclean :
-	-rm -f mosquitto.8
-	-rm -f mosquitto.conf.5
+	-rm -f mosquitto*.8
+	-rm -f mosquitto.conf*.5
 
 # To merge new translations do:
 # /usr/bin/xml2po -p de.po chapter1.xml > chapter1.de.xml
