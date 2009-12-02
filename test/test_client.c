@@ -118,8 +118,8 @@ int main(int argc, char *argv[])
 	int run = 1;
 	mqtt3_context context;
 
-	//context.sock = mqtt3_socket_connect("127.0.0.1", 1883);
-	context.sock = mqtt3_socket_connect("10.90.100.5", 1883);
+	context.sock = mqtt3_socket_connect("127.0.0.1", 1883);
+	//context.sock = mqtt3_socket_connect("10.90.100.5", 1883);
 	if(context.sock == -1){
 		return 1;
 	}

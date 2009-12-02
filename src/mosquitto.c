@@ -214,6 +214,7 @@ int main(int argc, char *argv[])
 					if(contexts[i] && fstat(contexts[i]->sock, &statbuf) == -1){
 						if(errno == EBADF){
 							contexts[i]->sock = -1;
+							mqtt3_db_client_will_queue(contexts[i]);
 							mqtt3_context_cleanup(contexts[i]);
 							contexts[i] = NULL;
 						}
@@ -230,6 +231,7 @@ int main(int argc, char *argv[])
 				if(contexts[i] && contexts[i]->sock != -1 && FD_ISSET(contexts[i]->sock, &readfds)){
 					if(handle_read(contexts[i])){
 						/* Read error or other that means we should disconnect */
+						mqtt3_db_client_will_queue(contexts[i]);
 						mqtt3_context_cleanup(contexts[i]);
 						contexts[i] = NULL;
 					}

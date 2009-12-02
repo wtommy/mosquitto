@@ -322,6 +322,41 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 	return rc;
 }
 
+int mqtt3_db_client_will_queue(mqtt3_context *context)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt = NULL;
+	const char *sub;
+	int qos;
+	const uint8_t *payload;
+	int retain;
+
+	if(!context || !context->id) return 1;
+
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("SELECT will_topic,will_qos,will_message,will_retain FROM clients WHERE id=?");
+		if(!stmt){
+			return 1;
+		}
+	}
+	if(sqlite3_bind_text(stmt, 1, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_step(stmt) == SQLITE_ROW){
+		sub = (const char *)sqlite3_column_text(stmt, 0);
+		qos = sqlite3_column_int(stmt, 1);
+		payload = sqlite3_column_text(stmt, 2);
+		retain = sqlite3_column_int(stmt, 3);
+		if(!rc){
+			if(mqtt3_db_messages_queue(sub, qos, strlen((const char *)payload), payload, retain)) rc = 1;
+		}
+	}else{
+		rc = 1;
+	}
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+
+	return rc;
+}
+
 int mqtt3_db_client_delete(mqtt3_context *context)
 {
 	int rc = 0;

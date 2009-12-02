@@ -161,6 +161,7 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 int mqtt3_db_client_delete(mqtt3_context *context);
 int mqtt3_db_client_find_socket(const char *client_id, int *sock);
 int mqtt3_db_client_invalidate_socket(const char *client_id, int sock);
+int mqtt3_db_client_will_queue(mqtt3_context *context);
 int mqtt3_db_message_count(int *count);
 int mqtt3_db_message_delete(const char *client_id, uint16_t mid, mqtt3_msg_direction dir);
 int mqtt3_db_message_delete_by_oid(uint64_t oid);
