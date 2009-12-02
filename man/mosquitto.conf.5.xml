@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<?xml-stylesheet type="text/xsl" href="http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN" "/usr/share/sgml/docbook/xml-dtd-4.1.2/docbookx.dtd">
+
+<refentry xml:id="mosquitto.conf">
+	<refmeta>
+		<refentrytitle>mosquitto.conf</refentrytitle>
+		<manvolnum>5</manvolnum>
+	</refmeta>
+
+	<refnamediv>
+		<refname>mosquitto.conf</refname>
+		<refpurpose>the configuration file for mosquitto</refpurpose>
+	</refnamediv>
+
+	<refsynopsisdiv>
+		<cmdsynopsis>
+			<command>mosquitto.conf</command>
+		</cmdsynopsis>
+	</refsynopsisdiv>
+
+	<refsect1>
+		<title>Description</title>
+		<para><command>mosquitto.conf</command> is the configuration file for mosquitto. The system wide file /etc/mosquitto.conf is the default configuration. If this is not found, <command>mosquitto</command> will attempt to open a configuration file in the current directory.</para>
+	</refsect1>
+
+	<refsect1>
+		<title>File Format</title>
+		<para>All lines with a # as the very first character are treated as a comment.</para>
+		<para>Configuration lines start with a variable name. The variable value is separated from the name by a single space.</para>
+	</refsect1>
+
+	<refsect1>
+		<title>Variables</title>
+		<variablelist>
+			<varlistentry>
+				<term><option>port</option></term>
+				<listitem>
+					<para>Set the network port to listen on. Defaults to 1883.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>persist</option></term>
+				<listitem>
+					<para>Can be 1 or 0, denoting true or false. If true, connection, subscription and message data will be written to the disk at /var/lib/mosquitto/mosquitto.db. If false, the data will be stored in memory only.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>msg_timeout</option></term>
+				<listitem>
+					<para>The integer number of seconds after a message has been sent before retrying when no response is received.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>sys_interval</option></term>
+				<listitem>
+					<para>The integer number of seconds between updates of the $SYS subscription hierarchy, which provides status information about the broker.</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsect1>
+
+	<refsect1>
+		<title>Files</title>
+		<para>/etc/mosquitto.conf or mosquitto.conf</para>
+	</refsect1>
+
+	<refsect1>
+		<title>Bugs</title>
+		<para><command>mosquitto</command> bug information can be found at <uri type="webpage">http://launchpad.net/mosquitto</uri>.</para>
+	</refsect1>
+
+	<refsect1>
+		<title>See Also</title>
+		<para>
+			<citerefentry>
+				<refentrytitle>mosquitto</refentrytitle>
+				<manvolnum>8</manvolnum>
+			</citerefentry>
+		</para>
+	</refsect1>
+
+	<refsect1>
+		<title>Author</title>
+		<para>Roger Light <email>roger@atchoo.org</email></para>
+	</refsect1>
+</refentry>

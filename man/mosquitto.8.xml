@@ -22,10 +22,98 @@
 	<refsect1>
 		<title>Description</title>
 		<para><command>mosquitto</command> is a broker for the mqtt protocol version 3.</para>
+		<para>It is intended to be a drop in replacement for rsmb, but it's a long way off yet.</para>
+	</refsect1>
+
+	<refsect1>
+		<title>Limitations</title>
+		<para><command>mosquitto</command> implements all of the mqtt protocol version 3, but there are some significant limitations compared to rsmb.</para>
+		<itemizedlist mark="circle">
+			<listitem><para>There is no bridge support.</para></listitem>
+			<listitem><para>Wildcards within subscription requests are not supported.</para></listitem>
+			<listitem><para>There are vastly fewer configuration options.</para></listitem>
+			<listitem><para>Only binding to a single port is possible, and it's not possible to bind to a specific address.</para></listitem>
+			<listitem><para>There is no logging information.</para></listitem>
+			<listitem><para>The $SYS hierarchy is smaller.</para></listitem>
+			<listitem><para>It isn't as well tested or documented...</para></listitem>
+		</itemizedlist>
+		<para>It should be noted that all of the above limitations should have &quot;currently&quot; included in them. They will all be fixed at some point.</para>
+	</refsect1>
+
+	<refsect1>
+		<title>Broker Status</title>
+		<para>Clients can find information about the broker by subscribing to topics in the $SYS hierarchy as follows. Topics marked as static are only sent once per client on subscription. Topics marked dynamic are updated every <option>sys_interval</option> seconds.</para>
+		<variablelist>
+			<varlistentry>
+				<term><option>$SYS/broker/version</option></term>
+				<listitem>
+					<para>The version of the broker. Static.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/broker/uptime</option></term>
+				<listitem>
+					<para>The amount of time in seconds the broker has been online. Dynamic.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/messages/inflight</option></term>
+				<listitem>
+					<para>The number of messages currently in flight. Dynamic.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/messages/sent</option></term>
+				<listitem>
+					<para>The total number of messages sent since the broker started. Dynamic. (not yet implemented)</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/messages/received</option></term>
+				<listitem>
+					<para>The total number of messages received since the broker started. Dynamic. (not yet implemented)</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsect1>
+
+	<refsect1>
+		<title>Files</title>
+		<variablelist>
+			<varlistentry>
+				<term><filename>/etc/mosquitto.conf</filename></term>
+				<listitem>
+					<para>Configuration file. See <citerefentry><refentrytitle>mosquitto.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><filename>/var/lib/mosquitto/mosquitto.db</filename></term>
+				<listitem>
+					<para>Persistent message data storage location if persist enabled.</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
 	</refsect1>
 
 	<refsect1>
 		<title>Bugs</title>
+		<para><command>mosquitto</command> bug information can be found at <uri type="webpage">http://launchpad.net/mosquitto</uri>.</para>
+	</refsect1>
+
+	<refsect1>
+		<title>See Also</title>
+		<para>
+			<citerefentry>
+				<refentrytitle>mosquitto.conf</refentrytitle>
+				<manvolnum>5</manvolnum>
+			</citerefentry>
+		</para>
+	</refsect1>
+
+	<refsect1>
+		<title>Thanks</title>
+		<para>Thanks to Andy Stanford-Clark for being one of the people who came up with MQTT in the first place and providing clarifications of the protocol.</para>
+		<para>Thanks also to everybody at the Ubuntu UK Podcast and Linux Outlaws for organising OggCamp, where Andy gave a talk that inspired mosquitto.</para>
 	</refsect1>
 
 	<refsect1>
