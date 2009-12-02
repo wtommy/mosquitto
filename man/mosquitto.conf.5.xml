@@ -54,7 +54,7 @@
 			<varlistentry>
 				<term><option>pid_file</option></term>
 				<listitem>
-					<para>Write a pid file to the file specified. If not given (the default), no pid file will be written.</para>
+					<para>Write a pid file to the file specified. If not given (the default), no pid file will be written. If the pid file cannot be written, mosquitto will exit.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

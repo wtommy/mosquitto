@@ -143,6 +143,9 @@ int main(int argc, char *argv[])
 			if(pid){
 				fprintf(pid, "%d", getpid());
 				fclose(pid);
+			}else{
+				fprintf(stderr, "Error: Unable to write pid file.\n");
+				return 1;
 			}
 		}
 	}
