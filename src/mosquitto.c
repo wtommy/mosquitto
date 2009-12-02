@@ -116,6 +116,11 @@ int main(int argc, char *argv[])
 	time_t start_time = time(NULL);
 	char buf[1024];
 
+	if(geteuid() == 0){
+		fprintf(stderr, "Error: Mosquitto should not be run as root/administrator.\n");
+		return 1;
+	}
+
 	if(mqtt3_config_read(&config)){
 		fprintf(stderr, "Error: Unable to open configuration file.\n");
 		return 1;
