@@ -52,6 +52,12 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>pid_file</option></term>
+				<listitem>
+					<para>Write a pid file to the file specified. If not given (the default), no pid file will be written.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>msg_timeout</option></term>
 				<listitem>
 					<para>The integer number of seconds after a message has been sent before retrying when no response is received.</para>

@@ -17,6 +17,7 @@ int mqtt3_config_read(mqtt3_config *config)
 	config->persistence = 1;
 	config->persistence_location = NULL;
 	config->sys_interval = 10;
+	config->pid_file = NULL;
 
 	fptr = fopen(CONFIG_PATH "/mosquitto.conf", "rt");
 	if(!fptr) fptr = fopen("mosquitto.conf", "rt");
@@ -49,6 +50,16 @@ int mqtt3_config_read(mqtt3_config *config)
 						config->persistence_location = mqtt3_strdup(token);
 					}else{
 						fprintf(stderr, "Warning: Invalid persistence_location value. Using default.\n");
+					}
+				}else if(!strcmp(token, "pid_file")){
+					token = strtok(NULL, " ");
+					if(token){
+						while(token[strlen(token)-1] == 10 || token[strlen(token)-1] == 13){
+							token[strlen(token)-1] = 0;
+						}
+						config->pid_file = mqtt3_strdup(token);
+					}else{
+						fprintf(stderr, "Warning: Invalid pid_file value. Using default.\n");
 					}
 				}else if(!strcmp(token, "port")){
 					token = strtok(NULL, " ");

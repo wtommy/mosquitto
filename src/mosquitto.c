@@ -111,11 +111,12 @@ int main(int argc, char *argv[])
 	int sockmax;
 	struct stat statbuf;
 	time_t now;
-	int daemon = 0;
+	int daemon = 1;
 	mqtt3_config config;
 	time_t start_time = time(NULL);
 	char buf[1024];
 	int i;
+	FILE *pid;
 
 	if(geteuid() == 0){
 		fprintf(stderr, "Error: Mosquitto should not be run as root/administrator.\n");
@@ -136,6 +137,13 @@ int main(int argc, char *argv[])
 				return 1;
 			default:
 				return 0;
+		}
+		if(config.pid_file){
+			pid = fopen(config.pid_file, "wt");
+			if(pid){
+				fprintf(pid, "%d", getpid());
+				fclose(pid);
+			}
 		}
 	}
 
@@ -268,6 +276,10 @@ int main(int argc, char *argv[])
 	close(listensock);
 
 	mqtt3_db_close();
+
+	if(config.pid_file){
+		remove(config.pid_file);
+	}
 
 	return 0;
 }

@@ -96,6 +96,7 @@ typedef struct {
 	int persistence;
 	char *persistence_location;
 	int sys_interval;
+	char *pid_file;
 } mqtt3_config;
 
 /* Utility functions */
