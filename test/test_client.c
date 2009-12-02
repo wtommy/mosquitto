@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
 		}else if(fdcount == 0){
 			switch(state){
 				case stSocketOpened:
-					mqtt3_raw_connect(&context, id, false, 0, false, "", "", 60, true);
+					mqtt3_raw_connect(&context, id, true, 2, true, "will", "aargh", 60, true);
 					state = stConnSent;
 					break;
 				case stConnSent:
