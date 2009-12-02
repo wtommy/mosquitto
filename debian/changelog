@@ -1,0 +1,5 @@
+mosquitto (0.1-0ubuntu1~ppa) karmic; urgency=low
+
+  * Initial release
+
+ -- Roger A. Light <roger@atchoo.org>  Wed, 02 Dec 2009 10:35:36 +0000

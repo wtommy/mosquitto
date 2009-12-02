@@ -1,0 +1,16 @@
+Source: mosquitto
+Section: net
+Priority: optional
+Maintainer: Ubuntu MOTU Developers <ubuntu-motu@lists.ubuntu.com>
+XSBC-Original-Maintainer: Roger Light <roger@atchoo.org>
+Build-Depends: debhelper (>= 7), libsqlite3-dev
+Standards-Version: 3.8.3
+Homepage: http://mosquitto.atchoo.org/
+
+Package: mosquitto
+Architecture: any
+Depends: ${shlibs:Depends}, adduser (>= 3.10), libsqlite3-0
+Description: MQTT version 3 compatible message broker
+ This is a message broker that supports version 3 of the MQ Telemetry Transport
+ protocol. MQTT provides a lightweight method of carrying out messaging using a
+ publish/subscribe model.
