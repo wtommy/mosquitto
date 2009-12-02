@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 
 	/* Set static $SYS messages */
 	snprintf(buf, 1024, "mosquitto version %s (build date %s)", VERSION, BUILDDATE);
-	mqtt3_db_messages_queue("$SYS/version", 2, strlen(buf), (uint8_t *)buf, 1);
+	mqtt3_db_messages_queue("$SYS/broker/version", 2, strlen(buf), (uint8_t *)buf, 1);
 
 	listensock = mqtt3_socket_listen(config.port);
 	if(listensock == -1){

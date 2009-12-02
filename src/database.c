@@ -1037,10 +1037,26 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 {
 	static time_t last_update = 0;
 	time_t now = time(NULL);
+	char buf[100];
+	int count;
 
 	if(now - interval > last_update){
-		// Do updates
-		last_update = now;
+		snprintf(buf, 100, "%d", (int)(now - start_time));
+		mqtt3_db_messages_queue("$SYS/broker/uptime", 2, strlen(buf), (uint8_t *)buf, 1);
+
+	
+		if(!mqtt3_db_message_count(&count)){
+			snprintf(buf, 100, "%d", count);
+			mqtt3_db_messages_queue("$SYS/messages/inflight", 2, strlen(buf), (uint8_t *)buf, 1);
+		}
+
+		snprintf(buf, 100, "%d", 0);
+		mqtt3_db_messages_queue("$SYS/messages/sent", 2, strlen(buf), (uint8_t *)buf, 1);
+
+		snprintf(buf, 100, "%d", 0);
+		mqtt3_db_messages_queue("$SYS/messages/received", 2, strlen(buf), (uint8_t *)buf, 1);
+		
+		last_update = time(NULL);
 	}
 }
 
