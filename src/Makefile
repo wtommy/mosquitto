@@ -2,7 +2,7 @@ include ../config.mk
 
 CFLAGS_FINAL=${CFLAGS} -DCONFIG_PATH=\"${CONFIG_PATH}\" -DVERSION=\"${VERSION}\" -DBUILDDATE=\"${BUILDDATE}\"
 
-.PHONY: all clean
+.PHONY: all install uninstall clean reallyclean
 
 all : mosquitto
 
@@ -42,5 +42,15 @@ read_handle_server.o : read_handle_server.c mqtt3.h
 util.o : util.c mqtt3.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
+install :
+	$(INSTALL) -d ${DESTDIR}$(prefix)/sbin
+	$(INSTALL) -s mosquitto ${DESTDIR}${prefix}/sbin/mosquitto
+
+uninstall :
+	-rm -f ${DESTDIR}${prefix}/sbin/mosquitto
+
 clean : 
 	-rm -f *.o mosquitto
+
+reallyclean : clean
+	-rm -rf *.orig *.db

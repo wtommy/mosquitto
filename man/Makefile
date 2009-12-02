@@ -1,3 +1,5 @@
+include ../config.mk
+
 .PHONY : all clean install uninstall dist distclean
 
 DOCBOOK2MAN=docbook2man.pl
@@ -5,7 +7,12 @@ DOCBOOK2MAN=docbook2man.pl
 all :  mosquitto.8 mosquitto.conf.5
 
 clean :
-	-rm mosquitto*.8 mosquitto.conf*.5
+	-rm -f mosquitto*.8 mosquitto.conf*.5
+
+reallyclean : clean
+	-rm -f *.orig
+
+dist : mosquitto.8 mosquitto.conf.5
 
 install :
 	$(INSTALL) -d ${DESTDIR}$(mandir)/man8
