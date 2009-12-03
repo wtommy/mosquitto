@@ -31,6 +31,11 @@ dist : reallyclean
 	mkdir -p dist/mosquitto-${VERSION}
 	cp -r logo man src windows COPYING Makefile config.mk readme.txt mosquitto.conf dist/mosquitto-${VERSION}/
 	cd dist; tar -zcf mosquitto-${VERSION}.tar.gz mosquitto-${VERSION}/
+	man2html man/mosquitto.8 > dist/mosquitto-8.html
+	man2html man/mosquitto.conf.5 > dist/mosquitto-conf-5.html
+	sed -i 's#http://localhost/cgi-bin/man/man2html?5+mosquitto.conf#mosquitto-conf-5.html#' dist/mosquitto-8.html dist/mosquitto-conf-5.html
+	sed -i 's#http://localhost/cgi-bin/man/man2html?8+mosquitto#mosquitto-8.html#' dist/mosquitto-8.html dist/mosquitto-conf-5.html
+	sed -i 's#http://localhost/cgi-bin/man/man2html#http://mosquitto.atchoo.org/#' dist/mosquitto-8.html dist/mosquitto-conf-5.html
 
 distclean : clean
 	@for d in ${DISTDIRS}; do $(MAKE) -C $${d} distclean; done
@@ -41,7 +46,6 @@ sign : dist
 	cd dist; gpg --detach-sign -a mosquitto-${VERSION}.tar.gz
 
 copy : sign
-	man2html man/mosquitto.1 > dist/mosquitto.html
-	cd dist; scp mosquitto-${VERSION}.tar.gz mosquitto-${VERSION}.tar.gz.asc atchoo:mosquitto.atchoo.org/files/
+	cd dist; scp mosquitto-${VERSION}.tar.gz mosquitto-${VERSION}.tar.gz.asc atchoo:mosquitto.atchoo.org/files/source/
 	cd dist; scp *.html atchoo:mosquitto.atchoo.org/man/
 
