@@ -60,13 +60,13 @@
 			<varlistentry>
 				<term><option>msg_timeout</option></term>
 				<listitem>
-					<para>The integer number of seconds after a message has been sent before retrying when no response is received.</para>
+					<para>The integer number of seconds after a message has been sent before retrying when no response is received. If unset, defaults to 10 seconds.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>sys_interval</option></term>
 				<listitem>
-					<para>The integer number of seconds between updates of the $SYS subscription hierarchy, which provides status information about the broker.</para>
+					<para>The integer number of seconds between updates of the $SYS subscription hierarchy, which provides status information about the broker. If unset, defaults to 10 seconds.</para>
 				</listitem>
 			</varlistentry>
 		</variablelist>
