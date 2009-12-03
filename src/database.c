@@ -517,6 +517,7 @@ int mqtt3_db_message_delete_by_oid(uint64_t oid)
 
 int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, int retain, const char *sub, int qos, uint32_t payloadlen, const uint8_t *payload)
 {
+	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 
@@ -549,6 +550,7 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direc
 
 int mqtt3_db_message_update(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status)
 {
+	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 
@@ -576,6 +578,7 @@ int mqtt3_db_message_update(const char *client_id, uint16_t mid, mqtt3_msg_direc
 
 int mqtt3_db_messages_delete(const char *client_id)
 {
+	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 
@@ -597,6 +600,7 @@ int mqtt3_db_messages_delete(const char *client_id)
 
 int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
 {
+	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	char *client_id;
 	uint8_t client_qos;
@@ -663,6 +667,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 			return 1;
 		}
 	}
+	_mqtt3_db_transaction_begin();
 	if(sqlite3_bind_int(stmt_select, 1, now) != SQLITE_OK) rc = 1;
 	while(sqlite3_step(stmt_select) == SQLITE_ROW){
 		OID = sqlite3_column_int(stmt_select, 0);
@@ -691,6 +696,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	}
 	sqlite3_reset(stmt_select);
 	sqlite3_clear_bindings(stmt_select);
+	_mqtt3_db_transaction_end();
 	return 0;
 }
 
@@ -761,8 +767,8 @@ int mqtt3_db_message_write(mqtt3_context *context)
 		}
 	}
 	if(sqlite3_bind_text(stmt, 1, context->id, strlen(context->id), SQLITE_STATIC) == SQLITE_OK){
-		/* Only write a single message per call to this function */
-		if(sqlite3_step(stmt) == SQLITE_ROW){
+		_mqtt3_db_transaction_begin();
+		while(sqlite3_step(stmt) == SQLITE_ROW){
 			OID = sqlite3_column_int(stmt, 0);
 			status = sqlite3_column_int(stmt, 1);
 			mid = sqlite3_column_int(stmt, 2);
@@ -803,6 +809,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 					break;
 			}
 		}
+		_mqtt3_db_transaction_end();
 	}else{
 		rc = 1;
 	}
@@ -813,6 +820,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 
 uint16_t mqtt3_db_mid_generate(const char *client_id)
 {
+	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	static sqlite3_stmt *stmt_select = NULL;
 	static sqlite3_stmt *stmt_update = NULL;
@@ -918,6 +926,7 @@ int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_
 
 int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, const uint8_t *payload)
 {
+	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	static sqlite3_stmt *stmt_update = NULL;
 	static sqlite3_stmt *stmt_insert = NULL;
@@ -1031,6 +1040,7 @@ int mqtt3_db_sub_delete(const char *client_id, const char *sub)
 
 int mqtt3_db_sub_search_start(const char *sub)
 {
+	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 
 	if(!sub) return 1;
@@ -1051,6 +1061,7 @@ int mqtt3_db_sub_search_start(const char *sub)
 
 int mqtt3_db_sub_search_next(char **client_id, uint8_t *qos)
 {
+	/* Warning: Don't start transaction in this function. */
 	if(sqlite3_step(stmt_sub_search) != SQLITE_ROW){
 		return 1;
 	}
@@ -1089,6 +1100,8 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 	int count;
 
 	if(now - interval > last_update){
+		_mqtt3_db_transaction_begin();
+
 		snprintf(buf, 100, "%d", (int)(now - start_time));
 		mqtt3_db_messages_queue("$SYS/broker/uptime", 2, strlen(buf), (uint8_t *)buf, 1);
 
@@ -1105,6 +1118,8 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 		mqtt3_db_messages_queue("$SYS/messages/received", 2, strlen(buf), (uint8_t *)buf, 1);
 		
 		last_update = time(NULL);
+
+		_mqtt3_db_transaction_end();
 	}
 }
 
