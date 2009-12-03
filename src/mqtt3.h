@@ -99,13 +99,25 @@ typedef struct {
 	char *pid_file;
 } mqtt3_config;
 
-/* Utility functions */
+/* ============================================================
+ * Utility functions
+ * ============================================================ */
+/* Return a string that corresponds to the MQTT command number (left shifted 4 bits). */
 const char *mqtt3_command_to_string(uint8_t command);
 
 /* Config functions */
+/* Read configuration data into "config".
+ * Looks in /etc/mosquitto.conf first. If not found, looks in ./mosquitto.conf.
+ * Returns 0 on success, 1 if there is a configuration error or if a file cannot be opened.
+ */
 int mqtt3_config_read(mqtt3_config *config);
 
-/* Raw send functions - just construct the packet and send */
+/* ============================================================
+ * Raw send functions - just construct the packet and send 
+ * ============================================================ */
+/* Generic function for sending a command to a client where there is no payload, just a mid.
+ * Returns 0 on success, 1 on error.
+ */
 int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid);
 int mqtt3_raw_connack(mqtt3_context *context, uint8_t result);
 int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, const char *will_msg, uint16_t keepalive, bool clean_start);
@@ -121,7 +133,9 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic);
 int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command);
 
-/* Network functions */
+/* ============================================================
+ * Network functions
+ * ============================================================ */
 int mqtt3_socket_connect(const char *ip, uint16_t port);
 int mqtt3_socket_close(mqtt3_context *context);
 int mqtt3_socket_listen(uint16_t port);
@@ -138,7 +152,9 @@ int mqtt3_write_string(mqtt3_context *context, const char *str, uint16_t length)
 int mqtt3_write_remaining_length(mqtt3_context *context, uint32_t length);
 int mqtt3_write_uint16(mqtt3_context *context, uint16_t word);
 
-/* Read handling functions */
+/* ============================================================
+ * Read handling functions
+ * ============================================================ */
 int mqtt3_handle_connack(mqtt3_context *context);
 int mqtt3_handle_connect(mqtt3_context *context);
 int mqtt3_handle_disconnect(mqtt3_context *context);
@@ -154,7 +170,9 @@ int mqtt3_handle_subscribe(mqtt3_context *context);
 int mqtt3_handle_unsuback(mqtt3_context *context);
 int mqtt3_handle_unsubscribe(mqtt3_context *context);
 
-/* Database handling */
+/* ============================================================
+ * Database handling
+ * ============================================================ */
 int mqtt3_db_open(const char *location, const char *filename);
 int mqtt3_db_close(void);
 int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message);
@@ -184,11 +202,15 @@ int mqtt3_db_sub_search_next(char **client_id, uint8_t *qos);
 int mqtt3_db_subs_clean_start(const char *client_id);
 void mqtt3_db_sys_update(int interval, time_t start_time);
 
-/* Context functions */
+/* ============================================================
+ * Context functions
+ * ============================================================ */
 mqtt3_context *mqtt3_context_init(int sock);
 void mqtt3_context_cleanup(mqtt3_context *context);
 
-/* Memory functions */
+/* ============================================================
+ * Memory functions
+ * ============================================================ */
 void *mqtt3_calloc(size_t nmemb, size_t size);
 void mqtt3_free(void *mem);
 void *mqtt3_malloc(size_t size);
