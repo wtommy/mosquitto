@@ -6,4 +6,4 @@
 # Compulsory line, this is a version 3 file
 version=3
 
-http://mosquitto.atchoo.org/files/mosquitto-(.*)\.tar\.gz
+http://mosquitto.atchoo.org/files/source/mosquitto-(.*)\.tar\.gz
