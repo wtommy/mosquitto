@@ -65,8 +65,8 @@ int mqtt3_config_read(mqtt3_config *config)
 					token = strtok(NULL, " ");
 					config->port = atoi(token);
 					if(config->port < 1 || config->port > 65535){
-						fprintf(stderr, "Warning: Invalid port value (%d). Using default (1833).\n", config->port);
-						config->port = 1833;
+						fprintf(stderr, "Warning: Invalid port value (%d). Using default (1883).\n", config->port);
+						config->port = 1883;
 					}
 				}else if(!strcmp(token, "sys_interval")){
 					token = strtok(NULL, " ");
