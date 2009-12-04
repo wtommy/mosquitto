@@ -1,3 +1,10 @@
+mosquitto (0.2-0~ppa1) karmic; urgency=low
+
+  * New release.
+  * Set daemon properties with defaults file now this is possible.
+
+ -- Roger A. Light <roger@atchoo.org>  Fri, 04 Dec 2009 18:31:51 +0000
+
 mosquitto (0.1-0~ppa1) karmic; urgency=low
 
   * Initial release
