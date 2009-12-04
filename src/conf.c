@@ -27,6 +27,9 @@ int mqtt3_config_read(mqtt3_config *config)
 		if(buf[0] != '#' && buf[0] != 10 && buf[0] != 13){
 			token = strtok(buf, " ");
 			if(token){
+				while(token[strlen(token)-1] == 10 || token[strlen(token)-1] == 13){
+					token[strlen(token)-1] = 0;
+				}
 				if(!strcmp(token, "msg_timeout")){
 					token = strtok(NULL, " ");
 					config->msg_timeout = atoi(token);
