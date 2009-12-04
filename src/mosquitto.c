@@ -46,6 +46,33 @@ POSSIBILITY OF SUCH DAMAGE.
 
 static int run;
 
+int drop_privileges(mqtt3_config *config)
+{
+	struct passwd *pwd;
+
+	if(geteuid() == 0){
+		if(config->user){
+			pwd = getpwnam(config->user);
+			if(!pwd){
+				fprintf(stderr, "Error: Invalid user '%s'.\n", config->user);
+				return 1;
+			}
+			if(setgid(pwd->pw_gid) == -1){
+				fprintf(stderr, "Error: %s.\n", strerror(errno));
+				return 1;
+			}
+			if(setuid(pwd->pw_uid) == -1){
+				fprintf(stderr, "Error: %s.\n", strerror(errno));
+				return 1;
+			}
+		}
+		if(geteuid() == 0 || getegid() == 0){
+			fprintf(stderr, "Warning: Mosquitto should not be run as root/administrator.\n");
+		}
+	}
+	return 0;
+}
+
 void handle_sigint(int signal)
 {
 	run = 0;
@@ -117,33 +144,10 @@ int main(int argc, char *argv[])
 	char buf[1024];
 	int i;
 	FILE *pid;
-	struct passwd *pwd;
 
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
-
-	/* Drop privileges */
-	if(geteuid() == 0){
-		if(config.user){
-			printf("config.user: %s\n", config.user);
-			pwd = getpwnam(config.user);
-			if(!pwd){
-				fprintf(stderr, "Error: Invalid user '%s'.\n", config.user);
-				return 1;
-			}
-			if(setgid(pwd->pw_gid) == -1){
-				fprintf(stderr, "Error: %s.\n", strerror(errno));
-				return 1;
-			}
-			if(setuid(pwd->pw_uid) == -1){
-				fprintf(stderr, "Error: %s.\n", strerror(errno));
-				return 1;
-			}
-		}
-		if(geteuid() == 0 || getegid() == 0){
-			fprintf(stderr, "Warning: Mosquitto should not be run as root/administrator.\n");
-		}
-	}
+	if(drop_privileges(&config)) return 1;
 
 	if(config.daemon){
 		switch(fork()){
