@@ -51,6 +51,9 @@ int mqtt3_config_read(mqtt3_config *config)
 							token[strlen(token)-1] = 0;
 						}
 						config->persistence_location = mqtt3_strdup(token);
+						if(token[strlen(token)-1] != '/'){
+							fprintf(stderr, "Warning: persistence_location should normally end with a '/'.\n");
+						}
 					}else{
 						fprintf(stderr, "Warning: Invalid persistence_location value. Using default.\n");
 					}
