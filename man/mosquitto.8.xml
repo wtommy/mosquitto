@@ -17,6 +17,9 @@
 		<cmdsynopsis>
 			<command>mosquitto</command>
 			<group choice='opt'>
+				<arg><option>-c</option> <replaceable>config file</replaceable></arg>
+			</group>
+			<group choice='opt'>
 				<arg><option>-f</option></arg>
 				<arg><option>--foreground</option></arg>
 			</group>
@@ -32,6 +35,13 @@
 	<refsect1>
 		<title>Options</title>
 		<variablelist>
+			<varlistentry>
+				<term><option>-c</option></term>
+				<term><option>--config-file</option></term>
+				<listitem>
+					<para>Load configuration from a file. In not given, the default values as described in <citerefentry><refentrytitle>mosquitto.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> are used.</para>
+				</listitem>
+			</varlistentry>
 			<varlistentry>
 				<term><option>-f</option></term>
 				<term><option>--foreground</option></term>

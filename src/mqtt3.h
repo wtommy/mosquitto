@@ -111,11 +111,10 @@ const char *mqtt3_command_to_string(uint8_t command);
  * ============================================================ */
 /* Initialise config struct to default values. */
 void mqtt3_config_init(mqtt3_config *config);
-/* Read configuration data into "config".
- * Looks in /etc/mosquitto.conf first. If not found, looks in ./mosquitto.conf.
+/* Read configuration data from filename into config.
  * Returns 0 on success, 1 if there is a configuration error or if a file cannot be opened.
  */
-int mqtt3_config_read(mqtt3_config *config);
+int mqtt3_config_read(mqtt3_config *config, const char *filename);
 
 /* ============================================================
  * Raw send functions - just construct the packet and send 

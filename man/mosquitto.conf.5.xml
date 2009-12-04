@@ -21,7 +21,12 @@
 
 	<refsect1>
 		<title>Description</title>
-		<para><command>mosquitto.conf</command> is the configuration file for mosquitto. The system wide file /etc/mosquitto.conf is the default configuration. If this is not found, <command>mosquitto</command> will attempt to open a configuration file in the current directory.</para>
+		<para><command>mosquitto.conf</command> is the configuration file for
+		mosquitto. This file can reside anywhere as long as mosquitto can read
+		it. By default, mosquitto does not need a configuration file and will
+		use the default values listed below. See
+		<citerefentry><refentrytitle>mosquitto</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+		for information on how to load a configuration file.</para>
 	</refsect1>
 
 	<refsect1>
@@ -86,7 +91,7 @@
 
 	<refsect1>
 		<title>Files</title>
-		<para>/etc/mosquitto.conf or mosquitto.conf</para>
+		<para>mosquitto.conf</para>
 	</refsect1>
 
 	<refsect1>

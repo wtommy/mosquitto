@@ -122,10 +122,22 @@ int main(int argc, char *argv[])
 
 	mqtt3_config_init(&config);
 
-	if(mqtt3_config_read(&config)){
-		fprintf(stderr, "Error: Unable to open configuration file.\n");
-		return 1;
+	for(i=1; i<argc; i++){
+		if(!strcmp(argv[i], "-c") || !strcmp(argv[i], "--config-file")){
+			if(i<argc-1){
+				if(mqtt3_config_read(&config, argv[i+1])){
+					fprintf(stderr, "Error: Unable to open configuration file.\n");
+					return 1;
+				}
+			}else{
+				fprintf(stderr, "Error: -c argument given, but no config file specified.\n");
+			}
+			i++;
+		}else if(!strcmp(argv[i], "-f") || !strcmp(argv[i], "--foreground")){
+			daemon = 0;
+		}
 	}
+
 
 	/* Drop privileges */
 	if(geteuid() == 0){
@@ -150,9 +162,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if(argc == 2 && (!strcmp(argv[1], "-f") || !strcmp(argv[1], "--foreground"))){
-		daemon = 0;
-	}
 	if(daemon){
 		switch(fork()){
 			case 0:

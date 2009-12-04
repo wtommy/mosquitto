@@ -16,15 +16,14 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->user = "mosquitto";
 }
 
-int mqtt3_config_read(mqtt3_config *config)
+int mqtt3_config_read(mqtt3_config *config, const char *filename)
 {
 	int rc = 0;
 	FILE *fptr = NULL;
 	char buf[1024];
 	char *token;
 	
-	fptr = fopen(CONFIG_PATH "/mosquitto.conf", "rt");
-	if(!fptr) fptr = fopen("mosquitto.conf", "rt");
+	fptr = fopen(filename, "rt");
 	if(!fptr) return 1;
 
 	while(fgets(buf, 1024, fptr)){
