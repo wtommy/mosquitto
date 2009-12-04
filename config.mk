@@ -16,6 +16,3 @@ DOCBOOK2MAN=docbook2man.pl
 prefix=/usr/local
 mandir=${prefix}/share/man
 localedir=${prefix}/share/locale
-
-CONFIG_PATH=/etc
-#CONFIG_PATH=..
