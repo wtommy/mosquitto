@@ -62,7 +62,7 @@ DIETIME=10              # Time to wait for the server to die, in seconds
                         # when it actually did)
 
 LOGFILE=$LOGDIR/$NAME.log  # Server logfile
-DAEMONUSER=mosquitto   # Users to run the daemons as. If this value
+#DAEMONUSER=mosquitto   # Users to run the daemons as. If this value
                         # is set start-stop-daemon will chuid the server
 
 # Include defaults if available

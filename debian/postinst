@@ -7,7 +7,7 @@ set -e
 
 setup_mosquitto_user() {
 	if ! getent passwd mosquitto >/dev/null; then
-		adduser --quiet --system --no-create-home --home /var/run/mosquitto --shell /usr/sbin/nologin mosquitto
+		adduser --quiet --system --no-create-home --home /var/lib/mosquitto --shell /usr/sbin/nologin mosquitto
 	fi
 }
 
