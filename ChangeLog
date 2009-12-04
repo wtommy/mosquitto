@@ -1,0 +1,17 @@
+0.2 - 200912xx
+==============
+
+- Replaced the command line option --foreground with --daemon, swapping the
+  default behaviour.
+- Added the command line option --config-file, to specify a config file to
+  load.  If this is not given, no config file is load and the default options
+  are used.
+- Added the command line option --port for specifying the port to listen on.
+  This overrides values in the config file.
+- Don't use persistence by default.
+- Default behaviour is now more sane when run by a normal user with no command
+  line options (combination of above changes).
+- Added option user to config file, defaulting to a value of mosquitto. If
+  this value isn't blank and mosquitto is started by root, then it will drop
+  privileges by changing to the user and its primary group. This replaces the
+  current behaviour of refusing to start if run by root.
