@@ -15,3 +15,6 @@
   this value isn't blank and mosquitto is started by root, then it will drop
   privileges by changing to the user and its primary group. This replaces the
   current behaviour of refusing to start if run by root.
+- Fix non-persistent mode, which would never work in the previous release.
+- Added information on default values of msg_timeout and sys_interval to the
+  mosquitto.conf man page. (closes bug #492045).
