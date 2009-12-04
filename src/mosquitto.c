@@ -185,6 +185,11 @@ int main(int argc, char *argv[])
 
 	listensock = mqtt3_socket_listen(config.port);
 	if(listensock == -1){
+		mqtt3_free(contexts);
+		mqtt3_db_close();
+		if(config.pid_file){
+			remove(config.pid_file);
+		}
 		return 1;
 	}
 
