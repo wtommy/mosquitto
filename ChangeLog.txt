@@ -1,4 +1,4 @@
-0.2 - 200912xx
+0.2 - 20091204
 ==============
 
 - Replaced the command line option --foreground with --daemon, swapping the
