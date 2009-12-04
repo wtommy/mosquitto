@@ -65,33 +65,41 @@ int mqtt3_db_open(const char *location, const char *filename)
 		return 1;
 	}
 
-	if(location && strlen(location) && strcmp(filename, ":memory:")){
-		filepath = mqtt3_malloc(strlen(location) + strlen(filename) + 1);
-		if(!filepath) return 1;
-		sprintf(filepath, "%s%s", location, filename);
-	}else{
-		filepath = (char *)filename;
-	}
-	/* Open without creating first. If found, check for db version.
-	 * If not found, open with create.
-	 */
-	if(sqlite3_open_v2(filepath, &db, SQLITE_OPEN_READWRITE, NULL) == SQLITE_OK){
-		if(_mqtt3_db_version_check()){
-			fprintf(stderr, "Error: Invalid database version.\n");
-			return 1;
-		}
-	}else{
-		if(sqlite3_open_v2(filepath, &db,
-				SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL) != SQLITE_OK){
+	if(!strcmp(filename, ":memory:")){
+		if(sqlite3_open_v2(filename, &db, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK){
 			fprintf(stderr, "Error: %s\n", sqlite3_errmsg(db));
 			return 1;
 		}
 		if(_mqtt3_db_tables_create()) return 1;
+	}else{
+		if(location && strlen(location)){
+			filepath = mqtt3_malloc(strlen(location) + strlen(filename) + 1);
+			if(!filepath) return 1;
+			sprintf(filepath, "%s%s", location, filename);
+		}else{
+			filepath = (char *)filename;
+		}
+		/* Open without creating first. If found, check for db version.
+		 * If not found, open with create.
+		 */
+		if(sqlite3_open_v2(filepath, &db, SQLITE_OPEN_READWRITE, NULL) == SQLITE_OK){
+			if(_mqtt3_db_version_check()){
+				fprintf(stderr, "Error: Invalid database version.\n");
+				return 1;
+			}
+		}else{
+			if(sqlite3_open_v2(filepath, &db,
+					SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL) != SQLITE_OK){
+				fprintf(stderr, "Error: %s\n", sqlite3_errmsg(db));
+				return 1;
+			}
+			if(_mqtt3_db_tables_create()) return 1;
+		}
+		if(filepath && filepath != filename){
+			mqtt3_free(filepath);
+		}
 	}
 
-	if(filepath && filepath != filename){
-		mqtt3_free(filepath);
-	}
 	if(_mqtt3_db_invalidate_sockets()) return 1;
 
 	return 0;
