@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}else{
-		if(mqtt3_db_open(NULL, ":memory")){
+		if(mqtt3_db_open(NULL, ":memory:")){
 			fprintf(stderr, "Error: Couldn't open database.\n");
 			return 1;
 		}
