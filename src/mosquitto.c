@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 	int sockmax;
 	struct stat statbuf;
 	time_t now;
-	int daemon = 1;
+	int daemon = 0;
 	mqtt3_config config;
 	time_t start_time = time(NULL);
 	char buf[1024];
@@ -133,8 +133,8 @@ int main(int argc, char *argv[])
 				fprintf(stderr, "Error: -c argument given, but no config file specified.\n");
 			}
 			i++;
-		}else if(!strcmp(argv[i], "-f") || !strcmp(argv[i], "--foreground")){
-			daemon = 0;
+		}else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--daemon")){
+			daemon = 1;
 		}
 	}
 
