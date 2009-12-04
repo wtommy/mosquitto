@@ -120,6 +120,8 @@ int main(int argc, char *argv[])
 	FILE *pid;
 	struct passwd *pwd;
 
+	mqtt3_config_init(&config);
+
 	if(mqtt3_config_read(&config)){
 		fprintf(stderr, "Error: Unable to open configuration file.\n");
 		return 1;

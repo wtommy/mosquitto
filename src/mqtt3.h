@@ -106,7 +106,11 @@ typedef struct {
 /* Return a string that corresponds to the MQTT command number (left shifted 4 bits). */
 const char *mqtt3_command_to_string(uint8_t command);
 
-/* Config functions */
+/* ============================================================
+ * Config functions
+ * ============================================================ */
+/* Initialise config struct to default values. */
+void mqtt3_config_init(mqtt3_config *config);
 /* Read configuration data into "config".
  * Looks in /etc/mosquitto.conf first. If not found, looks in ./mosquitto.conf.
  * Returns 0 on success, 1 if there is a configuration error or if a file cannot be opened.

@@ -4,6 +4,18 @@
 
 #include <mqtt3.h>
 
+void mqtt3_config_init(mqtt3_config *config)
+{
+	/* Set defaults */
+	config->msg_timeout = 10;
+	config->persistence = 1;
+	config->persistence_location = NULL;
+	config->port = 1883;
+	config->pid_file = NULL;
+	config->sys_interval = 10;
+	config->user = "mosquitto";
+}
+
 int mqtt3_config_read(mqtt3_config *config)
 {
 	int rc = 0;
@@ -11,15 +23,6 @@ int mqtt3_config_read(mqtt3_config *config)
 	char buf[1024];
 	char *token;
 	
-	/* Set defaults */
-	config->port = 1883;
-	config->msg_timeout = 10;
-	config->persistence = 1;
-	config->persistence_location = NULL;
-	config->sys_interval = 10;
-	config->pid_file = NULL;
-	config->user = "mosquitto";
-
 	fptr = fopen(CONFIG_PATH "/mosquitto.conf", "rt");
 	if(!fptr) fptr = fopen("mosquitto.conf", "rt");
 	if(!fptr) return 1;
