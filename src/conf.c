@@ -31,6 +31,7 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 				}
 			}else{
 				fprintf(stderr, "Error: -c argument given, but no config file specified.\n");
+				return 1;
 			}
 			i++;
 		}else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--daemon")){
@@ -44,6 +45,7 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 				}
 			}else{
 				fprintf(stderr, "Error: -p argument given, but no port specified.\n");
+				return 1;
 			}
 		}
 	}
