@@ -7,6 +7,7 @@
 void mqtt3_config_init(mqtt3_config *config)
 {
 	/* Set defaults */
+	config->daemon = 0;
 	config->msg_timeout = 10;
 	config->persistence = 0;
 	config->persistence_location = NULL;

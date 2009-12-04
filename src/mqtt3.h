@@ -91,6 +91,7 @@ typedef enum {
 } mqtt3_msg_direction;
 
 typedef struct {
+	int daemon;
 	int port;
 	int msg_timeout;
 	int persistence;

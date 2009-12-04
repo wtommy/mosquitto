@@ -112,7 +112,6 @@ int main(int argc, char *argv[])
 	int sockmax;
 	struct stat statbuf;
 	time_t now;
-	int daemon = 0;
 	mqtt3_config config;
 	time_t start_time = time(NULL);
 	char buf[1024];
@@ -135,7 +134,7 @@ int main(int argc, char *argv[])
 			}
 			i++;
 		}else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--daemon")){
-			daemon = 1;
+			config.daemon = 1;
 		}else if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
 			if(i<argc-1){
 				tmp_i = atoi(argv[i+1]);
