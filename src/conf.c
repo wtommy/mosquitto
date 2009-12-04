@@ -20,7 +20,7 @@ void mqtt3_config_init(mqtt3_config *config)
 int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 {
 	int i;
-	int tmp_i;
+	int port_override = 0;
 
 	for(i=1; i<argc; i++){
 		if(!strcmp(argv[i], "-c") || !strcmp(argv[i], "--config-file")){
@@ -37,17 +37,21 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 			config->daemon = 1;
 		}else if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
 			if(i<argc-1){
-				tmp_i = atoi(argv[i+1]);
-				if(tmp_i>0 && tmp_i<65536){
-					config->port = tmp_i;
-				}else{
-					fprintf(stderr, "Error: Invalid port specified (%d).\n", tmp_i);
+				port_override = atoi(argv[i+1]);
+				if(port_override<1 || port_override>65535){
+					fprintf(stderr, "Error: Invalid port specified (%d).\n", port_override);
 					return 1;
 				}
 			}else{
 				fprintf(stderr, "Error: -p argument given, but no port specified.\n");
 			}
 		}
+	}
+	/* This must happen after all other parsing in case -p is given before -c
+	 * on the command line. -p always overrides -c.
+	 */
+	if(port_override){
+		config->port = port_override;
 	}
 	return 0;
 }
