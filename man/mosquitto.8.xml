@@ -23,6 +23,9 @@
 				<arg><option>-d</option></arg>
 				<arg><option>--daemon</option></arg>
 			</group>
+			<group choice='opt'>
+				<arg><option>-p</option> <replaceable>port number</replaceable></arg>
+			</group>
 		</cmdsynopsis>
 	</refsynopsisdiv>
 
@@ -47,6 +50,13 @@
 				<term><option>--daemon</option></term>
 				<listitem>
 					<para>Run <command>mosquitto</command> in the background as a daemon. All other behaviour remains the same.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-p</option></term>
+				<term><option>--port</option></term>
+				<listitem>
+					<para>Listen on the port specified instead of the default 1883. This overrides the port setting in the config file.</para>
 				</listitem>
 			</varlistentry>
 		</variablelist>

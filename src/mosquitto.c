@@ -119,6 +119,7 @@ int main(int argc, char *argv[])
 	int i;
 	FILE *pid;
 	struct passwd *pwd;
+	int tmp_i;
 
 	mqtt3_config_init(&config);
 
@@ -135,6 +136,18 @@ int main(int argc, char *argv[])
 			i++;
 		}else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--daemon")){
 			daemon = 1;
+		}else if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
+			if(i<argc-1){
+				tmp_i = atoi(argv[i+1]);
+				if(tmp_i>0 && tmp_i<65536){
+					config.port = tmp_i;
+				}else{
+					fprintf(stderr, "Error: Invalid port specified (%d).\n", tmp_i);
+					return 1;
+				}
+			}else{
+				fprintf(stderr, "Error: -p argument given, but no port specified.\n");
+			}
 		}
 	}
 
