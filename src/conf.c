@@ -28,19 +28,29 @@ int mqtt3_config_read(mqtt3_config *config)
 		if(buf[0] != '#' && buf[0] != 10 && buf[0] != 13){
 			token = strtok(buf, " ");
 			if(token){
+				while(token[strlen(token)-1] == 10 || token[strlen(token)-1] == 13){
+					token[strlen(token)-1] = 0;
+				}
 				if(!strcmp(token, "msg_timeout")){
 					token = strtok(NULL, " ");
-					config->msg_timeout = atoi(token);
-					if(config->msg_timeout < 1 || config->msg_timeout > 3600){
-						fprintf(stderr, "Warning: Invalid msg_timeout value (%d). Using default (10).\n", config->msg_timeout);
+					if(token){
+						config->msg_timeout = atoi(token);
+						if(config->msg_timeout < 1 || config->msg_timeout > 3600){
+							fprintf(stderr, "Warning: Invalid msg_timeout value (%d). Using default (10).\n", config->msg_timeout);
+						}
+					}else{
+						fprintf(stderr, "Warning: Empty msg_timeout value in configuration.\n");
 					}
-					token = strtok(NULL, " ");
 				}else if(!strcmp(token, "persistence")){
 					token = strtok(NULL, " ");
-					config->persistence = atoi(token);
-					if(config->persistence != 1 && config->persistence != 0){
-						fprintf(stderr, "Warning: Invalid persistence value (%d). Using default (1).\n", config->persistence);
-						config->persistence = 1;
+					if(token){
+						config->persistence = atoi(token);
+						if(config->persistence != 1 && config->persistence != 0){
+							fprintf(stderr, "Warning: Invalid persistence value (%d). Using default (1).\n", config->persistence);
+							config->persistence = 1;
+						}
+					}else{
+						fprintf(stderr, "Warning: Empty persistence value in configuration.\n");
 					}
 				}else if(!strcmp(token, "persistence_location")){
 					token = strtok(NULL, " ");
@@ -49,8 +59,9 @@ int mqtt3_config_read(mqtt3_config *config)
 							token[strlen(token)-1] = 0;
 						}
 						config->persistence_location = mqtt3_strdup(token);
-					}else{
-						fprintf(stderr, "Warning: Invalid persistence_location value. Using default.\n");
+						if(token[strlen(token)-1] != '/'){
+							fprintf(stderr, "Warning: persistence_location should normally end with a '/'.\n");
+						}
 					}
 				}else if(!strcmp(token, "pid_file")){
 					token = strtok(NULL, " ");
@@ -59,22 +70,28 @@ int mqtt3_config_read(mqtt3_config *config)
 							token[strlen(token)-1] = 0;
 						}
 						config->pid_file = mqtt3_strdup(token);
-					}else{
-						fprintf(stderr, "Warning: Invalid pid_file value. Using default.\n");
 					}
 				}else if(!strcmp(token, "port")){
 					token = strtok(NULL, " ");
-					config->port = atoi(token);
-					if(config->port < 1 || config->port > 65535){
-						fprintf(stderr, "Warning: Invalid port value (%d). Using default (1833).\n", config->port);
-						config->port = 1833;
+					if(token){
+						config->port = atoi(token);
+						if(config->port < 1 || config->port > 65535){
+							fprintf(stderr, "Warning: Invalid port value (%d). Using default (1883).\n", config->port);
+							config->port = 1883;
+						}
+					}else{
+						fprintf(stderr, "Warning: Empty port value in configuration.\n");
 					}
 				}else if(!strcmp(token, "sys_interval")){
 					token = strtok(NULL, " ");
-					config->sys_interval = atoi(token);
-					if(config->sys_interval < 1 || config->sys_interval > 65535){
-						fprintf(stderr, "Warning: Invalid sys_interval value (%d). Using default (10).\n", config->sys_interval);
-						config->sys_interval = 1833;
+					if(token){
+						config->sys_interval = atoi(token);
+						if(config->sys_interval < 1 || config->sys_interval > 65535){
+							fprintf(stderr, "Warning: Invalid sys_interval value (%d). Using default (10).\n", config->sys_interval);
+							config->sys_interval = 10;
+						}
+					}else{
+						fprintf(stderr, "Warning: Empty sys_interval value in configuration.\n");
 					}
 				}else if(!strcmp(token, "user")){
 					token = strtok(NULL, " ");
