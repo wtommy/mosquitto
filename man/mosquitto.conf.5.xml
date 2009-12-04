@@ -69,6 +69,18 @@
 					<para>The integer number of seconds between updates of the $SYS subscription hierarchy, which provides status information about the broker. If unset, defaults to 10 seconds.</para>
 				</listitem>
 			</varlistentry>
+			<varlistentry>
+				<term><option>user</option></term>
+				<listitem>
+					<para>When run as root, change to this user and its primary
+					group on startup.  If mosquitto is unable to change to this
+					user and group, it will exit with an error. The user
+					specified must have read/write access to the persistence
+					database and pid file if they are to be written. If run as
+					a non-root user, this setting has no effect. Defaults to
+					mosquitto.</para>
+				</listitem>
+			</varlistentry>
 		</variablelist>
 	</refsect1>
 

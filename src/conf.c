@@ -18,6 +18,7 @@ int mqtt3_config_read(mqtt3_config *config)
 	config->persistence_location = NULL;
 	config->sys_interval = 10;
 	config->pid_file = NULL;
+	config->user = "mosquitto";
 
 	fptr = fopen(CONFIG_PATH "/mosquitto.conf", "rt");
 	if(!fptr) fptr = fopen("mosquitto.conf", "rt");
@@ -74,6 +75,16 @@ int mqtt3_config_read(mqtt3_config *config)
 					if(config->sys_interval < 1 || config->sys_interval > 65535){
 						fprintf(stderr, "Warning: Invalid sys_interval value (%d). Using default (10).\n", config->sys_interval);
 						config->sys_interval = 1833;
+					}
+				}else if(!strcmp(token, "user")){
+					token = strtok(NULL, " ");
+					if(token){
+						while(token[strlen(token)-1] == 10 || token[strlen(token)-1] == 13){
+							token[strlen(token)-1] = 0;
+						}
+						config->user = mqtt3_strdup(token);
+					}else{
+						fprintf(stderr, "Warning: Invalid user value. Using default.\n");
 					}
 				}else{
 					fprintf(stderr, "Warning: Unknown configuration variable \"%s\".\n", token);

@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <errno.h>
 #include <netinet/in.h>
+#include <pwd.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -117,15 +118,34 @@ int main(int argc, char *argv[])
 	char buf[1024];
 	int i;
 	FILE *pid;
-
-	if(geteuid() == 0){
-		fprintf(stderr, "Error: Mosquitto should not be run as root/administrator.\n");
-		return 1;
-	}
+	struct passwd *pwd;
 
 	if(mqtt3_config_read(&config)){
 		fprintf(stderr, "Error: Unable to open configuration file.\n");
 		return 1;
+	}
+
+	/* Drop privileges */
+	if(geteuid() == 0){
+		if(config.user){
+			printf("config.user: %s\n", config.user);
+			pwd = getpwnam(config.user);
+			if(!pwd){
+				fprintf(stderr, "Error: Invalid user '%s'.\n", config.user);
+				return 1;
+			}
+			if(setgid(pwd->pw_gid) == -1){
+				fprintf(stderr, "Error: %s.\n", strerror(errno));
+				return 1;
+			}
+			if(setuid(pwd->pw_uid) == -1){
+				fprintf(stderr, "Error: %s.\n", strerror(errno));
+				return 1;
+			}
+		}
+		if(geteuid() == 0 || getegid() == 0){
+			fprintf(stderr, "Warning: Mosquitto should not be run as root/administrator.\n");
+		}
 	}
 
 	if(argc == 2 && (!strcmp(argv[1], "-f") || !strcmp(argv[1], "--foreground"))){
