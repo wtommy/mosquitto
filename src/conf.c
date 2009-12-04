@@ -8,7 +8,7 @@ void mqtt3_config_init(mqtt3_config *config)
 {
 	/* Set defaults */
 	config->msg_timeout = 10;
-	config->persistence = 1;
+	config->persistence = 0;
 	config->persistence_location = NULL;
 	config->port = 1883;
 	config->pid_file = NULL;
@@ -49,8 +49,8 @@ int mqtt3_config_read(mqtt3_config *config)
 					if(token){
 						config->persistence = atoi(token);
 						if(config->persistence != 1 && config->persistence != 0){
-							fprintf(stderr, "Warning: Invalid persistence value (%d). Using default (1).\n", config->persistence);
-							config->persistence = 1;
+							fprintf(stderr, "Warning: Invalid persistence value (%d). Using default (0).\n", config->persistence);
+							config->persistence = 0;
 						}
 					}else{
 						fprintf(stderr, "Warning: Empty persistence value in configuration.\n");
