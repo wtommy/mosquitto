@@ -73,7 +73,7 @@ int mqtt3_config_read(mqtt3_config *config)
 					config->sys_interval = atoi(token);
 					if(config->sys_interval < 1 || config->sys_interval > 65535){
 						fprintf(stderr, "Warning: Invalid sys_interval value (%d). Using default (10).\n", config->sys_interval);
-						config->sys_interval = 1833;
+						config->sys_interval = 10;
 					}
 				}else{
 					fprintf(stderr, "Warning: Unknown configuration variable \"%s\".\n", token);
