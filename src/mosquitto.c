@@ -118,38 +118,9 @@ int main(int argc, char *argv[])
 	int i;
 	FILE *pid;
 	struct passwd *pwd;
-	int tmp_i;
 
 	mqtt3_config_init(&config);
-
-	for(i=1; i<argc; i++){
-		if(!strcmp(argv[i], "-c") || !strcmp(argv[i], "--config-file")){
-			if(i<argc-1){
-				if(mqtt3_config_read(&config, argv[i+1])){
-					fprintf(stderr, "Error: Unable to open configuration file.\n");
-					return 1;
-				}
-			}else{
-				fprintf(stderr, "Error: -c argument given, but no config file specified.\n");
-			}
-			i++;
-		}else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--daemon")){
-			config.daemon = 1;
-		}else if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
-			if(i<argc-1){
-				tmp_i = atoi(argv[i+1]);
-				if(tmp_i>0 && tmp_i<65536){
-					config.port = tmp_i;
-				}else{
-					fprintf(stderr, "Error: Invalid port specified (%d).\n", tmp_i);
-					return 1;
-				}
-			}else{
-				fprintf(stderr, "Error: -p argument given, but no port specified.\n");
-			}
-		}
-	}
-
+	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
 
 	/* Drop privileges */
 	if(geteuid() == 0){
@@ -174,7 +145,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if(daemon){
+	if(config.daemon){
 		switch(fork()){
 			case 0:
 				break;

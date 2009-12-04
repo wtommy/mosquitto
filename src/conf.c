@@ -17,6 +17,41 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->user = "mosquitto";
 }
 
+int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
+{
+	int i;
+	int tmp_i;
+
+	for(i=1; i<argc; i++){
+		if(!strcmp(argv[i], "-c") || !strcmp(argv[i], "--config-file")){
+			if(i<argc-1){
+				if(mqtt3_config_read(config, argv[i+1])){
+					fprintf(stderr, "Error: Unable to open configuration file.\n");
+					return 1;
+				}
+			}else{
+				fprintf(stderr, "Error: -c argument given, but no config file specified.\n");
+			}
+			i++;
+		}else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--daemon")){
+			config->daemon = 1;
+		}else if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
+			if(i<argc-1){
+				tmp_i = atoi(argv[i+1]);
+				if(tmp_i>0 && tmp_i<65536){
+					config->port = tmp_i;
+				}else{
+					fprintf(stderr, "Error: Invalid port specified (%d).\n", tmp_i);
+					return 1;
+				}
+			}else{
+				fprintf(stderr, "Error: -p argument given, but no port specified.\n");
+			}
+		}
+	}
+	return 0;
+}
+
 int mqtt3_config_read(mqtt3_config *config, const char *filename)
 {
 	int rc = 0;

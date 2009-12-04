@@ -112,6 +112,8 @@ const char *mqtt3_command_to_string(uint8_t command);
  * ============================================================ */
 /* Initialise config struct to default values. */
 void mqtt3_config_init(mqtt3_config *config);
+/* Parse command line options into config. */
+int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[]);
 /* Read configuration data from filename into config.
  * Returns 0 on success, 1 if there is a configuration error or if a file cannot be opened.
  */
