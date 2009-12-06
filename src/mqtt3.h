@@ -63,6 +63,14 @@ POSSIBILITY OF SUCH DAMAGE.
 #define PINGRESP 0xD0
 #define DISCONNECT 0xE0
 
+/* Log types */
+#define LOG_NONE 0x00
+#define LOG_SYSLOG 0x01
+#define LOG_FILE 0x02
+#define LOG_STDOUT 0x04
+#define LOG_STDERR 0x08
+#define LOG_TOPIC 0x10
+
 typedef struct _mqtt3_context{
 	int sock;
 	time_t last_msg_in;
