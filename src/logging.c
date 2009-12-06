@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include <stdio.h>
+#include <syslog.h>
 
 #include <mqtt3.h>
 
@@ -21,14 +22,21 @@ int mqtt3_log_init(int level, int types)
 
 	max_level = level;
 	log_types = types;
-	/* FIXME - do something! */
+
+	if(log_types & LOG_SYSLOG){
+		openlog("mosquitto", LOG_PID, LOG_DAEMON);
+	}
+	/* FIXME - do something for all types! */
 
 	return rc;
 }
 
 int mqtt3_log_close(void)
 {
-	/* FIXME - do something! */
+	if(log_types & LOG_SYSLOG){
+		closelog();
+	}
+	/* FIXME - do something for all types! */
 
 	return 0;
 }
