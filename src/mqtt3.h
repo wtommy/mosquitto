@@ -238,4 +238,11 @@ uint32_t mqtt3_memory_used(void);
 void *mqtt3_realloc(void *ptr, size_t size);
 char *mqtt3_strdup(const char *s);
 
+/* ============================================================
+ * Logging functions
+ * ============================================================ */
+int mqtt3_log_init(int level, int types);
+int mqtt3_log_close(void);
+int mqtt3_log_printf(int level, int type, const char *fmt, ...);
+
 #endif
