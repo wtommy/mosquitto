@@ -13,6 +13,9 @@
  * To topics
  */
 
+/* Give option of logging timestamp.
+ * Logging pid.
+ */
 static int log_types = 0;
 static int max_level = 0;
 
