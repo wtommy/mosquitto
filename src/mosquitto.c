@@ -27,6 +27,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <config.h>
+
 #include <errno.h>
 #include <netinet/in.h>
 #include <pwd.h>
@@ -36,15 +38,23 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <sys/types.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#ifdef WITH_WRAP
+#include <tcpd.h>
+#endif
 #include <unistd.h>
 
 #include <mqtt3.h>
 
 static int run;
+#ifdef WITH_WRAP
+int allow_severity = LOG_INFO;
+int deny_severity = LOG_INFO;
+#endif
 
 int drop_privileges(mqtt3_config *config)
 {
@@ -144,6 +154,9 @@ int main(int argc, char *argv[])
 	char buf[1024];
 	int i;
 	FILE *pid;
+#ifdef WITH_WRAP
+	struct request_info wrap_req;
+#endif
 
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
@@ -281,21 +294,33 @@ int main(int argc, char *argv[])
 			}
 			if(FD_ISSET(listensock, &readfds)){
 				new_sock = accept(listensock, NULL, 0);
-				new_context = mqtt3_context_init(new_sock);
-				for(i=0; i<context_count; i++){
-					if(contexts[i] == NULL){
-						contexts[i] = new_context;
-						break;
+#ifdef WITH_WRAP
+				/* Use tcpd / libwrap to determine whether a connection is allowed. */
+				request_init(&wrap_req, RQ_FILE, new_sock, RQ_DAEMON, "mosquitto", 0);
+				fromhost(&wrap_req);
+				if(!hosts_access(&wrap_req)){
+					/* Access is denied */
+					close(new_sock);
+				}else{
+#endif
+					new_context = mqtt3_context_init(new_sock);
+					for(i=0; i<context_count; i++){
+						if(contexts[i] == NULL){
+							contexts[i] = new_context;
+							break;
+						}
 					}
-				}
-				if(i==context_count){
-					context_count++;
-					tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*context_count);
-					if(tmp_contexts){
-						contexts = tmp_contexts;
-						contexts[context_count-1] = new_context;
+					if(i==context_count){
+						context_count++;
+						tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*context_count);
+						if(tmp_contexts){
+							contexts = tmp_contexts;
+							contexts[context_count-1] = new_context;
+						}
 					}
+#ifdef WITH_WRAP
 				}
+#endif
 			}
 		}
 	}

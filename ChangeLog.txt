@@ -1,3 +1,8 @@
+0.3 - 200912xx
+==============
+
+- Added host access control through tcp-wrappers support.
+
 0.2 - 20091204
 ==============
 

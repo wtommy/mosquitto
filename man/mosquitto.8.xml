@@ -129,6 +129,13 @@
 					<para>Persistent message data storage location if persist enabled.</para>
 				</listitem>
 			</varlistentry>
+			<varlistentry>
+				<term><filename>/etc/hosts.allow</filename></term>
+				<term><filename>/etc/hosts.deny</filename></term>
+				<listitem>
+					<para>Host access control via tcp-wrappers as described in <citerefentry><refentrytitle>hosts_access</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
+				</listitem>
+			</varlistentry>
 		</variablelist>
 	</refsect1>
 
@@ -142,6 +149,10 @@
 		<para>
 			<citerefentry>
 				<refentrytitle>mosquitto.conf</refentrytitle>
+				<manvolnum>5</manvolnum>
+			</citerefentry>
+			<citerefentry>
+				<refentrytitle>hosts_access</refentrytitle>
 				<manvolnum>5</manvolnum>
 			</citerefentry>
 		</para>
