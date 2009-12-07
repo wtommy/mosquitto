@@ -82,12 +82,15 @@ int mqtt3_socket_listen(uint16_t port)
 {
 	int sock;
 	struct sockaddr_in addr;
+	int opt = 1;
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock == -1){
 		fprintf(stderr, "Error: %s\n", strerror(errno));
 		return -1;
 	}
+
+	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
 	memset(&addr, 0, sizeof(struct sockaddr_in));
 	addr.sin_family = AF_INET;
