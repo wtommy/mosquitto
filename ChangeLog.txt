@@ -3,6 +3,8 @@
 
 - Added host access control through tcp-wrappers support.
 - Set SO_REUSEADDR on the listening socket so restart is much quicker.
+- Added support for tracking current heap memory usage - this is published on
+  the topic "$SYS/broker/heap/current size"
 
 0.2 - 20091204
 ==============

@@ -1119,6 +1119,9 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 			mqtt3_db_messages_queue("$SYS/messages/inflight", 2, strlen(buf), (uint8_t *)buf, 1);
 		}
 
+		snprintf(buf, 100, "%d", mqtt3_memory_used());
+		mqtt3_db_messages_queue("$SYS/heap/current size", 2, strlen(buf), (uint8_t *)buf, 1);
+
 		snprintf(buf, 100, "%d", 0);
 		mqtt3_db_messages_queue("$SYS/messages/sent", 2, strlen(buf), (uint8_t *)buf, 1);
 

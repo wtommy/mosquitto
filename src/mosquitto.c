@@ -258,6 +258,7 @@ int main(int argc, char *argv[])
 		timeout.tv_sec = 1;
 		timeout.tv_nsec = 0;
 
+		printf("Mem: %d\n", mqtt3_memory_used());
 		fdcount = pselect(sockmax+1, &readfds, &writefds, NULL, &timeout, &sigblock);
 		if(fdcount == -1){
 			/* Error ocurred, probably an fd has been closed. 
