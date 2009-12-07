@@ -40,6 +40,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mqtt3.h>
 
+int _mqtt3_socket_listen(struct sockaddr *addr);
+
 int mqtt3_socket_close(mqtt3_context *context)
 {
 	int rc = -1;
@@ -79,10 +81,9 @@ int mqtt3_socket_connect(const char *ip, uint16_t port)
 	return sock;
 }
 
-int mqtt3_socket_listen(uint16_t port)
+int _mqtt3_socket_listen(struct sockaddr *addr)
 {
 	int sock;
-	struct sockaddr_in addr;
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock == -1){
@@ -90,23 +91,30 @@ int mqtt3_socket_listen(uint16_t port)
 		return -1;
 	}
 
-	memset(&addr, 0, sizeof(struct sockaddr_in));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
-
-	if(bind(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_in)) == -1){
+	if(bind(sock, addr, sizeof(struct sockaddr_in)) == -1){
 		fprintf(stderr, "Error: %s\n", strerror(errno));
-		fflush(stderr);
+		close(sock);
 		return -1;
 	}
 
 	if(listen(sock, 100) == -1){
 		fprintf(stderr, "Error: %s\n", strerror(errno));
-		fflush(stderr);
+		close(sock);
 		return -1;
 	}
 
 	return sock;
+}
+
+int mqtt3_socket_listen(uint16_t port)
+{
+	struct sockaddr_in addr;
+
+	memset(&addr, 0, sizeof(struct sockaddr_in));
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(port);
+
+	return _mqtt3_socket_listen((struct sockaddr *)&addr);
 }
 
 int mqtt3_socket_listen_if(const char *iface, uint16_t port)
@@ -114,7 +122,6 @@ int mqtt3_socket_listen_if(const char *iface, uint16_t port)
 	struct ifaddrs *ifa;
 	struct ifaddrs *tmp;
 	int sock;
-	struct sockaddr_in addr;
 
 	if(!iface) return -1;
 
@@ -122,29 +129,8 @@ int mqtt3_socket_listen_if(const char *iface, uint16_t port)
 		tmp = ifa;
 		while(tmp){
 			if(!strcmp(tmp->ifa_name, iface) && tmp->ifa_addr->sa_family == AF_INET){
-				sock = socket(AF_INET, SOCK_STREAM, 0);
-				if(sock == -1){
-					fprintf(stderr, "Error: %s\n", strerror(errno));
-					freeifaddrs(ifa);
-					return -1;
-				}
-
-				memset(&addr, 0, sizeof(struct sockaddr_in));
-				addr.sin_family = AF_INET;
-				addr.sin_port = htons(port);
-	
-				if(bind(sock, tmp->ifa_addr, sizeof(struct sockaddr_in)) == -1){
-					fprintf(stderr, "Error: %s\n", strerror(errno));
-					freeifaddrs(ifa);
-					return -1;
-				}
-
-				if(listen(sock, 100) == -1){
-					fprintf(stderr, "Error: %s\n", strerror(errno));
-					freeifaddrs(ifa);
-					return -1;
-				}
-
+				sock = _mqtt3_socket_listen(tmp->ifa_addr);
+				freeifaddrs(ifa);
 				return sock;
 			}
 			tmp = tmp->ifa_next;
