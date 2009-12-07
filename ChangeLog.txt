@@ -1,3 +1,10 @@
+0.3 - 200912xx
+==============
+
+- The port option in the configuration file and --port command line argument
+  may now be given any number of times to make mosquitto listen on multiple
+  sockets.
+
 0.2 - 20091204
 ==============
 

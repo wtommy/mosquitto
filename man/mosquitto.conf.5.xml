@@ -41,7 +41,7 @@
 			<varlistentry>
 				<term><option>port</option></term>
 				<listitem>
-					<para>Set the network port to listen on. Defaults to 1883.</para>
+					<para>Set the network port to listen on. Defaults to 1883. This option may be given any number of times. A socket will be created for each port listed.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

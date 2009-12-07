@@ -90,9 +90,15 @@ typedef enum {
 	md_out = 1
 } mqtt3_msg_direction;
 
+struct mqtt3_iface {
+	char *iface;
+	int port;
+};
+
 typedef struct {
 	int daemon;
-	int port;
+	struct mqtt3_iface *iface;
+	int iface_count;
 	int msg_timeout;
 	int persistence;
 	char *persistence_location;

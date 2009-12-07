@@ -56,7 +56,7 @@
 				<term><option>-p</option></term>
 				<term><option>--port</option></term>
 				<listitem>
-					<para>Listen on the port specified instead of the default 1883. This overrides the port setting in the config file.</para>
+					<para>Listen on the port specified instead of the default 1883. This acts in addition to the port setting in the config file. May be specified multiple times to open multiple sockets listening on different ports.</para>
 				</listitem>
 			</varlistentry>
 		</variablelist>

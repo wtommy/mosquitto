@@ -130,7 +130,8 @@ int main(int argc, char *argv[])
 	struct timespec timeout;
 	fd_set readfds, writefds;
 	sigset_t sigblock;
-	int fdcount; int listensock;
+	int fdcount;
+	int *listensock = NULL;
 	int new_sock;
 	mqtt3_context **contexts = NULL;
 	mqtt3_context **tmp_contexts = NULL;
@@ -205,14 +206,17 @@ int main(int argc, char *argv[])
 	snprintf(buf, 1024, "mosquitto version %s (build date %s)", VERSION, BUILDDATE);
 	mqtt3_db_messages_queue("$SYS/broker/version", 2, strlen(buf), (uint8_t *)buf, 1);
 
-	listensock = mqtt3_socket_listen(config.port);
-	if(listensock == -1){
-		mqtt3_free(contexts);
-		mqtt3_db_close();
-		if(config.pid_file){
-			remove(config.pid_file);
+	listensock = mqtt3_malloc(sizeof(int)*config.iface_count);
+	for(i=0; i<config.iface_count; i++){
+		listensock[i] = mqtt3_socket_listen(config.iface[i].port);
+		if(listensock[i] == -1){
+			mqtt3_free(contexts);
+			mqtt3_db_close();
+			if(config.pid_file){
+				remove(config.pid_file);
+			}
+			return 1;
 		}
-		return 1;
 	}
 
 	run = 1;
@@ -220,9 +224,15 @@ int main(int argc, char *argv[])
 		mqtt3_db_sys_update(config.sys_interval, start_time);
 
 		FD_ZERO(&readfds);
-		FD_SET(listensock, &readfds);
 
-		sockmax = listensock;
+		sockmax = 0;
+		for(i=0; i<config.iface_count; i++){
+			FD_SET(listensock[i], &readfds);
+			if(listensock[i] > sockmax){
+				sockmax = listensock[i];
+			}
+		}
+
 		now = time(NULL);
 		for(i=0; i<context_count; i++){
 			if(contexts[i] && contexts[i]->sock != -1){
@@ -279,21 +289,23 @@ int main(int argc, char *argv[])
 					}
 				}
 			}
-			if(FD_ISSET(listensock, &readfds)){
-				new_sock = accept(listensock, NULL, 0);
-				new_context = mqtt3_context_init(new_sock);
-				for(i=0; i<context_count; i++){
-					if(contexts[i] == NULL){
-						contexts[i] = new_context;
-						break;
+			for(i=0; i<config.iface_count; i++){
+				if(FD_ISSET(listensock[i], &readfds)){
+					new_sock = accept(listensock[i], NULL, 0);
+					new_context = mqtt3_context_init(new_sock);
+					for(i=0; i<context_count; i++){
+						if(contexts[i] == NULL){
+							contexts[i] = new_context;
+							break;
+						}
 					}
-				}
-				if(i==context_count){
-					context_count++;
-					tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*context_count);
-					if(tmp_contexts){
-						contexts = tmp_contexts;
-						contexts[context_count-1] = new_context;
+					if(i==context_count){
+						context_count++;
+						tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*context_count);
+						if(tmp_contexts){
+							contexts = tmp_contexts;
+							contexts[context_count-1] = new_context;
+						}
 					}
 				}
 			}
@@ -307,7 +319,14 @@ int main(int argc, char *argv[])
 	}
 	mqtt3_free(contexts);
 
-	close(listensock);
+	if(listensock){
+		for(i=0; i<config.iface_count; i++){
+			if(listensock[i] != -1){
+				close(listensock[i]);
+			}
+		}
+		mqtt3_free(listensock);
+	}
 
 	mqtt3_db_close();
 

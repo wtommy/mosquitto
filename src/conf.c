@@ -8,10 +8,11 @@ void mqtt3_config_init(mqtt3_config *config)
 {
 	/* Set defaults */
 	config->daemon = 0;
+	config->iface = NULL;
+	config->iface_count = 0;
 	config->msg_timeout = 10;
 	config->persistence = 0;
 	config->persistence_location = NULL;
-	config->port = 1883;
 	config->pid_file = NULL;
 	config->sys_interval = 10;
 	config->user = "mosquitto";
@@ -20,7 +21,7 @@ void mqtt3_config_init(mqtt3_config *config)
 int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 {
 	int i;
-	int port_override = 0;
+	int port_tmp;
 
 	for(i=1; i<argc; i++){
 		if(!strcmp(argv[i], "-c") || !strcmp(argv[i], "--config-file")){
@@ -38,10 +39,19 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 			config->daemon = 1;
 		}else if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
 			if(i<argc-1){
-				port_override = atoi(argv[i+1]);
-				if(port_override<1 || port_override>65535){
-					fprintf(stderr, "Error: Invalid port specified (%d).\n", port_override);
+				port_tmp = atoi(argv[i+1]);
+				if(port_tmp<1 || port_tmp>65535){
+					fprintf(stderr, "Error: Invalid port specified (%d).\n", port_tmp);
 					return 1;
+				}else{
+					config->iface_count++;
+					config->iface = mqtt3_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
+					if(!config->iface){
+						fprintf(stderr, "Error: Out of memory.\n");
+						return 1;
+					}
+					config->iface[config->iface_count-1].iface = NULL;
+					config->iface[config->iface_count-1].port = port_tmp;
 				}
 			}else{
 				fprintf(stderr, "Error: -p argument given, but no port specified.\n");
@@ -49,11 +59,12 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 			}
 		}
 	}
-	/* This must happen after all other parsing in case -p is given before -c
-	 * on the command line. -p always overrides -c.
-	 */
-	if(port_override){
-		config->port = port_override;
+
+	if(!config->iface){
+		config->iface = mqtt3_malloc(sizeof(struct mqtt3_iface));
+		config->iface->iface = NULL;
+		config->iface->port = 1883;
+		config->iface_count = 1;
 	}
 	return 0;
 }
@@ -64,6 +75,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	FILE *fptr = NULL;
 	char buf[1024];
 	char *token;
+	int port_tmp;
 	
 	fptr = fopen(filename, "rt");
 	if(!fptr) return 1;
@@ -118,11 +130,19 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "port")){
 					token = strtok(NULL, " ");
 					if(token){
-						config->port = atoi(token);
-						if(config->port < 1 || config->port > 65535){
-							fprintf(stderr, "Warning: Invalid port value (%d). Using default (1883).\n", config->port);
-							config->port = 1883;
+						port_tmp = atoi(token);
+						if(port_tmp < 1 || port_tmp > 65535){
+							fprintf(stderr, "Error: Invalid port value (%d).\n", port_tmp);
+							return 1;
 						}
+						config->iface_count++;
+						config->iface = mqtt3_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
+						if(!config->iface){
+							fprintf(stderr, "Error: Out of memory.\n");
+							return 1;
+						}
+						config->iface[config->iface_count-1].iface = NULL;
+						config->iface[config->iface_count-1].port = port_tmp;
 					}else{
 						fprintf(stderr, "Warning: Empty port value in configuration.\n");
 					}
