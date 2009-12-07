@@ -97,6 +97,12 @@
 		<para>Clients can find information about the broker by subscribing to topics in the $SYS hierarchy as follows. Topics marked as static are only sent once per client on subscription. Topics marked dynamic are updated every <option>sys_interval</option> seconds.</para>
 		<variablelist>
 			<varlistentry>
+				<term><option>$SYS/broker/heap/current size</option></term>
+				<listitem>
+					<para>The current size of the heap memory in use by mosquitto. Dynamic.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>$SYS/broker/version</option></term>
 				<listitem>
 					<para>The version of the broker. Static.</para>
@@ -144,6 +150,13 @@
 					<para>Persistent message data storage location if persist enabled.</para>
 				</listitem>
 			</varlistentry>
+			<varlistentry>
+				<term><filename>/etc/hosts.allow</filename></term>
+				<term><filename>/etc/hosts.deny</filename></term>
+				<listitem>
+					<para>Host access control via tcp-wrappers as described in <citerefentry><refentrytitle>hosts_access</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
+				</listitem>
+			</varlistentry>
 		</variablelist>
 	</refsect1>
 
@@ -157,6 +170,10 @@
 		<para>
 			<citerefentry>
 				<refentrytitle>mosquitto.conf</refentrytitle>
+				<manvolnum>5</manvolnum>
+			</citerefentry>
+			<citerefentry>
+				<refentrytitle>hosts_access</refentrytitle>
 				<manvolnum>5</manvolnum>
 			</citerefentry>
 		</para>

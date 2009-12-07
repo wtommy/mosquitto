@@ -84,12 +84,15 @@ int mqtt3_socket_connect(const char *ip, uint16_t port)
 int _mqtt3_socket_listen(struct sockaddr *addr)
 {
 	int sock;
+	int opt = 1;
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock == -1){
 		fprintf(stderr, "Error: %s\n", strerror(errno));
 		return -1;
 	}
+
+	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
 	if(bind(sock, addr, sizeof(struct sockaddr_in)) == -1){
 		fprintf(stderr, "Error: %s\n", strerror(errno));

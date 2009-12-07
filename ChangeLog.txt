@@ -6,6 +6,10 @@
   sockets.
 - Add new config file and command line option "interface" to specify an
   interface to listen on, rather than all interfaces.
+- Added host access control through tcp-wrappers support.
+- Set SO_REUSEADDR on the listening socket so restart is much quicker.
+- Added support for tracking current heap memory usage - this is published on
+  the topic "$SYS/broker/heap/current size"
 
 0.2 - 20091204
 ==============

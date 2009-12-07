@@ -107,8 +107,13 @@ int mqtt3_db_open(const char *location, const char *filename)
 
 int mqtt3_db_close(void)
 {
+	char *errmsg = NULL;
 	_mqtt3_db_statements_finalize();
 
+	sqlite3_exec(db, "VACUUM", NULL, NULL, &errmsg);
+	if(errmsg){
+		sqlite3_free(errmsg);
+	}
 	sqlite3_close(db);
 	db = NULL;
 
@@ -1118,6 +1123,9 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 			snprintf(buf, 100, "%d", count);
 			mqtt3_db_messages_queue("$SYS/messages/inflight", 2, strlen(buf), (uint8_t *)buf, 1);
 		}
+
+		snprintf(buf, 100, "%d", mqtt3_memory_used());
+		mqtt3_db_messages_queue("$SYS/heap/current size", 2, strlen(buf), (uint8_t *)buf, 1);
 
 		snprintf(buf, 100, "%d", 0);
 		mqtt3_db_messages_queue("$SYS/messages/sent", 2, strlen(buf), (uint8_t *)buf, 1);

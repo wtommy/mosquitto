@@ -34,37 +34,71 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mqtt3.h>
 
+struct _memlist {
+	struct _memlist *next;
+	void *ptr;
+	size_t size;
+};
+
+static struct _memlist *memlist = NULL;
 static uint32_t memcount = 0;
 
 void *mqtt3_calloc(size_t nmemb, size_t size)
 {
 	void *mem = calloc(nmemb, size);
-	/* FIXME
+	struct _memlist *list = NULL;
+
 	if(mem){
+		list = malloc(sizeof(struct _memlist));
+		list->ptr = mem;
+		list->size = size;
+		list->next = memlist;
+		memlist = list;
+
 		memcount += size;
 	}
-	*/
+
 	return mem;
 }
 
 void mqtt3_free(void *mem)
 {
+	struct _memlist *list;
+	struct _memlist *prev = NULL;
+
 	if(mem){
-		free(mem);
-		/* FIXME
-		memcount -= 
-		*/
+		for(list=memlist; list; list=list->next){
+			if(list->ptr == mem){
+				free(mem);
+				memcount -= list->size;
+				if(prev){
+					prev->next = list->next;
+				}else{
+					memlist = list->next;
+				}
+				free(list);
+				break;
+			}
+			prev = list;
+		}
 	}
 }
 
 void *mqtt3_malloc(size_t size)
 {
 	void *mem = malloc(size);
-	/* FIXME
+	struct _memlist *list = NULL;
+
 	if(mem){
+		list = malloc(sizeof(struct _memlist));
+		list->ptr = mem;
+		list->size = size;
+		list->next = memlist;
+		memlist = list;
+
 		memcount += size;
 	}
-	*/
+
 	return mem;
 }
 
@@ -75,23 +109,48 @@ uint32_t mqtt3_memory_used(void)
 
 void *mqtt3_realloc(void *ptr, size_t size)
 {
-	void *mem = realloc(ptr, size);
-	/* FIXME
-	if(mem){
+	void *mem = NULL;
+	struct _memlist *list = NULL;
+
+	if(ptr){
+		for(list=memlist; list; list=list->next){
+			if(list->ptr == ptr){
+				mem = realloc(ptr, size);
+				list->ptr = mem;
+				memcount += size-list->size;
+				list->size = size;
+				break;
+			}
+		}
+	}else{
+		list = malloc(sizeof(struct _memlist));
+		mem = realloc(ptr, size);
+		list->ptr = mem;
+		list->size = size;
+		list->next = memlist;
+		memlist = list;
 		memcount += size;
 	}
-	*/
 	return mem;
 }
 
 char *mqtt3_strdup(const char *s)
 {
-	char *str = strdup(s);
-	/* FIXME
+	char *str;
+	struct _memlist *list = NULL;
+
+	if(!s) return NULL;
+
+	str = strdup(s);
 	if(str){
+		list = malloc(sizeof(struct _memlist));
+		list->ptr = str;
+		list->size = strlen(str);
+		list->next = memlist;
+		memlist = list;
+
 		memcount += strlen(str);
 	}
-	*/
 	return str;
 }
 
