@@ -39,6 +39,18 @@
 		<title>Variables</title>
 		<variablelist>
 			<varlistentry>
+				<term><option>interface</option></term>
+				<listitem>
+					<para>Listen for incoming network connections on the
+					specified interface only. The port to listen to can be
+					changed from the default by appending it to the interface
+					name, e.g. eth0:1884. This is useful to restrict access to
+					certain network interfaces. To restrict access to mosquitto
+					to the local host only, use "interface lo". This option
+					may be specified multiple times.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>port</option></term>
 				<listitem>
 					<para>Set the network port to listen on. Defaults to 1883. This option may be given any number of times. A socket will be created for each port listed.</para>

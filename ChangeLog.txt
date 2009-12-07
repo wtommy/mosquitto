@@ -4,6 +4,8 @@
 - The port option in the configuration file and --port command line argument
   may now be given any number of times to make mosquitto listen on multiple
   sockets.
+- Add new config file and command line option "interface" to specify an
+  interface to listen on, rather than all interfaces.
 
 0.2 - 20091204
 ==============

@@ -208,7 +208,11 @@ int main(int argc, char *argv[])
 
 	listensock = mqtt3_malloc(sizeof(int)*config.iface_count);
 	for(i=0; i<config.iface_count; i++){
-		listensock[i] = mqtt3_socket_listen(config.iface[i].port);
+		if(config.iface[i].iface){
+			listensock[i] = mqtt3_socket_listen_if(config.iface[i].iface, config.iface[i].port);
+		}else{
+			listensock[i] = mqtt3_socket_listen(config.iface[i].port);
+		}
 		if(listensock[i] == -1){
 			mqtt3_free(contexts);
 			mqtt3_db_close();

@@ -129,6 +129,7 @@ int mqtt3_socket_listen_if(const char *iface, uint16_t port)
 		tmp = ifa;
 		while(tmp){
 			if(!strcmp(tmp->ifa_name, iface) && tmp->ifa_addr->sa_family == AF_INET){
+				((struct sockaddr_in *)tmp->ifa_addr)->sin_port = htons(port);
 				sock = _mqtt3_socket_listen(tmp->ifa_addr);
 				freeifaddrs(ifa);
 				return sock;
