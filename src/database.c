@@ -107,8 +107,13 @@ int mqtt3_db_open(const char *location, const char *filename)
 
 int mqtt3_db_close(void)
 {
+	char *errmsg = NULL;
 	_mqtt3_db_statements_finalize();
 
+	sqlite3_exec(db, "VACUUM", NULL, NULL, &errmsg);
+	if(errmsg){
+		sqlite3_free(errmsg);
+	}
 	sqlite3_close(db);
 	db = NULL;
 
