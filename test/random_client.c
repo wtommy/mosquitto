@@ -111,7 +111,6 @@ void send_random(mqtt3_context *context, int length)
 
 	if(fd >= 0){
 		if(read(fd, buf, length) == length){
-			buf[0] = buf[0] 
 			mqtt3_write_bytes(context, buf, length);
 		}
 		close(fd);
