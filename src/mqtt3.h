@@ -63,7 +63,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define PINGRESP 0xD0
 #define DISCONNECT 0xE0
 
-/* Log types */
+/* Log destinations */
 #define LOG_NONE 0x00
 #define LOG_SYSLOG 0x01
 #define LOG_FILE 0x02
@@ -249,8 +249,8 @@ char *mqtt3_strdup(const char *s);
 /* ============================================================
  * Logging functions
  * ============================================================ */
-int mqtt3_log_init(int level, int types);
+int mqtt3_log_init(int level, int destinations);
 int mqtt3_log_close(void);
-int mqtt3_log_printf(int level, int type, const char *fmt, ...);
+int mqtt3_log_printf(int level, const char *fmt, ...);
 
 #endif
