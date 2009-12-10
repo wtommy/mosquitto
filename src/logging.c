@@ -77,7 +77,7 @@ int mqtt3_log_printf(int level, const char *fmt, ...)
 	va_list va;
 	char s[500];
 
-	if(level <= max_level){
+	if(level <= max_level && log_destinations != MQTT3_LOG_NONE){
 		va_start(va, fmt);
 		vsnprintf(s, 500, fmt, va);
 		va_end(va);
