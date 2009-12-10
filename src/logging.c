@@ -54,7 +54,7 @@ int mqtt3_log_init(int level, int destinations)
 	max_level = level;
 	log_destinations = destinations;
 
-	if(log_destinations & LOG_SYSLOG){
+	if(log_destinations & MQTT3_LOG_SYSLOG){
 		openlog("mosquitto", LOG_PID, LOG_DAEMON);
 	}
 	/* FIXME - do something for all destinations! */
@@ -64,7 +64,7 @@ int mqtt3_log_init(int level, int destinations)
 
 int mqtt3_log_close(void)
 {
-	if(log_destinations & LOG_SYSLOG){
+	if(log_destinations & MQTT3_LOG_SYSLOG){
 		closelog();
 	}
 	/* FIXME - do something for all destinations! */
