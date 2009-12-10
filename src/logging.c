@@ -28,6 +28,7 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 #include <syslog.h>
 
 #include <mqtt3.h>
@@ -90,6 +91,25 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 		}
 		if(log_destinations & MQTT3_LOG_SYSLOG){
 			syslog(LOG_INFO, "%s", s);
+		}
+		if(log_destinations & MQTT3_LOG_TOPIC){
+			switch(priority){
+				case MQTT3_LOG_ERR:
+					mqtt3_db_messages_queue("broker/log/E", 2, strlen(s), (uint8_t *)s, 0);
+					break;
+				case MQTT3_LOG_WARNING:
+					mqtt3_db_messages_queue("broker/log/W", 2, strlen(s), (uint8_t *)s, 0);
+					break;
+				case MQTT3_LOG_NOTICE:
+					mqtt3_db_messages_queue("broker/log/N", 2, strlen(s), (uint8_t *)s, 0);
+					break;
+				case MQTT3_LOG_INFO:
+					mqtt3_db_messages_queue("broker/log/I", 2, strlen(s), (uint8_t *)s, 0);
+					break;
+				case MQTT3_LOG_DEBUG:
+					mqtt3_db_messages_queue("broker/log/D", 2, strlen(s), (uint8_t *)s, 0);
+					break;
+			}
 		}
 	}
 
