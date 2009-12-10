@@ -82,7 +82,15 @@ int mqtt3_log_printf(int level, const char *fmt, ...)
 		vsnprintf(s, 500, fmt, va);
 		va_end(va);
 
-		/* FIXME - do something! */
+		if(log_destinations & MQTT3_LOG_STDOUT){
+			fprintf(stdout, "%s", s);
+		}
+		if(log_destinations & MQTT3_LOG_STDERR){
+			fprintf(stderr, "%s", s);
+		}
+		if(log_destinations & MQTT3_LOG_SYSLOG){
+			syslog(LOG_INFO, "%s", s);
+		}
 	}
 
 	return 0;
