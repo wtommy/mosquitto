@@ -45,13 +45,13 @@ POSSIBILITY OF SUCH DAMAGE.
  * Logging pid.
  */
 static int log_destinations = 0;
-static int max_level = 0;
+static int max_priority = 0;
 
-int mqtt3_log_init(int level, int destinations)
+int mqtt3_log_init(int priority, int destinations)
 {
 	int rc = 0;
 
-	max_level = level;
+	max_priority = priority;
 	log_destinations = destinations;
 
 	if(log_destinations & MQTT3_LOG_SYSLOG){
@@ -72,12 +72,12 @@ int mqtt3_log_close(void)
 	return 0;
 }
 
-int mqtt3_log_printf(int level, const char *fmt, ...)
+int mqtt3_log_printf(int priority, const char *fmt, ...)
 {
 	va_list va;
 	char s[500];
 
-	if(level <= max_level && log_destinations != MQTT3_LOG_NONE){
+	if(priority <= max_priority && log_destinations != MQTT3_LOG_NONE){
 		va_start(va, fmt);
 		vsnprintf(s, 500, fmt, va);
 		va_end(va);
