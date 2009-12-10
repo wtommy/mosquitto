@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <syslog.h>
 #include <sys/select.h>
 #include <time.h>
 
@@ -70,6 +71,15 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MQTT3_LOG_STDOUT 0x04
 #define MQTT3_LOG_STDERR 0x08
 #define MQTT3_LOG_TOPIC 0x10
+
+/* Log priorities
+ * Use own names instead of syslog for easier porting/modifications.
+ */
+#define MQTT3_LOG_ERR LOG_ERR
+#define MQTT3_LOG_WARNING LOG_WARNING
+#define MQTT3_NOTICE LOG_NOTICE
+#define MQTT3_LOG_INFO LOG_INFO
+#define MQTT3_LOG_DEBUG LOG_DEBUG
 
 typedef struct _mqtt3_context{
 	int sock;
