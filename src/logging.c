@@ -45,20 +45,19 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Give option of logging timestamp.
  * Logging pid.
  */
-static int log_destinations = 0;
-static int max_priority = 0;
+static int log_destinations = MQTT3_LOG_NONE;
+static int log_priorities = MQTT3_LOG_NONE;
 
-int mqtt3_log_init(int priority, int destinations)
+int mqtt3_log_init(int priorities, int destinations)
 {
 	int rc = 0;
 
-	max_priority = priority;
+	log_priorities = priorities;
 	log_destinations = destinations;
 
 	if(log_destinations & MQTT3_LOG_SYSLOG){
 		openlog("mosquitto", LOG_PID, LOG_DAEMON);
 	}
-	/* FIXME - do something for all destinations! */
 
 	return rc;
 }
@@ -77,8 +76,32 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 {
 	va_list va;
 	char s[500];
+	const char *topic;
+	int syslog_priority;
 
-	if(priority <= max_priority && log_destinations != MQTT3_LOG_NONE){
+	if((log_priorities & priority) && log_destinations != MQTT3_LOG_NONE){
+		switch(priority){
+			case MQTT3_LOG_DEBUG:
+				topic = "broker/log/D";
+				syslog_priority = LOG_DEBUG;
+				break;
+			case MQTT3_LOG_ERR:
+				topic = "broker/log/E";
+				syslog_priority = LOG_ERR;
+				break;
+			case MQTT3_LOG_WARNING:
+				topic = "broker/log/W";
+				syslog_priority = LOG_WARNING;
+				break;
+			case MQTT3_LOG_NOTICE:
+				topic = "broker/log/N";
+				syslog_priority = LOG_NOTICE;
+				break;
+			case MQTT3_LOG_INFO:
+				topic = "broker/log/I";
+				syslog_priority = LOG_INFO;
+				break;
+		}
 		va_start(va, fmt);
 		vsnprintf(s, 500, fmt, va);
 		va_end(va);
@@ -90,26 +113,10 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 			fprintf(stderr, "%s", s);
 		}
 		if(log_destinations & MQTT3_LOG_SYSLOG){
-			syslog(LOG_INFO, "%s", s);
+			syslog(syslog_priority, "%s", s);
 		}
 		if(log_destinations & MQTT3_LOG_TOPIC){
-			switch(priority){
-				case MQTT3_LOG_ERR:
-					mqtt3_db_messages_queue("broker/log/E", 2, strlen(s), (uint8_t *)s, 0);
-					break;
-				case MQTT3_LOG_WARNING:
-					mqtt3_db_messages_queue("broker/log/W", 2, strlen(s), (uint8_t *)s, 0);
-					break;
-				case MQTT3_LOG_NOTICE:
-					mqtt3_db_messages_queue("broker/log/N", 2, strlen(s), (uint8_t *)s, 0);
-					break;
-				case MQTT3_LOG_INFO:
-					mqtt3_db_messages_queue("broker/log/I", 2, strlen(s), (uint8_t *)s, 0);
-					break;
-				case MQTT3_LOG_DEBUG:
-					mqtt3_db_messages_queue("broker/log/D", 2, strlen(s), (uint8_t *)s, 0);
-					break;
-			}
+			mqtt3_db_messages_queue(topic, 2, strlen(s), (uint8_t *)s, 0);
 		}
 	}
 
