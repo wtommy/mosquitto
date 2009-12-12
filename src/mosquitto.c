@@ -237,6 +237,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	/* Initialise logging only after all of the other initialisation has been done. */
+	mqtt3_log_init(config->log_priorities, config->log_dest);
+
 	run = 1;
 	while(run){
 		mqtt3_db_sys_update(config.sys_interval, start_time);
@@ -341,6 +344,8 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+
+	 mqtt3_log_close();
 
 	for(i=0; i<context_count; i++){
 		if(contexts[i]){
