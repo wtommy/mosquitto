@@ -78,6 +78,12 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>msg_timeout</option></term>
+				<listitem>
+					<para>The integer number of seconds after a message has been sent before retrying when no response is received. If unset, defaults to 10 seconds.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>port</option></term>
 				<listitem>
 					<para>Set the network port to listen on. Defaults to 1883. This option may be given any number of times. A socket will be created for each port listed.</para>
@@ -99,12 +105,6 @@
 				<term><option>pid_file</option></term>
 				<listitem>
 					<para>Write a pid file to the file specified. If not given (the default), no pid file will be written. If the pid file cannot be written, mosquitto will exit. This option only has an effect is mosquitto is run in daemon mode.</para>
-				</listitem>
-			</varlistentry>
-			<varlistentry>
-				<term><option>msg_timeout</option></term>
-				<listitem>
-					<para>The integer number of seconds after a message has been sent before retrying when no response is received. If unset, defaults to 10 seconds.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
