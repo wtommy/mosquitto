@@ -52,13 +52,13 @@ int mqtt3_handle_connack(mqtt3_context *context)
 		case 0:
 			return 0;
 		case 1:
-			fprintf(stderr, "Connection Refused: unacceptable protocol version\n");
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Connection Refused: unacceptable protocol version\n");
 			return 1;
 		case 2:
-			fprintf(stderr, "Connection Refused: identifier rejected\n");
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Connection Refused: identifier rejected\n");
 			return 1;
 		case 3:
-			fprintf(stderr, "Connection Refused: broker unavailable\n");
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Connection Refused: broker unavailable\n");
 			return 1;
 	}
 	return 1;

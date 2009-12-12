@@ -63,7 +63,7 @@ int mqtt3_socket_connect(const char *ip, uint16_t port)
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock == -1){
-		fprintf(stderr, "Error: %s\n", strerror(errno));
+		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -73,8 +73,7 @@ int mqtt3_socket_connect(const char *ip, uint16_t port)
 	inet_aton(ip, &(addr.sin_addr));
 
 	if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_in)) == -1){
-		fprintf(stderr, "Error: %s\n", strerror(errno));
-		fflush(stderr);
+		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -88,20 +87,20 @@ int _mqtt3_socket_listen(struct sockaddr *addr)
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock == -1){
-		fprintf(stderr, "Error: %s\n", strerror(errno));
+		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s\n", strerror(errno));
 		return -1;
 	}
 
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
 	if(bind(sock, addr, sizeof(struct sockaddr_in)) == -1){
-		fprintf(stderr, "Error: %s\n", strerror(errno));
+		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s\n", strerror(errno));
 		close(sock);
 		return -1;
 	}
 
 	if(listen(sock, 100) == -1){
-		fprintf(stderr, "Error: %s\n", strerror(errno));
+		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s\n", strerror(errno));
 		close(sock);
 		return -1;
 	}

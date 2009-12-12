@@ -30,11 +30,11 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 		if(!strcmp(argv[i], "-c") || !strcmp(argv[i], "--config-file")){
 			if(i<argc-1){
 				if(mqtt3_config_read(config, argv[i+1])){
-					fprintf(stderr, "Error: Unable to open configuration file.\n");
+					mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to open configuration file.\n");
 					return 1;
 				}
 			}else{
-				fprintf(stderr, "Error: -c argument given, but no config file specified.\n");
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: -c argument given, but no config file specified.\n");
 				return 1;
 			}
 			i++;
@@ -48,7 +48,7 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 					config->iface_count++;
 					config->iface = mqtt3_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
 					if(!config->iface){
-						fprintf(stderr, "Error: Out of memory.\n");
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.\n");
 						return 1;
 					}
 					config->iface[config->iface_count-1].iface = mqtt3_strdup(str);
@@ -56,7 +56,7 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 					if(str){
 						port_tmp = atoi(str);
 						if(port_tmp < 1 || port_tmp > 65535){
-							fprintf(stderr, "Error: Invalid port value (%d).\n", port_tmp);
+							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid port value (%d).\n", port_tmp);
 							return 1;
 						}
 						config->iface[config->iface_count-1].port = port_tmp;
@@ -65,27 +65,27 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 					}
 				}
 			}else{
-				fprintf(stderr, "Error: -i argument given, but no interface specifed.\n");
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: -i argument given, but no interface specifed.\n");
 				return 1;
 			}
 		}else if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
 			if(i<argc-1){
 				port_tmp = atoi(argv[i+1]);
 				if(port_tmp<1 || port_tmp>65535){
-					fprintf(stderr, "Error: Invalid port specified (%d).\n", port_tmp);
+					mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid port specified (%d).\n", port_tmp);
 					return 1;
 				}else{
 					config->iface_count++;
 					config->iface = mqtt3_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
 					if(!config->iface){
-						fprintf(stderr, "Error: Out of memory.\n");
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.\n");
 						return 1;
 					}
 					config->iface[config->iface_count-1].iface = NULL;
 					config->iface[config->iface_count-1].port = port_tmp;
 				}
 			}else{
-				fprintf(stderr, "Error: -p argument given, but no port specified.\n");
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: -p argument given, but no port specified.\n");
 				return 1;
 			}
 		}
@@ -127,7 +127,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 							config->iface_count++;
 							config->iface = mqtt3_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
 							if(!config->iface){
-								fprintf(stderr, "Error: Out of memory.\n");
+								mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.\n");
 								return 1;
 							}
 							config->iface[config->iface_count-1].iface = mqtt3_strdup(token);
@@ -135,7 +135,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 							if(token){
 								port_tmp = atoi(token);
 								if(port_tmp < 1 || port_tmp > 65535){
-									fprintf(stderr, "Error: Invalid port value (%d).\n", port_tmp);
+									mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid port value (%d).\n", port_tmp);
 									return 1;
 								}
 								config->iface[config->iface_count-1].port = port_tmp;
@@ -144,7 +144,8 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 							}
 						}
 					}else{
-						fprintf(stderr, "Warning: Empty interface value in configuration.\n");
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty interface value in configuration.\n");
+						return 1;
 					}
 				}else if(!strcmp(token, "log_dest")){
 					token = strtok(NULL, " ");
@@ -160,11 +161,12 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						}else if(!strcmp(token, "topic")){
 							config->log_dest |= MQTT3_LOG_TOPIC;
 						}else{
-							fprintf(stderr, "Error: Invalid log_dest value (%s).\n", token);
+							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid log_dest value (%s).\n", token);
 							return 1;
 						}
 					}else{
-						fprintf(stderr, "Warning: Empty log_dest value in configuration.\n");
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty log_dest value in configuration.\n");
+						return 1;
 					}
 				}else if(!strcmp(token, "log_type")){
 					token = strtok(NULL, " ");
@@ -182,39 +184,39 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						}else if(!strcmp(token, "debug")){
 							config->log_priorities |= MQTT3_LOG_DEBUG;
 						}else{
-							fprintf(stderr, "Error: Invalid log_type value (%s).\n", token);
+							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid log_type value (%s).\n", token);
 							return 1;
 						}
 					}else{
-						fprintf(stderr, "Warning: Empty log_type value in configuration.\n");
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty log_type value in configuration.\n");
 					}
 				}else if(!strcmp(token, "msg_timeout")){
 					token = strtok(NULL, " ");
 					if(token){
 						config->msg_timeout = atoi(token);
 						if(config->msg_timeout < 1 || config->msg_timeout > 3600){
-							fprintf(stderr, "Warning: Invalid msg_timeout value (%d). Using default (10).\n", config->msg_timeout);
+							mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Invalid msg_timeout value (%d). Using default (10).\n", config->msg_timeout);
 						}
 					}else{
-						fprintf(stderr, "Warning: Empty msg_timeout value in configuration.\n");
+						mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Empty msg_timeout value in configuration.\n");
 					}
 				}else if(!strcmp(token, "persistence")){
 					token = strtok(NULL, " ");
 					if(token){
 						config->persistence = atoi(token);
 						if(config->persistence != 1 && config->persistence != 0){
-							fprintf(stderr, "Warning: Invalid persistence value (%d). Using default (0).\n", config->persistence);
+							mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Invalid persistence value (%d). Using default (0).\n", config->persistence);
 							config->persistence = 0;
 						}
 					}else{
-						fprintf(stderr, "Warning: Empty persistence value in configuration.\n");
+						mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Empty persistence value in configuration.\n");
 					}
 				}else if(!strcmp(token, "persistence_location")){
 					token = strtok(NULL, " ");
 					if(token){
 						config->persistence_location = mqtt3_strdup(token);
 						if(token[strlen(token)-1] != '/'){
-							fprintf(stderr, "Warning: persistence_location should normally end with a '/'.\n");
+							mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: persistence_location should normally end with a '/'.\n");
 						}
 					}
 				}else if(!strcmp(token, "pid_file")){
@@ -227,40 +229,40 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					if(token){
 						port_tmp = atoi(token);
 						if(port_tmp < 1 || port_tmp > 65535){
-							fprintf(stderr, "Error: Invalid port value (%d).\n", port_tmp);
+							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid port value (%d).\n", port_tmp);
 							return 1;
 						}
 						config->iface_count++;
 						config->iface = mqtt3_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
 						if(!config->iface){
-							fprintf(stderr, "Error: Out of memory.\n");
+							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.\n");
 							return 1;
 						}
 						config->iface[config->iface_count-1].iface = NULL;
 						config->iface[config->iface_count-1].port = port_tmp;
 					}else{
-						fprintf(stderr, "Warning: Empty port value in configuration.\n");
+						mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Empty port value in configuration.\n");
 					}
 				}else if(!strcmp(token, "sys_interval")){
 					token = strtok(NULL, " ");
 					if(token){
 						config->sys_interval = atoi(token);
 						if(config->sys_interval < 1 || config->sys_interval > 65535){
-							fprintf(stderr, "Warning: Invalid sys_interval value (%d). Using default (10).\n", config->sys_interval);
+							mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Invalid sys_interval value (%d). Using default (10).\n", config->sys_interval);
 							config->sys_interval = 10;
 						}
 					}else{
-						fprintf(stderr, "Warning: Empty sys_interval value in configuration.\n");
+						mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Empty sys_interval value in configuration.\n");
 					}
 				}else if(!strcmp(token, "user")){
 					token = strtok(NULL, " ");
 					if(token){
 						config->user = mqtt3_strdup(token);
 					}else{
-						fprintf(stderr, "Warning: Invalid user value. Using default.\n");
+						mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Invalid user value. Using default.\n");
 					}
 				}else{
-					fprintf(stderr, "Warning: Unknown configuration variable \"%s\".\n", token);
+					mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Unknown configuration variable \"%s\".\n", token);
 				}
 			}
 		}

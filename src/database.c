@@ -67,7 +67,7 @@ int mqtt3_db_open(const char *location, const char *filename)
 
 	if(!strcmp(filename, ":memory:")){
 		if(sqlite3_open_v2(filename, &db, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK){
-			fprintf(stderr, "Error: %s\n", sqlite3_errmsg(db));
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s\n", sqlite3_errmsg(db));
 			return 1;
 		}
 		if(_mqtt3_db_tables_create()) return 1;
@@ -84,13 +84,13 @@ int mqtt3_db_open(const char *location, const char *filename)
 		 */
 		if(sqlite3_open_v2(filepath, &db, SQLITE_OPEN_READWRITE, NULL) == SQLITE_OK){
 			if(_mqtt3_db_version_check()){
-				fprintf(stderr, "Error: Invalid database version.\n");
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid database version.\n");
 				return 1;
 			}
 		}else{
 			if(sqlite3_open_v2(filepath, &db,
 					SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL) != SQLITE_OK){
-				fprintf(stderr, "Error: %s\n", sqlite3_errmsg(db));
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s\n", sqlite3_errmsg(db));
 				return 1;
 			}
 			if(_mqtt3_db_tables_create()) return 1;
@@ -259,7 +259,7 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 			/* Client is reconnecting after a disconnect */
 		}else if(oldsock != context->sock){
 			/* Client is already connected, disconnect old version */
-			fprintf(stderr, "Client %s already connected, closing old connection.\n", context->id);
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Client %s already connected, closing old connection.\n", context->id);
 			close(oldsock);
 		}
 		mqtt3_db_client_update(context, will, will_retain, will_qos, will_topic, will_message);
@@ -431,7 +431,7 @@ int _mqtt3_db_invalidate_sockets(void)
 		}
 		sqlite3_free(query);
 		if(errmsg){
-			fprintf(stderr, "Error: %s\n", errmsg);
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s\n", errmsg);
 			sqlite3_free(errmsg);
 		}
 	}else{
