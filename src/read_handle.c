@@ -44,6 +44,7 @@ int mqtt3_handle_puback(mqtt3_context *context)
 	uint32_t remaining_length;
 	uint16_t mid;
 
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBACK");
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 
@@ -56,6 +57,7 @@ int mqtt3_handle_puback(mqtt3_context *context)
 int mqtt3_handle_pingreq(mqtt3_context *context)
 {
 	uint32_t remaining_length;
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGREQ");
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	return mqtt3_raw_pingresp(context);
 }
@@ -63,6 +65,7 @@ int mqtt3_handle_pingreq(mqtt3_context *context)
 int mqtt3_handle_pingresp(mqtt3_context *context)
 {
 	uint32_t remaining_length;
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGRESP");
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	return 0;
 }
@@ -72,6 +75,7 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 	uint32_t remaining_length;
 	uint16_t mid;
 
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBCOMP");
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 
@@ -91,6 +95,7 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 	uint16_t mid;
 	int rc = 0;
 
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBLISH");
 	dup = (header & 0x08)>>3;
 	qos = (header & 0x06)>>1;
 	retain = (header & 0x01);
@@ -139,6 +144,7 @@ int mqtt3_handle_pubrec(mqtt3_context *context)
 	uint32_t remaining_length;
 	uint16_t mid;
 
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREC");
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 
@@ -153,6 +159,7 @@ int mqtt3_handle_pubrel(mqtt3_context *context)
 	uint32_t remaining_length;
 	uint16_t mid;
 
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREL");
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 

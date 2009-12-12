@@ -49,6 +49,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	char *will_topic = NULL, *will_message = NULL;
 	uint8_t will, will_retain, will_qos, clean_start;
 	
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received CONNECT");
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_string(context, &protocol_name)) return 1;
 	if(!protocol_name){
@@ -107,6 +108,7 @@ int mqtt3_handle_disconnect(mqtt3_context *context)
 {
 	uint32_t remaining_length;
 
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received DISCONNECT");
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	return mqtt3_socket_close(context);
 }
@@ -127,6 +129,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 	uint8_t *retain_payload = NULL;
 	uint32_t retain_payloadlen;
 
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received SUBSCRIBE");
 	/* FIXME - plenty of potential for memory leaks here */
 	if(!context) return 1;
 
@@ -196,6 +199,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 	uint16_t mid;
 	char *sub;
 
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received UNSUBSCRIBE");
 	if(!context) return 1;
 
 	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
