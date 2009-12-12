@@ -146,6 +146,29 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					}else{
 						fprintf(stderr, "Warning: Empty interface value in configuration.\n");
 					}
+				}else if(!strcmp(token, "log_dest")){
+					token = strtok(NULL, " ");
+					if(token){
+						while(token[strlen(token)-1] == 10 || token[strlen(token)-1] == 13){
+							token[strlen(token)-1] = 0;
+						}
+						if(!strcmp(token, "none")){
+							config->log_dest = MQTT3_LOG_NONE;
+						}else if(!strcmp(token, "syslog")){
+							config->log_dest |= MQTT3_LOG_SYSLOG;
+						}else if(!strcmp(token, "stdout")){
+							config->log_dest |= MQTT3_LOG_STDOUT;
+						}else if(!strcmp(token, "stderr")){
+							config->log_dest |= MQTT3_LOG_STDERR;
+						}else if(!strcmp(token, "topic")){
+							config->log_dest |= MQTT3_LOG_TOPIC;
+						}else{
+							fprintf(stderr, "Error: Invalid log_dest value (%s).\n", token);
+							return 1;
+						}
+					}else{
+						fprintf(stderr, "Warning: Empty log_dest value in configuration.\n");
+					}
 				}else if(!strcmp(token, "msg_timeout")){
 					token = strtok(NULL, " ");
 					if(token){
