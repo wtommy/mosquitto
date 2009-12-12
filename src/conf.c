@@ -10,6 +10,8 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->daemon = 0;
 	config->iface = NULL;
 	config->iface_count = 0;
+	config->log_dest = MQTT3_LOG_STDERR;
+	config->log_priorities = MQTT3_LOG_ERR | MQTT3_LOG_WARNING;
 	config->msg_timeout = 10;
 	config->persistence = 0;
 	config->persistence_location = NULL;
