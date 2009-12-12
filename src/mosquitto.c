@@ -162,6 +162,8 @@ int main(int argc, char *argv[])
 
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
+	/* Initialise logging immediately after loading the config */
+	mqtt3_log_init(config.log_priorities, config.log_dest);
 	if(drop_privileges(&config)) return 1;
 
 	if(config.daemon){
@@ -236,9 +238,6 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
-
-	/* Initialise logging only after all of the other initialisation has been done. */
-	mqtt3_log_init(config.log_priorities, config.log_dest);
 
 	run = 1;
 	while(run){
