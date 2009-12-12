@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Initialise logging only after all of the other initialisation has been done. */
-	mqtt3_log_init(config->log_priorities, config->log_dest);
+	mqtt3_log_init(config.log_priorities, config.log_dest);
 
 	run = 1;
 	while(run){
