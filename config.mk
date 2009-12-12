@@ -3,8 +3,8 @@ BUILDDATE=20091204
 
 #MANCOUNTRIES=en_GB
 
-CFLAGS=-I. -ggdb -Wall -O2
-LDFLAGS=-nopie -lsqlite3
+CFLAGS=-I. -I.. -ggdb -Wall -O2
+LDFLAGS=-nopie -lsqlite3 -lwrap
 
 CC=gcc
 INSTALL=install

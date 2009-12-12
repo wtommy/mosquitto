@@ -27,6 +27,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <config.h>
+
 #include <errno.h>
 #include <netinet/in.h>
 #include <pwd.h>
@@ -36,15 +38,23 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <sys/types.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#ifdef WITH_WRAP
+#include <tcpd.h>
+#endif
 #include <unistd.h>
 
 #include <mqtt3.h>
 
 static int run;
+#ifdef WITH_WRAP
+int allow_severity = LOG_INFO;
+int deny_severity = LOG_INFO;
+#endif
 
 int drop_privileges(mqtt3_config *config)
 {
@@ -118,7 +128,8 @@ int handle_read(mqtt3_context *context)
 			if(mqtt3_handle_unsubscribe(context)) return 1;
 			break;
 		default:
-			// FIXME - do something?
+			/* If we don't recognise the command, return an error straight away. */
+			return 1;
 			break;
 	}
 
@@ -130,7 +141,8 @@ int main(int argc, char *argv[])
 	struct timespec timeout;
 	fd_set readfds, writefds;
 	sigset_t sigblock;
-	int fdcount; int listensock;
+	int fdcount;
+	int *listensock = NULL;
 	int new_sock;
 	mqtt3_context **contexts = NULL;
 	mqtt3_context **tmp_contexts = NULL;
@@ -144,6 +156,9 @@ int main(int argc, char *argv[])
 	char buf[1024];
 	int i;
 	FILE *pid;
+#ifdef WITH_WRAP
+	struct request_info wrap_req;
+#endif
 
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
@@ -205,14 +220,21 @@ int main(int argc, char *argv[])
 	snprintf(buf, 1024, "mosquitto version %s (build date %s)", VERSION, BUILDDATE);
 	mqtt3_db_messages_queue("$SYS/broker/version", 2, strlen(buf), (uint8_t *)buf, 1);
 
-	listensock = mqtt3_socket_listen(config.port);
-	if(listensock == -1){
-		mqtt3_free(contexts);
-		mqtt3_db_close();
-		if(config.pid_file){
-			remove(config.pid_file);
+	listensock = mqtt3_malloc(sizeof(int)*config.iface_count);
+	for(i=0; i<config.iface_count; i++){
+		if(config.iface[i].iface){
+			listensock[i] = mqtt3_socket_listen_if(config.iface[i].iface, config.iface[i].port);
+		}else{
+			listensock[i] = mqtt3_socket_listen(config.iface[i].port);
 		}
-		return 1;
+		if(listensock[i] == -1){
+			mqtt3_free(contexts);
+			mqtt3_db_close();
+			if(config.pid_file){
+				remove(config.pid_file);
+			}
+			return 1;
+		}
 	}
 
 	run = 1;
@@ -220,9 +242,15 @@ int main(int argc, char *argv[])
 		mqtt3_db_sys_update(config.sys_interval, start_time);
 
 		FD_ZERO(&readfds);
-		FD_SET(listensock, &readfds);
 
-		sockmax = listensock;
+		sockmax = 0;
+		for(i=0; i<config.iface_count; i++){
+			FD_SET(listensock[i], &readfds);
+			if(listensock[i] > sockmax){
+				sockmax = listensock[i];
+			}
+		}
+
 		now = time(NULL);
 		for(i=0; i<context_count; i++){
 			if(contexts[i] && contexts[i]->sock != -1){
@@ -279,22 +307,36 @@ int main(int argc, char *argv[])
 					}
 				}
 			}
-			if(FD_ISSET(listensock, &readfds)){
-				new_sock = accept(listensock, NULL, 0);
-				new_context = mqtt3_context_init(new_sock);
-				for(i=0; i<context_count; i++){
-					if(contexts[i] == NULL){
-						contexts[i] = new_context;
-						break;
+			for(i=0; i<config.iface_count; i++){
+				if(FD_ISSET(listensock[i], &readfds)){
+					new_sock = accept(listensock[i], NULL, 0);
+#ifdef WITH_WRAP
+					/* Use tcpd / libwrap to determine whether a connection is allowed. */
+					request_init(&wrap_req, RQ_FILE, new_sock, RQ_DAEMON, "mosquitto", 0);
+					fromhost(&wrap_req);
+					if(!hosts_access(&wrap_req)){
+						/* Access is denied */
+						close(new_sock);
+					}else{
+#endif
+						new_context = mqtt3_context_init(new_sock);
+						for(i=0; i<context_count; i++){
+							if(contexts[i] == NULL){
+								contexts[i] = new_context;
+								break;
+							}
+						}
+						if(i==context_count){
+							context_count++;
+							tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*context_count);
+							if(tmp_contexts){
+								contexts = tmp_contexts;
+								contexts[context_count-1] = new_context;
+							}
+						}
+#ifdef WITH_WRAP
 					}
-				}
-				if(i==context_count){
-					context_count++;
-					tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*context_count);
-					if(tmp_contexts){
-						contexts = tmp_contexts;
-						contexts[context_count-1] = new_context;
-					}
+#endif
 				}
 			}
 		}
@@ -307,7 +349,14 @@ int main(int argc, char *argv[])
 	}
 	mqtt3_free(contexts);
 
-	close(listensock);
+	if(listensock){
+		for(i=0; i<config.iface_count; i++){
+			if(listensock[i] != -1){
+				close(listensock[i]);
+			}
+		}
+		mqtt3_free(listensock);
+	}
 
 	mqtt3_db_close();
 

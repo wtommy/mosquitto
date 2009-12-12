@@ -106,9 +106,15 @@ typedef enum {
 	md_out = 1
 } mqtt3_msg_direction;
 
+struct mqtt3_iface {
+	char *iface;
+	int port;
+};
+
 typedef struct {
 	int daemon;
-	int port;
+	struct mqtt3_iface *iface;
+	int iface_count;
 	int msg_timeout;
 	int persistence;
 	char *persistence_location;
@@ -162,6 +168,7 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command);
 int mqtt3_socket_connect(const char *ip, uint16_t port);
 int mqtt3_socket_close(mqtt3_context *context);
 int mqtt3_socket_listen(uint16_t port);
+int mqtt3_socket_listen_if(const char *iface, uint16_t port);
 
 int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte);
 int mqtt3_read_bytes(mqtt3_context *context, uint8_t *bytes, uint32_t count);
