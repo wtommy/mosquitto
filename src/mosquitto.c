@@ -344,7 +344,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	 mqtt3_log_close();
+	mqtt3_log_close();
 
 	for(i=0; i<context_count; i++){
 		if(contexts[i]){
