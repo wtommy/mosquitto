@@ -195,21 +195,24 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					if(token){
 						config->msg_timeout = atoi(token);
 						if(config->msg_timeout < 1 || config->msg_timeout > 3600){
-							mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Invalid msg_timeout value (%d). Using default (10).\n", config->msg_timeout);
+							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid msg_timeout value (%d).\n", config->msg_timeout);
+							return 1;
 						}
 					}else{
-						mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Empty msg_timeout value in configuration.\n");
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty msg_timeout value in configuration.\n");
+						return 1;
 					}
 				}else if(!strcmp(token, "persistence")){
 					token = strtok(NULL, " ");
 					if(token){
 						config->persistence = atoi(token);
 						if(config->persistence != 1 && config->persistence != 0){
-							mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Invalid persistence value (%d). Using default (0).\n", config->persistence);
-							config->persistence = 0;
+							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid persistence value (%d).\n", config->persistence);
+							return 1;
 						}
 					}else{
-						mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Empty persistence value in configuration.\n");
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty persistence value in configuration.\n");
+						return 1;
 					}
 				}else if(!strcmp(token, "persistence_location")){
 					token = strtok(NULL, " ");
@@ -241,28 +244,32 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						config->iface[config->iface_count-1].iface = NULL;
 						config->iface[config->iface_count-1].port = port_tmp;
 					}else{
-						mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Empty port value in configuration.\n");
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty port value in configuration.\n");
+						return 1;
 					}
 				}else if(!strcmp(token, "sys_interval")){
 					token = strtok(NULL, " ");
 					if(token){
 						config->sys_interval = atoi(token);
 						if(config->sys_interval < 1 || config->sys_interval > 65535){
-							mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Invalid sys_interval value (%d). Using default (10).\n", config->sys_interval);
-							config->sys_interval = 10;
+							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid sys_interval value (%d).\n", config->sys_interval);
+							return 1;
 						}
 					}else{
-						mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Empty sys_interval value in configuration.\n");
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty sys_interval value in configuration.\n");
+						return 1;
 					}
 				}else if(!strcmp(token, "user")){
 					token = strtok(NULL, " ");
 					if(token){
 						config->user = mqtt3_strdup(token);
 					}else{
-						mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Invalid user value. Using default.\n");
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid user value.\n");
+						return 1;
 					}
 				}else{
-					mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Unknown configuration variable \"%s\".\n", token);
+					mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unknown configuration variable \"%s\".\n", token);
+					return 1;
 				}
 			}
 		}
