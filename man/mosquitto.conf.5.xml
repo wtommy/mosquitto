@@ -51,6 +51,33 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>log_dest</option></term>
+				<listitem>
+					<para>Send log messages to a particular destination.
+					Possible destinations are: stdout stderr syslog topic.
+					stdout and stderr log to the console on the named output.
+					syslog uses the userspace syslog facility which usually
+					ends up in /var/log/messages or similar.topic logs to the
+					broker topic 'broker/log/&lt;severity&gt;', where severity
+					is one of D, E, W, N, I which are debug, error, warning,
+					notice and information. Use "log_dest none" if you wish to
+					disable logging. Defaults to stderr and topic. To clear the
+					default, place a "log_dest none" line before your own
+					preferences. This option may be specified multiple
+					times.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>log_type</option></term>
+				<listitem>
+					<para>Choose types of messages to log. Possible types are:
+					debug, error, warning, notice, information, none. Defaults
+					to error and warning. To clear the default use a "log_type
+					none" line before your own preferences. This option may be
+					specified multiple times.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>port</option></term>
 				<listitem>
 					<para>Set the network port to listen on. Defaults to 1883. This option may be given any number of times. A socket will be created for each port listed.</para>
