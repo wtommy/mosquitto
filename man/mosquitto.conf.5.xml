@@ -61,10 +61,8 @@
 					broker topic 'broker/log/&lt;severity&gt;', where severity
 					is one of D, E, W, N, I which are debug, error, warning,
 					notice and information. Use "log_dest none" if you wish to
-					disable logging. Defaults to stderr and topic. To clear the
-					default, place a "log_dest none" line before your own
-					preferences. This option may be specified multiple
-					times.</para>
+					disable logging. Defaults to stderr and topic. This option
+					may be specified multiple times.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -72,9 +70,8 @@
 				<listitem>
 					<para>Choose types of messages to log. Possible types are:
 					debug, error, warning, notice, information, none. Defaults
-					to error and warning. To clear the default use a "log_type
-					none" line before your own preferences. This option may be
-					specified multiple times.</para>
+					to error and warning. This option may be specified multiple
+					times.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

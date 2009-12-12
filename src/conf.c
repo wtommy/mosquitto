@@ -11,7 +11,7 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->iface = NULL;
 	config->iface_count = 0;
 	config->log_dest = MQTT3_LOG_STDERR | MQTT3_LOG_TOPIC;
-	config->log_priorities = MQTT3_LOG_ERR | MQTT3_LOG_WARNING;
+	config->log_type = MQTT3_LOG_ERR | MQTT3_LOG_WARNING;
 	config->msg_timeout = 10;
 	config->persistence = 0;
 	config->persistence_location = NULL;
@@ -107,6 +107,8 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	char buf[1024];
 	char *token;
 	int port_tmp;
+	int log_dest = MQTT3_LOG_NONE;
+	int log_type = MQTT3_LOG_NONE;
 	
 	fptr = fopen(filename, "rt");
 	if(!fptr) return 1;
@@ -151,15 +153,15 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					token = strtok(NULL, " ");
 					if(token){
 						if(!strcmp(token, "none")){
-							config->log_dest = MQTT3_LOG_NONE;
+							log_dest = MQTT3_LOG_NONE;
 						}else if(!strcmp(token, "syslog")){
-							config->log_dest |= MQTT3_LOG_SYSLOG;
+							log_dest |= MQTT3_LOG_SYSLOG;
 						}else if(!strcmp(token, "stdout")){
-							config->log_dest |= MQTT3_LOG_STDOUT;
+							log_dest |= MQTT3_LOG_STDOUT;
 						}else if(!strcmp(token, "stderr")){
-							config->log_dest |= MQTT3_LOG_STDERR;
+							log_dest |= MQTT3_LOG_STDERR;
 						}else if(!strcmp(token, "topic")){
-							config->log_dest |= MQTT3_LOG_TOPIC;
+							log_dest |= MQTT3_LOG_TOPIC;
 						}else{
 							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid log_dest value (%s).", token);
 							return 1;
@@ -172,17 +174,17 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					token = strtok(NULL, " ");
 					if(token){
 						if(!strcmp(token, "none")){
-							config->log_priorities = MQTT3_LOG_NONE;
+							log_type = MQTT3_LOG_NONE;
 						}else if(!strcmp(token, "information")){
-							config->log_priorities |= MQTT3_LOG_INFO;
+							log_type |= MQTT3_LOG_INFO;
 						}else if(!strcmp(token, "notice")){
-							config->log_priorities |= MQTT3_LOG_NOTICE;
+							log_type |= MQTT3_LOG_NOTICE;
 						}else if(!strcmp(token, "warning")){
-							config->log_priorities |= MQTT3_LOG_WARNING;
+							log_type |= MQTT3_LOG_WARNING;
 						}else if(!strcmp(token, "error")){
-							config->log_priorities |= MQTT3_LOG_ERR;
+							log_type |= MQTT3_LOG_ERR;
 						}else if(!strcmp(token, "debug")){
-							config->log_priorities |= MQTT3_LOG_DEBUG;
+							log_type |= MQTT3_LOG_DEBUG;
 						}else{
 							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid log_type value (%s).", token);
 							return 1;
@@ -275,6 +277,9 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 		}
 	}
 	fclose(fptr);
+
+	config->log_dest = log_dest;;
+	config->log_type = log_type;
 
 	return rc;
 }

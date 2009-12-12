@@ -72,7 +72,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MQTT3_LOG_STDERR 0x08
 #define MQTT3_LOG_TOPIC 0x10
 
-/* Log priorities */
+/* Log types */
 #define MQTT3_LOG_INFO 0x01
 #define MQTT3_LOG_NOTICE 0x02
 #define MQTT3_LOG_WARNING 0x04
@@ -116,7 +116,7 @@ typedef struct {
 	struct mqtt3_iface *iface;
 	int iface_count;
 	int log_dest;
-	int log_priorities;
+	int log_type;
 	int msg_timeout;
 	int persistence;
 	char *persistence_location;
