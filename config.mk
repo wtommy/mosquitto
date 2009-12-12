@@ -3,7 +3,7 @@ BUILDDATE=20091204
 
 #MANCOUNTRIES=en_GB
 
-CFLAGS=-I. -I.. -ggdb -Wall -O2
+CFLAGS=-I. -I.. -ggdb -Wall -Os
 LDFLAGS=-nopie -lsqlite3 -lwrap
 
 CC=gcc
