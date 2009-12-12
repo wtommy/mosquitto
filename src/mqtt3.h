@@ -115,6 +115,8 @@ typedef struct {
 	int daemon;
 	struct mqtt3_iface *iface;
 	int iface_count;
+	int log_dest;
+	int log_priorities;
 	int msg_timeout;
 	int persistence;
 	char *persistence_location;
