@@ -64,20 +64,20 @@ int drop_privileges(mqtt3_config *config)
 		if(config->user){
 			pwd = getpwnam(config->user);
 			if(!pwd){
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid user '%s'.\n", config->user);
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid user '%s'.", config->user);
 				return 1;
 			}
 			if(setgid(pwd->pw_gid) == -1){
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s.\n", strerror(errno));
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s.", strerror(errno));
 				return 1;
 			}
 			if(setuid(pwd->pw_uid) == -1){
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s.\n", strerror(errno));
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s.", strerror(errno));
 				return 1;
 			}
 		}
 		if(geteuid() == 0 || getegid() == 0){
-			mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Mosquitto should not be run as root/administrator.\n");
+			mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Mosquitto should not be run as root/administrator.");
 		}
 	}
 	return 0;
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
 			case 0:
 				break;
 			case -1:
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error in fork: %s\n", strerror(errno));
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error in fork: %s", strerror(errno));
 				return 1;
 			default:
 				return 0;
@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
 				fprintf(pid, "%d", getpid());
 				fclose(pid);
 			}else{
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to write pid file.\n");
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to write pid file.");
 				return 1;
 			}
 		}
@@ -208,12 +208,12 @@ int main(int argc, char *argv[])
 
 	if(config.persistence){
 		if(mqtt3_db_open(config.persistence_location, "mosquitto.db")){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Couldn't open database.\n");
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Couldn't open database.");
 			return 1;
 		}
 	}else{
 		if(mqtt3_db_open(NULL, ":memory:")){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Couldn't open database.\n");
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Couldn't open database.");
 			return 1;
 		}
 	}
