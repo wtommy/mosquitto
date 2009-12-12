@@ -113,11 +113,11 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 
 	while(fgets(buf, 1024, fptr)){
 		if(buf[0] != '#' && buf[0] != 10 && buf[0] != 13){
+			while(buf[strlen(buf)-1] == 10 || buf[strlen(buf)-1] == 13){
+				buf[strlen(buf)-1] = 0;
+			}
 			token = strtok(buf, " ");
 			if(token){
-				while(token[strlen(token)-1] == 10 || token[strlen(token)-1] == 13){
-					token[strlen(token)-1] = 0;
-				}
 
 				if(!strcmp(token, "interface")){
 					token = strtok(NULL, " ");
@@ -149,9 +149,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "log_dest")){
 					token = strtok(NULL, " ");
 					if(token){
-						while(token[strlen(token)-1] == 10 || token[strlen(token)-1] == 13){
-							token[strlen(token)-1] = 0;
-						}
 						if(!strcmp(token, "none")){
 							config->log_dest = MQTT3_LOG_NONE;
 						}else if(!strcmp(token, "syslog")){
@@ -193,9 +190,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "persistence_location")){
 					token = strtok(NULL, " ");
 					if(token){
-						while(token[strlen(token)-1] == 10 || token[strlen(token)-1] == 13){
-							token[strlen(token)-1] = 0;
-						}
 						config->persistence_location = mqtt3_strdup(token);
 						if(token[strlen(token)-1] != '/'){
 							fprintf(stderr, "Warning: persistence_location should normally end with a '/'.\n");
@@ -204,9 +198,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "pid_file")){
 					token = strtok(NULL, " ");
 					if(token){
-						while(token[strlen(token)-1] == 10 || token[strlen(token)-1] == 13){
-							token[strlen(token)-1] = 0;
-						}
 						config->pid_file = mqtt3_strdup(token);
 					}
 				}else if(!strcmp(token, "port")){
@@ -242,9 +233,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "user")){
 					token = strtok(NULL, " ");
 					if(token){
-						while(token[strlen(token)-1] == 10 || token[strlen(token)-1] == 13){
-							token[strlen(token)-1] = 0;
-						}
 						config->user = mqtt3_strdup(token);
 					}else{
 						fprintf(stderr, "Warning: Invalid user value. Using default.\n");
