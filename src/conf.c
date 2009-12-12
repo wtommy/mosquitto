@@ -166,6 +166,28 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					}else{
 						fprintf(stderr, "Warning: Empty log_dest value in configuration.\n");
 					}
+				}else if(!strcmp(token, "log_type")){
+					token = strtok(NULL, " ");
+					if(token){
+						if(!strcmp(token, "none")){
+							config->log_priorities = MQTT3_LOG_NONE;
+						}else if(!strcmp(token, "information")){
+							config->log_priorities |= MQTT3_LOG_INFO;
+						}else if(!strcmp(token, "notice")){
+							config->log_priorities |= MQTT3_LOG_NOTICE;
+						}else if(!strcmp(token, "warning")){
+							config->log_priorities |= MQTT3_LOG_WARNING;
+						}else if(!strcmp(token, "error")){
+							config->log_priorities |= MQTT3_LOG_ERR;
+						}else if(!strcmp(token, "debug")){
+							config->log_priorities |= MQTT3_LOG_DEBUG;
+						}else{
+							fprintf(stderr, "Error: Invalid log_type value (%s).\n", token);
+							return 1;
+						}
+					}else{
+						fprintf(stderr, "Warning: Empty log_type value in configuration.\n");
+					}
 				}else if(!strcmp(token, "msg_timeout")){
 					token = strtok(NULL, " ");
 					if(token){
