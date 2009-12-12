@@ -101,6 +101,9 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 				topic = "broker/log/I";
 				syslog_priority = LOG_INFO;
 				break;
+			default:
+				topic = "broker/log/E";
+				syslog_priority = LOG_ERR;
 		}
 		va_start(va, fmt);
 		vsnprintf(s, 500, fmt, va);
