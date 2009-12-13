@@ -71,7 +71,8 @@
 					<para>Choose types of messages to log. Possible types are:
 					debug, error, warning, notice, information, none. Defaults
 					to error and warning. This option may be specified multiple
-					times.</para>
+					times. Note that the debug type (used for decoding incoming
+					network packets) is never logged in syslog.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
