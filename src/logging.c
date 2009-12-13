@@ -116,7 +116,7 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 			fprintf(stderr, "%s\n", s);
 		}
 		if(log_destinations & MQTT3_LOG_SYSLOG){
-			syslog(syslog_priority, "%s\n", s);
+			syslog(syslog_priority, "%s", s);
 		}
 		if(log_destinations & MQTT3_LOG_TOPIC){
 			mqtt3_db_messages_queue(topic, 2, strlen(s), (uint8_t *)s, 0);
