@@ -108,7 +108,9 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	char *token;
 	int port_tmp;
 	int log_dest = MQTT3_LOG_NONE;
+	int log_dest_set = 0;
 	int log_type = MQTT3_LOG_NONE;
+	int log_type_set = 0;
 	
 	fptr = fopen(filename, "rt");
 	if(!fptr) return 1;
@@ -152,6 +154,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "log_dest")){
 					token = strtok(NULL, " ");
 					if(token){
+						log_dest_set = 1;
 						if(!strcmp(token, "none")){
 							log_dest = MQTT3_LOG_NONE;
 						}else if(!strcmp(token, "syslog")){
@@ -173,6 +176,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "log_type")){
 					token = strtok(NULL, " ");
 					if(token){
+						log_type_set = 1;
 						if(!strcmp(token, "none")){
 							log_type = MQTT3_LOG_NONE;
 						}else if(!strcmp(token, "information")){
@@ -278,8 +282,12 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	}
 	fclose(fptr);
 
-	config->log_dest = log_dest;
-	config->log_type = log_type;
+	if(log_dest_set){
+		config->log_dest = log_dest;
+	}
+	if(log_type_set){
+		config->log_type = log_type;
+	}
 
 	return rc;
 }
