@@ -18,9 +18,6 @@ fix_permissions() {
 
 case "$1" in
 	configure)
-		sed -i 's!^#persistence 0.*!persistence 1!' /etc/mosquitto.conf
-		sed -i 's!^#persistence_location.*!persistence_location /var/lib/mosquitto/!' /etc/mosquitto.conf
-		sed -i 's!^#pid_file.*!pid_file /var/run/mosquitto/mosquitto.pid!' /etc/mosquitto.conf
 		setup_mosquitto_user
 		fix_permissions
 	;;
