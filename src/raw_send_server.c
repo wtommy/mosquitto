@@ -33,6 +33,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 {
+	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending CONNACK to %d (%d)", context->sock, result);
+
 	if(mqtt3_write_byte(context, CONNACK)) return 1;
 	if(mqtt3_write_remaining_length(context, 2)) return 1;
 	if(mqtt3_write_byte(context, 0)) return 1;
