@@ -164,6 +164,7 @@ int main(int argc, char *argv[])
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
 	/* Initialise logging immediately after loading the config */
 	mqtt3_log_init(config.log_type, config.log_dest);
+	mqtt3_log_printf(MQTT3_LOG_INFO, "mosquitto %s %s starting", VERSION, BUILDDATE);
 	if(drop_privileges(&config)) return 1;
 
 	if(config.daemon){
@@ -285,6 +286,7 @@ int main(int argc, char *argv[])
 				for(i=0; i<context_count; i++){
 					if(contexts[i] && fstat(contexts[i]->sock, &statbuf) == -1){
 						if(errno == EBADF){
+							mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket error on client %d, disconnecting.", contexts[i]->sock);
 							contexts[i]->sock = -1;
 							mqtt3_db_client_will_queue(contexts[i]);
 							mqtt3_context_cleanup(contexts[i]);
@@ -318,9 +320,11 @@ int main(int argc, char *argv[])
 					fromhost(&wrap_req);
 					if(!hosts_access(&wrap_req)){
 						/* Access is denied */
+						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client connection denied access by tcpd.");
 						close(new_sock);
 					}else{
 #endif
+						mqtt3_log_printf(MQTT3_LOG_NOTICE, "New client connected on sock %d.", new_sock);
 						new_context = mqtt3_context_init(new_sock);
 						for(i=0; i<context_count; i++){
 							if(contexts[i] == NULL){
@@ -343,6 +347,8 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+
+	mqtt3_log_printf(MQTT3_LOG_INFO, "mosquitto terminating", VERSION, BUILDDATE);
 
 	mqtt3_log_close();
 
