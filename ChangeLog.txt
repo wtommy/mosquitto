@@ -10,6 +10,8 @@
 - Set SO_REUSEADDR on the listening socket so restart is much quicker.
 - Added support for tracking current heap memory usage - this is published on
   the topic "$SYS/broker/heap/current size"
+- Added code for logging to stderr, stdout, syslog and topics. 
+- Added logging to numerous places - still plenty of scope for more.
 
 0.2 - 20091204
 ==============
