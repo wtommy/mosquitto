@@ -17,6 +17,11 @@ build: build-stamp
 
 build-stamp: configure-stamp  
 	dh_testdir
+	sed -i 's!^#persistence 0.*!persistence 1!' mosquitto.conf
+	sed -i 's!^#persistence_location.*!persistence_location /var/lib/mosquitto/!' mosquitto.conf
+	sed -i 's!^#pid_file.*!pid_file /var/run/mosquitto/mosquitto.pid!' mosquitto.conf
+	echo "log_dest syslog" >> mosquitto.conf
+	echo "log_dest topics" >> mosquitto.conf
 	$(MAKE)
 	touch $@
 
