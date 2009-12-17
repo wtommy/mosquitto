@@ -85,6 +85,8 @@ int _mqtt3_socket_listen(struct sockaddr *addr)
 	int sock;
 	int opt = 1;
 
+	mqtt3_log_printf(MQTT3_LOG_INFO, "Opening listen socket on port %d.", ntohs(((struct sockaddr_in *)addr)->sin_port));
+
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock == -1){
 		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", strerror(errno));
