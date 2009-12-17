@@ -85,7 +85,7 @@
 			<listitem><para>There is no bridge support.</para></listitem>
 			<listitem><para>Wildcards within subscription requests are not supported.</para></listitem>
 			<listitem><para>There are vastly fewer configuration options.</para></listitem>
-			<listitem><para>There is no logging information.</para></listitem>
+			<listitem><para>There is less logging information.</para></listitem>
 			<listitem><para>The $SYS hierarchy is smaller.</para></listitem>
 			<listitem><para>It isn't as well tested or documented...</para></listitem>
 		</itemizedlist>
