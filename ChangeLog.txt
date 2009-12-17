@@ -1,4 +1,4 @@
-0.3 - 200912xx
+0.3 - 20091217
 ==============
 
 - The port option in the configuration file and --port command line argument
