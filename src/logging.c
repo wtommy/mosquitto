@@ -46,7 +46,7 @@ POSSIBILITY OF SUCH DAMAGE.
  * Logging pid.
  */
 static int log_destinations = MQTT3_LOG_STDERR | MQTT3_LOG_TOPIC;
-static int log_priorities = MQTT3_LOG_ERR | MQTT3_LOG_WARNING;
+static int log_priorities = MQTT3_LOG_ERR | MQTT3_LOG_WARNING | MQTT3_LOG_NOTICE | MQTT3_LOG_INFO;
 
 int mqtt3_log_init(int priorities, int destinations)
 {
