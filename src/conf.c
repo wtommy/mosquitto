@@ -278,7 +278,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	}
 	fclose(fptr);
 
-	config->log_dest = log_dest;;
+	config->log_dest = log_dest;
 	config->log_type = log_type;
 
 	return rc;
