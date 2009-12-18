@@ -64,7 +64,6 @@ int handle_read(mqtt3_context *context)
 	int rc;
 
 	rc = read(context->sock, &buf, 1);
-	printf("rc: %d\n", rc);
 	if(rc == -1){
 		printf("Error: %s\n", strerror(errno));
 		return 1;
@@ -167,15 +166,12 @@ int main(int argc, char *argv[])
 					break;
 				case stPause:
 					//mqtt3_raw_disconnect(&context);
-					printf("Pause\n");
 					break;
 				default:
 					fprintf(stderr, "Error: Unknown state\n");
 					break;
 			}
 		}else{
-			printf("fdcount=%d\n", fdcount);
-
 			if(FD_ISSET(context.sock, &readfds)){
 				if(handle_read(&context)){
 					fprintf(stderr, "Socket closed on remote side\n");
