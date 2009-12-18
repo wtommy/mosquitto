@@ -114,7 +114,7 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 	}
 
 	payloadlen = remaining_length;
-	payload = mqtt3_calloc(payloadlen, sizeof(uint8_t));
+	payload = mqtt3_calloc(payloadlen+1, sizeof(uint8_t));
 	if(mqtt3_read_bytes(context, payload, payloadlen)){
 		mqtt3_free(sub);
 		return 1;

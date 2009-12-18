@@ -1,5 +1,5 @@
 CC=cc
-CFLAGS=-I../src -Wall -ggdb
+CFLAGS=-I../src -Wall -ggdb -DDEBUG
 LDFLAGS=-lsqlite3
 
 .PHONY: all clean
