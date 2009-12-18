@@ -119,6 +119,9 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 		mqtt3_free(sub);
 		return 1;
 	}
+#ifdef DEBUG
+	printf("%s: %s\n", sub, payload);
+#endif
 
 	switch(qos){
 		case 0:
