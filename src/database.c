@@ -27,6 +27,78 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+/* A note on matching topic subscriptions.
+ *
+ * Topics can be up to 32767 characters in length. The / character is used as a
+ * hierarchy delimiter. Messages are published to a particular topic.
+ * Clients may subscribe to particular topics directly, but may also use
+ * wildcards in subscriptions.  The + and # characters are used as wildcards.
+ * The # wildcard can be used at the end of a subscription only, and is a
+ * wildcard for the level of hierarchy at which it is placed and all subsequent
+ * levels.
+ * The + wildcard may be used at any point within the subscription and is a
+ * wildcard for only the level of hierarchy at which it is placed.
+ * Neither wildcard may be used as part of a substring.
+ * Valid:
+ * 	a/b/+
+ * 	a/+/c
+ * 	a/#
+ * 	a/b/#
+ * 	#
+ * 	+/b/c
+ * 	+/+/+
+ * Invalid:
+ *  a/#/c
+ *  a+/b/c
+ * Valid but non-matching:
+ *  a/b
+ *  a/+
+ *  +/b
+ *  b/c/a
+ *  a/b/d
+ *
+ * When a message is ready to be published at the broker, we need to check all
+ * of the subscriptions to see which ones the message should be sent to. This
+ * would be easy without wildcards, but requires a bit more work with them.
+ *
+ * The regex used to do the matching is of the form below for a topic of a/b/c:
+ *
+ * ^(?:(?:(a|\+)(?!$))(?:(?:/(?:(b|\+)(?!$)))(?:(?:/(?:c|\+))|/#)?|/#)?|#)$
+ *
+ * In general, we're matching (a or +) followed by (the next levels of hierarchy or #).
+ * More specifically, all the levels of hierarchy must match, unless the last level is #.
+ *
+ * ^(?:							# Must start at beginning of string
+ * 		(?:						# (Level 1 hierarchy)
+ * 			(a|\+)(?!$) 		# Match a or +, but only if not EOL.
+ * 		)						# AND 
+ * 		(?:
+ * 			(?:					# (Level 2 hierarchy)
+ * 				/				# Match /
+ * 				(?:				# AND
+ * 					(b|\+)(?!$)	# Match b or +, but only if not EOL.
+ * 				)
+ * 			)					# AND
+ * 			(?:
+ * 				(?:				# (Level 3 hierarchy)
+ * 					/			# Match /
+ * 					(?:			# AND
+ * 						c|\+	# Match c or +.
+ * 					)
+ * 				)
+ * 				|				# OR (instead of level 3)
+ * 				/#				# Match /# at level 3
+ * 			)?					# Level 3 exist 1/0 times
+ * 			|					# OR (instead of level 2)
+ * 			/#					# Match /# at level 2
+ * 		)?						# Level 2 exist 1/0 times
+ * 		|						# OR (instead of level 1)
+ * 		#						# Match # at level 1
+ * 	)$							# Must end on EOL.
+ *
+ *
+ */
+
 #include <sqlite3.h>
 #include <stdio.h>
 #include <string.h>
