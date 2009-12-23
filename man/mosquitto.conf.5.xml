@@ -58,7 +58,7 @@
 					stdout and stderr log to the console on the named output.
 					syslog uses the userspace syslog facility which usually
 					ends up in /var/log/messages or similar.topic logs to the
-					broker topic 'broker/log/&lt;severity&gt;', where severity
+					broker topic '$SYS/broker/log/&lt;severity&gt;', where severity
 					is one of D, E, W, N, I which are debug, error, warning,
 					notice and information. Use "log_dest none" if you wish to
 					disable logging. Defaults to stderr and topic. This option
