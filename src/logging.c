@@ -82,27 +82,27 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 	if((log_priorities & priority) && log_destinations != MQTT3_LOG_NONE){
 		switch(priority){
 			case MQTT3_LOG_DEBUG:
-				topic = "broker/log/D";
+				topic = "$SYS/broker/log/D";
 				syslog_priority = LOG_DEBUG;
 				break;
 			case MQTT3_LOG_ERR:
-				topic = "broker/log/E";
+				topic = "$SYS/broker/log/E";
 				syslog_priority = LOG_ERR;
 				break;
 			case MQTT3_LOG_WARNING:
-				topic = "broker/log/W";
+				topic = "$SYS/broker/log/W";
 				syslog_priority = LOG_WARNING;
 				break;
 			case MQTT3_LOG_NOTICE:
-				topic = "broker/log/N";
+				topic = "$SYS/broker/log/N";
 				syslog_priority = LOG_NOTICE;
 				break;
 			case MQTT3_LOG_INFO:
-				topic = "broker/log/I";
+				topic = "$SYS/broker/log/I";
 				syslog_priority = LOG_INFO;
 				break;
 			default:
-				topic = "broker/log/E";
+				topic = "$SYS/broker/log/E";
 				syslog_priority = LOG_ERR;
 		}
 		va_start(va, fmt);
