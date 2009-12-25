@@ -8,6 +8,11 @@ void mqtt3_config_init(mqtt3_config *config)
 {
 	/* Set defaults */
 	config->daemon = 0;
+#ifdef __CYGWIN__
+	config->ext_sqlite_regex = "sqlite3_pcre.dll";
+#else
+	config->ext_sqlite_regex = "sqlite3_pcre.so";
+#endif
 	config->iface = NULL;
 	config->iface_count = 0;
 	config->log_dest = MQTT3_LOG_STDERR | MQTT3_LOG_TOPIC;
@@ -123,7 +128,15 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 			token = strtok(buf, " ");
 			if(token){
 
-				if(!strcmp(token, "interface")){
+				if(!strcmp(token, "ext_sqlite_regex")){
+					token = strtok(NULL, " ");
+					if(token){
+						config->ext_sqlite_regex = mqtt3_strdup(token);
+					}else{
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty ext_sqlite_regex value in config.");
+						return 1;
+					}
+				}else if(!strcmp(token, "interface")){
 					token = strtok(NULL, " ");
 					if(token){
 						token = strtok(token, ":");
