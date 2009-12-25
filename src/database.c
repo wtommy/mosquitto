@@ -122,6 +122,7 @@ static sqlite3_stmt *stmt_sub_search = NULL;
 
 int _mqtt3_db_tables_create(void);
 int _mqtt3_db_invalidate_sockets(void);
+int _mqtt3_db_regex_create(const char *topic, char *regex);
 sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query);
 void _mqtt3_db_statements_finalize(void);
 int _mqtt3_db_version_check(void);
@@ -977,6 +978,47 @@ int mqtt3_db_outgoing_check(fd_set *writefds, int *sockmax)
 	sqlite3_reset(stmt);
 
 	return rc;
+}
+
+int _mqtt3_db_regex_create(const char *topic, char *regex)
+{
+	char *stmp;
+	int hier;
+	static char *local_regex = NULL;
+	static int regex_len = 0;
+	int new_len;
+	char *token;
+	int pos;
+	int i;
+
+	if(!topic) return 1;
+
+	hier = 0;
+	stmp = topic;
+	while(stmp){
+		stmp = index(stmp, '/');
+		if(stmp) stmp++;
+		hier++;
+	}
+	new_len = strlen(topic) - (hier-1) + 18 + (22 + 5)*(hier-1) + 4 + 1;
+	if(regex_len < new_len){
+		local_regex = realloc(local_regex, new_len);
+		regex_len = new_len;
+		if(!local_regex) return 1;
+	}
+	token = strtok(topic, "/");
+	pos = sprintf(local_regex, "^(?:(?:(%s|\\+)(?!$)", token);
+	token = strtok(NULL, "/");
+	while(token){
+		pos += sprintf(&(local_regex[pos]), "(?:(?:/(?:(%s|\\+)(?!$)))", token);
+		token = strtok(NULL, "/");
+	}
+	for(i=0; i<hier-1; i++){
+		pos += sprintf(&(local_regex[pos]), "|/#)?");
+	}
+	sprintf(&(local_regex[pos]), "|#)$");
+	*regex = local_regex;
+	return 0;
 }
 
 int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload)
