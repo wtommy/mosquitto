@@ -48,14 +48,14 @@ POSSIBILITY OF SUCH DAMAGE.
  * 	+/b/c
  * 	+/+/+
  * Invalid:
- *  a/#/c
- *  a+/b/c
+ *	a/#/c
+ *	a+/b/c
  * Valid but non-matching:
- *  a/b
- *  a/+
- *  +/b
- *  b/c/a
- *  a/b/d
+ *	a/b
+ *	a/+
+ *	+/b
+ *	b/c/a
+ *	a/b/d
  *
  * When a message is ready to be published at the broker, we need to check all
  * of the subscriptions to see which ones the message should be sent to. This
@@ -65,8 +65,10 @@ POSSIBILITY OF SUCH DAMAGE.
  *
  * ^(?:(?:(a|\+)(?!$))(?:(?:/(?:(b|\+)(?!$)))(?:(?:/(?:c|\+))|/#)?|/#)?|#)$
  *
- * In general, we're matching (a or +) followed by (the next levels of hierarchy or #).
- * More specifically, all the levels of hierarchy must match, unless the last level is #.
+ * In general, we're matching (a or +) followed by (the next levels of
+ * hierarchy or #).
+ * More specifically, all the levels of hierarchy must match, unless the last
+ * level is #.
  *
  * ^(?:							# Must start at beginning of string
  * 		(?:						# (Level 1 hierarchy)
