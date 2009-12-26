@@ -1004,7 +1004,7 @@ int _mqtt3_db_regex_create(const char *topic, char **regex)
 	}
 	new_len = strlen(local_topic) - (hier-1) + 18 + (22 + 5)*(hier-1) + 4 + 1;
 	if(regex_len < new_len){
-		local_regex = realloc(local_regex, new_len);
+		local_regex = mqtt3_realloc(local_regex, new_len);
 		regex_len = new_len;
 		if(!local_regex) return 1;
 	}
