@@ -123,7 +123,9 @@ static sqlite3_stmt *stmt_sub_search = NULL;
 
 int _mqtt3_db_tables_create(void);
 int _mqtt3_db_invalidate_sockets(void);
+#ifdef WITH_REGEX
 int _mqtt3_db_regex_create(const char *topic, char **regex);
+#endif
 sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query);
 void _mqtt3_db_statements_finalize(void);
 int _mqtt3_db_version_check(void);
@@ -992,6 +994,7 @@ int mqtt3_db_outgoing_check(fd_set *writefds, int *sockmax)
 	return rc;
 }
 
+#ifdef WITH_REGEX
 int _mqtt3_db_regex_create(const char *topic, char **regex)
 {
 	char *stmp;
@@ -1056,6 +1059,7 @@ int _mqtt3_db_regex_create(const char *topic, char **regex)
 	mqtt3_free(local_topic);
 	return 0;
 }
+#endif
 
 int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload)
 {
