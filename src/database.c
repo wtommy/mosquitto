@@ -106,6 +106,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <unistd.h>
 
+#include <config.h>
 #include <mqtt3.h>
 
 static sqlite3 *db = NULL;
@@ -130,12 +131,15 @@ int _mqtt3_db_transaction_begin(void);
 int _mqtt3_db_transaction_end(void);
 int _mqtt3_db_transaction_rollback(void);
 
-int mqtt3_db_open(const char *location, const char *filename)
+int mqtt3_db_open(const char *location, const char *filename, const char *regex_ext_path)
 {
 	char *filepath;
+	char *errmsg;
 
 	if(!filename) return 1;
-
+#ifdef WITH_REGEX
+	if(!regex_ext_path) return 1;
+#endif
 	if(sqlite3_initialize() != SQLITE_OK){
 		return 1;
 	}
@@ -175,6 +179,16 @@ int mqtt3_db_open(const char *location, const char *filename)
 		}
 	}
 
+#ifdef WITH_REGEX
+	sqlite3_enable_load_extension(db, 1);
+	if(sqlite3_load_extension(db, regex_ext_path, NULL, &errmsg) != SQLITE_OK){
+		if(errmsg){
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+			sqlite3_free(errmsg);
+		}
+		return 1;
+	}
+#endif
 	if(_mqtt3_db_invalidate_sockets()) return 1;
 
 	return 0;
