@@ -1128,6 +1128,7 @@ int mqtt3_db_sub_insert(const char *client_id, const char *sub, int qos)
 	if(sqlite3_bind_text(stmt_select, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_text(stmt_select, 2, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt_select) == SQLITE_ROW){
+		/* Entry already exists, so update */
 		if(sqlite3_bind_int(stmt_update, 1, qos) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_text(stmt_update, 2, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_text(stmt_update, 3, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
@@ -1135,6 +1136,7 @@ int mqtt3_db_sub_insert(const char *client_id, const char *sub, int qos)
 		sqlite3_reset(stmt_update);
 		sqlite3_clear_bindings(stmt_update);
 	}else{
+		/* Insert */
 		if(sqlite3_bind_text(stmt_insert, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_text(stmt_insert, 2, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(stmt_insert, 3, qos) != SQLITE_OK) rc = 1;
