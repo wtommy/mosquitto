@@ -183,6 +183,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 		payloadlen++;
 	}
 
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending SUBACK to %d", context->sock);
 	if(mqtt3_write_byte(context, SUBACK)) return 1;
 	if(mqtt3_write_remaining_length(context, payloadlen+2)) return 1;
 	if(mqtt3_write_uint16(context, mid)) return 1;
