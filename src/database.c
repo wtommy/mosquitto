@@ -1213,11 +1213,18 @@ int mqtt3_db_sub_search_start(const char *sub)
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
+#ifdef WITH_REGEX
+	char *regex;
+#endif
 
 	if(!sub) return 1;
 
 	if(!stmt_sub_search){
+#ifdef WITH_REGEX
+		stmt_sub_search = _mqtt3_db_statement_prepare("SELECT client_id,qos FROM subs WHERE regexp(?, sub)");
+#else
 		stmt_sub_search = _mqtt3_db_statement_prepare("SELECT client_id,qos FROM subs where sub=?");
+#endif
 		if(!stmt_sub_search){
 			return 1;
 		}
@@ -1225,7 +1232,12 @@ int mqtt3_db_sub_search_start(const char *sub)
 	sqlite3_reset(stmt_sub_search);
 	sqlite3_clear_bindings(stmt_sub_search);
 
+#ifdef WITH_REGEX
+	if(_mqtt3_db_regex_create(sub, &regex)) return 1;
+	if(sqlite3_bind_text(stmt_sub_search, 1, regex, strlen(regex), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+#else
 	if(sqlite3_bind_text(stmt_sub_search, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+#endif
 
 	return rc;
 }
