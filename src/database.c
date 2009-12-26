@@ -1025,9 +1025,9 @@ int _mqtt3_db_regex_create(const char *topic, char **regex)
 			  + 24*(hier-2) /* For hier>1 && hier<(max-1) start */
 			  + 15 /* For final hier start */
 			  + 5*(hier-2) /* For hier>1 end */
-			  + 5; /* For hier==1 and NULL */
+			  + 6; /* For hier==1 and NULL */
 	}else{
-		new_len = strlen(local_topic) + 20;
+		new_len = strlen(local_topic) + 21;
 	}
 	if(regex_len < new_len){
 		local_regex = mqtt3_realloc(local_regex, new_len);
