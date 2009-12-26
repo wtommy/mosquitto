@@ -1016,23 +1016,42 @@ int _mqtt3_db_regex_create(const char *topic, char **regex)
 		if(stmp) stmp++;
 		hier++;
 	}
-	new_len = strlen(local_topic) - (hier-1) + 18 + (22 + 5)*(hier-1) + 4 + 1;
+	if(hier > 1){
+		new_len = strlen(local_topic) - (hier-1)
+			  + 24 /* For hier==1 start */
+			  + 24*(hier-2) /* For hier>1 && hier<(max-1) start */
+			  + 15 /* For final hier start */
+			  + 5*(hier-2) /* For hier>1 end */
+			  + 5; /* For hier==1 and NULL */
+	}else{
+		new_len = strlen(local_topic) + 20;
+	}
 	if(regex_len < new_len){
 		local_regex = mqtt3_realloc(local_regex, new_len);
 		regex_len = new_len;
 		if(!local_regex) return 1;
 	}
-	token = strtok(local_topic, "/");
-	pos = sprintf(local_regex, "^(?:(?:(%s|\\+)(?!$)", token);
-	token = strtok(NULL, "/");
-	while(token){
-		pos += sprintf(&(local_regex[pos]), "(?:(?:/(?:(%s|\\+)(?!$)))", token);
+	if(hier > 1){
+		token = strtok(local_topic, "/");
+		pos = sprintf(local_regex, "^(?:(?:(?:%s|\\+)(?!$))", token);
 		token = strtok(NULL, "/");
+		i=1;
+		while(token){
+			if(i < hier-1){
+				pos += sprintf(&(local_regex[pos]), "(?:(?:/(?:(?:%s|\\+)(?!$)))", token);
+			}else{
+				pos += sprintf(&(local_regex[pos]), "(?:(?:/(?:%s|\\+))", token);
+			}
+			token = strtok(NULL, "/");
+			i++;
+		}
+		for(i=0; i<hier-1; i++){
+			pos += sprintf(&(local_regex[pos]), "|/#)?");
+		}
+		sprintf(&(local_regex[pos]), "|#)$");
+	}else{
+		pos = sprintf(local_regex, "^(?:(?:(?:%s|\\+))|#)$", local_topic);
 	}
-	for(i=0; i<hier-1; i++){
-		pos += sprintf(&(local_regex[pos]), "|/#)?");
-	}
-	sprintf(&(local_regex[pos]), "|#)$");
 	*regex = local_regex;
 	mqtt3_free(local_topic);
 	return 0;
