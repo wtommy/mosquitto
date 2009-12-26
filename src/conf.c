@@ -15,7 +15,7 @@ void mqtt3_config_init(mqtt3_config *config)
 #endif
 	config->iface = NULL;
 	config->iface_count = 0;
-	config->log_dest = MQTT3_LOG_STDERR | MQTT3_LOG_TOPIC;
+	config->log_dest = MQTT3_LOG_STDERR;
 	config->log_type = MQTT3_LOG_ERR | MQTT3_LOG_WARNING | MQTT3_LOG_NOTICE | MQTT3_LOG_INFO;
 	config->msg_timeout = 10;
 	config->persistence = 0;
