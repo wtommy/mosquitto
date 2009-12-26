@@ -1,5 +1,5 @@
 VERSION=0.4pre
-BUILDDATE=200912xx
+BUILDDATE:=$(shell date +%Y%m%d)
 
 #MANCOUNTRIES=en_GB
 
