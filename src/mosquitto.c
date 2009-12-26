@@ -162,9 +162,6 @@ int main(int argc, char *argv[])
 
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
-	/* Initialise logging immediately after loading the config */
-	mqtt3_log_init(config.log_type, config.log_dest);
-	mqtt3_log_printf(MQTT3_LOG_INFO, "mosquitto %s %s starting", VERSION, BUILDDATE);
 	if(drop_privileges(&config)) return 1;
 
 	if(config.daemon){
@@ -218,6 +215,10 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
+	/* Initialise logging only after initialising the database in case we're
+	 * logging to topics */
+	mqtt3_log_init(config.log_type, config.log_dest);
+	mqtt3_log_printf(MQTT3_LOG_INFO, "mosquitto %s %s starting", VERSION, BUILDDATE);
 
 	/* Set static $SYS messages */
 	snprintf(buf, 1024, "mosquitto version %s (build date %s)", VERSION, BUILDDATE);
