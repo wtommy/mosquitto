@@ -726,8 +726,6 @@ int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, const
 			}
 			if(client_id) mqtt3_free(client_id);
 		}
-	}else{
-		rc = 1;
 	}
 
 	return rc;
