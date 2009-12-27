@@ -56,6 +56,14 @@ int allow_severity = LOG_INFO;
 int deny_severity = LOG_INFO;
 #endif
 
+/* mosquitto shouldn't run as root.
+ * This function will attempt to change to an unprivileged user and group if
+ * running as root. The user is given in config->user.
+ * Returns 1 on failure (unknown user, setuid/setgid failure)
+ * Returns 0 on success.
+ * Note that setting config->user to "root" does not produce an error, but it
+ * strongly discouraged.
+ */
 int drop_privileges(mqtt3_config *config)
 {
 	struct passwd *pwd;
@@ -83,6 +91,7 @@ int drop_privileges(mqtt3_config *config)
 	return 0;
 }
 
+/* Signal handler for SIGINT and SIGTERM - just stop gracefully. */
 void handle_sigint(int signal)
 {
 	run = 0;
