@@ -301,6 +301,11 @@ int _mqtt3_db_tables_create(void)
 	return rc;
 }
 
+/* Internal function.
+ * Check the version of the open database.
+ * Returns 1 on non-match or failure (sqlite error)
+ * Returns 0 on version match.
+ */
 int _mqtt3_db_version_check(void)
 {
 	int rc = 0;
@@ -326,6 +331,11 @@ int _mqtt3_db_version_check(void)
 	return rc;
 }
 
+/* Internal function.
+ * Finalise all sqlite statements held in g_stmts. This must be done before
+ * closing the db.
+ * See also _mqtt3_db_statement_prepare().
+ */
 void _mqtt3_db_statements_finalize(void)
 {
 	int i;
@@ -337,6 +347,16 @@ void _mqtt3_db_statements_finalize(void)
 	mqtt3_free(g_stmts);
 }
 
+/* Adds a new client to the database.
+ * This should be called when a new connection has successfully sent a CONNECT command.
+ * If a client is already connected with the same id, the old client will be
+ * disconnected and the information updated.
+ * If will=1 then a will will be stored for the client. In this case,
+ * will_topic and will_message must not be NULL otherwise this will return
+ * failure.
+ * Returns 1 on failure (context or context->id is NULL, sqlite error)
+ * Returns 0 on success.
+ */
 int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
 {
 	static sqlite3_stmt *stmt = NULL;
@@ -389,6 +409,16 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 	return rc;
 }
 
+/* Update a client connection in the database.
+ * This will be called if a client with the same id connects twice (see
+ * mqtt3_db_client_insert()), or if a client reconnects that had clean start
+ * disabled.
+ * If will=1 then a will will be stored for the client. In this case,
+ * will_topic and will_message must not be NULL otherwise this will return
+ * failure.
+ * Returns 1 on failure (context or context->id is NULL, sqlite error)
+ * Returns 0 on success.
+ */
 int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
 {
 	int rc = 0;
@@ -428,6 +458,10 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 	return rc;
 }
 
+/* Called on client death to add a will to the message queue if the will exists.
+ * Returns 1 on failure (context or context->id is NULL, sqlite error)
+ * Returns 0 on success (will queued or will not found)
+ */
 int mqtt3_db_client_will_queue(mqtt3_context *context)
 {
 	int rc = 0;
@@ -465,6 +499,11 @@ int mqtt3_db_client_will_queue(mqtt3_context *context)
 	return rc;
 }
 
+/* Delete a client from the database.
+ * Called when clients with clean start enabled disconnect.
+ * Returns 1 on failure (context or context->id is NULL, sqlite error)
+ * Returns 0 on success.
+ */
 int mqtt3_db_client_delete(mqtt3_context *context)
 {
 	int rc = 0;
@@ -486,6 +525,10 @@ int mqtt3_db_client_delete(mqtt3_context *context)
 	return rc;
 }
 
+/* Find the socket for given client id.
+ * Returns 1 on failure (client_id or sock is NULL, client id not found)
+ * Returns 0 on success.
+ */
 int mqtt3_db_client_find_socket(const char *client_id, int *sock)
 {
 	int rc = 0;
@@ -511,6 +554,11 @@ int mqtt3_db_client_find_socket(const char *client_id, int *sock)
 	return rc;
 }
 
+/* Internal function.
+ * Set all stored sockets to -1 (invalid) when closing mosquitto.
+ * Returns 1 on failure (sqlite error)
+ * Returns 0 on success.
+ */
 int _mqtt3_db_invalidate_sockets(void)
 {
 	int rc = 0;
@@ -536,6 +584,12 @@ int _mqtt3_db_invalidate_sockets(void)
 	return rc;
 }
 
+/* Sets stored socket for a given client to -1.
+ * Called when a client with clean start disabled disconnects and hence has no
+ * associated socket.
+ * Returns 1 on failure (client_id is NULL, sqlite error)
+ * Returns 0 on success.
+ */
 int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
 {
 	int rc = 0;
@@ -558,6 +612,11 @@ int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
 	return rc;
 }
 
+/* Returns the number of messages currently in the database - this is the
+ * number of messages in flight and doesn't include retained messages.
+ * Returns 1 on failure (count is NULL, sqlite error)
+ * Returns 0 on success.
+ */
 int mqtt3_db_message_count(int *count)
 {
 	int rc = 0;
@@ -840,7 +899,6 @@ int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_dire
 		}else{
 			rc = 1;
 		}
-
 	}else{
 		rc = 1;
 	}
@@ -1107,8 +1165,8 @@ int _mqtt3_db_regex_create(const char *topic, char **regex)
 
 /* Find a single retained message matching 'sub'.
  * Return qos, payloadlen and payload only if those arguments are not NULL.
- * Returns 1 on failure (sub is NULL, sqlite error)
- * Returns 0 on success.
+ * Returns 1 on failure (sub is NULL, sqlite error) or no retained message found.
+ * Returns 0 on retained message successfully found.
  */
 int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload)
 {
