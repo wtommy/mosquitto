@@ -1262,6 +1262,7 @@ int mqtt3_db_sub_search_start(const char *sub)
 int mqtt3_db_sub_search_next(char **client_id, uint8_t *qos)
 {
 	/* Warning: Don't start transaction in this function. */
+	if(!stmt_sub_search || !client_id || !qos) return 1;
 	if(sqlite3_step(stmt_sub_search) != SQLITE_ROW){
 		return 1;
 	}
