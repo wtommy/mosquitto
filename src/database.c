@@ -1008,7 +1008,7 @@ int _mqtt3_db_regex_create(const char *topic, char **regex)
 	int i;
 	int sys = 0;
 
-	if(!topic) return 1;
+	if(!topic || !regex) return 1;
 
 	local_topic = mqtt3_strdup(topic);
 	if(!local_topic) return 1;
