@@ -973,7 +973,7 @@ int mqtt3_db_outgoing_check(fd_set *writefds, int *sockmax)
 	static sqlite3_stmt *stmt = NULL;
 	int fd;
 
-	if(!writefds) return 1;
+	if(!writefds || !sockmax) return 1;
 
 	FD_ZERO(writefds);
 	if(!stmt){
