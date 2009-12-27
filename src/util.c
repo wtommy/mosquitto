@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mqtt3.h>
 
+/* Convert mqtt command (as defined in mqtt3.h) to corresponding string. */
 const char *mqtt3_command_to_string(uint8_t command)
 {
 	switch(command){
