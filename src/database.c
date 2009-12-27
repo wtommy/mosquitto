@@ -343,7 +343,8 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 	int rc = 0;
 	int oldsock;
 
-	if(!context) return 1;
+	if(!context || !context->id) return 1;
+	if(will && (!will_topic || !will_message)) return 1;
 
 	if(!mqtt3_db_client_find_socket(context->id, &oldsock)){
 		if(oldsock == -1){
@@ -394,6 +395,7 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 	static sqlite3_stmt *stmt = NULL;
 
 	if(!context || !context->id) return 1;
+	if(will && (!will_topic || !will_message)) return 1;
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("UPDATE clients SET "
