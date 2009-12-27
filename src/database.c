@@ -1006,12 +1006,16 @@ int _mqtt3_db_regex_create(const char *topic, char **regex)
 	char *token;
 	int pos;
 	int i;
+	int sys = 0;
 
 	if(!topic) return 1;
 
 	local_topic = mqtt3_strdup(topic);
 	if(!local_topic) return 1;
 
+	if(!strncmp(local_topic, "$SYS", 4)){
+		sys = 1;
+	}
 	hier = 0;
 	stmp = local_topic;
 	while(stmp){
@@ -1025,7 +1029,8 @@ int _mqtt3_db_regex_create(const char *topic, char **regex)
 			  + 24*(hier-2) /* For hier>1 && hier<(max-1) start */
 			  + 15 /* For final hier start */
 			  + 5*(hier-2) /* For hier>1 end */
-			  + 6; /* For hier==1 and NULL */
+			  + 6 /* For hier==1 and NULL */
+			  + 4*hier; /* For \Q ... \E per hierarchy level */
 	}else{
 		new_len = strlen(local_topic) + 21;
 	}
@@ -1036,14 +1041,18 @@ int _mqtt3_db_regex_create(const char *topic, char **regex)
 	}
 	if(hier > 1){
 		token = strtok(local_topic, "/");
-		pos = sprintf(local_regex, "^(?:(?:(?:%s|\\+)(?!$))", token);
+		if(!sys){
+			pos = sprintf(local_regex, "^(?:(?:(?:\\Q%s\\E|\\+)(?!$))", token);
+		}else{
+			pos = sprintf(local_regex, "^(?:(?:(?:\\Q%s\\E)(?!$))", token);
+		}
 		token = strtok(NULL, "/");
 		i=1;
 		while(token){
 			if(i < hier-1){
-				pos += sprintf(&(local_regex[pos]), "(?:(?:/(?:(?:%s|\\+)(?!$)))", token);
+				pos += sprintf(&(local_regex[pos]), "(?:(?:/(?:(?:\\Q%s\\E|\\+)(?!$)))", token);
 			}else{
-				pos += sprintf(&(local_regex[pos]), "(?:(?:/(?:%s|\\+))", token);
+				pos += sprintf(&(local_regex[pos]), "(?:(?:/(?:\\Q%s\\E|\\+))", token);
 			}
 			token = strtok(NULL, "/");
 			i++;
@@ -1051,9 +1060,17 @@ int _mqtt3_db_regex_create(const char *topic, char **regex)
 		for(i=0; i<hier-1; i++){
 			pos += sprintf(&(local_regex[pos]), "|/#)?");
 		}
-		sprintf(&(local_regex[pos]), "|#)$");
+		if(!sys){
+			sprintf(&(local_regex[pos]), "|#)$");
+		}else{
+			sprintf(&(local_regex[pos]), ")$");
+		}
 	}else{
-		pos = sprintf(local_regex, "^(?:(?:(?:%s|\\+))|#)$", local_topic);
+		if(!sys){
+			pos = sprintf(local_regex, "^(?:(?:(?:\\Q%s\\E|\\+))|#)$", local_topic);
+		}else{
+			pos = sprintf(local_regex, "^(?:(?:(?:%s|\\+)))$", local_topic);
+		}
 	}
 	*regex = local_regex;
 	mqtt3_free(local_topic);
