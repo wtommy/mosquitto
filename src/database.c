@@ -1299,7 +1299,7 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 	char buf[100];
 	int count;
 
-	if(now - interval > last_update){
+	if(interval && now - interval > last_update){
 		_mqtt3_db_transaction_begin();
 
 		snprintf(buf, 100, "%d", (int)(now - start_time));
