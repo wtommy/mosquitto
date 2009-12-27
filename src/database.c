@@ -920,6 +920,11 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	return rc;
 }
 
+/* Generate the next message id for a particular client.
+ * This is last_mid+1. last_mid remains persistent across connections if clean start is not enabled.
+ * Returns 1 on failure (client_id is NULL, sqlite error)
+ * Returns new message id on success.
+ */
 uint16_t mqtt3_db_mid_generate(const char *client_id)
 {
 	/* Warning: Don't start transaction in this function. */
@@ -967,6 +972,17 @@ uint16_t mqtt3_db_mid_generate(const char *client_id)
 	}
 }
 
+/* Check for current messages that are ready to send and add the corresponding
+ * sock to writefds to check whether they can be written to.
+ * Messages that are ready to be sent have status of:
+ *   ms_publish = 1 (send PUBLISH for QoS=0)
+ *   ms_publish_puback = 2 (send PUBACK for QoS=1)
+ *   ms_publish_pubrec = 4 (send PUBREC for QoS=2)
+ *   ms_resend_pubrel = 6 (send duplicate PUBREL for QoS=2)
+ *   ms_resend_pubcomp = 8 (send duplicate PUBCOMP for QoS=2)
+ * Returns 1 on failure (writefds or sockmax is NULL, sqlite error)
+ * Returns 0 on success.
+ */
 int mqtt3_db_outgoing_check(fd_set *writefds, int *sockmax)
 {
 	int rc = 0;
@@ -995,6 +1011,13 @@ int mqtt3_db_outgoing_check(fd_set *writefds, int *sockmax)
 }
 
 #ifdef WITH_REGEX
+/* Internal function.
+ * Create a regular expression based on 'topic' to match all subscriptions with
+ * wildcards + and #.
+ * Returns 1 on failure (topic or regex are NULL, out of memory).
+ * Regular expression is returned in 'regex'. This memory must not be freed by
+ * the caller.
+ */
 int _mqtt3_db_regex_create(const char *topic, char **regex)
 {
 	char *stmp;
@@ -1078,6 +1101,11 @@ int _mqtt3_db_regex_create(const char *topic, char **regex)
 }
 #endif
 
+/* Find a single retained message matching 'sub'.
+ * Return qos, payloadlen and payload only if those arguments are not NULL.
+ * Returns 1 on failure (sub is NULL, sqlite error)
+ * Returns 0 on success.
+ */
 int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload)
 {
 	int rc = 0;
@@ -1110,6 +1138,11 @@ int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_
 	return rc;
 }
 
+/* Add a retained message to the database for a particular topic.
+ * Only one retained message exists per topic, so does an update if one already exists.
+ * Returns 1 on failure (sub, or payload are NULL, payloadlen is 0, sqlite error)
+ * Returns 0 on success.
+ */
 int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, const uint8_t *payload)
 {
 	/* Warning: Don't start transaction in this function. */
@@ -1152,6 +1185,11 @@ int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, const 
 	return rc;
 }
 
+/* Save a subscription for a client.
+ * Returns 1 on failure (client_id or sub is NULL, sqlite error)
+ * Returns 0 on success.
+ * If a subscription already exists for this client, it will be updated.
+ */
 int mqtt3_db_sub_insert(const char *client_id, const char *sub, int qos)
 {
 	int rc = 0;
@@ -1204,6 +1242,11 @@ int mqtt3_db_sub_insert(const char *client_id, const char *sub, int qos)
 	return rc;
 }
 
+/* Remove a subscription for a client.
+ * Returns 1 on failure (client_id or sub are NULL, sqlite error)
+ * Returns 0 on success.
+ * Will return success if no subscription exists for the given client_id/sub.
+ */
 int mqtt3_db_sub_delete(const char *client_id, const char *sub)
 {
 	int rc = 0;
@@ -1226,6 +1269,12 @@ int mqtt3_db_sub_delete(const char *client_id, const char *sub)
 	return rc;
 }
 
+/* Begin a new search for subscriptions that match 'sub'.
+ * Returns 1 on failure (sub is NULL, sqlite error)
+ * Returns 0 on failure.
+ * Will use regex for pattern matching if compiled with WITH_REGEX defined.
+ * Wildcards in subscriptions are disabled is WITH_REGEX not defined.
+ */
 int mqtt3_db_sub_search_start(const char *sub)
 {
 	/* Warning: Don't start transaction in this function. */
@@ -1259,6 +1308,12 @@ int mqtt3_db_sub_search_start(const char *sub)
 	return rc;
 }
 
+/* Retrieve next matching subscription from search.
+ * mqtt3_db_sub_search_start() must have been called prior to calling this function.
+ * Returns matching client id and qos in client_id and qos, which must not be NULL.
+ * Returns 1 on failure (m_d_s_s_s() not called, client_id or qos is NULL, sqlite error)
+ * Returns 0 on success.
+ */
 int mqtt3_db_sub_search_next(char **client_id, uint8_t *qos)
 {
 	/* Warning: Don't start transaction in this function. */
@@ -1272,6 +1327,10 @@ int mqtt3_db_sub_search_next(char **client_id, uint8_t *qos)
 	return 0;
 }
 
+/* Remove all subscriptions for a client.
+ * Returns 1 on failure (client_id is NULL, sqlite error)
+ * Returns 0 on success.
+ */
 int mqtt3_db_subs_clean_start(const char *client_id)
 {
 	int rc = 0;
@@ -1293,6 +1352,12 @@ int mqtt3_db_subs_clean_start(const char *client_id)
 	return rc;
 }
 
+/* Send messages for the $SYS hierarchy if the last update is longer than
+ * 'interval' seconds ago.
+ * 'interval' is the amount of seconds between updates. If 0, then no periodic
+ * messages are sent for the $SYS hierarchy.
+ * 'start_time' is the result of time() that the broker was started at.
+ */
 void mqtt3_db_sys_update(int interval, time_t start_time)
 {
 	static time_t last_update = 0;
@@ -1327,6 +1392,21 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 	}
 }
 
+/* Internal function.
+ * Prepare a sqlite query.
+ * All of the regularly used sqlite queries are prepared as parameterised
+ * queries so they only need to be parsed once and to increase security by
+ * removing the need to carry out string escaping.
+ * Before closing the database, all currently prepared queries must be released.
+ * To do this, each function that needs to make a query has a static
+ * sqlite3_stmt variable to hold the query statement. _m_d_s_p() prepares the
+ * statement and the function stores it in its static variable. _m_d_s_p() also
+ * adds the statement to a global static array so that the statements can be
+ * released when mosquitto is closing.
+ *
+ * Returns NULL on failure
+ * Returns a valid sqlite3_stmt on success.
+ */
 sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query)
 {
 	struct stmt_array *tmp;
@@ -1347,6 +1427,11 @@ sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query)
 	return stmt;
 }
 
+/* Internal function.
+ * Begin a sqlite transaction.
+ * Returns 1 on failure (sqlite error)
+ * Returns 0 on success.
+ */
 int _mqtt3_db_transaction_begin(void)
 {
 	int rc = 0;
@@ -1364,6 +1449,11 @@ int _mqtt3_db_transaction_begin(void)
 	return rc;
 }
 
+/* Internal function.
+ * End a sqlite transaction.
+ * Returns 1 on failure (sqlite error)
+ * Returns 0 on success.
+ */
 int _mqtt3_db_transaction_end(void)
 {
 	int rc = 0;
@@ -1381,6 +1471,11 @@ int _mqtt3_db_transaction_end(void)
 	return rc;
 }
 
+/* Internal function.
+ * Roll back a sqlite transaction.
+ * Returns 1 on failure (sqlite error)
+ * Returns 0 on success.
+ */
 int _mqtt3_db_transaction_rollback(void)
 {
 	int rc = 0;
