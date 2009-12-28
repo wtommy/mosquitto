@@ -151,6 +151,26 @@ int mqtt3_socket_listen_if(const char *iface, uint16_t port)
 	return -1;
 }
 
+int mqtt3_net_read(mqtt3_context *context)
+{
+	uint8_t *buf = NULL;
+
+	/* This gets called if pselect() indicates that there is network data
+	 * available - ie. at least one byte.  What we do depends on what data we
+	 * already have.
+	 * If we've not got a command, attempt to read one and save it. This should
+	 * always work because it's only a single byte.
+	 * Then try to read the remaining length. This may fail because it is may
+	 * be more than one byte - will need to save data pending next read if it
+	 * does fail.
+	 * Then try to read the remaining payload, where 'payload' here means the
+	 * combined variable header and actual payload. This is the most likely to
+	 * fail due to longer length, so save current data and current position.
+	 * After all data is read, send to mqtt3_handle_packet() to deal with.
+	 * Finally, free the memory and reset everything to starting conditions.
+	 */
+}
+
 int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte)
 {
 	if(read(context->sock, byte, 1) == 1){
