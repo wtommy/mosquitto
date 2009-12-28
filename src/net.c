@@ -42,11 +42,15 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int _mqtt3_socket_listen(struct sockaddr *addr);
 
+/* Close a socket associated with a context and set it to -1.
+ * Returns 1 on failure (context is NULL)
+ * Returns 0 on success.
+ */
 int mqtt3_socket_close(mqtt3_context *context)
 {
-	int rc = -1;
+	int rc = 0;
 
-	if(!context) return -1;
+	if(!context) return 1;
 	if(context->sock != -1){
 		mqtt3_db_client_invalidate_socket(context->id, context->sock);
 		rc = close(context->sock);
@@ -56,10 +60,16 @@ int mqtt3_socket_close(mqtt3_context *context)
 	return rc;
 }
 
+/* Create a socket and connect it to 'ip' on port 'port'.
+ * Returns -1 on failure (ip is NULL, socket creation/connection error)
+ * Returns sock number on success.
+ */
 int mqtt3_socket_connect(const char *ip, uint16_t port)
 {
 	int sock;
 	struct sockaddr_in addr;
+
+	if(!ip) return -1;
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock == -1){
@@ -80,10 +90,17 @@ int mqtt3_socket_connect(const char *ip, uint16_t port)
 	return sock;
 }
 
+/* Internal function.
+ * Create a socket and set it to listen based on the sockaddr details in addr.
+ * Returns -1 on failure (addr is NULL, socket creation/listening error)
+ * Returns sock number on success.
+ */
 int _mqtt3_socket_listen(struct sockaddr *addr)
 {
 	int sock;
 	int opt = 1;
+
+	if(!addr) return -1;
 
 	mqtt3_log_printf(MQTT3_LOG_INFO, "Opening listen socket on port %d.", ntohs(((struct sockaddr_in *)addr)->sin_port));
 
@@ -110,6 +127,10 @@ int _mqtt3_socket_listen(struct sockaddr *addr)
 	return sock;
 }
 
+/* Creates a socket and listens on port 'port'.
+ * Returns -1 on failure
+ * Returns sock number on success.
+ */
 int mqtt3_socket_listen(uint16_t port)
 {
 	struct sockaddr_in addr;
@@ -121,6 +142,11 @@ int mqtt3_socket_listen(uint16_t port)
 	return _mqtt3_socket_listen((struct sockaddr *)&addr);
 }
 
+/* Creates a socket and listens on port 'port' on address associated with
+ * network interface 'iface'.
+ * Returns -1 on failure (iface is NULL, socket creation/listen error)
+ * Returns sock number on success.
+ */
 int mqtt3_socket_listen_if(const char *iface, uint16_t port)
 {
 	struct ifaddrs *ifa;
