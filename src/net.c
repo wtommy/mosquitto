@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <ifaddrs.h>
 #include <netinet/in.h>
 #include <stdint.h>
@@ -94,6 +95,11 @@ int _mqtt3_socket_listen(struct sockaddr *addr)
 	}
 
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+	/* Set non-blocking */
+	opt = fcntl(sock, F_GETFL, 0);
+	if(opt < 0) return -1;
+	if(fcntl(sock, F_SETFL, opt | O_NONBLOCK) < 0) return -1;
 
 	if(bind(sock, addr, sizeof(struct sockaddr_in)) == -1){
 		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", strerror(errno));
