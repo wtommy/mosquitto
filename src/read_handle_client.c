@@ -41,12 +41,10 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int mqtt3_handle_connack(mqtt3_context *context)
 {
-	uint32_t remaining_length;
 	uint8_t byte;
 	uint8_t rc;
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received CONNACK");
-	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_byte(context, &byte)) return 1; // Reserved byte, not used
 	if(mqtt3_read_byte(context, &rc)) return 1;
 	switch(rc){
@@ -67,20 +65,15 @@ int mqtt3_handle_connack(mqtt3_context *context)
 
 int mqtt3_handle_suback(mqtt3_context *context)
 {
-	uint32_t remaining_length;
 	uint16_t mid;
 	uint8_t granted_qos;
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received SUBACK");
-	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
-
 	if(mqtt3_read_uint16(context, &mid)) return 1;
-	remaining_length -= 2;
 
-	while(remaining_length){
+	while(context->packet.pos < context->packet.remaining_length){
 		/* FIXME - Need to do something with this */
 		if(mqtt3_read_byte(context, &granted_qos)) return 1;
-		remaining_length--;
 	}
 
 	return 0;
@@ -88,11 +81,9 @@ int mqtt3_handle_suback(mqtt3_context *context)
 
 int mqtt3_handle_unsuback(mqtt3_context *context)
 {
-	uint32_t remaining_length;
 	uint16_t mid;
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received UNSUBACK");
-	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 
 	return 0;
