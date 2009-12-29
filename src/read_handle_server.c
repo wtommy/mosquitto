@@ -193,25 +193,21 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 
 int mqtt3_handle_unsubscribe(mqtt3_context *context)
 {
-	uint32_t remaining_length;
 	uint16_t mid;
 	char *sub;
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received UNSUBSCRIBE");
 	if(!context) return 1;
 
-	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
-	remaining_length -= 2;
 
-	while(remaining_length){
+	while(context->packet.pos < context->packet.remaining_length){
 		sub = NULL;
 		if(mqtt3_read_string(context, &sub)){
 			if(sub) mqtt3_free(sub);
 			return 1;
 		}
 
-		remaining_length -= strlen(sub) + 2;
 		if(sub){
 			mqtt3_db_sub_delete(context->id, sub);
 			mqtt3_free(sub);
