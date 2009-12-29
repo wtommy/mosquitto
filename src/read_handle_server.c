@@ -106,10 +106,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 
 int mqtt3_handle_disconnect(mqtt3_context *context)
 {
-	uint32_t remaining_length;
-
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received DISCONNECT");
-	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	return mqtt3_socket_close(context);
 }
 
