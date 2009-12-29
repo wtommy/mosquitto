@@ -172,6 +172,9 @@ int mqtt3_net_read(mqtt3_context *context)
 	 * Finally, free the memory and reset everything to starting conditions.
 	 */
 	if(!context->packet.command){
+		/* FIXME - check command and fill in expected length if we know it.
+		 * This means we can check the client is sending valid data some times.
+		 */
 		read_length = read(context->sock, &byte, 1);
 		if(read_length == 1){
 			context->packet.command = byte;
