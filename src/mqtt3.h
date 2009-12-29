@@ -79,6 +79,16 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MQTT3_LOG_ERR 0x08
 #define MQTT3_LOG_DEBUG 0x10
 
+struct _mqtt3_packet{
+	uint8_t command;
+	uint8_t have_remaining;
+	uint32_t remaining_mult;
+	uint32_t remaining_length;
+	uint32_t to_read;
+	uint32_t pos;
+	uint8_t *payload;
+};
+
 typedef struct _mqtt3_context{
 	int sock;
 	time_t last_msg_in;
@@ -86,6 +96,7 @@ typedef struct _mqtt3_context{
 	uint16_t keepalive;
 	bool clean_start;
 	char *id;
+	struct _mqtt3_packet packet;
 } mqtt3_context;
 
 typedef enum {
@@ -254,6 +265,7 @@ void mqtt3_db_sys_update(int interval, time_t start_time);
  * ============================================================ */
 mqtt3_context *mqtt3_context_init(int sock);
 void mqtt3_context_cleanup(mqtt3_context *context);
+void mqtt3_context_packet_cleanup(mqtt3_context *context);
 
 /* ============================================================
  * Memory functions

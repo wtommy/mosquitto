@@ -45,6 +45,14 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context->clean_start = true;
 	context->id = NULL;
 
+	context->packet.command = 0;
+	context->packet.have_remaining = 0;
+	context->packet.remaining_mult = 1;
+	context->packet.remaining_length = 0;
+	context->packet.payload = NULL;
+	context->packet.to_read = 0;
+	context->packet.pos = 0;
+
 	return context;
 }
 
@@ -61,7 +69,22 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 		mqtt3_db_client_delete(context);
 	}
 	if(context->id) mqtt3_free(context->id);
+	mqtt3_context_packet_cleanup(context);
 	mqtt3_free(context);
 }
 
+void mqtt3_context_packet_cleanup(mqtt3_context *context)
+{
+	if(!context) return;
+
+	/* Free data and reset values */
+	context->packet.command = 0;
+	context->packet.have_remaining = 0;
+	context->packet.remaining_mult = 1;
+	context->packet.remaining_length = 0;
+	if(context->packet.payload) mqtt3_free(context->packet.payload);
+	context->packet.payload = NULL;
+	context->packet.to_read = 0;
+	context->packet.pos = 0;
+}
 
