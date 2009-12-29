@@ -88,11 +88,9 @@ int mqtt3_packet_handle(mqtt3_context *context)
 
 int mqtt3_handle_puback(mqtt3_context *context)
 {
-	uint32_t remaining_length;
 	uint16_t mid;
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBACK");
-	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 
 	if(mid){
@@ -103,27 +101,21 @@ int mqtt3_handle_puback(mqtt3_context *context)
 
 int mqtt3_handle_pingreq(mqtt3_context *context)
 {
-	uint32_t remaining_length;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGREQ");
-	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	return mqtt3_raw_pingresp(context);
 }
 
 int mqtt3_handle_pingresp(mqtt3_context *context)
 {
-	uint32_t remaining_length;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGRESP");
-	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	return 0;
 }
 
 int mqtt3_handle_pubcomp(mqtt3_context *context)
 {
-	uint32_t remaining_length;
 	uint16_t mid;
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBCOMP");
-	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 
 	if(mid){
@@ -136,7 +128,6 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 {
 	char *sub;
 	uint8_t *payload;
-	uint32_t remaining_length;
 	uint32_t payloadlen;
 	uint8_t dup, qos, retain;
 	uint16_t mid;
@@ -147,20 +138,16 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 	qos = (header & 0x06)>>1;
 	retain = (header & 0x01);
 
-	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
-
 	if(mqtt3_read_string(context, &sub)) return 1;
-	remaining_length -= strlen((char *)sub) + 2;
 
 	if(qos > 0){
 		if(mqtt3_read_uint16(context, &mid)){
 			mqtt3_free(sub);
 			return 1;
 		}
-		remaining_length -= 2;
 	}
 
-	payloadlen = remaining_length;
+	payloadlen = context->packet.remaining_length - context->packet.pos;
 	payload = mqtt3_calloc(payloadlen+1, sizeof(uint8_t));
 	if(mqtt3_read_bytes(context, payload, payloadlen)){
 		mqtt3_free(sub);
@@ -191,11 +178,9 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 
 int mqtt3_handle_pubrec(mqtt3_context *context)
 {
-	uint32_t remaining_length;
 	uint16_t mid;
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREC");
-	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 
 	if(mqtt3_db_message_update(context->id, mid, md_out, ms_wait_pubcomp)) return 1;
@@ -206,11 +191,9 @@ int mqtt3_handle_pubrec(mqtt3_context *context)
 
 int mqtt3_handle_pubrel(mqtt3_context *context)
 {
-	uint32_t remaining_length;
 	uint16_t mid;
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREL");
-	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 
 	if(mqtt3_db_message_release(context->id, mid, md_in)) return 1;
