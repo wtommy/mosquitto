@@ -114,7 +114,6 @@ int mqtt3_handle_disconnect(mqtt3_context *context)
 int mqtt3_handle_subscribe(mqtt3_context *context)
 {
 	int rc = 0;
-	uint32_t remaining_length;
 	uint16_t mid;
 	char *sub;
 	uint8_t qos;
@@ -130,20 +129,16 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 	/* FIXME - plenty of potential for memory leaks here */
 	if(!context) return 1;
 
-	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_uint16(context, &mid)) return 1;
-	remaining_length -= 2;
 
-	while(remaining_length){
+	while(context->packet.pos < context->packet.remaining_length){
 		sub = NULL;
 		if(mqtt3_read_string(context, &sub)){
 			if(sub) mqtt3_free(sub);
 			return 1;
 		}
 
-		remaining_length -= strlen(sub) + 2;
 		if(mqtt3_read_byte(context, &qos)) return 1;
-		remaining_length -= 1;
 		if(sub){
 			mqtt3_db_sub_insert(context->id, sub, qos);
 	
