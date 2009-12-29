@@ -153,8 +153,10 @@ int mqtt3_socket_listen_if(const char *iface, uint16_t port)
 
 int mqtt3_net_read(mqtt3_context *context)
 {
-	uint8_t *buf = NULL;
+	uint8_t byte;
+	uint32_t read_length;
 
+	if(!context || context->sock == -1) return 1;
 	/* This gets called if pselect() indicates that there is network data
 	 * available - ie. at least one byte.  What we do depends on what data we
 	 * already have.
@@ -169,6 +171,67 @@ int mqtt3_net_read(mqtt3_context *context)
 	 * After all data is read, send to mqtt3_handle_packet() to deal with.
 	 * Finally, free the memory and reset everything to starting conditions.
 	 */
+	if(!context->packet.command){
+		read_length = read(context->sock, &byte, 1);
+		if(read_length == 1){
+			context->packet.command = byte;
+		}else{
+			if(read_length == 0) return 1; /* EOF */
+			if(errno == EAGAIN || errno == EWOULDBLOCK){
+				return 0;
+			}else{
+				return 1;
+			}
+		}
+	}
+	if(!context->packet.have_remaining){
+		/* Read remaining
+		 * Algorithm for decoding taken from pseudo code at
+		 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
+		 */
+		do{
+			read_length = read(context->sock, &byte, 1);
+			if(read_length == 1){
+				context->packet.remaining_length += (byte & 127) * context->packet.remaining_mult;
+				context->packet.remaining_mult *= 128;
+			}else{
+				if(read_length == 0) return 1; /* EOF */
+				if(errno == EAGAIN || errno == EWOULDBLOCK){
+					return 0;
+				}else{
+					return 1;
+				}
+			}
+		}while((byte & 128) != 0);
+
+		if(context->packet.remaining_length > 0){
+			context->packet.payload = mqtt3_malloc(context->packet.remaining_length*sizeof(uint8_t));
+			if(!context->packet.payload) return 1;
+			context->packet.to_read = context->packet.remaining_length;
+		}
+		context->packet.have_remaining = 1;
+	}
+	if(context->packet.to_read>0){
+		read_length = read(context->sock, &(context->packet.payload[context->packet.pos]), context->packet.to_read);
+		if(read_length > 0){
+			context->packet.to_read -= read_length;
+			context->packet.pos += read_length;
+			if(context->packet.to_read == 0){
+				/* All data for this packet is read. */
+
+				/* Free data and reset values */
+				mqtt3_context_packet_cleanup(context);
+			}
+		}else{
+			if(errno == EAGAIN || errno == EWOULDBLOCK){
+				return 0;
+			}else{
+				return 1;
+			}
+		}
+	}
+	context->last_msg_in = time(NULL);
+	return 0;
 }
 
 int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte)
