@@ -350,8 +350,10 @@ int mqtt3_read_uint16(mqtt3_context *context, uint16_t *word)
 {
 	uint8_t msb, lsb;
 
-	if(mqtt3_read_byte(context, &msb)) return 1;
-	if(mqtt3_read_byte(context, &lsb)) return 1;
+	msb = context->packet.payload[context->packet.pos];
+	context->packet.pos++;
+	lsb = context->packet.payload[context->packet.pos];
+	context->packet.pos++;
 
 	*word = (msb<<8) + lsb;
 
