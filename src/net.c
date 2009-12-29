@@ -316,17 +316,19 @@ int mqtt3_read_string(mqtt3_context *context, char **str)
 	uint8_t msb, lsb;
 	uint16_t len;
 
-	if(mqtt3_read_byte(context, &msb)) return 1;
-	if(mqtt3_read_byte(context, &lsb)) return 1;
+	msb = context->packet.payload[context->packet.pos];
+	context->packet.pos++;
+	lsb = context->packet.payload[context->packet.pos];
+	context->packet.pos++;
 
 	len = (msb<<8) + lsb;
 
 	*str = mqtt3_calloc(len+1, sizeof(char));
 	if(*str){
-		if(mqtt3_read_bytes(context, (uint8_t *)*str, len)){
-			mqtt3_free(*str);
-			return 1;
-		}
+		memcpy(*str, &(context->packet.payload[context->packet.pos]), len);
+		context->packet.pos += len;
+	}else{
+		return 1;
 	}
 
 	return 0;
