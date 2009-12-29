@@ -200,6 +200,7 @@ int mqtt3_write_uint16(mqtt3_context *context, uint16_t word);
 /* ============================================================
  * Read handling functions
  * ============================================================ */
+int mqtt3_packet_handle(mqtt3_context *context);
 int mqtt3_handle_connack(mqtt3_context *context);
 int mqtt3_handle_connect(mqtt3_context *context);
 int mqtt3_handle_disconnect(mqtt3_context *context);
