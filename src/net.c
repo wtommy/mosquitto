@@ -241,12 +241,11 @@ int mqtt3_net_read(mqtt3_context *context)
 
 int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte)
 {
-	if(read(context->sock, byte, 1) == 1){
-		context->last_msg_in = time(NULL);
-		return 0;
-	}else{
-		return 1;
-	}
+	/* FIXME - error checking. */
+	*byte = context->packet.payload[context->packet.pos];
+	context->packet.pos++;
+
+	return 0;
 }
 
 int mqtt3_write_byte(mqtt3_context *context, uint8_t byte)
@@ -260,12 +259,11 @@ int mqtt3_write_byte(mqtt3_context *context, uint8_t byte)
 
 int mqtt3_read_bytes(mqtt3_context *context, uint8_t *bytes, uint32_t count)
 {
-	if(read(context->sock, bytes, count) == count){
-		context->last_msg_in = time(NULL);
-		return 0;
-	}else{
-		return 1;
-	}
+	/* FIXME - error checking. */
+	memcpy(bytes, &(context->packet.payload[context->packet.pos]), count);
+	context->packet.pos += count;
+
+	return 0;
 }
 
 int mqtt3_write_bytes(mqtt3_context *context, const uint8_t *bytes, uint32_t count)
