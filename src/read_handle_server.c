@@ -41,7 +41,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int mqtt3_handle_connect(mqtt3_context *context)
 {
-	uint32_t remaining_length;
 	char *protocol_name;
 	uint8_t protocol_version;
 	uint8_t connect_flags;
@@ -50,7 +49,6 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	uint8_t will, will_retain, will_qos, clean_start;
 	
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received CONNECT");
-	if(mqtt3_read_remaining_length(context, &remaining_length)) return 1;
 	if(mqtt3_read_string(context, &protocol_name)) return 1;
 	if(!protocol_name){
 		mqtt3_context_cleanup(context);
