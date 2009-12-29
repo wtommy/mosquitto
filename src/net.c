@@ -218,6 +218,7 @@ int mqtt3_net_read(mqtt3_context *context)
 			context->packet.pos += read_length;
 			if(context->packet.to_read == 0){
 				/* All data for this packet is read. */
+				mqtt3_packet_handle(context);
 
 				/* Free data and reset values */
 				mqtt3_context_packet_cleanup(context);
