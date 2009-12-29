@@ -275,24 +275,6 @@ int mqtt3_write_bytes(mqtt3_context *context, const uint8_t *bytes, uint32_t cou
 	}
 }
 
-int mqtt3_read_remaining_length(mqtt3_context *context, uint32_t *remaining)
-{
-	uint32_t multiplier = 1;
-	uint8_t digit;
-
-	/* Algorithm for decoding taken from pseudo code at
-	 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
-	 */
-	(*remaining) = 0;
-	do{
-		if(mqtt3_read_byte(context, &digit)) return 1;
-		(*remaining) += (digit & 127) * multiplier;
-		multiplier *= 128;
-	}while((digit & 128) != 0);
-
-	return 0;
-}
-
 int mqtt3_write_remaining_length(mqtt3_context *context, uint32_t length)
 {
 	uint8_t digit;
