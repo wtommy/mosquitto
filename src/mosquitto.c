@@ -97,54 +97,6 @@ void handle_sigint(int signal)
 	run = 0;
 }
 
-int handle_read(mqtt3_context *context)
-{
-	uint8_t byte;
-
-	if(mqtt3_read_byte(context, &byte)) return 1;
-	switch(byte&0xF0){
-		case CONNECT:
-			if(mqtt3_handle_connect(context)) return 1;
-			break;
-		case DISCONNECT:
-			if(mqtt3_handle_disconnect(context)) return 1;
-			break;
-		case PINGREQ:
-			if(mqtt3_handle_pingreq(context)) return 1;
-			break;
-		case PINGRESP:
-			if(mqtt3_handle_pingresp(context)) return 1;
-			break;
-		case PUBACK:
-			if(mqtt3_handle_puback(context)) return 1;
-			break;
-		case PUBCOMP:
-			if(mqtt3_handle_pubcomp(context)) return 1;
-			break;
-		case PUBLISH:
-			if(mqtt3_handle_publish(context, byte)) return 1;
-			break;
-		case PUBREC:
-			if(mqtt3_handle_pubrec(context)) return 1;
-			break;
-		case PUBREL:
-			if(mqtt3_handle_pubrel(context)) return 1;
-			break;
-		case SUBSCRIBE:
-			if(mqtt3_handle_subscribe(context)) return 1;
-			break;
-		case UNSUBSCRIBE:
-			if(mqtt3_handle_unsubscribe(context)) return 1;
-			break;
-		default:
-			/* If we don't recognise the command, return an error straight away. */
-			return 1;
-			break;
-	}
-
-	return 0;
-}
-
 int main(int argc, char *argv[])
 {
 	struct timespec timeout;
@@ -313,7 +265,7 @@ int main(int argc, char *argv[])
 					}
 				}
 				if(contexts[i] && contexts[i]->sock != -1 && FD_ISSET(contexts[i]->sock, &readfds)){
-					if(handle_read(contexts[i])){
+					if(mqtt3_net_read(contexts[i])){
 						/* Read error or other that means we should disconnect */
 						mqtt3_db_client_will_queue(contexts[i]);
 						mqtt3_context_cleanup(contexts[i]);
