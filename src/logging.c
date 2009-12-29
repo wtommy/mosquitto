@@ -111,9 +111,11 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 
 		if(log_destinations & MQTT3_LOG_STDOUT){
 			fprintf(stdout, "%s\n", s);
+			fflush(stdout);
 		}
 		if(log_destinations & MQTT3_LOG_STDERR){
 			fprintf(stderr, "%s\n", s);
+			fflush(stderr);
 		}
 		if(log_destinations & MQTT3_LOG_SYSLOG){
 			syslog(syslog_priority, "%s", s);
