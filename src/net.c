@@ -41,6 +41,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mqtt3.h>
 
+static uint64_t bytes_read = 0;
+static uint64_t bytes_written = 0;
+
 int _mqtt3_socket_listen(struct sockaddr *addr);
 
 /* Close a socket associated with a context and set it to -1.
@@ -203,6 +206,7 @@ int mqtt3_net_read(mqtt3_context *context)
 		 */
 		read_length = read(context->sock, &byte, 1);
 		if(read_length == 1){
+			bytes_read++;
 			context->packet.command = byte;
 		}else{
 			if(read_length == 0) return 1; /* EOF */
@@ -221,6 +225,7 @@ int mqtt3_net_read(mqtt3_context *context)
 		do{
 			read_length = read(context->sock, &byte, 1);
 			if(read_length == 1){
+				bytes_read++;
 				context->packet.remaining_length += (byte & 127) * context->packet.remaining_mult;
 				context->packet.remaining_mult *= 128;
 			}else{
@@ -243,6 +248,7 @@ int mqtt3_net_read(mqtt3_context *context)
 	if(context->packet.to_read>0){
 		read_length = read(context->sock, &(context->packet.payload[context->packet.pos]), context->packet.to_read);
 		if(read_length > 0){
+			bytes_read += read_length;
 			context->packet.to_read -= read_length;
 			context->packet.pos += read_length;
 			if(context->packet.to_read == 0){
@@ -277,6 +283,7 @@ int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte)
 int mqtt3_write_byte(mqtt3_context *context, uint8_t byte)
 {
 	if(write(context->sock, &byte, 1) == 1){
+		bytes_written++;
 		return 0;
 	}else{
 		return 1;
@@ -295,6 +302,7 @@ int mqtt3_read_bytes(mqtt3_context *context, uint8_t *bytes, uint32_t count)
 int mqtt3_write_bytes(mqtt3_context *context, const uint8_t *bytes, uint32_t count)
 {
 	if(write(context->sock, bytes, count) == count){
+		bytes_written += count;
 		return 0;
 	}else{
 		return 1;
@@ -372,5 +380,15 @@ int mqtt3_write_uint16(mqtt3_context *context, uint16_t word)
 	if(mqtt3_write_byte(context, MQTT_LSB(word))) return 1;
 
 	return 0;
+}
+
+uint64_t mqtt3_total_bytes_read(void)
+{
+	return bytes_read;
+}
+
+uint64_t mqtt3_total_bytes_written(void)
+{
+	return bytes_written;
 }
 
