@@ -382,12 +382,12 @@ int mqtt3_write_uint16(mqtt3_context *context, uint16_t word)
 	return 0;
 }
 
-uint64_t mqtt3_net_total_bytes_received(void)
+uint64_t mqtt3_net_bytes_total_received(void)
 {
 	return bytes_received;
 }
 
-uint64_t mqtt3_net_total_bytes_sent(void)
+uint64_t mqtt3_net_bytes_total_sent(void)
 {
 	return bytes_sent;
 }
