@@ -132,6 +132,18 @@
 					<para>The total number of messages received since the broker started. Dynamic. (not yet implemented)</para>
 				</listitem>
 			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/broker/bytes/sent</option></term>
+				<listitem>
+					<para>The total number of bytes sent since the broker started.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/broker/bytes/received</option></term>
+				<listitem>
+					<para>The total number of bytes received since the broker started.</para>
+				</listitem>
+			</varlistentry>
 		</variablelist>
 	</refsect1>
 
