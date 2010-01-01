@@ -286,8 +286,8 @@ int main(int argc, char *argv[])
 						close(new_sock);
 					}else{
 #endif
-						mqtt3_log_printf(MQTT3_LOG_NOTICE, "New client connected on sock %d.", new_sock);
 						new_context = mqtt3_context_init(new_sock);
+						mqtt3_log_printf(MQTT3_LOG_NOTICE, "New client connected from %s.", new_context->address);
 						for(i=0; i<context_count; i++){
 							if(contexts[i] == NULL){
 								contexts[i] = new_context;
