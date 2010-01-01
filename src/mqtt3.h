@@ -96,6 +96,7 @@ typedef struct _mqtt3_context{
 	uint16_t keepalive;
 	bool clean_start;
 	char *id;
+	char *address;
 	struct _mqtt3_packet packet;
 } mqtt3_context;
 

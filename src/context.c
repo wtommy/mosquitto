@@ -27,13 +27,18 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <arpa/inet.h>
 #include <stdlib.h>
+#include <sys/socket.h>
 
 #include <mqtt3.h>
 
 mqtt3_context *mqtt3_context_init(int sock)
 {
 	mqtt3_context *context;
+	struct sockaddr addr;
+	socklen_t addrlen;
+	char address[1024];
 
 	context = mqtt3_malloc(sizeof(mqtt3_context));
 	if(!context) return NULL;
@@ -53,6 +58,14 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context->packet.to_read = 0;
 	context->packet.pos = 0;
 
+	addrlen = sizeof(addr);
+	context->address = NULL;
+	if(!getpeername(sock, &addr, &addrlen)){
+		if(inet_ntop(AF_INET, &((struct sockaddr_in *)&addr)->sin_addr.s_addr, address, 1024)){
+			context->address = mqtt3_strdup(address);
+		}
+	}
+	
 	return context;
 }
 
