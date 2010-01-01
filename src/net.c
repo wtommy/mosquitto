@@ -41,8 +41,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mqtt3.h>
 
-static uint64_t bytes_read = 0;
-static uint64_t bytes_written = 0;
+static uint64_t bytes_received = 0;
+static uint64_t bytes_sent = 0;
 
 int _mqtt3_socket_listen(struct sockaddr *addr);
 
@@ -206,7 +206,7 @@ int mqtt3_net_read(mqtt3_context *context)
 		 */
 		read_length = read(context->sock, &byte, 1);
 		if(read_length == 1){
-			bytes_read++;
+			bytes_received++;
 			context->packet.command = byte;
 		}else{
 			if(read_length == 0) return 1; /* EOF */
@@ -225,7 +225,7 @@ int mqtt3_net_read(mqtt3_context *context)
 		do{
 			read_length = read(context->sock, &byte, 1);
 			if(read_length == 1){
-				bytes_read++;
+				bytes_received++;
 				context->packet.remaining_length += (byte & 127) * context->packet.remaining_mult;
 				context->packet.remaining_mult *= 128;
 			}else{
@@ -248,7 +248,7 @@ int mqtt3_net_read(mqtt3_context *context)
 	if(context->packet.to_read>0){
 		read_length = read(context->sock, &(context->packet.payload[context->packet.pos]), context->packet.to_read);
 		if(read_length > 0){
-			bytes_read += read_length;
+			bytes_received += read_length;
 			context->packet.to_read -= read_length;
 			context->packet.pos += read_length;
 			if(context->packet.to_read == 0){
@@ -283,7 +283,7 @@ int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte)
 int mqtt3_write_byte(mqtt3_context *context, uint8_t byte)
 {
 	if(write(context->sock, &byte, 1) == 1){
-		bytes_written++;
+		bytes_sent++;
 		return 0;
 	}else{
 		return 1;
@@ -302,7 +302,7 @@ int mqtt3_read_bytes(mqtt3_context *context, uint8_t *bytes, uint32_t count)
 int mqtt3_write_bytes(mqtt3_context *context, const uint8_t *bytes, uint32_t count)
 {
 	if(write(context->sock, bytes, count) == count){
-		bytes_written += count;
+		bytes_sent += count;
 		return 0;
 	}else{
 		return 1;
@@ -382,13 +382,13 @@ int mqtt3_write_uint16(mqtt3_context *context, uint16_t word)
 	return 0;
 }
 
-uint64_t mqtt3_total_bytes_read(void)
+uint64_t mqtt3_net_total_bytes_received(void)
 {
-	return bytes_read;
+	return bytes_received;
 }
 
-uint64_t mqtt3_total_bytes_written(void)
+uint64_t mqtt3_net_total_bytes_sent(void)
 {
-	return bytes_written;
+	return bytes_sent;
 }
 
