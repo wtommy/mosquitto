@@ -1,6 +1,6 @@
 include ../config.mk
 
-CFLAGS_FINAL=${CFLAGS} -DVERSION=\"${VERSION}\" -DBUILDDATE=\"${BUILDDATE}\"
+CFLAGS_FINAL=${CFLAGS} -DVERSION="\"${VERSION}\"" -DTIMESTAMP="\"${TIMESTAMP}\""
 
 .PHONY: all install uninstall clean reallyclean
 

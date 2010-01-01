@@ -179,10 +179,10 @@ int main(int argc, char *argv[])
 	/* Initialise logging only after initialising the database in case we're
 	 * logging to topics */
 	mqtt3_log_init(config.log_type, config.log_dest);
-	mqtt3_log_printf(MQTT3_LOG_INFO, "mosquitto %s %s starting", VERSION, BUILDDATE);
+	mqtt3_log_printf(MQTT3_LOG_INFO, "mosquitto version %s (build date %s) starting", VERSION, TIMESTAMP);
 
 	/* Set static $SYS messages */
-	snprintf(buf, 1024, "mosquitto version %s (build date %s)", VERSION, BUILDDATE);
+	snprintf(buf, 1024, "mosquitto version %s (build date %s)", VERSION, TIMESTAMP);
 	mqtt3_db_messages_queue("$SYS/broker/version", 2, strlen(buf), (uint8_t *)buf, 1);
 
 	listensock = mqtt3_malloc(sizeof(int)*config.iface_count);
@@ -310,7 +310,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	mqtt3_log_printf(MQTT3_LOG_INFO, "mosquitto terminating", VERSION, BUILDDATE);
+	mqtt3_log_printf(MQTT3_LOG_INFO, "mosquitto version %s terminating", VERSION);
 
 	mqtt3_log_close();
 
