@@ -196,8 +196,8 @@ int mqtt3_write_string(mqtt3_context *context, const char *str, uint16_t length)
 int mqtt3_write_remaining_length(mqtt3_context *context, uint32_t length);
 int mqtt3_write_uint16(mqtt3_context *context, uint16_t word);
 
-uint64_t mqtt3_total_bytes_read(void);
-uint64_t mqtt3_total_bytes_written(void);
+uint64_t mqtt3_net_total_bytes_received(void);
+uint64_t mqtt3_net_total_bytes_sent(void);
 
 /* ============================================================
  * Read handling functions
