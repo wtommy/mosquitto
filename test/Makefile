@@ -1,10 +1,10 @@
 CC=cc
-CFLAGS=-I../src -Wall -ggdb -DDEBUG
+CFLAGS=-I../src -I.. -Wall -ggdb -DDEBUG
 LDFLAGS=-lsqlite3
 
 .PHONY: all clean
 
-all : random_client test_client
+all : packet_client random_client test_client
 
 test_client : test_client.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o read_handle.o read_handle_client.o util.o
 	${CC} $(LDFLAGS) $^ -o $@
@@ -12,7 +12,13 @@ test_client : test_client.o database.o logging.o memory.o net.o raw_send.o raw_s
 random_client : random_client.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o read_handle.o read_handle_client.o util.o
 	${CC} $(LDFLAGS) $^ -o $@
 
+packet_client : packet_client.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o read_handle.o read_handle_client.o util.o
+	${CC} $(LDFLAGS) $^ -o $@
+
 random_client.o : random_client.c ../src/mqtt3.h
+	${CC} $(CFLAGS) -c $< -o $@
+
+packet_client.o : packet_client.c ../src/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 test_client.o : test_client.c ../src/mqtt3.h
