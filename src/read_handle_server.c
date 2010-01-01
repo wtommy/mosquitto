@@ -48,7 +48,6 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	char *will_topic = NULL, *will_message = NULL;
 	uint8_t will, will_retain, will_qos, clean_start;
 	
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received CONNECT");
 	if(mqtt3_read_string(context, &protocol_name)) return 1;
 	if(!protocol_name){
 		mqtt3_context_cleanup(context);
@@ -91,6 +90,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 		mqtt3_free(context->id);
 	}
 
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
 	context->id = client_id;
 	context->clean_start = clean_start;
 
