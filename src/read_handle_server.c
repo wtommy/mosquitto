@@ -104,7 +104,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 
 int mqtt3_handle_disconnect(mqtt3_context *context)
 {
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received DISCONNECT");
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received DISCONNECT from %s", context->id);
 	return mqtt3_socket_close(context);
 }
 
@@ -123,7 +123,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 	uint8_t *retain_payload = NULL;
 	uint32_t retain_payloadlen;
 
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received SUBSCRIBE");
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received SUBSCRIBE from %s", context->id);
 	/* FIXME - plenty of potential for memory leaks here */
 	if(!context) return 1;
 
@@ -173,7 +173,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 		payloadlen++;
 	}
 
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending SUBACK to %d", context->sock);
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending SUBACK to %s", context->id);
 	if(mqtt3_write_byte(context, SUBACK)) return 1;
 	if(mqtt3_write_remaining_length(context, payloadlen+2)) return 1;
 	if(mqtt3_write_uint16(context, mid)) return 1;
@@ -189,7 +189,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 	uint16_t mid;
 	char *sub;
 
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received UNSUBSCRIBE");
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received UNSUBSCRIBE from %s", context->id);
 	if(!context) return 1;
 
 	if(mqtt3_read_uint16(context, &mid)) return 1;

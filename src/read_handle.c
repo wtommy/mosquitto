@@ -90,8 +90,8 @@ int mqtt3_handle_puback(mqtt3_context *context)
 {
 	uint16_t mid;
 
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBACK");
 	if(mqtt3_read_uint16(context, &mid)) return 1;
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBACK from %s (Mid: %d)", context->id, mid);
 
 	if(mid){
 		if(mqtt3_db_message_delete(context->id, mid, md_out)) return 1;
@@ -101,13 +101,13 @@ int mqtt3_handle_puback(mqtt3_context *context)
 
 int mqtt3_handle_pingreq(mqtt3_context *context)
 {
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGREQ");
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGREQ from %s", context->id);
 	return mqtt3_raw_pingresp(context);
 }
 
 int mqtt3_handle_pingresp(mqtt3_context *context)
 {
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGRESP");
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGRESP from %s", context->id);
 	return 0;
 }
 
@@ -115,8 +115,8 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 {
 	uint16_t mid;
 
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBCOMP");
 	if(mqtt3_read_uint16(context, &mid)) return 1;
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBCOMP from %s (Mid: %d)", context->id, mid);
 
 	if(mid){
 		if(mqtt3_db_message_delete(context->id, mid, md_out)) return 1;
@@ -133,7 +133,7 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 	uint16_t mid;
 	int rc = 0;
 
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBLISH");
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBLISH from %s", context->id);
 	dup = (header & 0x08)>>3;
 	qos = (header & 0x06)>>1;
 	retain = (header & 0x01);
@@ -180,8 +180,8 @@ int mqtt3_handle_pubrec(mqtt3_context *context)
 {
 	uint16_t mid;
 
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREC");
 	if(mqtt3_read_uint16(context, &mid)) return 1;
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREC from %s (Mid: %d)", context->id, mid);
 
 	if(mqtt3_db_message_update(context->id, mid, md_out, ms_wait_pubcomp)) return 1;
 	if(mqtt3_raw_pubrel(context, mid)) return 1;
@@ -193,8 +193,8 @@ int mqtt3_handle_pubrel(mqtt3_context *context)
 {
 	uint16_t mid;
 
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREL");
 	if(mqtt3_read_uint16(context, &mid)) return 1;
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREL from %s (Mid: %d)", context->id, mid);
 
 	if(mqtt3_db_message_release(context->id, mid, md_in)) return 1;
 	if(mqtt3_raw_pubcomp(context, mid)) return 1;
