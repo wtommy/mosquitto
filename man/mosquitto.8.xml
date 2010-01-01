@@ -94,12 +94,12 @@
 
 	<refsect1>
 		<title>Broker Status</title>
-		<para>Clients can find information about the broker by subscribing to topics in the $SYS hierarchy as follows. Topics marked as static are only sent once per client on subscription. Topics marked dynamic are updated every <option>sys_interval</option> seconds.</para>
+		<para>Clients can find information about the broker by subscribing to topics in the $SYS hierarchy as follows. Topics marked as static are only sent once per client on subscription. All other topics are updated every <option>sys_interval</option> seconds.</para>
 		<variablelist>
 			<varlistentry>
 				<term><option>$SYS/broker/heap/current size</option></term>
 				<listitem>
-					<para>The current size of the heap memory in use by mosquitto. Dynamic.</para>
+					<para>The current size of the heap memory in use by mosquitto.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -111,25 +111,25 @@
 			<varlistentry>
 				<term><option>$SYS/broker/uptime</option></term>
 				<listitem>
-					<para>The amount of time in seconds the broker has been online. Dynamic.</para>
+					<para>The amount of time in seconds the broker has been online.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>$SYS/messages/inflight</option></term>
 				<listitem>
-					<para>The number of messages currently in flight. Dynamic.</para>
+					<para>The number of messages currently in flight.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>$SYS/messages/sent</option></term>
 				<listitem>
-					<para>The total number of messages sent since the broker started. Dynamic. (not yet implemented)</para>
+					<para>The total number of messages sent since the broker started. (not yet implemented)</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>$SYS/messages/received</option></term>
 				<listitem>
-					<para>The total number of messages received since the broker started. Dynamic. (not yet implemented)</para>
+					<para>The total number of messages received since the broker started. (not yet implemented)</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
