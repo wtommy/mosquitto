@@ -138,6 +138,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 
 		if(mqtt3_read_byte(context, &qos)) return 1;
 		if(sub){
+			mqtt3_log_printf(MQTT3_LOG_DEBUG, "\t%s (QoS %d)", sub, qos);
 			mqtt3_db_sub_insert(context->id, sub, qos);
 	
 			if(!mqtt3_db_retain_find(sub, &retain_qos, &retain_payloadlen, &retain_payload)){
@@ -202,6 +203,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 		}
 
 		if(sub){
+			mqtt3_log_printf(MQTT3_LOG_DEBUG, "\t%s", sub);
 			mqtt3_db_sub_delete(context->id, sub);
 			mqtt3_free(sub);
 		}
