@@ -1,18 +1,19 @@
 CC=cc
 CFLAGS=-I../src -I.. -Wall -ggdb -DDEBUG
-LDFLAGS=-lsqlite3
+LDFLAGS=-lsqlite3 -nopie
+OBJS=context.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o raw_send_server.o read_handle.o read_handle_client.o read_handle_server.o util.o
 
 .PHONY: all clean
 
 all : packet_client random_client test_client
 
-test_client : test_client.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o read_handle.o read_handle_client.o util.o
+test_client : test_client.o ${OBJS}
 	${CC} $^ -o $@ ${LDFLAGS}
 
-random_client : random_client.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o read_handle.o read_handle_client.o util.o
+random_client : random_client.o ${OBJS}
 	${CC} $^ -o $@ ${LDFLAGS}
 
-packet_client : packet_client.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o read_handle.o read_handle_client.o util.o
+packet_client : packet_client.o ${OBJS}
 	${CC} $(LDFLAGS) $^ -o $@
 
 random_client.o : random_client.c ../src/mqtt3.h
@@ -22,6 +23,9 @@ packet_client.o : packet_client.c ../src/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 test_client.o : test_client.c ../src/mqtt3.h
+	${CC} $(CFLAGS) -c $< -o $@
+
+context.o : ../src/context.c ../src/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 database.o : ../src/database.c ../src/mqtt3.h
@@ -42,10 +46,16 @@ raw_send.o : ../src/raw_send.c ../src/mqtt3.h
 raw_send_client.o : ../src/raw_send_client.c ../src/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
+raw_send_server.o : ../src/raw_send_server.c ../src/mqtt3.h
+	${CC} $(CFLAGS) -c $< -o $@
+
 read_handle.o : ../src/read_handle.c ../src/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 read_handle_client.o : ../src/read_handle_client.c ../src/mqtt3.h
+	${CC} $(CFLAGS) -c $< -o $@
+
+read_handle_server.o : ../src/read_handle_server.c ../src/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 util.o : ../src/util.c ../src/mqtt3.h
