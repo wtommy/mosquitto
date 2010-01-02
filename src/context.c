@@ -81,6 +81,7 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 		mqtt3_db_messages_delete(context->id);
 		mqtt3_db_client_delete(context);
 	}
+	if(context->address) mqtt3_free(context->address);
 	if(context->id) mqtt3_free(context->id);
 	mqtt3_context_packet_cleanup(context);
 	mqtt3_free(context);
