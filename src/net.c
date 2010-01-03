@@ -184,6 +184,7 @@ int mqtt3_net_read(mqtt3_context *context)
 {
 	uint8_t byte;
 	uint32_t read_length;
+	int rc = 0;
 
 	if(!context || context->sock == -1) return 1;
 	/* This gets called if pselect() indicates that there is network data
@@ -260,7 +261,7 @@ int mqtt3_net_read(mqtt3_context *context)
 			if(context->packet.to_read == 0){
 				/* All data for this packet is read. */
 				context->packet.pos = 0;
-				mqtt3_packet_handle(context);
+				rc = mqtt3_packet_handle(context);
 
 				/* Free data and reset values */
 				mqtt3_context_packet_cleanup(context);
@@ -274,7 +275,7 @@ int mqtt3_net_read(mqtt3_context *context)
 		}
 	}
 	context->last_msg_in = time(NULL);
-	return 0;
+	return rc;
 }
 
 int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte)
