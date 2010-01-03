@@ -252,20 +252,12 @@ int mqtt3_net_read(mqtt3_context *context)
 		}
 		context->packet.have_remaining = 1;
 	}
-	if(context->packet.to_read>0){
+	while(context->packet.to_read>0){
 		read_length = read(context->sock, &(context->packet.payload[context->packet.pos]), context->packet.to_read);
 		if(read_length > 0){
 			bytes_received += read_length;
 			context->packet.to_read -= read_length;
 			context->packet.pos += read_length;
-			if(context->packet.to_read == 0){
-				/* All data for this packet is read. */
-				context->packet.pos = 0;
-				rc = mqtt3_packet_handle(context);
-
-				/* Free data and reset values */
-				mqtt3_context_packet_cleanup(context);
-			}
 		}else{
 			if(errno == EAGAIN || errno == EWOULDBLOCK){
 				return 0;
@@ -274,6 +266,14 @@ int mqtt3_net_read(mqtt3_context *context)
 			}
 		}
 	}
+
+	/* All data for this packet is read. */
+	context->packet.pos = 0;
+	rc = mqtt3_packet_handle(context);
+
+	/* Free data and reset values */
+	mqtt3_context_packet_cleanup(context);
+
 	context->last_msg_in = time(NULL);
 	return rc;
 }
