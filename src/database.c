@@ -1449,10 +1449,10 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 		snprintf(buf, 100, "%lu", mqtt3_net_msgs_total_received());
 		mqtt3_db_messages_queue("$SYS/broker/messages/received", 2, strlen(buf), (uint8_t *)buf, 1);
 		
-		snprintf(buf, 100, "%d", mqtt3_net_bytes_total_received());
+		snprintf(buf, 100, "%llu", (unsigned long long)mqtt3_net_bytes_total_received());
 		mqtt3_db_messages_queue("$SYS/broker/bytes/total/received", 2, strlen(buf), (uint8_t *)buf, 1);
 		
-		snprintf(buf, 100, "%d", mqtt3_net_bytes_total_sent());
+		snprintf(buf, 100, "%llu", (unsigned long long)mqtt3_net_bytes_total_sent());
 		mqtt3_db_messages_queue("$SYS/broker/bytes/total/sent", 2, strlen(buf), (uint8_t *)buf, 1);
 		
 		last_update = time(NULL);
