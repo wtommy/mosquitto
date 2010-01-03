@@ -227,6 +227,7 @@ int main(int argc, char *argv[])
 						sockmax = contexts[i]->sock;
 					}
 				}else{
+					mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", contexts[i]->id);
 					/* Client has exceeded keepalive*1.5 */
 					mqtt3_context_cleanup(contexts[i]);
 					contexts[i] = NULL;
