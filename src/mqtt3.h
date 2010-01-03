@@ -203,6 +203,7 @@ int mqtt3_write_uint16(mqtt3_context *context, uint16_t word);
 uint64_t mqtt3_net_bytes_total_received(void);
 uint64_t mqtt3_net_bytes_total_sent(void);
 unsigned long mqtt3_net_msgs_total_received(void);
+unsigned long mqtt3_net_msgs_total_sent(void);
 
 /* ============================================================
  * Read handling functions
