@@ -998,13 +998,13 @@ uint16_t mqtt3_db_mid_generate(const char *client_id)
 	if(!client_id) return 1;
 
 	if(!stmt_select){
-		stmt_select = _mqtt3_db_statement_prepare("SELECT last_mid FROM clients WHERE client_id=?");
+		stmt_select = _mqtt3_db_statement_prepare("SELECT last_mid FROM clients WHERE id=?");
 		if(!stmt_select){
 			return 1;
 		}
 	}
 	if(!stmt_update){
-		stmt_update = _mqtt3_db_statement_prepare("UPDATE clients SET last_mid=? WHERE client_id=?");
+		stmt_update = _mqtt3_db_statement_prepare("UPDATE clients SET last_mid=? WHERE id=?");
 		if(!stmt_update){
 			return 1;
 		}
@@ -1433,7 +1433,6 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 		snprintf(buf, 100, "%d", (int)(now - start_time));
 		mqtt3_db_messages_queue("$SYS/broker/uptime", 2, strlen(buf), (uint8_t *)buf, 1);
 
-	
 		if(!mqtt3_db_message_count(&count)){
 			snprintf(buf, 100, "%d", count);
 			mqtt3_db_messages_queue("$SYS/broker/messages/inflight", 2, strlen(buf), (uint8_t *)buf, 1);
