@@ -228,7 +228,7 @@ int mqtt3_socket_listen_if(const char *iface, uint16_t port)
 int mqtt3_net_read(mqtt3_context *context)
 {
 	uint8_t byte;
-	uint32_t read_length;
+	ssize_t read_length;
 	int rc = 0;
 
 	if(!context || context->sock == -1) return 1;
