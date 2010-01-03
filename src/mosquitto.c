@@ -221,15 +221,15 @@ int main(int argc, char *argv[])
 		now = time(NULL);
 		for(i=0; i<context_count; i++){
 			if(contexts[i] && contexts[i]->sock != -1){
-				FD_SET(contexts[i]->sock, &readfds);
-				if(contexts[i]->sock > sockmax){
-					sockmax = contexts[i]->sock;
-				}
-				if(now - contexts[i]->last_msg_in > contexts[i]->keepalive*3/2){
-					/* Client has exceeded keepalive*1.5 
-					 * Close socket - it is still in the fd set so will get reaped on the 
-					 * pselect error. FIXME - Better to remove it properly. */
-					close(contexts[i]->sock);
+				if(now - contexts[i]->last_msg_in < contexts[i]->keepalive*3/2){
+					FD_SET(contexts[i]->sock, &readfds);
+					if(contexts[i]->sock > sockmax){
+						sockmax = contexts[i]->sock;
+					}
+				}else{
+					/* Client has exceeded keepalive*1.5 */
+					mqtt3_context_cleanup(contexts[i]);
+					contexts[i] = NULL;
 				}
 			}
 		}
