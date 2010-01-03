@@ -235,6 +235,8 @@ int main(int argc, char *argv[])
 		}
 
 		mqtt3_db_message_timeout_check(config.msg_timeout);
+		/* Outgoing check should happen after readfds is populated so that
+		 * timed out clients are already removed. */
 		mqtt3_db_outgoing_check(&writefds, &sockmax);
 
 		timeout.tv_sec = 1;
