@@ -44,6 +44,7 @@ POSSIBILITY OF SUCH DAMAGE.
 static uint64_t bytes_received = 0;
 static uint64_t bytes_sent = 0;
 static unsigned long msgs_received = 0;
+static unsigned long msgs_sent = 0;
 
 int _mqtt3_socket_listen(struct sockaddr *addr);
 
@@ -461,5 +462,10 @@ uint64_t mqtt3_net_bytes_total_sent(void)
 unsigned long mqtt3_net_msgs_total_received(void)
 {
 	return msgs_received;
+}
+
+unsigned long mqtt3_net_msgs_total_sent(void)
+{
+	return msgs_sent;
 }
 
