@@ -52,12 +52,20 @@ int mqtt3_socket_accept(mqtt3_context **contexts, int context_count, int listens
 	int new_sock = -1;
 	mqtt3_context **tmp_contexts = NULL;
 	mqtt3_context *new_context;
+	int opt;
 #ifdef WITH_WRAP
 	struct request_info wrap_req;
 #endif
 
 	new_sock = accept(listensock, NULL, 0);
 	if(new_sock < 0) return -1;
+	/* Set non-blocking */
+	opt = fcntl(new_sock, F_GETFL, 0);
+	if(opt == -1 || fcntl(new_sock, F_SETFL, opt | O_NONBLOCK) == -1){
+		/* If either fcntl fails, don't want to allow this client to connect. */
+		close(new_sock);
+		return -1;
+	}
 #ifdef WITH_WRAP
 	/* Use tcpd / libwrap to determine whether a connection is allowed. */
 	request_init(&wrap_req, RQ_FILE, new_sock, RQ_DAEMON, "mosquitto", 0);
