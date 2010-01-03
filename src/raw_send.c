@@ -38,7 +38,7 @@ int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 	return mqtt3_send_command_with_mid(context, PUBACK, mid);
 }
 
-int mqtt3_raw_publish(mqtt3_context *context, bool dup, uint8_t qos, bool retain, uint16_t mid, const char *sub, uint32_t payloadlen, const uint8_t *payload)
+int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain, uint16_t mid, const char *sub, uint32_t payloadlen, const uint8_t *payload)
 {
 	int packetlen;
 

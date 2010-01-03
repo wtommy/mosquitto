@@ -914,6 +914,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	uint64_t OID;
 	int status;
 	uint16_t mid;
+	int dup;
 	int retain;
 	const char *sub;
 	int qos;
@@ -923,9 +924,9 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	if(!context || !context->id || context->sock == -1) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT OID,status,mid,retain,sub,qos,payloadlen,payload FROM messages "
+		stmt = _mqtt3_db_statement_prepare("SELECT OID,status,mid,dup,retain,sub,qos,payloadlen,payload FROM messages "
 				"WHERE (status=1 OR status=2 OR status=4 OR status=6 OR status=8) "
-				"AND direction=1 AND client_id=?");
+				"AND direction=1 AND client_id=? ORDER BY timestamp");
 		if(!stmt){
 			return 1;
 		}
@@ -936,26 +937,27 @@ int mqtt3_db_message_write(mqtt3_context *context)
 			OID = sqlite3_column_int(stmt, 0);
 			status = sqlite3_column_int(stmt, 1);
 			mid = sqlite3_column_int(stmt, 2);
-			retain = sqlite3_column_int(stmt, 3);
-			sub = (const char *)sqlite3_column_text(stmt, 4);
-			qos = sqlite3_column_int(stmt, 5);
-			payloadlen = sqlite3_column_int(stmt, 6);
-			payload = sqlite3_column_blob(stmt, 7);
+			dup = sqlite3_column_int(stmt, 3);
+			retain = sqlite3_column_int(stmt, 4);
+			sub = (const char *)sqlite3_column_text(stmt, 5);
+			qos = sqlite3_column_int(stmt, 6);
+			payloadlen = sqlite3_column_int(stmt, 7);
+			payload = sqlite3_column_blob(stmt, 8);
 			switch(status){
 				case ms_publish:
-					if(!mqtt3_raw_publish(context, false, qos, retain, mid, sub, payloadlen, payload)){
+					if(!mqtt3_raw_publish(context, dup, qos, retain, mid, sub, payloadlen, payload)){
 						mqtt3_db_message_delete_by_oid(OID);
 					}
 					break;
 
 				case ms_publish_puback:
-					if(!mqtt3_raw_publish(context, false, qos, retain, mid, sub, payloadlen, payload)){
+					if(!mqtt3_raw_publish(context, dup, qos, retain, mid, sub, payloadlen, payload)){
 						mqtt3_db_message_update(context->id, mid, md_out, ms_wait_puback);
 					}
 					break;
 
 				case ms_publish_pubrec:
-					if(!mqtt3_raw_publish(context, false, qos, retain, mid, sub, payloadlen, payload)){
+					if(!mqtt3_raw_publish(context, dup, qos, retain, mid, sub, payloadlen, payload)){
 						mqtt3_db_message_update(context->id, mid, md_out, ms_wait_pubrec);
 					}
 					break;

@@ -172,7 +172,7 @@ int mqtt3_raw_pingreq(mqtt3_context *context);
 int mqtt3_raw_pingresp(mqtt3_context *context);
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid);
 int mqtt3_raw_pubcomp(mqtt3_context *context, uint16_t mid);
-int mqtt3_raw_publish(mqtt3_context *context, bool dup, uint8_t qos, bool retain, uint16_t mid, const char *sub, uint32_t payloadlen, const uint8_t *payload);
+int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain, uint16_t mid, const char *sub, uint32_t payloadlen, const uint8_t *payload);
 int mqtt3_raw_pubrec(mqtt3_context *context, uint16_t mid);
 int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid);
 int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uint8_t topic_qos);
