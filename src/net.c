@@ -279,7 +279,7 @@ int mqtt3_net_read(mqtt3_context *context)
 
 int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte)
 {
-	if(context->packet.pos+1 >= context->packet.remaining_length)
+	if(context->packet.pos+1 > context->packet.remaining_length)
 		return 1;
 
 	*byte = context->packet.payload[context->packet.pos];
@@ -300,7 +300,7 @@ int mqtt3_write_byte(mqtt3_context *context, uint8_t byte)
 
 int mqtt3_read_bytes(mqtt3_context *context, uint8_t *bytes, uint32_t count)
 {
-	if(context->packet.pos+count >= context->packet.remaining_length)
+	if(context->packet.pos+count > context->packet.remaining_length)
 		return 1;
 
 	memcpy(bytes, &(context->packet.payload[context->packet.pos]), count);
@@ -345,7 +345,7 @@ int mqtt3_read_string(mqtt3_context *context, char **str)
 
 	if(mqtt3_read_uint16(context, &len)) return 1;
 
-	if(context->packet.pos+len >= context->packet.remaining_length)
+	if(context->packet.pos+len > context->packet.remaining_length)
 		return 1;
 
 	*str = mqtt3_calloc(len+1, sizeof(char));
@@ -371,7 +371,7 @@ int mqtt3_read_uint16(mqtt3_context *context, uint16_t *word)
 {
 	uint8_t msb, lsb;
 
-	if(context->packet.pos+2 >= context->packet.remaining_length)
+	if(context->packet.pos+2 > context->packet.remaining_length)
 		return 1;
 
 	msb = context->packet.payload[context->packet.pos];
