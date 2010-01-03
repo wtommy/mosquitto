@@ -225,6 +225,12 @@ int mqtt3_net_read(mqtt3_context *context)
 		do{
 			read_length = read(context->sock, &byte, 1);
 			if(read_length == 1){
+				context->packet.remaining_count++;
+				/* Max 4 bytes length for remaining length as defined by protocol.
+				 * Anything more likely means a broken/malicious client.
+				 */
+				if(context->packet.remaining_count > 4) return 1;
+
 				bytes_received++;
 				context->packet.remaining_length += (byte & 127) * context->packet.remaining_mult;
 				context->packet.remaining_mult *= 128;

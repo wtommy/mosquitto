@@ -52,6 +52,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 
 	context->packet.command = 0;
 	context->packet.have_remaining = 0;
+	context->packet.remaining_count = 0;
 	context->packet.remaining_mult = 1;
 	context->packet.remaining_length = 0;
 	context->packet.payload = NULL;
@@ -94,6 +95,7 @@ void mqtt3_context_packet_cleanup(mqtt3_context *context)
 	/* Free data and reset values */
 	context->packet.command = 0;
 	context->packet.have_remaining = 0;
+	context->packet.remaining_count = 0;
 	context->packet.remaining_mult = 1;
 	context->packet.remaining_length = 0;
 	if(context->packet.payload) mqtt3_free(context->packet.payload);

@@ -83,6 +83,7 @@ POSSIBILITY OF SUCH DAMAGE.
 struct _mqtt3_packet{
 	uint8_t command;
 	uint8_t have_remaining;
+	uint8_t remaining_count;
 	uint32_t remaining_mult;
 	uint32_t remaining_length;
 	uint32_t to_read;
