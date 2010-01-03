@@ -104,11 +104,8 @@ int main(int argc, char *argv[])
 	sigset_t sigblock;
 	int fdcount;
 	int *listensock = NULL;
-	int new_sock;
 	mqtt3_context **contexts = NULL;
-	mqtt3_context **tmp_contexts = NULL;
 	int context_count;
-	mqtt3_context *new_context;
 	int sockmax;
 	struct stat statbuf;
 	time_t now;
@@ -117,9 +114,6 @@ int main(int argc, char *argv[])
 	char buf[1024];
 	int i;
 	FILE *pid;
-#ifdef WITH_WRAP
-	struct request_info wrap_req;
-#endif
 
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
@@ -281,36 +275,7 @@ int main(int argc, char *argv[])
 			}
 			for(i=0; i<config.iface_count; i++){
 				if(FD_ISSET(listensock[i], &readfds)){
-					new_sock = accept(listensock[i], NULL, 0);
-#ifdef WITH_WRAP
-					/* Use tcpd / libwrap to determine whether a connection is allowed. */
-					request_init(&wrap_req, RQ_FILE, new_sock, RQ_DAEMON, "mosquitto", 0);
-					fromhost(&wrap_req);
-					if(!hosts_access(&wrap_req)){
-						/* Access is denied */
-						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client connection denied access by tcpd.");
-						close(new_sock);
-					}else{
-#endif
-						new_context = mqtt3_context_init(new_sock);
-						mqtt3_log_printf(MQTT3_LOG_NOTICE, "New client connected from %s.", new_context->address);
-						for(i=0; i<context_count; i++){
-							if(contexts[i] == NULL){
-								contexts[i] = new_context;
-								break;
-							}
-						}
-						if(i==context_count){
-							context_count++;
-							tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*context_count);
-							if(tmp_contexts){
-								contexts = tmp_contexts;
-								contexts[context_count-1] = new_context;
-							}
-						}
-#ifdef WITH_WRAP
-					}
-#endif
+					mqtt3_socket_accept(contexts, context_count, listensock[i]);
 				}
 			}
 		}

@@ -46,6 +46,51 @@ static uint64_t bytes_sent = 0;
 
 int _mqtt3_socket_listen(struct sockaddr *addr);
 
+int mqtt3_socket_accept(mqtt3_context **contexts, int context_count, int listensock)
+{
+	int i;
+	int new_sock = -1;
+	mqtt3_context **tmp_contexts = NULL;
+	mqtt3_context *new_context;
+#ifdef WITH_WRAP
+	struct request_info wrap_req;
+#endif
+
+	new_sock = accept(listensock, NULL, 0);
+	if(new_sock < 0) return -1;
+#ifdef WITH_WRAP
+	/* Use tcpd / libwrap to determine whether a connection is allowed. */
+	request_init(&wrap_req, RQ_FILE, new_sock, RQ_DAEMON, "mosquitto", 0);
+	fromhost(&wrap_req);
+	if(!hosts_access(&wrap_req)){
+		/* Access is denied */
+		mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client connection denied access by tcpd.");
+		close(new_sock);
+		return -1;
+	}else{
+#endif
+		new_context = mqtt3_context_init(new_sock);
+		mqtt3_log_printf(MQTT3_LOG_NOTICE, "New client connected from %s.", new_context->address);
+		for(i=0; i<context_count; i++){
+			if(contexts[i] == NULL){
+				contexts[i] = new_context;
+				break;
+			}
+		}
+		if(i==context_count){
+			context_count++;
+			tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*context_count);
+			if(tmp_contexts){
+				contexts = tmp_contexts;
+				contexts[context_count-1] = new_context;
+			}
+		}
+#ifdef WITH_WRAP
+	}
+#endif
+	return new_sock;
+}
+
 /* Close a socket associated with a context and set it to -1.
  * Returns 1 on failure (context is NULL)
  * Returns 0 on success.
