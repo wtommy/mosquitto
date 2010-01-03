@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
 		now = time(NULL);
 		for(i=0; i<context_count; i++){
 			if(contexts[i] && contexts[i]->sock != -1){
-				if(now - contexts[i]->last_msg_in < contexts[i]->keepalive*3/2){
+				if(!(contexts[i]->keepalive) || now - contexts[i]->last_msg_in < contexts[i]->keepalive*3/2){
 					FD_SET(contexts[i]->sock, &readfds);
 					if(contexts[i]->sock > sockmax){
 						sockmax = contexts[i]->sock;
