@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
 	mqtt3_log_printf(MQTT3_LOG_INFO, "mosquitto version %s (build date %s) starting", VERSION, TIMESTAMP);
 
 	/* Set static $SYS messages */
-	snprintf(buf, 1024, "mosquitto version %s (build date %s)", VERSION, TIMESTAMP);
+	snprintf(buf, 1024, "mosquitto version %s", VERSION);
 	mqtt3_db_messages_queue("$SYS/broker/version", 2, strlen(buf), (uint8_t *)buf, 1);
 	snprintf(buf, 1024, "%s", TIMESTAMP);
 	mqtt3_db_messages_queue("$SYS/broker/timestamp", 2, strlen(buf), (uint8_t *)buf, 1);
