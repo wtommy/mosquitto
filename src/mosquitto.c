@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
 				for(i=0; i<context_count; i++){
 					if(contexts[i] && fstat(contexts[i]->sock, &statbuf) == -1){
 						if(errno == EBADF){
-							mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket error on client %d, disconnecting.", contexts[i]->sock);
+							mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket error on client %s, disconnecting.", contexts[i]->id);
 							contexts[i]->sock = -1;
 							mqtt3_db_client_will_queue(contexts[i]);
 							mqtt3_context_cleanup(contexts[i]);
