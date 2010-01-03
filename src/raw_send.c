@@ -34,7 +34,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 {
-	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBACK to %s (%d)", context->id, mid);
+	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBACK to %s (Mid: %d)", context->id, mid);
 	return mqtt3_send_command_with_mid(context, PUBACK, mid);
 }
 
@@ -68,19 +68,19 @@ int mqtt3_raw_publish(mqtt3_context *context, bool dup, uint8_t qos, bool retain
 
 int mqtt3_raw_pubcomp(mqtt3_context *context, uint16_t mid)
 {
-	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBCOMP to %s (%d)", context->id, mid);
+	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBCOMP to %s (Mid: %d)", context->id, mid);
 	return mqtt3_send_command_with_mid(context, PUBCOMP, mid);
 }
 
 int mqtt3_raw_pubrec(mqtt3_context *context, uint16_t mid)
 {
-	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBREC to %s (%d)", context->id, mid);
+	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBREC to %s (Mid: %d)", context->id, mid);
 	return mqtt3_send_command_with_mid(context, PUBREC, mid);
 }
 
 int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid)
 {
-	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBREL to %s (%d)", context->id, mid);
+	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBREL to %s (Mid: %d)", context->id, mid);
 	return mqtt3_send_command_with_mid(context, PUBREL, mid);
 }
 
