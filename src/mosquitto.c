@@ -217,6 +217,9 @@ int main(int argc, char *argv[])
 		for(i=0; i<context_count; i++){
 			if(contexts[i] && contexts[i]->sock != -1){
 				if(!(contexts[i]->keepalive) || now - contexts[i]->last_msg_in < contexts[i]->keepalive*3/2){
+					if(mqtt3_db_message_write(contexts[i])){
+						// FIXME - do something here.
+					}
 					FD_SET(contexts[i]->sock, &readfds);
 					if(contexts[i]->sock > sockmax){
 						sockmax = contexts[i]->sock;
@@ -266,9 +269,6 @@ int main(int argc, char *argv[])
 						mqtt3_db_client_will_queue(contexts[i]);
 						mqtt3_context_cleanup(contexts[i]);
 						contexts[i] = NULL;
-					}
-					if(mqtt3_db_message_write(contexts[i])){
-						// FIXME - do something here.
 					}
 				}
 				if(contexts[i] && contexts[i]->sock != -1 && FD_ISSET(contexts[i]->sock, &readfds)){
