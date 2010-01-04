@@ -100,6 +100,7 @@ typedef struct _mqtt3_context{
 	char *id;
 	char *address;
 	struct _mqtt3_packet in_packet;
+	struct _mqtt3_packet out_packet;
 } mqtt3_context;
 
 typedef enum {
