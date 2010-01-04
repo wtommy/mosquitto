@@ -86,7 +86,7 @@ struct _mqtt3_packet{
 	uint8_t remaining_count;
 	uint32_t remaining_mult;
 	uint32_t remaining_length;
-	uint32_t to_read;
+	uint32_t to_process;
 	uint32_t pos;
 	uint8_t *payload;
 	struct _mqtt3_packet *next;

@@ -322,15 +322,15 @@ int mqtt3_net_read(mqtt3_context *context)
 		if(context->in_packet.remaining_length > 0){
 			context->in_packet.payload = mqtt3_malloc(context->in_packet.remaining_length*sizeof(uint8_t));
 			if(!context->in_packet.payload) return 1;
-			context->in_packet.to_read = context->in_packet.remaining_length;
+			context->in_packet.to_process = context->in_packet.remaining_length;
 		}
 		context->in_packet.have_remaining = 1;
 	}
-	while(context->in_packet.to_read>0){
-		read_length = read(context->sock, &(context->in_packet.payload[context->in_packet.pos]), context->in_packet.to_read);
+	while(context->in_packet.to_process>0){
+		read_length = read(context->sock, &(context->in_packet.payload[context->in_packet.pos]), context->in_packet.to_process);
 		if(read_length > 0){
 			bytes_received += read_length;
-			context->in_packet.to_read -= read_length;
+			context->in_packet.to_process -= read_length;
 			context->in_packet.pos += read_length;
 		}else{
 			if(errno == EAGAIN || errno == EWOULDBLOCK){

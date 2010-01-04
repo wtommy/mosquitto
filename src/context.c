@@ -99,7 +99,7 @@ void mqtt3_context_packet_cleanup(struct _mqtt3_packet *packet)
 	packet->remaining_length = 0;
 	if(packet->payload) mqtt3_free(packet->payload);
 	packet->payload = NULL;
-	packet->to_read = 0;
+	packet->to_process = 0;
 	packet->pos = 0;
 }
 
