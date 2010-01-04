@@ -45,7 +45,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 
 	if(!context || context->sock == -1 || !sub || !payload) return 1;
 
-	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBLISH to %s (%d, %d, %d, %d, '%s', ...)", context->id, dup, qos, retain, mid, sub);
+	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBLISH to %s (%d, %d, %d, %d, '%s', ... (%ld bytes))", context->id, dup, qos, retain, mid, sub, payloadlen);
 
 	packetlen = 2+strlen(sub) + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
