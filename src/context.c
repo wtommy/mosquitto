@@ -50,14 +50,8 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context->clean_start = true;
 	context->id = NULL;
 
-	context->in_packet.command = 0;
-	context->in_packet.have_remaining = 0;
-	context->in_packet.remaining_count = 0;
-	context->in_packet.remaining_mult = 1;
-	context->in_packet.remaining_length = 0;
 	context->in_packet.payload = NULL;
-	context->in_packet.to_read = 0;
-	context->in_packet.pos = 0;
+	mqtt3_context_packet_cleanup(&context->in_packet);
 
 	addrlen = sizeof(addr);
 	context->address = NULL;
