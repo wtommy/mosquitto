@@ -365,6 +365,10 @@ int mqtt3_net_write(mqtt3_context *context)
 		packet = context->out_packet;
 
 		if(packet->command){
+			/* Assign to_proces here before remaining_length changes. */
+			packet->to_process = packet->remaining_length;
+			packet->pos = 0;
+
 			write_length = write(context->sock, &packet->command, 1);
 			if(write_length == 1){
 				bytes_sent++;
