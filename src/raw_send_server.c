@@ -37,7 +37,7 @@ int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 
 	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending CONNACK to %s (%d)", context->id, result);
 
-	packet = mqtt3_malloc(sizeof(struct _mqtt3_packet));
+	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
 	if(!packet) return 1;
 
 	packet->command = CONNACK;
@@ -60,7 +60,7 @@ int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, 
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending SUBACK to %s", context->id);
 
-	packet = mqtt3_malloc(sizeof(struct _mqtt3_packet));
+	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
 	if(!packet) return 1;
 
 	packet->command = SUBACK;
