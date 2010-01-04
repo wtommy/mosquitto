@@ -89,6 +89,7 @@ struct _mqtt3_packet{
 	uint32_t to_read;
 	uint32_t pos;
 	uint8_t *payload;
+	struct _mqtt3_packet *next;
 };
 
 typedef struct _mqtt3_context{
@@ -100,7 +101,7 @@ typedef struct _mqtt3_context{
 	char *id;
 	char *address;
 	struct _mqtt3_packet in_packet;
-	struct _mqtt3_packet out_packet;
+	struct _mqtt3_packet *out_packet;
 } mqtt3_context;
 
 typedef enum {

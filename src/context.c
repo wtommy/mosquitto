@@ -52,8 +52,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 
 	context->in_packet.payload = NULL;
 	mqtt3_context_packet_cleanup(&context->in_packet);
-	context->out_packet.payload = NULL;
-	mqtt3_context_packet_cleanup(&context->out_packet);
+	context->out_packet = NULL;
 
 	addrlen = sizeof(addr);
 	context->address = NULL;
@@ -81,7 +80,10 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 	if(context->address) mqtt3_free(context->address);
 	if(context->id) mqtt3_free(context->id);
 	mqtt3_context_packet_cleanup(&(context->in_packet));
-	mqtt3_context_packet_cleanup(&(context->out_packet));
+	while(context->out_packet){
+		mqtt3_context_packet_cleanup(context->out_packet);
+		context->out_packet = context->out_packet->next;
+	}
 	mqtt3_free(context);
 }
 
