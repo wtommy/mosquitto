@@ -203,6 +203,7 @@ int main(int argc, char *argv[])
 		mqtt3_db_sys_update(config.sys_interval, start_time);
 
 		FD_ZERO(&readfds);
+		FD_ZERO(&writefds);
 
 		sockmax = 0;
 		for(i=0; i<config.iface_count; i++){
