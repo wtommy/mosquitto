@@ -198,11 +198,11 @@ int mqtt3_read_bytes(mqtt3_context *context, uint8_t *bytes, uint32_t count);
 int mqtt3_read_string(mqtt3_context *context, char **str);
 int mqtt3_read_uint16(mqtt3_context *context, uint16_t *word);
 
-int mqtt3_write_byte(mqtt3_context *context, uint8_t byte);
-int mqtt3_write_bytes(mqtt3_context *context, const uint8_t *bytes, uint32_t count);
-int mqtt3_write_string(mqtt3_context *context, const char *str, uint16_t length);
+int mqtt3_write_byte(struct _mqtt3_packet *packet, uint8_t byte);
+int mqtt3_write_bytes(struct _mqtt3_packet *packet, const uint8_t *bytes, uint32_t count);
+int mqtt3_write_string(struct _mqtt3_packet *packet, const char *str, uint16_t length);
 int mqtt3_write_remaining_length(mqtt3_context *context, uint32_t length);
-int mqtt3_write_uint16(mqtt3_context *context, uint16_t word);
+int mqtt3_write_uint16(struct _mqtt3_packet *packet, uint16_t word);
 
 uint64_t mqtt3_net_bytes_total_received(void);
 uint64_t mqtt3_net_bytes_total_sent(void);
