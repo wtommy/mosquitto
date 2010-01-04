@@ -33,13 +33,24 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 {
+	struct _mqtt3_packet *packet = NULL;
+
 	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending CONNACK to %s (%d)", context->id, result);
 
-	if(mqtt3_write_byte(context, CONNACK)) return 1;
-	if(mqtt3_write_remaining_length(context, 2)) return 1;
-	if(mqtt3_write_byte(context, 0)) return 1;
-	if(mqtt3_write_byte(context, result)) return 1;
+	packet = mqtt3_malloc(sizeof(struct _mqtt3_packet));
+	if(!packet) return 1;
 
+	packet->command = CONNACK;
+	packet->remaining_length = 2;
+	packet->payload = mqtt3_malloc(sizeof(uint8_t)*2);
+	if(!packet->payload){
+		mqtt3_free(packet);
+		return 1;
+	}
+	packet->payload[0] = 0;
+	packet->payload[1] = result;
+
+	if(mqtt3_net_packet_queue(context, packet)) return 1;
 	return 0;
 }
 
