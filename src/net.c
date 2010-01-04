@@ -424,9 +424,6 @@ int mqtt3_net_write(mqtt3_context *context)
 	}
 
 	msgs_sent++;
-	/* All data for this packet is sent. */
-	context->out_packet->pos = 0;
-	rc = mqtt3_packet_handle(context);
 
 	/* Free data and reset values */
 	context->out_packet = packet->next;
