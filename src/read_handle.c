@@ -63,7 +63,7 @@ int mqtt3_packet_handle(mqtt3_context *context)
 			if(mqtt3_handle_pubcomp(context)) return 1;
 			break;
 		case PUBLISH:
-			if(mqtt3_handle_publish(context, context->in_packet.command)) return 1;
+			if(mqtt3_handle_publish(context)) return 1;
 			break;
 		case PUBREC:
 			if(mqtt3_handle_pubrec(context)) return 1;
@@ -124,7 +124,7 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 	return 0;
 }
 
-int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
+int mqtt3_handle_publish(mqtt3_context *context)
 {
 	char *sub;
 	uint8_t *payload;
@@ -132,6 +132,7 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 	uint8_t dup, qos, retain;
 	uint16_t mid;
 	int rc = 0;
+	uint8_t header = context->in_packet.command;
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBLISH from %s", context->id);
 	dup = (header & 0x08)>>3;

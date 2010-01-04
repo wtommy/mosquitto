@@ -216,7 +216,7 @@ int mqtt3_handle_pingreq(mqtt3_context *context);
 int mqtt3_handle_pingresp(mqtt3_context *context);
 int mqtt3_handle_puback(mqtt3_context *context);
 int mqtt3_handle_pubcomp(mqtt3_context *context);
-int mqtt3_handle_publish(mqtt3_context *context, uint8_t header);
+int mqtt3_handle_publish(mqtt3_context *context);
 int mqtt3_handle_pubrec(mqtt3_context *context);
 int mqtt3_handle_pubrel(mqtt3_context *context);
 int mqtt3_handle_suback(mqtt3_context *context);
