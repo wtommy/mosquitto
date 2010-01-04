@@ -1036,44 +1036,6 @@ uint16_t mqtt3_db_mid_generate(const char *client_id)
 	}
 }
 
-/* Check for current messages that are ready to send and add the corresponding
- * sock to writefds to check whether they can be written to.
- * Messages that are ready to be sent have status of:
- *   ms_publish = 1 (send PUBLISH for QoS=0)
- *   ms_publish_puback = 2 (send PUBACK for QoS=1)
- *   ms_publish_pubrec = 4 (send PUBREC for QoS=2)
- *   ms_resend_pubrel = 6 (send duplicate PUBREL for QoS=2)
- *   ms_resend_pubcomp = 8 (send duplicate PUBCOMP for QoS=2)
- * Returns 1 on failure (writefds or sockmax is NULL, sqlite error)
- * Returns 0 on success.
- */
-int mqtt3_db_outgoing_check(fd_set *writefds, int *sockmax)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-	int fd;
-
-	if(!writefds || !sockmax) return 1;
-
-	FD_ZERO(writefds);
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT sock FROM clients JOIN messages ON clients.id=messages.client_id "
-				"WHERE (messages.status=1 OR messages.status=2 OR messages.status=4 OR messages.status=6 OR messages.status=8) "
-				"AND messages.direction=1 AND sock<>-1");
-		if(!stmt){
-			return 1;
-		}
-	}
-	while(sqlite3_step(stmt) == SQLITE_ROW){
-		fd = sqlite3_column_int(stmt, 0);
-		if(fd > *sockmax) *sockmax = fd;
-		FD_SET(fd, writefds);
-	}
-	sqlite3_reset(stmt);
-
-	return rc;
-}
-
 #ifdef WITH_REGEX
 /* Internal function.
  * Create a regular expression based on 'topic' to match all subscriptions with

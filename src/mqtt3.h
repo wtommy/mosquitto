@@ -257,8 +257,6 @@ int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, const
 int mqtt3_db_message_timeout_check(unsigned int timeout);
 /* Generate an outgoing mid for client_id. */
 uint16_t mqtt3_db_mid_generate(const char *client_id);
-/* Check for clients with pending outgoing messages and add their socks to those being tested as ready to write to in pselect(). */
-int mqtt3_db_outgoing_check(fd_set *writefds, int *sockmax);
 /* Find retained messages for topic sub and return values in qos, payloadlen and payload. */
 int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload);
 /* Add a retained message for a subject, overwriting an existing one if necessary. */
