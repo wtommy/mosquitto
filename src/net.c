@@ -476,26 +476,6 @@ int mqtt3_write_bytes(struct _mqtt3_packet *packet, const uint8_t *bytes, uint32
 	return 0;
 }
 
-int mqtt3_write_remaining_length(mqtt3_context *context, uint32_t length)
-{
-	uint8_t digit;
-
-	/* Algorithm for encoding taken from pseudo code at
-	 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
-	 */
-	do{
-		digit = length % 128;
-		length = length / 128;
-		/* If there are more digits to encode, set the top bit of this digit */
-		if(length>0){
-			digit = digit | 0x80;
-		}
-		if(mqtt3_write_byte(context->out_packet, digit)) return 1;
-	}while(length > 0);
-
-	return 0;
-}
-
 int mqtt3_read_string(mqtt3_context *context, char **str)
 {
 	uint16_t len;
