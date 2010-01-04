@@ -353,6 +353,89 @@ int mqtt3_net_read(mqtt3_context *context)
 	return rc;
 }
 
+int mqtt3_net_write(mqtt3_context *context)
+{
+	uint8_t byte;
+	ssize_t write_length;
+	struct _mqtt3_packet *packet;
+
+	if(!context || context->sock == -1) return 1;
+	packet = context->out_packet;
+	if(!packet) return 0;
+
+	if(packet->command){
+		write_length = write(context->sock, packet->command, 1);
+		if(write_length == 1){
+			bytes_sent++;
+			packet->command = 0;
+		}else{
+			if(write_length == 0) return 1; /* EOF */
+			if(errno == EAGAIN || errno == EWOULDBLOCK){
+				return 0;
+			}else{
+				return 1;
+			}
+		}
+	}
+	if(!packet->have_remaining){
+		/* Write remaining
+		 * Algorithm for encoding taken from pseudo code at
+		 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
+		 */
+		do{
+			byte = packet->remaining_length % 128;
+			packet->remaining_length = packet->remaining_length / 128;
+		/* If there are more digits to encode, set the top bit of this digit */
+			if(packet->remaining_length>0){
+				byte = byte | 0x80;
+			}
+			write_length = write(context->sock, &byte, 1);
+			if(write_length == 1){
+				packet->remaining_count++;
+				/* Max 4 bytes length for remaining length as defined by protocol. */
+				if(packet->remaining_count > 4) return 1;
+
+				bytes_sent++;
+			}else{
+				if(write_length == 0) return 1; /* EOF */
+				if(errno == EAGAIN || errno == EWOULDBLOCK){
+					return 0;
+				}else{
+					return 1;
+				}
+			}
+		}while(packet->remaining_length > 0);
+		packet->have_remaining = 1;
+	}
+	while(packet.to_process > 0){
+		write_length = write(context->sock, &(packet->payload[packet->pos]), packet->to_process);
+		if(write_length > 0){
+			bytes_sent += write_length;
+			packet.to_process -= write_length;
+			packet.pos += write_length;
+		}else{
+			if(errno == EAGAIN || errno == EWOULDBLOCK){
+				return 0;
+			}else{
+				return 1;
+			}
+		}
+	}
+
+	msgs_sent++;
+	/* All data for this packet is sent. */
+	context->out_packet.pos = 0;
+	rc = mqtt3_packet_handle(context);
+
+	/* Free data and reset values */
+	context->out_packet = packet->next;
+	mqtt3_context_packet_cleanup(packet);
+	mqtt3_free(packet);
+
+	context->last_msg_out = time(NULL);
+	return 0;
+}
+
 int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte)
 {
 	if(context->in_packet.pos+1 > context->in_packet.remaining_length)

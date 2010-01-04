@@ -192,6 +192,7 @@ int mqtt3_socket_listen_if(const char *iface, uint16_t port);
 
 int mqtt3_net_packet_queue(mqtt3_context *context, struct _mqtt3_packet *packet);
 int mqtt3_net_read(mqtt3_context *context);
+int mqtt3_net_write(mqtt3_context *context);
 int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte);
 int mqtt3_read_bytes(mqtt3_context *context, uint8_t *bytes, uint32_t count);
 int mqtt3_read_string(mqtt3_context *context, char **str);
