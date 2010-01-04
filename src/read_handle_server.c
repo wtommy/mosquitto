@@ -129,7 +129,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 
-	while(context->packet.pos < context->packet.remaining_length){
+	while(context->in_packet.pos < context->in_packet.remaining_length){
 		sub = NULL;
 		if(mqtt3_read_string(context, &sub)){
 			if(sub) mqtt3_free(sub);
@@ -195,7 +195,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 
-	while(context->packet.pos < context->packet.remaining_length){
+	while(context->in_packet.pos < context->in_packet.remaining_length){
 		sub = NULL;
 		if(mqtt3_read_string(context, &sub)){
 			if(sub) mqtt3_free(sub);

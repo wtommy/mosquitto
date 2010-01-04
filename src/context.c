@@ -50,14 +50,14 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context->clean_start = true;
 	context->id = NULL;
 
-	context->packet.command = 0;
-	context->packet.have_remaining = 0;
-	context->packet.remaining_count = 0;
-	context->packet.remaining_mult = 1;
-	context->packet.remaining_length = 0;
-	context->packet.payload = NULL;
-	context->packet.to_read = 0;
-	context->packet.pos = 0;
+	context->in_packet.command = 0;
+	context->in_packet.have_remaining = 0;
+	context->in_packet.remaining_count = 0;
+	context->in_packet.remaining_mult = 1;
+	context->in_packet.remaining_length = 0;
+	context->in_packet.payload = NULL;
+	context->in_packet.to_read = 0;
+	context->in_packet.pos = 0;
 
 	addrlen = sizeof(addr);
 	context->address = NULL;
@@ -84,23 +84,23 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 	}
 	if(context->address) mqtt3_free(context->address);
 	if(context->id) mqtt3_free(context->id);
-	mqtt3_context_packet_cleanup(context);
+	mqtt3_context_packet_cleanup(&(context->in_packet));
 	mqtt3_free(context);
 }
 
-void mqtt3_context_packet_cleanup(mqtt3_context *context)
+void mqtt3_context_packet_cleanup(struct _mqtt3_packet *packet)
 {
-	if(!context) return;
+	if(!packet) return;
 
 	/* Free data and reset values */
-	context->packet.command = 0;
-	context->packet.have_remaining = 0;
-	context->packet.remaining_count = 0;
-	context->packet.remaining_mult = 1;
-	context->packet.remaining_length = 0;
-	if(context->packet.payload) mqtt3_free(context->packet.payload);
-	context->packet.payload = NULL;
-	context->packet.to_read = 0;
-	context->packet.pos = 0;
+	packet->command = 0;
+	packet->have_remaining = 0;
+	packet->remaining_count = 0;
+	packet->remaining_mult = 1;
+	packet->remaining_length = 0;
+	if(packet->payload) mqtt3_free(packet->payload);
+	packet->payload = NULL;
+	packet->to_read = 0;
+	packet->pos = 0;
 }
 

@@ -71,7 +71,7 @@ int mqtt3_handle_suback(mqtt3_context *context)
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received SUBACK");
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 
-	while(context->packet.pos < context->packet.remaining_length){
+	while(context->in_packet.pos < context->in_packet.remaining_length){
 		/* FIXME - Need to do something with this */
 		if(mqtt3_read_byte(context, &granted_qos)) return 1;
 	}

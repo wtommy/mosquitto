@@ -43,7 +43,7 @@ int mqtt3_packet_handle(mqtt3_context *context)
 {
 	if(!context) return 1;
 
-	switch((context->packet.command)&0xF0){
+	switch((context->in_packet.command)&0xF0){
 		case CONNECT:
 			if(mqtt3_handle_connect(context)) return 1;
 			break;
@@ -63,7 +63,7 @@ int mqtt3_packet_handle(mqtt3_context *context)
 			if(mqtt3_handle_pubcomp(context)) return 1;
 			break;
 		case PUBLISH:
-			if(mqtt3_handle_publish(context, context->packet.command)) return 1;
+			if(mqtt3_handle_publish(context, context->in_packet.command)) return 1;
 			break;
 		case PUBREC:
 			if(mqtt3_handle_pubrec(context)) return 1;
@@ -147,7 +147,7 @@ int mqtt3_handle_publish(mqtt3_context *context, uint8_t header)
 		}
 	}
 
-	payloadlen = context->packet.remaining_length - context->packet.pos;
+	payloadlen = context->in_packet.remaining_length - context->in_packet.pos;
 	payload = mqtt3_calloc(payloadlen+1, sizeof(uint8_t));
 	if(mqtt3_read_bytes(context, payload, payloadlen)){
 		mqtt3_free(sub);

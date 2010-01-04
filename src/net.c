@@ -256,14 +256,14 @@ int mqtt3_net_read(mqtt3_context *context)
 	 * After all data is read, send to mqtt3_handle_packet() to deal with.
 	 * Finally, free the memory and reset everything to starting conditions.
 	 */
-	if(!context->packet.command){
+	if(!context->in_packet.command){
 		/* FIXME - check command and fill in expected length if we know it.
 		 * This means we can check the client is sending valid data some times.
 		 */
 		read_length = read(context->sock, &byte, 1);
 		if(read_length == 1){
 			bytes_received++;
-			context->packet.command = byte;
+			context->in_packet.command = byte;
 		}else{
 			if(read_length == 0) return 1; /* EOF */
 			if(errno == EAGAIN || errno == EWOULDBLOCK){
@@ -273,7 +273,7 @@ int mqtt3_net_read(mqtt3_context *context)
 			}
 		}
 	}
-	if(!context->packet.have_remaining){
+	if(!context->in_packet.have_remaining){
 		/* Read remaining
 		 * Algorithm for decoding taken from pseudo code at
 		 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
@@ -281,15 +281,15 @@ int mqtt3_net_read(mqtt3_context *context)
 		do{
 			read_length = read(context->sock, &byte, 1);
 			if(read_length == 1){
-				context->packet.remaining_count++;
+				context->in_packet.remaining_count++;
 				/* Max 4 bytes length for remaining length as defined by protocol.
 				 * Anything more likely means a broken/malicious client.
 				 */
-				if(context->packet.remaining_count > 4) return 1;
+				if(context->in_packet.remaining_count > 4) return 1;
 
 				bytes_received++;
-				context->packet.remaining_length += (byte & 127) * context->packet.remaining_mult;
-				context->packet.remaining_mult *= 128;
+				context->in_packet.remaining_length += (byte & 127) * context->in_packet.remaining_mult;
+				context->in_packet.remaining_mult *= 128;
 			}else{
 				if(read_length == 0) return 1; /* EOF */
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
@@ -300,19 +300,19 @@ int mqtt3_net_read(mqtt3_context *context)
 			}
 		}while((byte & 128) != 0);
 
-		if(context->packet.remaining_length > 0){
-			context->packet.payload = mqtt3_malloc(context->packet.remaining_length*sizeof(uint8_t));
-			if(!context->packet.payload) return 1;
-			context->packet.to_read = context->packet.remaining_length;
+		if(context->in_packet.remaining_length > 0){
+			context->in_packet.payload = mqtt3_malloc(context->in_packet.remaining_length*sizeof(uint8_t));
+			if(!context->in_packet.payload) return 1;
+			context->in_packet.to_read = context->in_packet.remaining_length;
 		}
-		context->packet.have_remaining = 1;
+		context->in_packet.have_remaining = 1;
 	}
-	while(context->packet.to_read>0){
-		read_length = read(context->sock, &(context->packet.payload[context->packet.pos]), context->packet.to_read);
+	while(context->in_packet.to_read>0){
+		read_length = read(context->sock, &(context->in_packet.payload[context->in_packet.pos]), context->in_packet.to_read);
 		if(read_length > 0){
 			bytes_received += read_length;
-			context->packet.to_read -= read_length;
-			context->packet.pos += read_length;
+			context->in_packet.to_read -= read_length;
+			context->in_packet.pos += read_length;
 		}else{
 			if(errno == EAGAIN || errno == EWOULDBLOCK){
 				return 0;
@@ -324,11 +324,11 @@ int mqtt3_net_read(mqtt3_context *context)
 
 	msgs_received++;
 	/* All data for this packet is read. */
-	context->packet.pos = 0;
+	context->in_packet.pos = 0;
 	rc = mqtt3_packet_handle(context);
 
 	/* Free data and reset values */
-	mqtt3_context_packet_cleanup(context);
+	mqtt3_context_packet_cleanup(&context->in_packet);
 
 	context->last_msg_in = time(NULL);
 	return rc;
@@ -336,11 +336,11 @@ int mqtt3_net_read(mqtt3_context *context)
 
 int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte)
 {
-	if(context->packet.pos+1 > context->packet.remaining_length)
+	if(context->in_packet.pos+1 > context->in_packet.remaining_length)
 		return 1;
 
-	*byte = context->packet.payload[context->packet.pos];
-	context->packet.pos++;
+	*byte = context->in_packet.payload[context->in_packet.pos];
+	context->in_packet.pos++;
 
 	return 0;
 }
@@ -357,11 +357,11 @@ int mqtt3_write_byte(mqtt3_context *context, uint8_t byte)
 
 int mqtt3_read_bytes(mqtt3_context *context, uint8_t *bytes, uint32_t count)
 {
-	if(context->packet.pos+count > context->packet.remaining_length)
+	if(context->in_packet.pos+count > context->in_packet.remaining_length)
 		return 1;
 
-	memcpy(bytes, &(context->packet.payload[context->packet.pos]), count);
-	context->packet.pos += count;
+	memcpy(bytes, &(context->in_packet.payload[context->in_packet.pos]), count);
+	context->in_packet.pos += count;
 
 	return 0;
 }
@@ -402,13 +402,13 @@ int mqtt3_read_string(mqtt3_context *context, char **str)
 
 	if(mqtt3_read_uint16(context, &len)) return 1;
 
-	if(context->packet.pos+len > context->packet.remaining_length)
+	if(context->in_packet.pos+len > context->in_packet.remaining_length)
 		return 1;
 
 	*str = mqtt3_calloc(len+1, sizeof(char));
 	if(*str){
-		memcpy(*str, &(context->packet.payload[context->packet.pos]), len);
-		context->packet.pos += len;
+		memcpy(*str, &(context->in_packet.payload[context->in_packet.pos]), len);
+		context->in_packet.pos += len;
 	}else{
 		return 1;
 	}
@@ -428,13 +428,13 @@ int mqtt3_read_uint16(mqtt3_context *context, uint16_t *word)
 {
 	uint8_t msb, lsb;
 
-	if(context->packet.pos+2 > context->packet.remaining_length)
+	if(context->in_packet.pos+2 > context->in_packet.remaining_length)
 		return 1;
 
-	msb = context->packet.payload[context->packet.pos];
-	context->packet.pos++;
-	lsb = context->packet.payload[context->packet.pos];
-	context->packet.pos++;
+	msb = context->in_packet.payload[context->in_packet.pos];
+	context->in_packet.pos++;
+	lsb = context->in_packet.payload[context->in_packet.pos];
+	context->in_packet.pos++;
 
 	*word = (msb<<8) + lsb;
 
