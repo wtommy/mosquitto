@@ -235,6 +235,25 @@ int mqtt3_socket_listen_if(const char *iface, uint16_t port)
 	return -1;
 }
 
+int mqtt3_net_packet_queue(mqtt3_context *context, struct _mqtt3_packet *packet)
+{
+	struct _mqtt3_packet *tail;
+
+	if(!context || !packet) return 1;
+
+	packet->next = NULL;
+	if(context->out_packet){
+		tail = context->out_packet;
+		while(tail->next){
+			tail = tail->next;
+		}
+		tail->next = packet;
+	}else{
+		context->out_packet = packet;
+	}
+	return 0;
+}
+
 int mqtt3_net_read(mqtt3_context *context)
 {
 	uint8_t byte;
