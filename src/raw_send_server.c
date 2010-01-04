@@ -54,3 +54,26 @@ int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 	return 0;
 }
 
+int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload)
+{
+	struct _mqtt3_packet *packet = NULL;
+
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending SUBACK to %s", context->id);
+
+	packet = mqtt3_malloc(sizeof(struct _mqtt3_packet));
+	if(!packet) return 1;
+
+	packet->command = SUBACK;
+	packet->remaining_length = 2+payloadlen;
+	packet->payload = mqtt3_malloc(sizeof(uint8_t)*(2+payloadlen));
+	if(!packet->payload){
+		mqtt3_free(packet);
+		return 1;
+	}
+	if(mqtt3_write_uint16(packet, mid)) return 1;
+	if(mqtt3_write_bytes(packet, payload, payloadlen)) return 1;
+
+	if(mqtt3_net_packet_queue(context, packet)) return 1;
+
+	return 0;
+}
