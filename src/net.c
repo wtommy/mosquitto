@@ -358,13 +358,14 @@ int mqtt3_net_write(mqtt3_context *context)
 	uint8_t byte;
 	ssize_t write_length;
 	struct _mqtt3_packet *packet;
+	int rc = 0;
 
 	if(!context || context->sock == -1) return 1;
 	packet = context->out_packet;
 	if(!packet) return 0;
 
 	if(packet->command){
-		write_length = write(context->sock, packet->command, 1);
+		write_length = write(context->sock, &packet->command, 1);
 		if(write_length == 1){
 			bytes_sent++;
 			packet->command = 0;
@@ -407,12 +408,12 @@ int mqtt3_net_write(mqtt3_context *context)
 		}while(packet->remaining_length > 0);
 		packet->have_remaining = 1;
 	}
-	while(packet.to_process > 0){
+	while(packet->to_process > 0){
 		write_length = write(context->sock, &(packet->payload[packet->pos]), packet->to_process);
 		if(write_length > 0){
 			bytes_sent += write_length;
-			packet.to_process -= write_length;
-			packet.pos += write_length;
+			packet->to_process -= write_length;
+			packet->pos += write_length;
 		}else{
 			if(errno == EAGAIN || errno == EWOULDBLOCK){
 				return 0;
@@ -424,7 +425,7 @@ int mqtt3_net_write(mqtt3_context *context)
 
 	msgs_sent++;
 	/* All data for this packet is sent. */
-	context->out_packet.pos = 0;
+	context->out_packet->pos = 0;
 	rc = mqtt3_packet_handle(context);
 
 	/* Free data and reset values */
@@ -433,7 +434,7 @@ int mqtt3_net_write(mqtt3_context *context)
 	mqtt3_free(packet);
 
 	context->last_msg_out = time(NULL);
-	return 0;
+	return rc;
 }
 
 int mqtt3_read_byte(mqtt3_context *context, uint8_t *byte)
