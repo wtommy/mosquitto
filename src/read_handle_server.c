@@ -209,9 +209,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 		}
 	}
 
-	if(mqtt3_write_byte(context, UNSUBACK)) return 1;
-	if(mqtt3_write_remaining_length(context, 2)) return 1;
-	if(mqtt3_write_uint16(context, mid)) return 1;
+	if(mqtt3_send_command_with_mid(context, UNSUBACK, mid)) return 1;
 
 	return 0;
 }
