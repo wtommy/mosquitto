@@ -44,9 +44,13 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, const char *will_msg, uint16_t keepalive, bool clean_start)
 {
+	struct _mqtt3_packet *packet = NULL;
 	int payloadlen;
 
 	if(!context || !client_id) return 1;
+
+	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
+	if(!packet) return 1;
 
 	payloadlen = 2+strlen(client_id);
 	if(will && will_topic && will_msg){
@@ -55,25 +59,29 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 		will = 0;
 	}
 
-	/* Fixed header */
-	if(mqtt3_write_byte(context, CONNECT)) return 1;
-	if(mqtt3_write_remaining_length(context, 12+payloadlen)) return 1;
-
-	/* Variable header */
-	if(mqtt3_write_string(context, PROTOCOL_NAME, strlen(PROTOCOL_NAME))) return 1;
-	if(mqtt3_write_byte(context, PROTOCOL_VERSION)) return 1;
-	if(mqtt3_write_byte(context, (will_retain<<5) | (will_qos<<3) | (will<<2) | (clean_start<<1))) return 1;
-	if(mqtt3_write_uint16(context, keepalive)) return 1;
-
-	/* Payload */
-	if(mqtt3_write_string(context, client_id, strlen(client_id))) return 1;
-	if(will){
-		if(mqtt3_write_string(context, will_topic, strlen(will_topic))) return 1;
-		if(mqtt3_write_string(context, will_msg, strlen(will_msg))) return 1;
+	packet->command = CONNECT;
+	packet->remaining_length = 12+payloadlen;
+	packet->payload = mqtt3_malloc(sizeof(uint8_t)*(12+payloadlen));
+	if(!packet->payload){
+		mqtt3_free(packet);
+		return 1;
 	}
 
-	context->last_msg_out = time(NULL);
+	/* Variable header */
+	if(mqtt3_write_string(packet, PROTOCOL_NAME, strlen(PROTOCOL_NAME))) return 1;
+	if(mqtt3_write_byte(packet, PROTOCOL_VERSION)) return 1;
+	if(mqtt3_write_byte(packet, (will_retain<<5) | (will_qos<<3) | (will<<2) | (clean_start<<1))) return 1;
+	if(mqtt3_write_uint16(packet, keepalive)) return 1;
+
+	/* Payload */
+	if(mqtt3_write_string(packet, client_id, strlen(client_id))) return 1;
+	if(will){
+		if(mqtt3_write_string(packet, will_topic, strlen(will_topic))) return 1;
+		if(mqtt3_write_string(packet, will_msg, strlen(will_msg))) return 1;
+	}
+
 	context->keepalive = keepalive;
+	if(mqtt3_net_packet_queue(context, packet)) return 1;
 	return 0;
 }
 
@@ -85,26 +93,34 @@ int mqtt3_raw_disconnect(mqtt3_context *context)
 int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uint8_t topic_qos)
 {
 	/* FIXME - only deals with a single topic */
+	struct _mqtt3_packet *packet = NULL;
 	uint32_t packetlen;
 	uint16_t mid;
 
 	if(!context || !topic) return 1;
 
+	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
+	if(!packet) return 1;
+
 	packetlen = 2 + 2+strlen(topic) + 1;
 
-	/* Fixed header */
-	if(mqtt3_write_byte(context, SUBSCRIBE | (dup<<3) | (1<<1))) return 1;
-	if(mqtt3_write_remaining_length(context, packetlen)) return 1;
+	packet->command = SUBSCRIBE | (dup<<3) | (1<<1);
+	packet->remaining_length = packetlen;
+	packet->payload = mqtt3_malloc(sizeof(uint8_t)*packetlen);
+	if(!packet->payload){
+		mqtt3_free(packet);
+		return 1;
+	}
 
 	/* Variable header */
 	mid = mqtt3_db_mid_generate(context->id);
-	if(mqtt3_write_uint16(context, mid)) return 1;
+	if(mqtt3_write_uint16(packet, mid)) return 1;
 
 	/* Payload */
-	if(mqtt3_write_string(context, topic, strlen(topic))) return 1;
-	if(mqtt3_write_byte(context, topic_qos)) return 1;
+	if(mqtt3_write_string(packet, topic, strlen(topic))) return 1;
+	if(mqtt3_write_byte(packet, topic_qos)) return 1;
 
-	context->last_msg_out = time(NULL);
+	if(mqtt3_net_packet_queue(context, packet)) return 1;
 	return 0;
 }
 
@@ -112,25 +128,33 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic)
 {
 	/* FIXME - only deals with a single topic */
+	struct _mqtt3_packet *packet = NULL;
 	uint32_t packetlen;
 	uint16_t mid;
 
 	if(!context || !topic) return 1;
 
+	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
+	if(!packet) return 1;
+
 	packetlen = 2 + 2+strlen(topic);
 
-	/* Fixed header */
-	if(mqtt3_write_byte(context, UNSUBSCRIBE | (dup<<3) | (1<<1))) return 1;
-	if(mqtt3_write_remaining_length(context, packetlen)) return 1;
-	
+	packet->command = SUBSCRIBE | (dup<<3) | (1<<1);
+	packet->remaining_length = packetlen;
+	packet->payload = mqtt3_malloc(sizeof(uint8_t)*packetlen);
+	if(!packet->payload){
+		mqtt3_free(packet);
+		return 1;
+	}
+
 	/* Variable header */
 	mid = mqtt3_db_mid_generate(context->id);
-	if(mqtt3_write_uint16(context, mid)) return 1;
+	if(mqtt3_write_uint16(packet, mid)) return 1;
 
 	/* Payload */
-	if(mqtt3_write_string(context, topic, strlen(topic))) return 1;
+	if(mqtt3_write_string(packet, topic, strlen(topic))) return 1;
 
-	context->last_msg_out = time(NULL);
+	if(mqtt3_net_packet_queue(context, packet)) return 1;
 	return 0;
 }
 
