@@ -40,6 +40,7 @@ int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 
 int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain, uint16_t mid, const char *sub, uint32_t payloadlen, const uint8_t *payload)
 {
+	struct _mqtt3_packet *packet = NULL;
 	int packetlen;
 
 	if(!context || context->sock == -1 || !sub || !payload) return 1;
@@ -48,21 +49,27 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 
 	packetlen = 2+strlen(sub) + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
+	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
+	if(!packet) return 1;
 
-	/* Fixed header */
-	if(mqtt3_write_byte(context, PUBLISH | (dup<<3) | (qos<<1) | retain)) return 1;
-	if(mqtt3_write_remaining_length(context, packetlen)) return 1;
-
+	packet->command = PUBLISH | (dup<<3) | (qos<<1) | retain;
+	packet->remaining_length = packetlen;
+	packet->payload = mqtt3_malloc(sizeof(uint8_t)*packetlen);
+	if(!packet->payload){
+		mqtt3_free(packet);
+		return 1;
+	}
 	/* Variable header (topic string) */
-	if(mqtt3_write_string(context, sub, strlen(sub))) return 1;
+	if(mqtt3_write_string(packet, sub, strlen(sub))) return 1;
 	if(qos > 0){
-		if(mqtt3_write_uint16(context, mid)) return 1;
+		if(mqtt3_write_uint16(packet, mid)) return 1;
 	}
 
 	/* Payload */
-	if(mqtt3_write_bytes(context, payload, payloadlen)) return 1;
+	if(mqtt3_write_bytes(packet, payload, payloadlen)) return 1;
 
-	context->last_msg_out = time(NULL);
+	if(mqtt3_net_packet_queue(context, packet)) return 1;
+
 	return 0;
 }
 
@@ -87,21 +94,39 @@ int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid)
 /* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
 int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid)
 {
-	if(mqtt3_write_byte(context, command)) return 1;
-	if(mqtt3_write_remaining_length(context, 2)) return 1;
-	if(mqtt3_write_uint16(context, mid)) return 1;
+	struct _mqtt3_packet *packet = NULL;
 
-	context->last_msg_out = time(NULL);
+	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
+	if(!packet) return 1;
+
+	packet->command = command;
+	packet->remaining_length = 2;
+	packet->payload = mqtt3_malloc(sizeof(uint8_t)*2);
+	if(!packet->payload){
+		mqtt3_free(packet);
+		return 1;
+	}
+	packet->payload[0] = MQTT_MSB(mid);
+	packet->payload[1] = MQTT_LSB(mid);
+
+	if(mqtt3_net_packet_queue(context, packet)) return 1;
+
 	return 0;
 }
 
 /* For DISCONNECT, PINGREQ and PINGRESP */
 int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command)
 {
-	if(mqtt3_write_byte(context, command)) return 1;
-	if(mqtt3_write_byte(context, 0)) return 1;
+	struct _mqtt3_packet *packet = NULL;
 
-	context->last_msg_out = time(NULL);
+	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
+	if(!packet) return 1;
+
+	packet->command = command;
+	packet->remaining_length = 0;
+
+	if(mqtt3_net_packet_queue(context, packet)) return 1;
+
 	return 0;
 }
 
