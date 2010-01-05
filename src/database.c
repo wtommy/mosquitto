@@ -1330,6 +1330,8 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 				break;
 		}
 	}
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
 	return rc;
 }
 #endif
