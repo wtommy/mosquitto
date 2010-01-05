@@ -1,3 +1,24 @@
+0.4 - 201001xx
+==============
+
+- Added support for wildcard subscriptions using + and #.
+- All network operations are now non-blocking and can cope with partial
+  packets, meaning that networking should be a lot more reliable.
+- Total messsages/bytes sent/received are now available in $SYS.
+- Improved logging information - use client ip address and id instead of
+  socket number.
+- Broker build timestamp is available in $SYS.
+- Keepalive==0 is now correctly treated as "never disconnect".
+- Fixed manpage installation.
+- Fixed incorrect $SYS hierarchy locations in documentation and code.
+- Debug type log messages are no longer sent to "topics".
+- Default logging destination no longer includes "topics" to prevent possible
+  error logging to the db before it is initialised.
+- Periodic $SYS messages can now be disabled.
+- stdout and stderr are flushed when logging to them to give more timely
+  updates.
+- dup is now set correctly when resending messages.
+
 0.3 - 20091217
 ==============
 
