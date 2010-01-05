@@ -1164,21 +1164,21 @@ int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 	if(hier > 1){
 		token = strtok(local_sub, "/");
 		if(!strcmp(token, "+")){
-			pos = sprintf(local_regex, "^[^/]*");
+			pos = sprintf(local_regex, "^[^/]+");
 		}else{
 			pos = sprintf(local_regex, "^\\Q%s\\E", token);
 		}
 		for(i=1; i<hier-1; i++){
 			token = strtok(NULL, "/");
 			if(!strcmp(token, "+")){
-				pos += sprintf(&(local_regex[pos]), "/[^/]*");
+				pos += sprintf(&(local_regex[pos]), "/[^/]+");
 			}else{
 				pos += sprintf(&(local_regex[pos]), "/\\Q%s\\E", token);
 			}
 		}
 		token = strtok(NULL, "/");
 		if(!strcmp(token, "+")){
-			pos += sprintf(&(local_regex[pos]), "/[^/]*$");
+			pos += sprintf(&(local_regex[pos]), "/[^/]+$");
 		}else if(!strcmp(token, "#")){
 			pos += sprintf(&(local_regex[pos]), "/.*");
 		}else{
@@ -1187,7 +1187,7 @@ int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 	}else{
 		token = strtok(local_sub, "/");
 		if(!strcmp(token, "+")){
-			pos = sprintf(local_regex, "/[^/]*$");
+			pos = sprintf(local_regex, "/[^/]+$");
 		}else if(!strcmp(token, "#")){
 			pos = sprintf(local_regex, "/.*");
 		}else{
