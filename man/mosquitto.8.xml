@@ -94,8 +94,20 @@
 
 	<refsect1>
 		<title>Broker Status</title>
-		<para>Clients can find information about the broker by subscribing to topics in the $SYS hierarchy as follows. Topics marked as static are only sent once per client on subscription. All other topics are updated every <option>sys_interval</option> seconds.</para>
+		<para>Clients can find information about the broker by subscribing to topics in the $SYS hierarchy as follows. Topics marked as static are only sent once per client on subscription. All other topics are updated every <option>sys_interval</option> seconds. If <option>sys_interval</option> is 0, then updates are not sent.</para>
 		<variablelist>
+			<varlistentry>
+				<term><option>$SYS/broker/bytes/received</option></term>
+				<listitem>
+					<para>The total number of bytes received since the broker started.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/broker/bytes/sent</option></term>
+				<listitem>
+					<para>The total number of bytes sent since the broker started.</para>
+				</listitem>
+			</varlistentry>
 			<varlistentry>
 				<term><option>$SYS/broker/heap/current size</option></term>
 				<listitem>
@@ -103,9 +115,21 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>$SYS/broker/version</option></term>
+				<term><option>$SYS/broker/messages/inflight</option></term>
 				<listitem>
-					<para>The version of the broker. Static.</para>
+					<para>The number of messages currently in flight.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/broker/messages/received</option></term>
+				<listitem>
+					<para>The total number of messages received since the broker started. (not yet implemented)</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/broker/messages/sent</option></term>
+				<listitem>
+					<para>The total number of messages sent since the broker started. (not yet implemented)</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -121,36 +145,52 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>$SYS/broker/messages/inflight</option></term>
+				<term><option>$SYS/broker/version</option></term>
 				<listitem>
-					<para>The number of messages currently in flight.</para>
-				</listitem>
-			</varlistentry>
-			<varlistentry>
-				<term><option>$SYS/broker/messages/sent</option></term>
-				<listitem>
-					<para>The total number of messages sent since the broker started. (not yet implemented)</para>
-				</listitem>
-			</varlistentry>
-			<varlistentry>
-				<term><option>$SYS/broker/messages/received</option></term>
-				<listitem>
-					<para>The total number of messages received since the broker started. (not yet implemented)</para>
-				</listitem>
-			</varlistentry>
-			<varlistentry>
-				<term><option>$SYS/broker/bytes/sent</option></term>
-				<listitem>
-					<para>The total number of bytes sent since the broker started.</para>
-				</listitem>
-			</varlistentry>
-			<varlistentry>
-				<term><option>$SYS/broker/bytes/received</option></term>
-				<listitem>
-					<para>The total number of bytes received since the broker started.</para>
+					<para>The version of the broker. Static.</para>
 				</listitem>
 			</varlistentry>
 		</variablelist>
+	</refsect1>
+
+	<refsect1>
+		<title>Wildcard Topic Subscriptions</title>
+		<para>In addition to allowing clients to subscribe to specific topics,
+		mosquitto also allows the use of two wildcards in subscriptions.
+		<option>+</option> is the wildcard used to match a single level of
+		hierarchy. For example, for a topic of "a/b/c/d", the following example
+		subscriptions will match:</para>
+		<itemizedlist mark="circle">
+			<listitem><para>a/b/c/d</para></listitem>
+			<listitem><para>+/b/c/d</para></listitem>
+			<listitem><para>a/+/c/d</para></listitem>
+			<listitem><para>a/+/+/d</para></listitem>
+			<listitem><para>+/+/+/+</para></listitem>
+		</itemizedlist>
+		<para>The following subscriptions will not match:</para>
+		<itemizedlist mark="circle">
+			<listitem><para>a/b/c</para></listitem>
+			<listitem><para>b/+/c/d</para></listitem>
+			<listitem><para>+/+/+</para></listitem>
+		</itemizedlist>
+		<para>The second wildcard is <option>#</option> and is used to match
+		all subsequent levels of hierarchy. With a topic of "a/b/c/d", the
+		following example subscriptions will match:</para>
+		<itemizedlist mark="circle">
+			<listitem><para>a/b/c/d</para></listitem>
+			<listitem><para>#</para></listitem>
+			<listitem><para>a/#</para></listitem>
+			<listitem><para>a/b/#</para></listitem>
+			<listitem><para>a/b/c/#</para></listitem>
+			<listitem><para>+/b/c/#</para></listitem>
+		</itemizedlist>
+		<para>The $SYS hierarchy does not match a subscription of
+		"#". If you want to observe the entire $SYS hierarchy, subscribe to
+		$SYS/#.</para>
+		<para>Note that the wildcards must be only ever used on their own, so a
+		subscription of "a/b+/c" is not valid use of a wildcard. The
+		<option>#</option> wildcard must only ever be used as the final
+		character of a subscription.</para>
 	</refsect1>
 
 	<refsect1>
