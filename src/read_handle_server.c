@@ -37,6 +37,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sys/select.h>
 #include <unistd.h>
 
+#include <config.h>
 #include <mqtt3.h>
 
 int mqtt3_handle_connect(mqtt3_context *context)
@@ -118,10 +119,12 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 	uint8_t *payload = NULL;
 	uint32_t payloadlen = 0;
 
+#ifndef WITH_REGEX
 	uint16_t retain_mid;
 	int retain_qos;
 	uint8_t *retain_payload = NULL;
 	uint32_t retain_payloadlen;
+#endif
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received SUBSCRIBE from %s", context->id);
 	/* FIXME - plenty of potential for memory leaks here */
@@ -141,6 +144,9 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 			mqtt3_log_printf(MQTT3_LOG_DEBUG, "\t%s (QoS %d)", sub, qos);
 			mqtt3_db_sub_insert(context->id, sub, qos);
 	
+#ifdef WITH_REGEX
+			if(mqtt3_db_retain_queue(context, sub, qos)) rc = 1;
+#else
 			if(!mqtt3_db_retain_find(sub, &retain_qos, &retain_payloadlen, &retain_payload)){
 				if(retain_qos > qos) retain_qos = qos;
 				if(retain_qos > 0){
@@ -166,6 +172,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 					mqtt3_free(retain_payload);
 				}
 			}
+#endif
 			mqtt3_free(sub);
 		}
 
