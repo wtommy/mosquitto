@@ -125,6 +125,7 @@ int _mqtt3_db_tables_create(void);
 int _mqtt3_db_invalidate_sockets(void);
 #ifdef WITH_REGEX
 int _mqtt3_db_regex_create(const char *topic, char **regex);
+int _mqtt3_db_retain_regex_create(const char *topic, char **regex);
 #endif
 sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query);
 void _mqtt3_db_statements_finalize(void);
@@ -1130,6 +1131,71 @@ int _mqtt3_db_regex_create(const char *topic, char **regex)
 	}
 	*regex = local_regex;
 	mqtt3_free(local_topic);
+	return 0;
+}
+
+int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
+{
+	char *stmp;
+	int hier;
+	char *local_regex = NULL;
+	int regex_len;
+	char *local_sub;
+	char *token;
+	int pos;
+	int i;
+
+	if(!sub || !regex) return 1;
+
+	local_sub = mqtt3_strdup(sub);
+	if(!local_sub) return 1;
+
+	hier = 0;
+	stmp = local_sub;
+	while(stmp){
+		stmp = index(stmp, '/');
+		if(stmp) stmp++;
+		hier++;
+	}
+	regex_len = strlen(local_sub) + 5*hier + 2;
+	local_regex = mqtt3_realloc(local_regex, regex_len);
+	if(!local_regex) return 1;
+
+	if(hier > 1){
+		token = strtok(local_sub, "/");
+		if(!strcmp(token, "+")){
+			pos = sprintf(local_regex, "^[^/]*");
+		}else{
+			pos = sprintf(local_regex, "^\\Q%s\\E", token);
+		}
+		for(i=1; i<hier-1; i++){
+			token = strtok(NULL, "/");
+			if(!strcmp(token, "+")){
+				pos += sprintf(&(local_regex[pos]), "/[^/]*");
+			}else{
+				pos += sprintf(&(local_regex[pos]), "/\\Q%s\\E", token);
+			}
+		}
+		token = strtok(NULL, "/");
+		if(!strcmp(token, "+")){
+			pos += sprintf(&(local_regex[pos]), "/[^/]*$");
+		}else if(!strcmp(token, "#")){
+			pos += sprintf(&(local_regex[pos]), "/.*");
+		}else{
+			pos += sprintf(&(local_regex[pos]), "/\\Q%s\\E$", token);
+		}
+	}else{
+		token = strtok(local_sub, "/");
+		if(!strcmp(token, "+")){
+			pos = sprintf(local_regex, "/[^/]*$");
+		}else if(!strcmp(token, "#")){
+			pos = sprintf(local_regex, "/.*");
+		}else{
+			pos = sprintf(local_regex, "/\\Q%s\\E$", token);
+		}
+	}
+	*regex = local_regex;
+	mqtt3_free(local_sub);
 	return 0;
 }
 #endif
