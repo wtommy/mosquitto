@@ -27,6 +27,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <config.h>
+
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -37,9 +39,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#ifdef WITH_WRAP
+#include <tcpd.h>
+#endif
 #include <unistd.h>
 
-#include <config.h>
 #include <mqtt3.h>
 
 static uint64_t bytes_received = 0;
