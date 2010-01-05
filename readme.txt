@@ -16,3 +16,5 @@ Mosquitto project information is available at the following locations:
 http://mosquitto.atchoo.org/ (main homepage)
 http://launchpad.net/mosquitto (bug tracking, translations)
 http://bitbucket.org/oojah/mosquitto (hg source code repository)
+
+Mosquitto was written by Roger Light <roger@atchoo.org>
