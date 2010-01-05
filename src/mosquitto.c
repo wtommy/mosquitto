@@ -215,21 +215,26 @@ int main(int argc, char *argv[])
 
 		now = time(NULL);
 		for(i=0; i<context_count; i++){
-			if(contexts[i] && contexts[i]->sock != -1){
-				if(!(contexts[i]->keepalive) || now - contexts[i]->last_msg_in < contexts[i]->keepalive*3/2){
-					if(mqtt3_db_message_write(contexts[i])){
-						// FIXME - do something here.
+			if(contexts[i]){
+				if(contexts[i]->sock != -1){
+					if(!(contexts[i]->keepalive) || now - contexts[i]->last_msg_in < contexts[i]->keepalive*3/2){
+						if(mqtt3_db_message_write(contexts[i])){
+							// FIXME - do something here.
+						}
+						FD_SET(contexts[i]->sock, &readfds);
+						if(contexts[i]->sock > sockmax){
+							sockmax = contexts[i]->sock;
+						}
+						if(contexts[i]->out_packet){
+							FD_SET(contexts[i]->sock, &writefds);
+						}
+					}else{
+						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", contexts[i]->id);
+						/* Client has exceeded keepalive*1.5 */
+						mqtt3_context_cleanup(contexts[i]);
+						contexts[i] = NULL;
 					}
-					FD_SET(contexts[i]->sock, &readfds);
-					if(contexts[i]->sock > sockmax){
-						sockmax = contexts[i]->sock;
-					}
-					if(contexts[i]->out_packet){
-						FD_SET(contexts[i]->sock, &writefds);
-					}
-				}else{
-					mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", contexts[i]->id);
-					/* Client has exceeded keepalive*1.5 */
+				}else if(contexts[i]->clean_start){
 					mqtt3_context_cleanup(contexts[i]);
 					contexts[i] = NULL;
 				}
