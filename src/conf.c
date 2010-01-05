@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <config.h>
 #include <mqtt3.h>
 
 void mqtt3_config_init(mqtt3_config *config)

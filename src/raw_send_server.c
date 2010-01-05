@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdint.h>
 
+#include <config.h>
 #include <mqtt3.h>
 
 int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)

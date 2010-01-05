@@ -39,6 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <config.h>
 #include <mqtt3.h>
 
 static uint64_t bytes_received = 0;

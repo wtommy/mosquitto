@@ -37,6 +37,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sys/select.h>
 #include <unistd.h>
 
+#include <config.h>
 #include <mqtt3.h>
 
 int mqtt3_packet_handle(mqtt3_context *context)

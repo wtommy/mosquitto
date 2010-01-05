@@ -30,6 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include <string.h>
 
+#include <config.h>
 #include <mqtt3.h>
 
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)

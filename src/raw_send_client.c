@@ -40,6 +40,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <time.h>
 #include <unistd.h>
 
+#include <config.h>
 #include <mqtt3.h>
 
 int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, const char *will_msg, uint16_t keepalive, bool clean_start)

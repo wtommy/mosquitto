@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <syslog.h>
 
+#include <config.h>
 #include <mqtt3.h>
 
 /* Options for logging should be:

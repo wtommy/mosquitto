@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdint.h>
 
+#include <config.h>
 #include <mqtt3.h>
 
 /* Convert mqtt command (as defined in mqtt3.h) to corresponding string. */
