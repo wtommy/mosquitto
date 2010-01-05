@@ -126,7 +126,7 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 
 int mqtt3_handle_publish(mqtt3_context *context)
 {
-	char *sub;
+	char *topic;
 	uint8_t *payload;
 	uint32_t payloadlen;
 	uint8_t dup, qos, retain;
@@ -139,11 +139,11 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	qos = (header & 0x06)>>1;
 	retain = (header & 0x01);
 
-	if(mqtt3_read_string(context, &sub)) return 1;
+	if(mqtt3_read_string(context, &topic)) return 1;
 
 	if(qos > 0){
 		if(mqtt3_read_uint16(context, &mid)){
-			mqtt3_free(sub);
+			mqtt3_free(topic);
 			return 1;
 		}
 	}
@@ -151,27 +151,27 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	payloadlen = context->in_packet.remaining_length - context->in_packet.pos;
 	payload = mqtt3_calloc(payloadlen+1, sizeof(uint8_t));
 	if(mqtt3_read_bytes(context, payload, payloadlen)){
-		mqtt3_free(sub);
+		mqtt3_free(topic);
 		return 1;
 	}
 #ifdef DEBUG
-	printf("%s: %s\n", sub, payload);
+	printf("%s: %s\n", topic, payload);
 #endif
 
 	switch(qos){
 		case 0:
-			if(mqtt3_db_messages_queue(sub, qos, payloadlen, payload, retain)) rc = 1;
+			if(mqtt3_db_messages_queue(topic, qos, payloadlen, payload, retain)) rc = 1;
 			break;
 		case 1:
-			if(mqtt3_db_messages_queue(sub, qos, payloadlen, payload, retain)) rc = 1;
+			if(mqtt3_db_messages_queue(topic, qos, payloadlen, payload, retain)) rc = 1;
 			if(mqtt3_raw_puback(context, mid)) rc = 1;
 			break;
 		case 2:
-			if(mqtt3_db_message_insert(context->id, mid, md_in, ms_wait_pubrec, retain, sub, qos, payloadlen, payload)) rc = 1;
+			if(mqtt3_db_message_insert(context->id, mid, md_in, ms_wait_pubrec, retain, topic, qos, payloadlen, payload)) rc = 1;
 			if(mqtt3_raw_pubrec(context, mid)) rc = 1;
 			break;
 	}
-	mqtt3_free(sub);
+	mqtt3_free(topic);
 	mqtt3_free(payload);
 
 	return rc;

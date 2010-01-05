@@ -125,7 +125,7 @@ int _mqtt3_db_tables_create(void);
 int _mqtt3_db_invalidate_sockets(void);
 #ifdef WITH_REGEX
 int _mqtt3_db_regex_create(const char *topic, char **regex);
-int _mqtt3_db_retain_regex_create(const char *topic, char **regex);
+int _mqtt3_db_retain_regex_create(const char *sub, char **regex);
 #endif
 sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query);
 void _mqtt3_db_statements_finalize(void);
@@ -283,7 +283,7 @@ int _mqtt3_db_tables_create(void)
 
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS retain("
-		"sub TEXT, qos INTEGER, payloadlen INTEGER, payload BLOB)",
+		"topic TEXT, qos INTEGER, payloadlen INTEGER, payload BLOB)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
 		rc = 1;
@@ -296,7 +296,7 @@ int _mqtt3_db_tables_create(void)
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS messages("
 		"client_id TEXT, timestamp INTEGER, direction INTEGER, status INTEGER, "
-		"mid INTEGER, dup INTEGER, qos INTEGER, retain INTEGER, sub TEXT, payloadlen INTEGER, payload BLOB)",
+		"mid INTEGER, dup INTEGER, qos INTEGER, retain INTEGER, topic TEXT, payloadlen INTEGER, payload BLOB)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
 		rc = 1;
@@ -475,7 +475,7 @@ int mqtt3_db_client_will_queue(mqtt3_context *context)
 	int rc = 0;
 	int dbrc;
 	static sqlite3_stmt *stmt = NULL;
-	const char *sub;
+	const char *topic;
 	int qos;
 	const uint8_t *payload;
 	int retain;
@@ -491,12 +491,12 @@ int mqtt3_db_client_will_queue(mqtt3_context *context)
 	if(sqlite3_bind_text(stmt, 1, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	dbrc = sqlite3_step(stmt);
 	if(dbrc == SQLITE_ROW){
-		sub = (const char *)sqlite3_column_text(stmt, 0);
+		topic = (const char *)sqlite3_column_text(stmt, 0);
 		qos = sqlite3_column_int(stmt, 1);
 		payload = sqlite3_column_text(stmt, 2);
 		retain = sqlite3_column_int(stmt, 3);
 		if(!rc){
-			if(mqtt3_db_messages_queue(sub, qos, strlen((const char *)payload), payload, retain)) rc = 1;
+			if(mqtt3_db_messages_queue(topic, qos, strlen((const char *)payload), payload, retain)) rc = 1;
 		}
 	}else if(dbrc != SQLITE_DONE){
 		rc = 1;
@@ -690,17 +690,17 @@ int mqtt3_db_message_delete_by_oid(uint64_t oid)
 	return rc;
 }
 
-int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, int retain, const char *sub, int qos, uint32_t payloadlen, const uint8_t *payload)
+int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, int retain, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload)
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 
-	if(!client_id || !sub || !payload) return 1;
+	if(!client_id || !topic || !payload) return 1;
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("INSERT INTO messages "
-				"(client_id, timestamp, direction, status, mid, dup, qos, retain, sub, payloadlen, payload) "
+				"(client_id, timestamp, direction, status, mid, dup, qos, retain, topic, payloadlen, payload) "
 				"VALUES (?,?,?,?,?,0,?,?,?,?,?)");
 		if(!stmt){
 			return 1;
@@ -713,7 +713,7 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direc
 	if(sqlite3_bind_int(stmt, 5, mid) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 6, qos) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 7, retain) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_text(stmt, 8, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 8, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 9, payloadlen) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_blob(stmt, 10, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
@@ -773,7 +773,7 @@ int mqtt3_db_messages_delete(const char *client_id)
 	return rc;
 }
 
-int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
+int mqtt3_db_messages_queue(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
@@ -782,13 +782,13 @@ int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, const
 	uint8_t msg_qos;
 	uint16_t mid;
 
-	/* Find all clients that subscribe to sub and put messages into the db for them. */
-	if(!sub || !payloadlen || !payload) return 1;
+	/* Find all clients that subscribe to topic and put messages into the db for them. */
+	if(!topic || !payloadlen || !payload) return 1;
 
 	if(retain){
-		if(mqtt3_db_retain_insert(sub, qos, payloadlen, payload)) rc = 1;
+		if(mqtt3_db_retain_insert(topic, qos, payloadlen, payload)) rc = 1;
 	}
-	if(!mqtt3_db_sub_search_start(sub)){
+	if(!mqtt3_db_sub_search_start(topic)){
 		while(!mqtt3_db_sub_search_next(&client_id, &client_qos)){
 			if(qos > client_qos){
 				msg_qos = client_qos;
@@ -802,13 +802,13 @@ int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, const
 			}
 			switch(msg_qos){
 				case 0:
-					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_publish, retain, sub, msg_qos, payloadlen, payload)) rc = 1;
+					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_publish, retain, topic, msg_qos, payloadlen, payload)) rc = 1;
 					break;
 				case 1:
-					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_publish_puback, retain, sub, msg_qos, payloadlen, payload)) rc = 1;
+					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_publish_puback, retain, topic, msg_qos, payloadlen, payload)) rc = 1;
 					break;
 				case 2:
-					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_publish_pubrec, retain, sub, msg_qos, payloadlen, payload)) rc = 1;
+					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_publish_pubrec, retain, topic, msg_qos, payloadlen, payload)) rc = 1;
 					break;
 			}
 			if(client_id) mqtt3_free(client_id);
@@ -878,7 +878,7 @@ int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_dire
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 	uint64_t OID;
-	const char *sub;
+	const char *topic;
 	int qos;
 	int payloadlen;
 	const uint8_t *payload;
@@ -887,7 +887,7 @@ int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_dire
 	if(!client_id) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT OID,sub,qos,payloadlen,payload,retain FROM messages WHERE client_id=? AND mid=? AND direction=?");
+		stmt = _mqtt3_db_statement_prepare("SELECT OID,topic,qos,payloadlen,payload,retain FROM messages WHERE client_id=? AND mid=? AND direction=?");
 		if(!stmt){
 			return 1;
 		}
@@ -897,12 +897,12 @@ int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_dire
 	if(sqlite3_bind_int(stmt, 3, dir) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) == SQLITE_ROW){
 		OID = sqlite3_column_int(stmt, 0);
-		sub = (const char *)sqlite3_column_text(stmt, 1);
+		topic = (const char *)sqlite3_column_text(stmt, 1);
 		qos = sqlite3_column_int(stmt, 2);
 		payloadlen = sqlite3_column_int(stmt, 3);
 		payload = sqlite3_column_blob(stmt, 4);
 		retain = sqlite3_column_int(stmt, 5);
-		if(!mqtt3_db_messages_queue(sub, qos, payloadlen, payload, retain)){
+		if(!mqtt3_db_messages_queue(topic, qos, payloadlen, payload, retain)){
 			if(mqtt3_db_message_delete_by_oid(OID)) rc = 1;
 		}else{
 			rc = 1;
@@ -924,7 +924,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	uint16_t mid;
 	int dup;
 	int retain;
-	const char *sub;
+	const char *topic;
 	int qos;
 	uint32_t payloadlen;
 	const uint8_t *payload;
@@ -932,7 +932,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	if(!context || !context->id || context->sock == -1) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT OID,status,mid,dup,retain,sub,qos,payloadlen,payload FROM messages "
+		stmt = _mqtt3_db_statement_prepare("SELECT OID,status,mid,dup,retain,topic,qos,payloadlen,payload FROM messages "
 				"WHERE (status=1 OR status=2 OR status=4 OR status=6 OR status=8) "
 				"AND direction=1 AND client_id=? ORDER BY timestamp");
 		if(!stmt){
@@ -947,25 +947,25 @@ int mqtt3_db_message_write(mqtt3_context *context)
 			mid = sqlite3_column_int(stmt, 2);
 			dup = sqlite3_column_int(stmt, 3);
 			retain = sqlite3_column_int(stmt, 4);
-			sub = (const char *)sqlite3_column_text(stmt, 5);
+			topic = (const char *)sqlite3_column_text(stmt, 5);
 			qos = sqlite3_column_int(stmt, 6);
 			payloadlen = sqlite3_column_int(stmt, 7);
 			payload = sqlite3_column_blob(stmt, 8);
 			switch(status){
 				case ms_publish:
-					if(!mqtt3_raw_publish(context, dup, qos, retain, mid, sub, payloadlen, payload)){
+					if(!mqtt3_raw_publish(context, dup, qos, retain, mid, topic, payloadlen, payload)){
 						mqtt3_db_message_delete_by_oid(OID);
 					}
 					break;
 
 				case ms_publish_puback:
-					if(!mqtt3_raw_publish(context, dup, qos, retain, mid, sub, payloadlen, payload)){
+					if(!mqtt3_raw_publish(context, dup, qos, retain, mid, topic, payloadlen, payload)){
 						mqtt3_db_message_update(context->id, mid, md_out, ms_wait_puback);
 					}
 					break;
 
 				case ms_publish_pubrec:
-					if(!mqtt3_raw_publish(context, dup, qos, retain, mid, sub, payloadlen, payload)){
+					if(!mqtt3_raw_publish(context, dup, qos, retain, mid, topic, payloadlen, payload)){
 						mqtt3_db_message_update(context->id, mid, md_out, ms_wait_pubrec);
 					}
 					break;
@@ -1200,26 +1200,26 @@ int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 }
 #endif
 
-/* Find a single retained message matching 'sub'.
+/* Find a single retained message matching 'topic'.
  * Return qos, payloadlen and payload only if those arguments are not NULL.
- * Returns 1 on failure (sub is NULL, sqlite error) or no retained message found.
+ * Returns 1 on failure (topic is NULL, sqlite error) or no retained message found.
  * Returns 0 on retained message successfully found.
  */
-int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload)
+int mqtt3_db_retain_find(const char *topic, int *qos, uint32_t *payloadlen, uint8_t **payload)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 	const uint8_t *payloadtmp;
 
-	if(!sub) return 1;
+	if(!topic) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT qos,payloadlen,payload FROM retain WHERE sub=?");
+		stmt = _mqtt3_db_statement_prepare("SELECT qos,payloadlen,payload FROM retain WHERE topic=?");
 		if(!stmt){
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) == SQLITE_ROW){
 		if(qos) *qos = sqlite3_column_int(stmt, 0);
 		if(payloadlen) *payloadlen = sqlite3_column_int(stmt, 1);
@@ -1239,21 +1239,21 @@ int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_
 
 /* Add a retained message to the database for a particular topic.
  * Only one retained message exists per topic, so does an update if one already exists.
- * Returns 1 on failure (sub, or payload are NULL, payloadlen is 0, sqlite error)
+ * Returns 1 on failure (topic, or payload are NULL, payloadlen is 0, sqlite error)
  * Returns 0 on success.
  */
-int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, const uint8_t *payload)
+int mqtt3_db_retain_insert(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload)
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	static sqlite3_stmt *stmt_update = NULL;
 	static sqlite3_stmt *stmt_insert = NULL;
 
-	if(!sub || !payloadlen || !payload) return 1;
+	if(!topic || !payloadlen || !payload) return 1;
 
-	if(!mqtt3_db_retain_find(sub, NULL, NULL, NULL)){
+	if(!mqtt3_db_retain_find(topic, NULL, NULL, NULL)){
 		if(!stmt_update){
-			stmt_update = _mqtt3_db_statement_prepare("UPDATE retain SET qos=?,payloadlen=?,payload=? WHERE sub=?");
+			stmt_update = _mqtt3_db_statement_prepare("UPDATE retain SET qos=?,payloadlen=?,payload=? WHERE topic=?");
 			if(!stmt_update){
 				return 1;
 			}
@@ -1261,7 +1261,7 @@ int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, const 
 		if(sqlite3_bind_int(stmt_update, 1, qos) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(stmt_update, 2, payloadlen) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_blob(stmt_update, 3, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_text(stmt_update, 4, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt_update, 4, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_step(stmt_update) != SQLITE_DONE) rc = 1;
 		sqlite3_reset(stmt_update);
 		sqlite3_clear_bindings(stmt_update);
@@ -1272,7 +1272,7 @@ int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, const 
 				return 1;
 			}
 		}
-		if(sqlite3_bind_text(stmt_insert, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt_insert, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(stmt_insert, 2, qos) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(stmt_insert, 3, payloadlen) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_blob(stmt_insert, 4, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
@@ -1297,7 +1297,7 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 	uint16_t mid;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT sub,qos,payloadlen,payload FROM retain WHERE regexp(?, sub)");
+		stmt = _mqtt3_db_statement_prepare("SELECT topic,qos,payloadlen,payload FROM retain WHERE regexp(?, topic)");
 		if(!stmt) return 1;
 	}
 	if(_mqtt3_db_retain_regex_create(sub, &regex)) return 1;
@@ -1420,13 +1420,13 @@ int mqtt3_db_sub_delete(const char *client_id, const char *sub)
 	return rc;
 }
 
-/* Begin a new search for subscriptions that match 'sub'.
- * Returns 1 on failure (sub is NULL, sqlite error)
+/* Begin a new search for subscriptions that match 'topic'.
+ * Returns 1 on failure (topic is NULL, sqlite error)
  * Returns 0 on failure.
  * Will use regex for pattern matching if compiled with WITH_REGEX defined.
- * Wildcards in subscriptions are disabled is WITH_REGEX not defined.
+ * Wildcards in subscriptions are disabled if WITH_REGEX not defined.
  */
-int mqtt3_db_sub_search_start(const char *sub)
+int mqtt3_db_sub_search_start(const char *topic)
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
@@ -1434,7 +1434,7 @@ int mqtt3_db_sub_search_start(const char *sub)
 	char *regex;
 #endif
 
-	if(!sub) return 1;
+	if(!topic) return 1;
 
 	if(!stmt_sub_search){
 #ifdef WITH_REGEX
@@ -1450,10 +1450,10 @@ int mqtt3_db_sub_search_start(const char *sub)
 	sqlite3_clear_bindings(stmt_sub_search);
 
 #ifdef WITH_REGEX
-	if(_mqtt3_db_regex_create(sub, &regex)) return 1;
+	if(_mqtt3_db_regex_create(topic, &regex)) return 1;
 	if(sqlite3_bind_text(stmt_sub_search, 1, regex, strlen(regex), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 #else
-	if(sqlite3_bind_text(stmt_sub_search, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt_sub_search, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 #endif
 
 	return rc;

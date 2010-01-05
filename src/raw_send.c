@@ -38,16 +38,16 @@ int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 	return mqtt3_send_command_with_mid(context, PUBACK, mid);
 }
 
-int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain, uint16_t mid, const char *sub, uint32_t payloadlen, const uint8_t *payload)
+int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload)
 {
 	struct _mqtt3_packet *packet = NULL;
 	int packetlen;
 
-	if(!context || context->sock == -1 || !sub || !payload) return 1;
+	if(!context || context->sock == -1 || !topic || !payload) return 1;
 
-	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBLISH to %s (%d, %d, %d, %d, '%s', ... (%ld bytes))", context->id, dup, qos, retain, mid, sub, payloadlen);
+	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBLISH to %s (%d, %d, %d, %d, '%s', ... (%ld bytes))", context->id, dup, qos, retain, mid, topic, payloadlen);
 
-	packetlen = 2+strlen(sub) + payloadlen;
+	packetlen = 2+strlen(topic) + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
 	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
 	if(!packet) return 1;
@@ -60,7 +60,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 		return 1;
 	}
 	/* Variable header (topic string) */
-	if(mqtt3_write_string(packet, sub, strlen(sub))) return 1;
+	if(mqtt3_write_string(packet, topic, strlen(topic))) return 1;
 	if(qos > 0){
 		if(mqtt3_write_uint16(packet, mid)) return 1;
 	}

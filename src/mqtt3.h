@@ -42,7 +42,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define PROTOCOL_VERSION 3
 
 /* Database macros */
-#define MQTT_DB_VERSION 0
+#define MQTT_DB_VERSION 1
 
 /* Macros for accessing the MSB and LSB of a uint16_t */
 #define MQTT_MSB(A) (uint8_t)((A & 0xFF00) >> 8)
@@ -174,7 +174,7 @@ int mqtt3_raw_pingreq(mqtt3_context *context);
 int mqtt3_raw_pingresp(mqtt3_context *context);
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid);
 int mqtt3_raw_pubcomp(mqtt3_context *context, uint16_t mid);
-int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain, uint16_t mid, const char *sub, uint32_t payloadlen, const uint8_t *payload);
+int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload);
 int mqtt3_raw_pubrec(mqtt3_context *context, uint16_t mid);
 int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid);
 int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload);
@@ -247,26 +247,26 @@ int mqtt3_db_client_will_queue(mqtt3_context *context);
 int mqtt3_db_message_count(int *count);
 int mqtt3_db_message_delete(const char *client_id, uint16_t mid, mqtt3_msg_direction dir);
 int mqtt3_db_message_delete_by_oid(uint64_t oid);
-int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, int retain, const char *sub, int qos, uint32_t payloadlen, const uint8_t *payload);
+int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, int retain, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload);
 int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_direction dir);
 int mqtt3_db_message_update(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status);
 int mqtt3_db_message_write(mqtt3_context *context);
 int mqtt3_db_messages_delete(const char *client_id);
-int mqtt3_db_messages_queue(const char *sub, int qos, uint32_t payloadlen, const uint8_t *payload, int retain);
+int mqtt3_db_messages_queue(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain);
 /* Check all messages waiting on a client reply and resend if timeout has been exceeded. */
 int mqtt3_db_message_timeout_check(unsigned int timeout);
 /* Generate an outgoing mid for client_id. */
 uint16_t mqtt3_db_mid_generate(const char *client_id);
-/* Find retained messages for topic sub and return values in qos, payloadlen and payload. */
-int mqtt3_db_retain_find(const char *sub, int *qos, uint32_t *payloadlen, uint8_t **payload);
-/* Add a retained message for a subject, overwriting an existing one if necessary. */
-int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, const uint8_t *payload);
+/* Find retained messages for topic and return values in qos, payloadlen and payload. */
+int mqtt3_db_retain_find(const char *topic, int *qos, uint32_t *payloadlen, uint8_t **payload);
+/* Add a retained message for a topic, overwriting an existing one if necessary. */
+int mqtt3_db_retain_insert(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload);
 int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos);
 /* Insert a new subscription/qos for a client. */
 int mqtt3_db_sub_insert(const char *client_id, const char *sub, int qos);
 /* Remove a subscription for a client. */
 int mqtt3_db_sub_delete(const char *client_id, const char *sub);
-int mqtt3_db_sub_search_start(const char *sub);
+int mqtt3_db_sub_search_start(const char *topic);
 int mqtt3_db_sub_search_next(char **client_id, uint8_t *qos);
 /* Remove all subscriptions for a client. */
 int mqtt3_db_subs_clean_start(const char *client_id);
