@@ -18,6 +18,7 @@
 - stdout and stderr are flushed when logging to them to give more timely
   updates.
 - dup is now set correctly when resending messages.
+- Database format bumped due to topic column naming fix.
 
 0.3 - 20091217
 ==============
