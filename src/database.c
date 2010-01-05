@@ -1284,6 +1284,56 @@ int mqtt3_db_retain_insert(const char *sub, int qos, uint32_t payloadlen, const 
 	return rc;
 }
 
+#ifdef WITH_REGEX
+int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt = NULL;;
+	char *regex = NULL;
+	const char *topic;
+	int qos;
+	const uint8_t *payload;
+	uint32_t payloadlen;
+	uint16_t mid;
+
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("SELECT sub,qos,payloadlen,payload FROM retain WHERE regexp(?, sub)");
+		if(!stmt) return 1;
+	}
+	if(_mqtt3_db_retain_regex_create(sub, &regex)) return 1;
+
+	if(sqlite3_bind_text(stmt, 1, regex, strlen(regex), mqtt3_free) != SQLITE_OK) rc = 1;
+	while(sqlite3_step(stmt) == SQLITE_ROW){
+		topic = (const char *)sqlite3_column_text(stmt, 0);
+		qos = sqlite3_column_int(stmt, 1);
+		payloadlen = sqlite3_column_int(stmt, 2);
+		payload = sqlite3_column_blob(stmt, 3);
+
+		if(qos > sub_qos) qos = sub_qos;
+		if(qos > 0){
+			mid = mqtt3_db_mid_generate(context->id);
+		}else{
+			mid = 0;
+		}
+		switch(qos){
+			case 0:
+				if(mqtt3_db_message_insert(context->id, mid, md_out, ms_publish, 1,
+						topic, qos, payloadlen, payload)) rc = 1;
+				break;
+			case 1:
+				if(mqtt3_db_message_insert(context->id, mid, md_out, ms_publish_puback, 1,
+						topic, qos, payloadlen, payload)) rc = 1;
+				break;
+			case 2:
+				if(mqtt3_db_message_insert(context->id, mid, md_out, ms_publish_pubrec, 1,
+						topic, qos, payloadlen, payload)) rc = 1;
+				break;
+		}
+	}
+	return rc;
+}
+#endif
+
 /* Save a subscription for a client.
  * Returns 1 on failure (client_id or sub is NULL, sqlite error)
  * Returns 0 on success.
