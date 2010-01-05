@@ -83,7 +83,6 @@
 		<para><command>mosquitto</command> implements all of the mqtt protocol version 3, but there are some significant limitations compared to rsmb.</para>
 		<itemizedlist mark="circle">
 			<listitem><para>There is no bridge support.</para></listitem>
-			<listitem><para>Wildcards within subscription requests are not supported.</para></listitem>
 			<listitem><para>There are vastly fewer configuration options.</para></listitem>
 			<listitem><para>There is less logging information.</para></listitem>
 			<listitem><para>The $SYS hierarchy is smaller.</para></listitem>
