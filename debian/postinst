@@ -20,6 +20,10 @@ case "$1" in
 	configure)
 		setup_mosquitto_user
 		fix_permissions
+
+		if [ -f /var/lib/mosquitto/mosquitto.db ]; then
+			mv /var/lib/mosquitto/mosquitto.db /var/lib/mosquitto/mosquitto.db.dpkg-old
+		fi
 	;;
 
 	abort-upgrade|abort-remove|abort-deconfigure)
