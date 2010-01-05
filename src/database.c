@@ -188,7 +188,14 @@ int mqtt3_db_open(const char *location, const char *filename, const char *regex_
 			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
 			sqlite3_free(errmsg);
 		}
-		return 1;
+		mqtt3_log_printf(MQTT3_LOG_NOTICE, "Retrying with regex_ext_path=/usr/lib/sqlite3-pcre.so");
+		if(sqlite3_load_extension(db, "/usr/lib/sqlite3-pcre.so", NULL, &errmsg) != SQLITE_OK){
+			if(errmsg){
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+				sqlite3_free(errmsg);
+			}
+			return 1;
+		}
 	}
 #endif
 	if(_mqtt3_db_invalidate_sockets()) return 1;

@@ -45,7 +45,9 @@
 					needed for wildcard subscription matching. If it is not
 					found, mosquitto will not start. The default when compiled
 					for Windows is "./sqlite3-pcre.dll" and for other platforms
-					"./sqlite3-pcre.so".</para>
+					"./sqlite3-pcre.so". If the extension cannot be loaded,
+					mosquitto will attempt to load it again with a path of
+					/usr/lib/sqlite3-pcre.so.</para>
 					<para>The sqlite3 pcre extension used is available at
 					http://git.altlinux.org/people/at/packages/?p=sqlite3-pcre.git</para>
 				</listitem>
