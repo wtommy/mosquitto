@@ -1,3 +1,15 @@
+mosquitto (0.4-0~ppa1) karmic; urgency=low
+
+  * New release.
+
+ -- Roger A. Light <roger@atchoo.org>  Tue, 05 Jan 2010 22:18:29 +0000
+
+mosquitto (0.3-0~ppa1) karmic; urgency=low
+
+  * New release.
+
+ -- Roger A. Light <roger@atchoo.org>  Thu, 17 Dec 2009 10:57:49 +0000
+
 mosquitto (0.2-0~ppa1) karmic; urgency=low
 
   * New release.
