@@ -7,6 +7,8 @@
 
 #export DH_VERBOSE=1
 
+include /usr/share/dpatch/dpatch.make
+
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
@@ -15,12 +17,12 @@ configure-stamp:
 
 build: build-stamp
 
-build-stamp: configure-stamp  
+build-stamp: configure-stamp  patch-stamp
 	dh_testdir
 	$(MAKE)
 	touch $@
 
-clean: 
+clean: unpatch
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp configure-stamp
