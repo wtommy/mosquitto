@@ -144,6 +144,8 @@ typedef struct {
 
 /* Client callback for publish events - this WILL change. */
 extern int (*client_publish_handler)(const char *, int, uint32_t, const uint8_t *, int);
+/* Client callback for connack events - this WILL change. */
+extern void (*client_connack_callback)(int);
 
 /* ============================================================
  * Utility functions

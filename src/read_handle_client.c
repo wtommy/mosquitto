@@ -40,6 +40,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 #include <mqtt3.h>
 
+void (*client_connack_callback)(int) = NULL;
+
 int mqtt3_handle_connack(mqtt3_context *context)
 {
 	uint8_t byte;
@@ -48,6 +50,9 @@ int mqtt3_handle_connack(mqtt3_context *context)
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received CONNACK");
 	if(mqtt3_read_byte(context, &byte)) return 1; // Reserved byte, not used
 	if(mqtt3_read_byte(context, &rc)) return 1;
+	if(client_connack_callback){
+		client_connack_callback(rc);
+	}
 	switch(rc){
 		case 0:
 			return 0;
