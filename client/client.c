@@ -132,6 +132,7 @@ int main(int argc, char *argv[])
 	mqtt3_context *context;
 	char id[30];
 	int i;
+	char *host = "localhost";
 	int port = 1883;
 
 	sprintf(id, "mosquitto_client_%d", getpid());
@@ -149,6 +150,24 @@ int main(int argc, char *argv[])
 					return 1;
 				}
 			}
+			i+=2;
+		}else if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--host")){
+			if(i==argc-1){
+				fprintf(stderr, "Error: -h argument given but no host specified.\n\n");
+				return 1;
+			}else{
+				host = argv[i+1];
+			}
+			i+=2;
+		}else if(!strcmp(argv[i], "-i") || !strcmp(argv[i], "--id")){
+			if(i==argc-1){
+				fprintf(stderr, "Error: -i argument given but no id specified.\n\n");
+				return 1;
+			}else{
+				memset(id, 0, 30);
+				snprintf(id, 29, "%s", argv[i+1]);
+			}
+			i+=2;
 		}else if(!strcmp(argv[i], "-t") || !strcmp(argv[i], "--topic")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -t argument given but no topic specified.\n\n");
@@ -156,12 +175,13 @@ int main(int argc, char *argv[])
 			}else{
 				topic = argv[i+1];
 			}
+			i+=2;
 		}
 	}
 	client_publish_callback = my_publish_callback;
 	client_connack_callback = my_connack_callback;
 
-	if(client_connect(&context, "127.0.0.1", port, id, 60)){
+	if(client_connect(&context, host, port, id, 60)){
 		fprintf(stderr, "Unable to connect.\n");
 		return 1;
 	}
