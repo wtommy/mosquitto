@@ -1,4 +1,9 @@
-0.4 - 201001xx
+0.4.1 = 2010112
+===============
+
+- Fix regex used for finding retained messages to send on new subscription.
+
+0.4 - 20100105
 ==============
 
 - Added support for wildcard subscriptions using + and #.
