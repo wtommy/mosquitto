@@ -30,6 +30,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef MQTT3_H
 #define MQTT3_H
 
+#include <config.h>
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <syslog.h>
@@ -142,10 +144,12 @@ typedef struct {
 	char *user;
 } mqtt3_config;
 
+#ifdef WITH_CLIENT
 /* Client callback for publish events - this WILL change. */
 extern int (*client_publish_handler)(const char *, int, uint32_t, const uint8_t *, int);
 /* Client callback for connack events - this WILL change. */
 extern void (*client_connack_callback)(int);
+#endif
 
 /* ============================================================
  * Utility functions

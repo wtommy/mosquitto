@@ -134,8 +134,10 @@ int _mqtt3_db_transaction_begin(void);
 int _mqtt3_db_transaction_end(void);
 int _mqtt3_db_transaction_rollback(void);
 
+#ifdef WITH_CLIENT
 /* Client callback for publish events - this WILL change. */
 int (*client_publish_handler)(const char *, int, uint32_t, const uint8_t *, int) = NULL;
+#endif
 
 int mqtt3_db_open(const char *location, const char *filename, const char *regex_ext_path)
 {
@@ -780,17 +782,22 @@ int mqtt3_db_messages_queue(const char *topic, int qos, uint32_t payloadlen, con
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
+#ifdef WITH_BROKER
 	char *client_id;
 	uint8_t client_qos;
 	uint8_t msg_qos;
 	uint16_t mid;
+#endif
 
 	/* Find all clients that subscribe to topic and put messages into the db for them. */
 	if(!topic || !payloadlen || !payload) return 1;
 
+#ifdef WITH_CLIENT
 	if(client_publish_handler){
 		client_publish_handler(topic, qos, payloadlen, payload, retain);
 	}
+#endif
+#ifdef WITH_BROKER
 	if(retain){
 		if(mqtt3_db_retain_insert(topic, qos, payloadlen, payload)) rc = 1;
 	}
@@ -820,7 +827,7 @@ int mqtt3_db_messages_queue(const char *topic, int qos, uint32_t payloadlen, con
 			if(client_id) mqtt3_free(client_id);
 		}
 	}
-
+#endif
 	return rc;
 }
 
