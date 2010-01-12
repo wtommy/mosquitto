@@ -33,6 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <errno.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -128,29 +129,39 @@ int mqtt3_socket_close(mqtt3_context *context)
  * Returns -1 on failure (ip is NULL, socket creation/connection error)
  * Returns sock number on success.
  */
-int mqtt3_socket_connect(const char *ip, uint16_t port)
+int mqtt3_socket_connect(const char *host, uint16_t port)
 {
 	int sock;
-	struct sockaddr_in addr;
 	int opt;
+	struct addrinfo hints;
+	struct addrinfo *ainfo, *rp;
+	int s;
 
-	if(!ip) return -1;
+	if(!host || !port) return -1;
 
-	sock = socket(AF_INET, SOCK_STREAM, 0);
-	if(sock == -1){
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_INET; /* IPv4 only at the moment. */
+	hints.ai_socktype = SOCK_STREAM;
+
+	s = getaddrinfo(host, NULL, &hints, &ainfo);
+	if(s) return -1;
+
+	for(rp = ainfo; rp != NULL; rp = rp->ai_next){
+		sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+		if(sock == -1) continue;
+		
+		((struct sockaddr_in *)rp->ai_addr)->sin_port = htons(port);
+		if(connect(sock, rp->ai_addr, rp->ai_addrlen) != -1){
+			break;
+		}
+
+		return -1;
+	}
+	if(!rp){
 		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", strerror(errno));
 		return -1;
 	}
-
-	memset(&addr, 0, sizeof(struct sockaddr_in));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
-	inet_aton(ip, &(addr.sin_addr));
-
-	if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_in)) == -1){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", strerror(errno));
-		return -1;
-	}
+	freeaddrinfo(ainfo);
 
 	/* Set non-blocking */
 	opt = fcntl(sock, F_GETFL, 0);

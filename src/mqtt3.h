@@ -195,7 +195,7 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command);
  * Network functions
  * ============================================================ */
 int mqtt3_socket_accept(mqtt3_context **contexts, int context_count, int listensock);
-int mqtt3_socket_connect(const char *ip, uint16_t port);
+int mqtt3_socket_connect(const char *host, uint16_t port);
 int mqtt3_socket_close(mqtt3_context *context);
 int mqtt3_socket_listen(uint16_t port);
 int mqtt3_socket_listen_if(const char *iface, uint16_t port);
