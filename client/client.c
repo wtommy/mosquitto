@@ -135,6 +135,7 @@ void print_usage(void)
 	printf(" -i specifies the id to use for this client. Defaults to mosquitto_client_ appended with the process id.\n");
 	printf(" -k specifies the keep alive in seconds for this client. Defaults to 60.\n");
 	printf(" -p specifies the network port to connect to. Defaults to 1883.\n");
+	printf(" -q specifies the quality of service level to use for the subscription. Defaults to 0.\n");
 	printf(" -t specifies the mqtt topic to subscribe to. Defaults to #.\n");
 }
 
@@ -193,6 +194,20 @@ int main(int argc, char *argv[])
 				keepalive = atoi(argv[i+1]);
 				if(keepalive>65535){
 					fprintf(stderr, "Error: Invalid keepalive given: %d\n", keepalive);
+					print_usage();
+					return 1;
+				}
+			}
+			i+=2;
+		}else if(!strcmp(argv[i], "-q") || !strcmp(argv[i], "--qos")){
+			if(i==argc-1){
+				fprintf(stderr, "Error: -q argument given but no QoS specified.\n\n");
+				print_usage();
+				return 1;
+			}else{
+				topic_qos = atoi(argv[i+1]);
+				if(topic_qos<0 || topic_qos>2){
+					fprintf(stderr, "Error: Invalid QoS given: %d\n", topic_qos);
 					print_usage();
 					return 1;
 				}
