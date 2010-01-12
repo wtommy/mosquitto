@@ -80,6 +80,17 @@ int mqtt3_packet_handle(mqtt3_context *context)
 			if(mqtt3_handle_unsubscribe(context)) return 1;
 			break;
 #endif
+#ifdef WITH_CLIENT
+		case CONNACK:
+			if(mqtt3_handle_connack(context)) return 1;
+			break;
+		case SUBACK:
+			if(mqtt3_handle_suback(context)) return 1;
+			break;
+		case UNSUBACK:
+			if(mqtt3_handle_unsuback(context)) return 1;
+			break;
+#endif
 		default:
 			/* If we don't recognise the command, return an error straight away. */
 			return 1;
