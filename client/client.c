@@ -132,13 +132,16 @@ int main(int argc, char *argv[])
 	mqtt3_context *context;
 	char id[30];
 
-	sprintf(id, "mosquitt_client_%d", getpid());
+	sprintf(id, "mosquitto_client_%d", getpid());
 
 	topic = "$SYS/#";
 	client_publish_callback = my_publish_callback;
 	client_connack_callback = my_connack_callback;
 
-	if(client_connect(&context, "127.0.0.1", 1883, id, 60)) return 1;
+	if(client_connect(&context, "127.0.0.1", 1883, id, 60)){
+		fprintf(stderr, "Unable to connect.\n");
+		return 1;
+	}
 	gcontext = context;
 
 	while(!client_loop(context)){
