@@ -45,12 +45,6 @@ int mqtt3_packet_handle(mqtt3_context *context)
 	if(!context) return 1;
 
 	switch((context->in_packet.command)&0xF0){
-		case CONNECT:
-			if(mqtt3_handle_connect(context)) return 1;
-			break;
-		case DISCONNECT:
-			if(mqtt3_handle_disconnect(context)) return 1;
-			break;
 		case PINGREQ:
 			if(mqtt3_handle_pingreq(context)) return 1;
 			break;
@@ -72,12 +66,20 @@ int mqtt3_packet_handle(mqtt3_context *context)
 		case PUBREL:
 			if(mqtt3_handle_pubrel(context)) return 1;
 			break;
+#ifdef WITH_BROKER
+		case CONNECT:
+			if(mqtt3_handle_connect(context)) return 1;
+			break;
+		case DISCONNECT:
+			if(mqtt3_handle_disconnect(context)) return 1;
+			break;
 		case SUBSCRIBE:
 			if(mqtt3_handle_subscribe(context)) return 1;
 			break;
 		case UNSUBSCRIBE:
 			if(mqtt3_handle_unsubscribe(context)) return 1;
 			break;
+#endif
 		default:
 			/* If we don't recognise the command, return an error straight away. */
 			return 1;
