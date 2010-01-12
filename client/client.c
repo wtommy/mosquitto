@@ -149,6 +149,13 @@ int main(int argc, char *argv[])
 					return 1;
 				}
 			}
+		}else if(!strcmp(argv[i], "-t") || !strcmp(argv[i], "--topic")){
+			if(i==argc-1){
+				fprintf(stderr, "Error: -t argument given but no topic specified.\n\n");
+				return 1;
+			}else{
+				topic = argv[i+1];
+			}
 		}
 	}
 	client_publish_callback = my_publish_callback;
