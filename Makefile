@@ -1,6 +1,6 @@
 include config.mk
 
-DIRS=man src
+DIRS=client man src
 DISTDIRS=man
 
 .PHONY : all mosquitto clean reallyclean install uninstall dist distclean sign copy
@@ -29,7 +29,7 @@ dist : reallyclean
 	@for d in ${DISTDIRS}; do $(MAKE) -C $${d} dist; done
 	
 	mkdir -p dist/mosquitto-${VERSION}
-	cp -r logo man src windows ChangeLog.txt COPYING Makefile compiling.txt config.h config.mk readme.txt mosquitto.conf dist/mosquitto-${VERSION}/
+	cp -r client logo man src windows ChangeLog.txt COPYING Makefile compiling.txt config.h config.mk readme.txt mosquitto.conf dist/mosquitto-${VERSION}/
 	cd dist; tar -zcf mosquitto-${VERSION}.tar.gz mosquitto-${VERSION}/
 	man2html man/mosquitto.8 > dist/mosquitto-8.html
 	man2html man/mosquitto.conf.5 > dist/mosquitto-conf-5.html
