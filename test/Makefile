@@ -1,6 +1,6 @@
 CC=cc
-CFLAGS=-I../src -I.. -Wall -ggdb -DDEBUG
-LDFLAGS=-lsqlite3 -nopie
+CFLAGS=-I../src -I. -Wall -ggdb -DDEBUG
+LDFLAGS=-lsqlite3 -nopie -lwrap
 OBJS=context.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o raw_send_server.o read_handle.o read_handle_client.o read_handle_server.o util.o
 
 .PHONY: all clean

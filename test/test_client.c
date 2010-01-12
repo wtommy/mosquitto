@@ -93,7 +93,7 @@ int handle_read(mqtt3_context *context)
 			if(mqtt3_handle_pubcomp(context)) return 3;
 			break;
 		case PUBLISH:
-			if(mqtt3_handle_publish(context, buf)) return 0;
+			if(mqtt3_handle_publish(context)) return 0;
 			break;
 		case PUBREC:
 			if(mqtt3_handle_pubrec(context)) return 3;
@@ -108,6 +108,12 @@ int handle_read(mqtt3_context *context)
 	return 0;
 }
 
+int my_publish_handler(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
+{
+	printf("%s\n", topic);
+	return 0;
+}
+
 /* pselect loop test */
 int main(int argc, char *argv[])
 {
@@ -115,7 +121,8 @@ int main(int argc, char *argv[])
 	fd_set readfds, writefds;
 	int fdcount;
 	int run = 1;
-	mqtt3_context context;
+	mqtt3_context *context;
+	int sock;
 	char id[30];
 
 	if(argc == 2){
@@ -123,64 +130,77 @@ int main(int argc, char *argv[])
 	}else{
 		sprintf(id, "test");
 	}
-	context.sock = mqtt3_socket_connect("127.0.0.1", 1883);
+
+	sock = mqtt3_socket_connect("127.0.0.1", 1883);
+	context = mqtt3_context_init(sock);
 	//context.sock = mqtt3_socket_connect("10.90.100.5", 1883);
-	if(context.sock == -1){
+	if(context->sock == -1){
 		return 1;
 	}
 	state = stSocketOpened;
 
+	publish_handler = my_publish_handler;
+
 	while(run){
 		FD_ZERO(&readfds);
-		FD_SET(context.sock, &readfds);
+		FD_SET(context->sock, &readfds);
 		FD_ZERO(&writefds);
-		//FD_SET(0, &writefds);
+		FD_SET(context->sock, &writefds);
 		timeout.tv_sec = 1;
 		timeout.tv_nsec = 0;
 
-		fdcount = pselect(context.sock+1, &readfds, &writefds, NULL, &timeout, NULL);
+		fdcount = pselect(context->sock+1, &readfds, &writefds, NULL, &timeout, NULL);
 		if(fdcount == -1){
 			fprintf(stderr, "Error in pselect: %s\n", strerror(errno));
 			run = 0;
 		}else if(fdcount == 0){
+		}else{
 			switch(state){
 				case stSocketOpened:
-					mqtt3_raw_connect(&context, id, true, 2, true, "will", "aargh", 60, true);
+					mqtt3_raw_connect(context, id, true, 2, true, "will", "aargh", 60, true);
+					printf("Connect\n");
 					state = stConnSent;
 					break;
 				case stConnSent:
 					printf("Waiting for CONNACK\n");
+					state = stConnAckd;
 					break;
 				case stConnAckd:
 					printf("CONNACK received\n");
-					mqtt3_raw_subscribe(&context, false, "a/b/c", 0);
+					mqtt3_raw_subscribe(context, false, "a/b/c", 0);
 					state = stSubSent;
 					break;
 				case stSubSent:
-					printf("Waiting for SUBACK\n");
+					//printf("Waiting for SUBACK\n");
 					break;
 				case stSubAckd:
 					printf("SUBACK received\n");
-					mqtt3_raw_publish(&context, 0, 0, 0, 1, "a/b/c", 5, (uint8_t *)"Roger");
+					mqtt3_raw_publish(context, 0, 0, 0, 1, "a/b/c", 5, (uint8_t *)"Roger");
 					state = stPause;
 					break;
 				case stPause:
-					//mqtt3_raw_disconnect(&context);
+					//mqtt3_raw_disconnect(context);
 					break;
 				default:
 					fprintf(stderr, "Error: Unknown state\n");
 					break;
 			}
-		}else{
-			if(FD_ISSET(context.sock, &readfds)){
-				if(handle_read(&context)){
-					fprintf(stderr, "Socket closed on remote side\n");
-					mqtt3_socket_close(&context);
+			if(FD_ISSET(context->sock, &readfds)){
+				if(mqtt3_net_read(context)){
+					fprintf(stderr, "Read Socket closed on remote side\n");
+					mqtt3_socket_close(context);
+					run = 0;
+				}
+			}
+			if(run && FD_ISSET(context->sock, &writefds)){
+				if(mqtt3_net_write(context)){
+					fprintf(stderr, "Write Socket closed on remote side\n");
+					mqtt3_socket_close(context);
 					run = 0;
 				}
 			}
 		}
-		mqtt3_check_keepalive(&context);
+		mqtt3_check_keepalive(context);
 	}
 	return 0;
 }

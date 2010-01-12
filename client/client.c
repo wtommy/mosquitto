@@ -134,6 +134,7 @@ int main(int argc, char *argv[])
 	int i;
 	char *host = "localhost";
 	int port = 1883;
+	int keepalive = 60;
 
 	sprintf(id, "mosquitto_client_%d", getpid());
 	topic = "#";
@@ -168,6 +169,18 @@ int main(int argc, char *argv[])
 				snprintf(id, 29, "%s", argv[i+1]);
 			}
 			i+=2;
+		}else if(!strcmp(argv[i], "-k") || !strcmp(argv[i], "--keepalive")){
+			if(i==argc-1){
+				fprintf(stderr, "Error: -k argument given but no keepalive specified.\n\n");
+				return 1;
+			}else{
+				keepalive = atoi(argv[i+1]);
+				if(keepalive>65535){
+					fprintf(stderr, "Error: Invalid keepalive given: %d\n", keepalive);
+					return 1;
+				}
+			}
+			i+=2;
 		}else if(!strcmp(argv[i], "-t") || !strcmp(argv[i], "--topic")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -t argument given but no topic specified.\n\n");
@@ -181,7 +194,7 @@ int main(int argc, char *argv[])
 	client_publish_callback = my_publish_callback;
 	client_connack_callback = my_connack_callback;
 
-	if(client_connect(&context, host, port, id, 60)){
+	if(client_connect(&context, host, port, id, keepalive)){
 		fprintf(stderr, "Unable to connect.\n");
 		return 1;
 	}

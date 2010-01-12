@@ -89,7 +89,7 @@ int handle_read(mqtt3_context *context)
 			if(mqtt3_handle_pubcomp(context)) return 3;
 			break;
 		case PUBLISH:
-			if(mqtt3_handle_publish(context, buf)) return 0;
+			if(mqtt3_handle_publish(context)) return 0;
 			break;
 		case PUBREC:
 			if(mqtt3_handle_pubrec(context)) return 3;
