@@ -132,6 +132,7 @@ int mqtt3_socket_connect(const char *ip, uint16_t port)
 {
 	int sock;
 	struct sockaddr_in addr;
+	int opt;
 
 	if(!ip) return -1;
 
@@ -148,6 +149,13 @@ int mqtt3_socket_connect(const char *ip, uint16_t port)
 
 	if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_in)) == -1){
 		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", strerror(errno));
+		return -1;
+	}
+
+	/* Set non-blocking */
+	opt = fcntl(sock, F_GETFL, 0);
+	if(opt == -1 || fcntl(sock, F_SETFL, opt | O_NONBLOCK) == -1){
+		close(sock);
 		return -1;
 	}
 
