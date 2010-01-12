@@ -131,14 +131,30 @@ int main(int argc, char *argv[])
 {
 	mqtt3_context *context;
 	char id[30];
+	int i;
+	int port = 1883;
 
 	sprintf(id, "mosquitto_client_%d", getpid());
+	topic = "#";
 
-	topic = "$SYS/#";
+	for(i=1; i<argc; i++){
+		if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
+			if(i==argc-1){
+				fprintf(stderr, "Error: -p argument given but no port specified.\n\n");
+				return 1;
+			}else{
+				port = atoi(argv[i+1]);
+				if(port<1 || port>65535){
+					fprintf(stderr, "Error: Invalid port given: %d\n", port);
+					return 1;
+				}
+			}
+		}
+	}
 	client_publish_callback = my_publish_callback;
 	client_connack_callback = my_connack_callback;
 
-	if(client_connect(&context, "127.0.0.1", 1883, id, 60)){
+	if(client_connect(&context, "127.0.0.1", port, id, 60)){
 		fprintf(stderr, "Unable to connect.\n");
 		return 1;
 	}
