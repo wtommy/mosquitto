@@ -127,6 +127,17 @@ int client_loop(mqtt3_context *context)
 	return 0;
 }
 
+void print_usage(void)
+{
+	printf("mosquitto_client is a simple mqtt client that will subscribe to a single topic and print all messages it receives.\n\n");
+	printf("Usage: mosquitto_client [-h host] [-i id] [-k keepalive] [-p port] [-t topic]\n\n");
+	printf(" -h specifies the mqtt host to connect to. Defaults to localhost.\n");
+	printf(" -i specifies the id to use for this client. Defaults to mosquitto_client_ appended with the process id.\n");
+	printf(" -k specifies the keep alive in seconds for this client. Defaults to 60.\n");
+	printf(" -p specifies the network port to connect to. Defaults to 1883.\n");
+	printf(" -t specifies the mqtt topic to subscribe to. Defaults to #.\n");
+}
+
 int main(int argc, char *argv[])
 {
 	mqtt3_context *context;
@@ -143,11 +154,13 @@ int main(int argc, char *argv[])
 		if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -p argument given but no port specified.\n\n");
+				print_usage();
 				return 1;
 			}else{
 				port = atoi(argv[i+1]);
 				if(port<1 || port>65535){
 					fprintf(stderr, "Error: Invalid port given: %d\n", port);
+					print_usage();
 					return 1;
 				}
 			}
@@ -155,6 +168,7 @@ int main(int argc, char *argv[])
 		}else if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--host")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -h argument given but no host specified.\n\n");
+				print_usage();
 				return 1;
 			}else{
 				host = argv[i+1];
@@ -163,6 +177,7 @@ int main(int argc, char *argv[])
 		}else if(!strcmp(argv[i], "-i") || !strcmp(argv[i], "--id")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -i argument given but no id specified.\n\n");
+				print_usage();
 				return 1;
 			}else{
 				memset(id, 0, 30);
@@ -172,11 +187,13 @@ int main(int argc, char *argv[])
 		}else if(!strcmp(argv[i], "-k") || !strcmp(argv[i], "--keepalive")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -k argument given but no keepalive specified.\n\n");
+				print_usage();
 				return 1;
 			}else{
 				keepalive = atoi(argv[i+1]);
 				if(keepalive>65535){
 					fprintf(stderr, "Error: Invalid keepalive given: %d\n", keepalive);
+					print_usage();
 					return 1;
 				}
 			}
@@ -184,6 +201,7 @@ int main(int argc, char *argv[])
 		}else if(!strcmp(argv[i], "-t") || !strcmp(argv[i], "--topic")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -t argument given but no topic specified.\n\n");
+				print_usage();
 				return 1;
 			}else{
 				topic = argv[i+1];
