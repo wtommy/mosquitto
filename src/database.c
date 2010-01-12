@@ -134,6 +134,9 @@ int _mqtt3_db_transaction_begin(void);
 int _mqtt3_db_transaction_end(void);
 int _mqtt3_db_transaction_rollback(void);
 
+/* Client callback for publish events - this WILL change. */
+int (*client_publish_handler)(const char *, int, uint32_t, const uint8_t *, int) = NULL;
+
 int mqtt3_db_open(const char *location, const char *filename, const char *regex_ext_path)
 {
 	char *filepath;
@@ -785,6 +788,9 @@ int mqtt3_db_messages_queue(const char *topic, int qos, uint32_t payloadlen, con
 	/* Find all clients that subscribe to topic and put messages into the db for them. */
 	if(!topic || !payloadlen || !payload) return 1;
 
+	if(client_publish_handler){
+		client_publish_handler(topic, qos, payloadlen, payload, retain);
+	}
 	if(retain){
 		if(mqtt3_db_retain_insert(topic, qos, payloadlen, payload)) rc = 1;
 	}

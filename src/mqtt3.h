@@ -142,6 +142,9 @@ typedef struct {
 	char *user;
 } mqtt3_config;
 
+/* Client callback for publish events - this WILL change. */
+extern int (*client_publish_handler)(const char *, int, uint32_t, const uint8_t *, int);
+
 /* ============================================================
  * Utility functions
  * ============================================================ */
