@@ -5,12 +5,12 @@ OBJS=context.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o 
 
 .PHONY: all clean
 
-all : mosquitto_client
+all : mosquitto_sub
 
-mosquitto_client : client.o $(OBJS)
+mosquitto_sub : sub_client.o $(OBJS)
 	${CC} $^ -o $@ ${LDFLAGS}
 
-client.o : client.c ../src/mqtt3.h
+sub_client.o : sub_client.c ../src/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 context.o : ../src/context.c ../src/mqtt3.h
@@ -50,4 +50,4 @@ util.o : ../src/util.c ../src/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 clean : 
-	-rm -f *.o mosquitto_client
+	-rm -f *.o mosquitto_sub
