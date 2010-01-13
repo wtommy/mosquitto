@@ -48,6 +48,7 @@ int client_connect(mqtt3_context **context, const char *host, int port, const ch
 		return 1;
 	}
 
+	(*context)->id = mqtt3_strdup(id);
 	mqtt3_raw_connect(*context, id,
 			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
 			keepalive, /*cleanstart*/true);
