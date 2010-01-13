@@ -222,6 +222,9 @@ int main(int argc, char *argv[])
 				topic = argv[i+1];
 			}
 			i+=2;
+		}else{
+			fprintf(stderr, "Error: Unknown option '%s'.\n",argv[i]);
+			return 1;
 		}
 	}
 	client_publish_callback = my_publish_callback;
