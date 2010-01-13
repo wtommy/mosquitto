@@ -4,6 +4,7 @@ syntax: glob
 *.exe
 *.db
 
+client/mosquitto_pub
 client/mosquitto_sub
 man/mosquitto.8
 man/mosquitto.conf.5
