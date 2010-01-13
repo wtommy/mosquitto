@@ -52,6 +52,10 @@ static uint64_t bytes_sent = 0;
 static unsigned long msgs_received = 0;
 static unsigned long msgs_sent = 0;
 
+#ifdef WITH_CLIENT
+void (*client_net_write_callback)(int) = NULL;
+#endif
+
 int _mqtt3_socket_listen(struct sockaddr *addr);
 
 int mqtt3_socket_accept(mqtt3_context **contexts, int context_count, int listensock)
@@ -396,6 +400,9 @@ int mqtt3_net_write(mqtt3_context *context)
 			write_length = write(context->sock, &packet->command, 1);
 			if(write_length == 1){
 				bytes_sent++;
+#ifdef WITH_CLIENT
+				packet->command_saved = packet->command;
+#endif
 				packet->command = 0;
 			}else{
 				if(write_length == 0) return 1; /* EOF */
@@ -453,6 +460,11 @@ int mqtt3_net_write(mqtt3_context *context)
 
 		msgs_sent++;
 
+#ifdef WITH_CLIENT
+		if(client_net_write_callback){
+			client_net_write_callback(packet->command_saved);
+		}
+#endif
 		/* Free data and reset values */
 		context->out_packet = packet->next;
 		mqtt3_context_packet_cleanup(packet);

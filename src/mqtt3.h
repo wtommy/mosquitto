@@ -84,6 +84,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
 struct _mqtt3_packet{
 	uint8_t command;
+#ifdef WITH_CLIENT
+	uint8_t command_saved;
+#endif
 	uint8_t have_remaining;
 	uint8_t remaining_count;
 	uint32_t remaining_mult;
@@ -149,6 +152,8 @@ typedef struct {
 extern int (*client_publish_callback)(const char *, int, uint32_t, const uint8_t *, int);
 /* Client callback for connack events - this WILL change. */
 extern void (*client_connack_callback)(int);
+/* Client callback for when a packet has been successfully written. */
+extern void (*client_net_write_callback)(int);
 #endif
 
 /* ============================================================
