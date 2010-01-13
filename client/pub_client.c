@@ -72,7 +72,7 @@ void print_usage(void)
 	printf(" -i : id to use for this client. Defaults to mosquitto_client_ appended with the process id.\n");
 	printf(" -m : message payload to send.\n");
 	printf(" -p : network port to connect to. Defaults to 1883.\n");
-	printf(" -q : quality of service level to use for the . Defaults to 0.\n");
+	printf(" -q : quality of service level to use for the message. Defaults to 0.\n");
 	printf(" -t : mqtt topic to publish to.\n");
 }
 
