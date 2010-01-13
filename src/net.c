@@ -462,7 +462,7 @@ int mqtt3_net_write(mqtt3_context *context)
 
 #ifdef WITH_CLIENT
 		if(client_net_write_callback){
-			client_net_write_callback(packet->command_saved);
+			client_net_write_callback(packet->command_saved&0xF0);
 		}
 #endif
 		/* Free data and reset values */
