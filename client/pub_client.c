@@ -163,6 +163,7 @@ int main(int argc, char *argv[])
 	fflush(stdout);
 	if(!topic || !message){
 		fprintf(stderr, "Error: Both topic and message must be supplied.\n");
+		print_usage();
 		return 1;
 	}
 
