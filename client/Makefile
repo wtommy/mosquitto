@@ -5,10 +5,16 @@ OBJS=client_shared.o context.o database.o logging.o memory.o net.o raw_send.o ra
 
 .PHONY: all clean
 
-all : mosquitto_sub
+all : mosquitto_pub mosquitto_sub
+
+mosquitto_pub : pub_client.o $(OBJS)
+	${CC} $^ -o $@ ${LDFLAGS}
 
 mosquitto_sub : sub_client.o $(OBJS)
 	${CC} $^ -o $@ ${LDFLAGS}
+
+pub_client.o : pub_client.c client_shared.h ../src/mqtt3.h
+	${CC} $(CFLAGS) -c $< -o $@
 
 sub_client.o : sub_client.c client_shared.h ../src/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
