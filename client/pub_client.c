@@ -156,6 +156,7 @@ int main(int argc, char *argv[])
 			i++;
 		}else{
 			fprintf(stderr, "Error: Unknown option '%s'.\n",argv[i]);
+			print_usage();
 			return 1;
 		}
 	}
