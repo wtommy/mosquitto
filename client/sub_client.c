@@ -129,10 +129,10 @@ int client_loop(mqtt3_context *context)
 
 void print_usage(void)
 {
-	printf("mosquitto_client is a simple mqtt client that will subscribe to a single topic and print all messages it receives.\n\n");
-	printf("Usage: mosquitto_client [-h host] [-i id] [-k keepalive] [-p port] [-t topic]\n\n");
+	printf("mosquitto_sub is a simple mqtt client that will subscribe to a single topic and print all messages it receives.\n\n");
+	printf("Usage: mosquitto_sub [-h host] [-i id] [-k keepalive] [-p port] [-t topic]\n\n");
 	printf(" -h specifies the mqtt host to connect to. Defaults to localhost.\n");
-	printf(" -i specifies the id to use for this client. Defaults to mosquitto_client_ appended with the process id.\n");
+	printf(" -i specifies the id to use for this client. Defaults to mosquitto_sub_ appended with the process id.\n");
 	printf(" -k specifies the keep alive in seconds for this client. Defaults to 60.\n");
 	printf(" -p specifies the network port to connect to. Defaults to 1883.\n");
 	printf(" -q specifies the quality of service level to use for the subscription. Defaults to 0.\n");
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
 	int port = 1883;
 	int keepalive = 60;
 
-	sprintf(id, "mosquitto_client_%d", getpid());
+	sprintf(id, "mosquitto_sub_%d", getpid());
 	topic = "#";
 
 	for(i=1; i<argc; i++){
