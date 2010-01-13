@@ -164,6 +164,10 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
+	if(client_init()){
+		fprintf(stderr, "Error: Unable to initialise database.\n");
+		return 1;
+	}
 	client_publish_callback = my_publish_callback;
 	client_connack_callback = my_connack_callback;
 
@@ -175,6 +179,7 @@ int main(int argc, char *argv[])
 
 	while(!client_loop(context)){
 	}
+	client_cleanup();
 	return 0;
 }
 

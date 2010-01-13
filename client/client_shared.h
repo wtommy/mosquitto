@@ -32,6 +32,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 #include <mqtt3.h>
 
+int client_init(void);
+void client_cleanup(void);
 int client_connect(mqtt3_context **context, const char *host, int port, const char *id, int keepalive);
 void mqtt3_check_keepalive(mqtt3_context *context);
 int client_loop(mqtt3_context *context);

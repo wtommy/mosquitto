@@ -36,6 +36,16 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mqtt3.h>
 
+int client_init(void)
+{
+	return mqtt3_db_open(NULL, ":memory:", NULL);
+}
+
+void client_cleanup(void)
+{
+	mqtt3_db_close();
+}
+
 int client_connect(mqtt3_context **context, const char *host, int port, const char *id, int keepalive)
 {
 	int sock;
