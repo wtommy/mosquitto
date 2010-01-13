@@ -59,4 +59,4 @@ util.o : ../src/util.c ../src/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 clean : 
-	-rm -f *.o mosquitto_sub
+	-rm -f *.o mosquitto_pub mosquitto_sub
