@@ -40,35 +40,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 
 #include <mqtt3.h>
+#include <client_shared.h>
 
 static char *topic = NULL;
 static int topic_qos = 0;
 static mqtt3_context *gcontext;
-
-int client_connect(mqtt3_context **context, const char *host, int port, const char *id, int keepalive)
-{
-	int sock;
-
-	if(!context || !host || !id) return 1;
-
-	sock = mqtt3_socket_connect(host, port);
-	*context = mqtt3_context_init(sock);
-	if((*context)->sock == -1){
-		return 1;
-	}
-
-	mqtt3_raw_connect(*context, id,
-			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
-			keepalive, /*cleanstart*/true);
-	return 0;
-}
-
-void mqtt3_check_keepalive(mqtt3_context *context)
-{
-	if(time(NULL) - context->last_msg_out >= context->keepalive){
-		mqtt3_raw_pingreq(context);
-	}
-}
 
 int my_publish_callback(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
 {
@@ -85,46 +61,6 @@ void my_connack_callback(int result)
 	}else{
 		printf("Connect failed\n");
 	}
-}
-
-int client_loop(mqtt3_context *context)
-{
-	struct timespec timeout;
-	fd_set readfds, writefds;
-	int fdcount;
-
-	FD_ZERO(&readfds);
-	FD_SET(context->sock, &readfds);
-	FD_ZERO(&writefds);
-	if(context->out_packet){
-		FD_SET(context->sock, &writefds);
-	}
-	timeout.tv_sec = 1;
-	timeout.tv_nsec = 0;
-
-	fdcount = pselect(context->sock+1, &readfds, &writefds, NULL, &timeout, NULL);
-	if(fdcount == -1){
-		fprintf(stderr, "Error in pselect: %s\n", strerror(errno));
-		return 1;
-	}else{
-		if(FD_ISSET(context->sock, &readfds)){
-			if(mqtt3_net_read(context)){
-				fprintf(stderr, "Read error on socket.\n");
-				mqtt3_socket_close(context);
-				return 1;
-			}
-		}
-		if(FD_ISSET(context->sock, &writefds)){
-			if(mqtt3_net_write(context)){
-				fprintf(stderr, "Write error on socket.\n");
-				mqtt3_socket_close(context);
-				return 1;
-			}
-		}
-	}
-	mqtt3_check_keepalive(context);
-
-	return 0;
 }
 
 void print_usage(void)
