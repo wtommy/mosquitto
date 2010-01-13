@@ -782,12 +782,10 @@ int mqtt3_db_messages_queue(const char *topic, int qos, uint32_t payloadlen, con
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
-#ifdef WITH_BROKER
 	char *client_id;
 	uint8_t client_qos;
 	uint8_t msg_qos;
 	uint16_t mid;
-#endif
 
 	/* Find all clients that subscribe to topic and put messages into the db for them. */
 	if(!topic || !payloadlen || !payload) return 1;
@@ -797,7 +795,6 @@ int mqtt3_db_messages_queue(const char *topic, int qos, uint32_t payloadlen, con
 		client_publish_callback(topic, qos, payloadlen, payload, retain);
 	}
 #endif
-#ifdef WITH_BROKER
 	if(retain){
 		if(mqtt3_db_retain_insert(topic, qos, payloadlen, payload)) rc = 1;
 	}
@@ -827,7 +824,6 @@ int mqtt3_db_messages_queue(const char *topic, int qos, uint32_t payloadlen, con
 			if(client_id) mqtt3_free(client_id);
 		}
 	}
-#endif
 	return rc;
 }
 
