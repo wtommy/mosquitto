@@ -3,7 +3,7 @@ CFLAGS=-I../src -I. -Wall -ggdb -DWITH_CLIENT
 LDFLAGS=-lsqlite3 -nopie
 OBJS=client_shared.o context.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o read_handle.o read_handle_client.o util.o
 
-.PHONY: all clean
+.PHONY: all install uninstall clean
 
 all : mosquitto_pub mosquitto_sub
 
@@ -57,6 +57,15 @@ read_handle_server.o : ../src/read_handle_server.c ../src/mqtt3.h
 
 util.o : ../src/util.c ../src/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
+
+install : all
+	$(INSTALL) -d ${DESTDIR}$(prefix)/bin
+	$(INSTALL) -s mosquitto_pub ${DESTDIR}${prefix}/bin/mosquitto_pub
+	$(INSTALL) -s mosquitto_sub ${DESTDIR}${prefix}/bin/mosquitto_sub
+
+uninstall :
+	-rm -f ${DESTDIR}${prefix}/bin/mosquitto_pub
+	-rm -f ${DESTDIR}${prefix}/bin/mosquitto_sub
 
 clean : 
 	-rm -f *.o mosquitto_pub mosquitto_sub
