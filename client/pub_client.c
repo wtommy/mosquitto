@@ -88,7 +88,6 @@ int main(int argc, char *argv[])
 	int keepalive = 60;
 
 	sprintf(id, "mosquitto_pub_%d", getpid());
-	topic = "#";
 
 	for(i=1; i<argc; i++){
 		if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
