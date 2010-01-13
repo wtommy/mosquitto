@@ -45,13 +45,14 @@ POSSIBILITY OF SUCH DAMAGE.
 static char *topic = NULL;
 static char *message = NULL;
 static int qos = 0;
+static int retain = 0;
 static mqtt3_context *gcontext;
 
 void my_connack_callback(int result)
 {
 	if(!result){
 		printf("Connected ok\n");
-		mqtt3_raw_publish(gcontext, false, qos, false, 0, topic, strlen(message), (uint8_t *)message);
+		mqtt3_raw_publish(gcontext, false, qos, retain, 1, topic, strlen(message), (uint8_t *)message);
 	}else{
 		printf("Connect failed\n");
 	}
@@ -67,11 +68,12 @@ void my_net_write_callback(int command)
 void print_usage(void)
 {
 	printf("mosquitto_pub is a simple mqtt client that will publish a message on a single topic and exit.\n\n");
-	printf("Usage: mosquitto_pub [-h host] [-i id] [-m message] [-p port] [-t topic]\n\n");
+	printf("Usage: mosquitto_pub [-h host] [-i id] [-m message] [-p port] [-r] [-t topic]\n\n");
 	printf(" -h : mqtt host to connect to. Defaults to localhost.\n");
 	printf(" -i : id to use for this client. Defaults to mosquitto_client_ appended with the process id.\n");
 	printf(" -m : message payload to send.\n");
 	printf(" -p : network port to connect to. Defaults to 1883.\n");
+	printf(" -r : message should be retained.\n");
 	printf(" -q : quality of service level to use for the message. Defaults to 0.\n");
 	printf(" -t : mqtt topic to publish to.\n");
 }
@@ -145,6 +147,8 @@ int main(int argc, char *argv[])
 				}
 			}
 			i++;
+		}else if(!strcmp(argv[i], "-r") || !strcmp(argv[i], "--retain")){
+			retain = 1;
 		}else if(!strcmp(argv[i], "-t") || !strcmp(argv[i], "--topic")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -t argument given but no topic specified.\n\n");
