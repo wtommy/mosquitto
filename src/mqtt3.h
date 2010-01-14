@@ -249,6 +249,7 @@ int mqtt3_db_open(const char *location, const char *filename, const char *regex_
 int mqtt3_db_close(void);
 int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message);
 int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message);
+int mqtt3_db_client_count(int *count);
 /* Remove the client detailed in context from the clients table only. */
 int mqtt3_db_client_delete(mqtt3_context *context);
 /* Return the socket number in sock of a client client_id. */

@@ -512,6 +512,34 @@ int mqtt3_db_client_will_queue(mqtt3_context *context)
 	return rc;
 }
 
+/* Returns the number of client currently in the database.
+ * This includes inactive clients.
+ * Returns 1 on failure (count is NULL, sqlite error)
+ * Returns 0 on success.
+ */
+int mqtt3_db_client_count(int *count)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt = NULL;
+
+	if(!count) return 1;
+
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("SELECT COUNT(*) FROM clients");
+		if(!stmt){
+			return 1;
+		}
+	}
+	if(sqlite3_step(stmt) == SQLITE_ROW){
+		*count = sqlite3_column_int(stmt, 0);
+	}else{
+		rc = 1;
+	}
+	sqlite3_reset(stmt);
+
+	return rc;
+}
+
 /* Delete a client from the database.
  * Called when clients with clean start enabled disconnect.
  * Returns 1 on failure (context or context->id is NULL, sqlite error)
@@ -1544,6 +1572,11 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 		if(!mqtt3_db_message_count(&count)){
 			snprintf(buf, 100, "%d", count);
 			mqtt3_db_messages_queue("$SYS/broker/messages/inflight", 2, strlen(buf), (uint8_t *)buf, 1);
+		}
+
+		if(!mqtt3_db_client_count(&count)){
+			snprintf(buf, 100, "%d", count);
+			mqtt3_db_messages_queue("$SYS/broker/clients/total", 2, strlen(buf), (uint8_t *)buf, 1);
 		}
 
 		snprintf(buf, 100, "%d", mqtt3_memory_used());
