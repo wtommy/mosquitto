@@ -1,4 +1,10 @@
-0.4.1 = 2010112
+0.5 - 2010xxxx
+==============
+
+- No longer store QoS=0 messages for disconnected clients that do not have
+  clean start set.
+
+0.4.1 - 2010112
 ===============
 
 - Fix regex used for finding retained messages to send on new subscription.
