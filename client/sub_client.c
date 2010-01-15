@@ -53,6 +53,7 @@ int my_publish_callback(const char *topic, int qos, uint32_t payloadlen, const u
 		printf("%s (QoS: %d): \"%s\"\n", topic, qos, payload);
 	}else{
 		printf("%s\n", payload);
+		fflush(stdout);
 	}
 
 	return 0;
