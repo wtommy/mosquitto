@@ -45,10 +45,15 @@ POSSIBILITY OF SUCH DAMAGE.
 static char *topic = NULL;
 static int topic_qos = 0;
 static mqtt3_context *gcontext;
+int verbose = 0;
 
 int my_publish_callback(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
 {
-	printf("%s (QoS: %d): \"%s\"\n", topic, qos, payload);
+	if(verbose){
+		printf("%s (QoS: %d): \"%s\"\n", topic, qos, payload);
+	}else{
+		printf("%s\n", payload);
+	}
 
 	return 0;
 }
@@ -56,23 +61,24 @@ int my_publish_callback(const char *topic, int qos, uint32_t payloadlen, const u
 void my_connack_callback(int result)
 {
 	if(!result){
-		printf("Connected ok\n");
+		fprintf(stderr, "Connected ok\n");
 		mqtt3_raw_subscribe(gcontext, false, topic, topic_qos);
 	}else{
-		printf("Connect failed\n");
+		fprintf(stderr, "Connect failed\n");
 	}
 }
 
 void print_usage(void)
 {
 	printf("mosquitto_sub is a simple mqtt client that will subscribe to a single topic and print all messages it receives.\n\n");
-	printf("Usage: mosquitto_sub [-h host] [-i id] [-k keepalive] [-p port] [-t topic]\n\n");
+	printf("Usage: mosquitto_sub [-h host] [-i id] [-k keepalive] [-p port] [-t topic] [-v]\n\n");
 	printf(" -h : mqtt host to connect to. Defaults to localhost.\n");
 	printf(" -i : id to use for this client. Defaults to mosquitto_sub_ appended with the process id.\n");
 	printf(" -k : keep alive in seconds for this client. Defaults to 60.\n");
 	printf(" -p : network port to connect to. Defaults to 1883.\n");
 	printf(" -q : quality of service level to use for the subscription. Defaults to 0.\n");
 	printf(" -t : mqtt topic to subscribe to. Defaults to #.\n");
+	printf(" -v : print published messages verbosely.\n");
 }
 
 int main(int argc, char *argv[])
@@ -158,6 +164,8 @@ int main(int argc, char *argv[])
 				topic = argv[i+1];
 			}
 			i++;
+		}else if(!strcmp(argv[i], "-v") || !strcmp(argv[i], "--verbose")){
+			verbose = 1;
 		}else{
 			fprintf(stderr, "Error: Unknown option '%s'.\n",argv[i]);
 			print_usage();
