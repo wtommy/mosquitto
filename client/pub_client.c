@@ -51,10 +51,10 @@ static mqtt3_context *gcontext;
 void my_connack_callback(int result)
 {
 	if(!result){
-		printf("Connected ok\n");
+		fprintf(stderr, "Connected ok\n");
 		mqtt3_raw_publish(gcontext, false, qos, retain, 1, topic, strlen(message), (uint8_t *)message);
 	}else{
-		printf("Connect failed\n");
+		fprintf(stderr, "Connect failed\n");
 	}
 }
 
