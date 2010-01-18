@@ -226,6 +226,25 @@ int mqtt3_db_close(void)
 	return 0;
 }
 
+int mqtt3_db_backup(void)
+{
+	int rc = 0;
+	sqlite3 *backup_db;
+	sqlite3_backup *backup;
+
+	if(!db) return 1;
+	if(sqlite3_open("/tmp/mosquitto-backup.db", &backup_db) != SQLITE_OK) return 1;
+	backup = sqlite3_backup_init(backup_db, "main", db, "main");
+	if(backup){
+		sqlite3_backup_step(backup, -1);
+		sqlite3_backup_finish(backup);
+	}else{
+		rc = 1;
+	}
+	sqlite3_close(backup_db);
+	return rc;
+}
+
 int _mqtt3_db_tables_create(void)
 {
 	int rc = 0;

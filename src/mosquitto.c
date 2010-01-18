@@ -97,6 +97,12 @@ void handle_sigint(int signal)
 	run = 0;
 }
 
+/* Signal handler for SIGUSR1 - backup the db. */
+void handle_sigusr1(int signal)
+{
+	mqtt3_db_backup();
+}
+
 int main(int argc, char *argv[])
 {
 	struct timespec timeout;
@@ -154,6 +160,7 @@ int main(int argc, char *argv[])
 
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
+	signal(SIGUSR1, handle_sigusr1);
 	signal(SIGPIPE, SIG_IGN);
 
 	sigemptyset(&sigblock);

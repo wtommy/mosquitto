@@ -247,6 +247,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context);
  * ============================================================ */
 int mqtt3_db_open(const char *location, const char *filename, const char *regex_ext_path);
 int mqtt3_db_close(void);
+int mqtt3_db_backup(void);
 int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message);
 int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message);
 int mqtt3_db_client_count(int *count);
