@@ -1,4 +1,9 @@
-0.4.1 = 2010112
+0.4.2 - 2010020x
+================
+
+- Fix segfault on client connect with invalid protocol name/version.
+
+0.4.1 - 20100112
 ===============
 
 - Fix regex used for finding retained messages to send on new subscription.
