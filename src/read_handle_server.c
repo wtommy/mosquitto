@@ -51,19 +51,19 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	
 	if(mqtt3_read_string(context, &protocol_name)) return 1;
 	if(!protocol_name){
-		mqtt3_context_cleanup(context);
+		mqtt3_socket_close(context);
 		return 3;
 	}
 	if(strcmp(protocol_name, PROTOCOL_NAME)){
 		mqtt3_free(protocol_name);
-		mqtt3_context_cleanup(context);
+		mqtt3_socket_close(context);
 		return 1;
 	}
 	if(mqtt3_read_byte(context, &protocol_version)) return 1;
 	if(protocol_version != PROTOCOL_VERSION){
 		mqtt3_free(protocol_name);
 		mqtt3_raw_connack(context, 1);
-		mqtt3_context_cleanup(context);
+		mqtt3_socket_close(context);
 		return 1;
 	}
 
