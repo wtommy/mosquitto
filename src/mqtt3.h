@@ -139,9 +139,9 @@ typedef struct {
 	int iface_count;
 	int log_dest;
 	int log_type;
-	int msg_timeout;
 	int persistence;
 	char *persistence_location;
+	int retry_interval;
 	int sys_interval;
 	char *pid_file;
 	char *user;

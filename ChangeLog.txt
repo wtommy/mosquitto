@@ -3,6 +3,7 @@
 
 - No longer store QoS=0 messages for disconnected clients that do not have
   clean start set.
+- Rename msg_timeout option to retry_interval for better rsmb compatibility.
 
 0.4.1 - 2010112
 ===============

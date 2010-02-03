@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		mqtt3_db_message_timeout_check(config.msg_timeout);
+		mqtt3_db_message_timeout_check(config.retry_interval);
 
 		timeout.tv_sec = 1;
 		timeout.tv_nsec = 0;

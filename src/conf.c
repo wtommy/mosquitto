@@ -18,10 +18,10 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->iface_count = 0;
 	config->log_dest = MQTT3_LOG_STDERR;
 	config->log_type = MQTT3_LOG_ERR | MQTT3_LOG_WARNING | MQTT3_LOG_NOTICE | MQTT3_LOG_INFO;
-	config->msg_timeout = 10;
 	config->persistence = 0;
 	config->persistence_location = NULL;
 	config->pid_file = NULL;
+	config->retry_interval = 20;
 	config->sys_interval = 10;
 	config->user = "mosquitto";
 }
@@ -210,18 +210,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty log_type value in configuration.");
 					}
-				}else if(!strcmp(token, "msg_timeout")){
-					token = strtok(NULL, " ");
-					if(token){
-						config->msg_timeout = atoi(token);
-						if(config->msg_timeout < 1 || config->msg_timeout > 3600){
-							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid msg_timeout value (%d).", config->msg_timeout);
-							return 1;
-						}
-					}else{
-						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty msg_timeout value in configuration.");
-						return 1;
-					}
 				}else if(!strcmp(token, "persistence")){
 					token = strtok(NULL, " ");
 					if(token){
@@ -265,6 +253,18 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						config->iface[config->iface_count-1].port = port_tmp;
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty port value in configuration.");
+						return 1;
+					}
+				}else if(!strcmp(token, "retry_interval")){
+					token = strtok(NULL, " ");
+					if(token){
+						config->retry_interval = atoi(token);
+						if(config->retry_interval < 1 || config->retry_interval > 3600){
+							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid retry_interval value (%d).", config->retry_interval);
+							return 1;
+						}
+					}else{
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty retry_interval value in configuration.");
 						return 1;
 					}
 				}else if(!strcmp(token, "sys_interval")){
