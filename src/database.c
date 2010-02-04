@@ -110,6 +110,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 
 static sqlite3 *db = NULL;
+static char *db_filepath = NULL;
 
 /* Need to make a struct here to have an array.
  * Don't know size of sqlite3_stmt so can't array it directly.
@@ -141,8 +142,11 @@ int (*client_publish_callback)(const char *, int, uint32_t, const uint8_t *, int
 
 int mqtt3_db_open(const char *location, const char *filename, const char *regex_ext_path)
 {
-	char *filepath;
 	char *errmsg;
+	int dbrc;
+	int rc = 0;
+	sqlite3_backup *restore;
+	sqlite3 *restore_db;
 
 	if(!filename) return 1;
 #ifdef WITH_REGEX
@@ -152,38 +156,41 @@ int mqtt3_db_open(const char *location, const char *filename, const char *regex_
 		return 1;
 	}
 
+	if(sqlite3_open_v2(":memory:", &db, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK){
+		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", sqlite3_errmsg(db));
+		return 1;
+	}
+
 	if(!strcmp(filename, ":memory:")){
-		if(sqlite3_open_v2(filename, &db, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", sqlite3_errmsg(db));
-			return 1;
-		}
 		if(_mqtt3_db_tables_create()) return 1;
 	}else{
 		if(location && strlen(location)){
-			filepath = mqtt3_malloc(strlen(location) + strlen(filename) + 1);
-			if(!filepath) return 1;
-			sprintf(filepath, "%s%s", location, filename);
+			db_filepath = mqtt3_malloc(strlen(location) + strlen(filename) + 1);
+			if(!db_filepath) return 1;
+			sprintf(db_filepath, "%s%s", location, filename);
 		}else{
-			filepath = (char *)filename;
+			db_filepath = mqtt3_strdup(filename);
 		}
-		/* Open without creating first. If found, check for db version.
-		 * If not found, open with create.
-		 */
-		if(sqlite3_open_v2(filepath, &db, SQLITE_OPEN_READWRITE, NULL) == SQLITE_OK){
-			if(_mqtt3_db_version_check()){
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid database version.");
-				return 1;
+		dbrc = sqlite3_open_v2(db_filepath, &restore_db, SQLITE_OPEN_READONLY, NULL);
+		/* FIXME - need to handle all error conditions, *especially* file doesn't exist. */
+		if(dbrc == SQLITE_OK){
+			restore = sqlite3_backup_init(db, "main", restore_db, "main");
+			if(restore){
+				sqlite3_backup_step(restore, -1);
+				sqlite3_backup_finish(restore);
+				if(_mqtt3_db_version_check()){
+					mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid database version.");
+					rc = 1;
+				}
+			}else{
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Couldn't restore database %s (%d).", db_filepath, dbrc);
+				rc = 1;
 			}
+			sqlite3_close(restore_db);
 		}else{
-			if(sqlite3_open_v2(filepath, &db,
-					SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL) != SQLITE_OK){
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", sqlite3_errmsg(db));
-				return 1;
-			}
+			/* Can't restore DB, so create a new set of tables. */
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Warning: Couldn't restore database (%d).", dbrc);
 			if(_mqtt3_db_tables_create()) return 1;
-		}
-		if(filepath && filepath != filename){
-			mqtt3_free(filepath);
 		}
 	}
 
@@ -206,7 +213,7 @@ int mqtt3_db_open(const char *location, const char *filename, const char *regex_
 #endif
 	if(_mqtt3_db_invalidate_sockets()) return 1;
 
-	return 0;
+	return rc;
 }
 
 int mqtt3_db_close(void)
@@ -232,8 +239,8 @@ int mqtt3_db_backup(void)
 	sqlite3 *backup_db;
 	sqlite3_backup *backup;
 
-	if(!db) return 1;
-	if(sqlite3_open("/tmp/mosquitto-backup.db", &backup_db) != SQLITE_OK) return 1;
+	if(!db || !db_filepath) return 1;
+	if(sqlite3_open(db_filepath, &backup_db) != SQLITE_OK) return 1;
 	backup = sqlite3_backup_init(backup_db, "main", db, "main");
 	if(backup){
 		sqlite3_backup_step(backup, -1);
