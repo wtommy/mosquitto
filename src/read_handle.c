@@ -46,58 +46,41 @@ int mqtt3_packet_handle(mqtt3_context *context)
 
 	switch((context->in_packet.command)&0xF0){
 		case PINGREQ:
-			if(mqtt3_handle_pingreq(context)) return 1;
-			break;
+			return mqtt3_handle_pingreq(context);
 		case PINGRESP:
-			if(mqtt3_handle_pingresp(context)) return 1;
-			break;
+			return mqtt3_handle_pingresp(context);
 		case PUBACK:
-			if(mqtt3_handle_puback(context)) return 1;
-			break;
+			return mqtt3_handle_puback(context);
 		case PUBCOMP:
-			if(mqtt3_handle_pubcomp(context)) return 1;
-			break;
+			return mqtt3_handle_pubcomp(context);
 		case PUBLISH:
-			if(mqtt3_handle_publish(context)) return 1;
-			break;
+			return mqtt3_handle_publish(context);
 		case PUBREC:
-			if(mqtt3_handle_pubrec(context)) return 1;
-			break;
+			return mqtt3_handle_pubrec(context);
 		case PUBREL:
-			if(mqtt3_handle_pubrel(context)) return 1;
-			break;
+			return mqtt3_handle_pubrel(context);
 #ifdef WITH_BROKER
 		case CONNECT:
-			if(mqtt3_handle_connect(context)) return 1;
-			break;
+			return mqtt3_handle_connect(context);
 		case DISCONNECT:
-			if(mqtt3_handle_disconnect(context)) return 1;
-			break;
+			return mqtt3_handle_disconnect(context);
 		case SUBSCRIBE:
-			if(mqtt3_handle_subscribe(context)) return 1;
-			break;
+			return mqtt3_handle_subscribe(context);
 		case UNSUBSCRIBE:
-			if(mqtt3_handle_unsubscribe(context)) return 1;
-			break;
+			return mqtt3_handle_unsubscribe(context);
 #endif
 #ifdef WITH_CLIENT
 		case CONNACK:
-			if(mqtt3_handle_connack(context)) return 1;
-			break;
+			return mqtt3_handle_connack(context);
 		case SUBACK:
-			if(mqtt3_handle_suback(context)) return 1;
-			break;
+			return mqtt3_handle_suback(context);
 		case UNSUBACK:
-			if(mqtt3_handle_unsuback(context)) return 1;
-			break;
+			return mqtt3_handle_unsuback(context);
 #endif
 		default:
 			/* If we don't recognise the command, return an error straight away. */
 			return 1;
-			break;
 	}
-
-	return 0;
 }
 
 int mqtt3_handle_puback(mqtt3_context *context)
