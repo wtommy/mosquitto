@@ -167,16 +167,9 @@ int main(int argc, char *argv[])
 	sigemptyset(&sigblock);
 	sigaddset(&sigblock, SIGINT);
 
-	if(config.persistence){
-		if(mqtt3_db_open(config.persistence_location, "mosquitto.db", config.ext_sqlite_regex)){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Couldn't open database.");
-			return 1;
-		}
-	}else{
-		if(mqtt3_db_open(NULL, ":memory:", config.ext_sqlite_regex)){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Couldn't open database.");
-			return 1;
-		}
+	if(mqtt3_db_open(&config)){
+		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Couldn't open database.");
+		return 1;
 	}
 	/* Initialise logging only after initialising the database in case we're
 	 * logging to topics */

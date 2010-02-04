@@ -140,7 +140,7 @@ int _mqtt3_db_transaction_rollback(void);
 int (*client_publish_callback)(const char *, int, uint32_t, const uint8_t *, int) = NULL;
 #endif
 
-int mqtt3_db_open(const char *location, const char *filename, const char *regex_ext_path)
+int mqtt3_db_open(mqtt3_config *config)
 {
 	char *errmsg;
 	int dbrc;
@@ -148,9 +148,9 @@ int mqtt3_db_open(const char *location, const char *filename, const char *regex_
 	sqlite3_backup *restore;
 	sqlite3 *restore_db;
 
-	if(!filename) return 1;
+	if(!config) return 1;
 #ifdef WITH_REGEX
-	if(!regex_ext_path) return 1;
+	if(!config->ext_sqlite_regex) return 1;
 #endif
 	if(sqlite3_initialize() != SQLITE_OK){
 		return 1;
@@ -161,15 +161,15 @@ int mqtt3_db_open(const char *location, const char *filename, const char *regex_
 		return 1;
 	}
 
-	if(!strcmp(filename, ":memory:")){
+	if(!config->persistence){
 		if(_mqtt3_db_tables_create()) return 1;
 	}else{
-		if(location && strlen(location)){
-			db_filepath = mqtt3_malloc(strlen(location) + strlen(filename) + 1);
+		if(config->persistence_location && strlen(config->persistence_location)){
+			db_filepath = mqtt3_malloc(strlen(config->persistence_location) + strlen("mosquitto.db") + 1);
 			if(!db_filepath) return 1;
-			sprintf(db_filepath, "%s%s", location, filename);
+			sprintf(db_filepath, "%smosquitto.db", config->persistence_location);
 		}else{
-			db_filepath = mqtt3_strdup(filename);
+			db_filepath = mqtt3_strdup("mosquitto.db");
 		}
 		dbrc = sqlite3_open_v2(db_filepath, &restore_db, SQLITE_OPEN_READONLY, NULL);
 		/* FIXME - need to handle all error conditions, *especially* file doesn't exist. */
@@ -196,7 +196,7 @@ int mqtt3_db_open(const char *location, const char *filename, const char *regex_
 
 #ifdef WITH_REGEX
 	sqlite3_enable_load_extension(db, 1);
-	if(sqlite3_load_extension(db, regex_ext_path, NULL, &errmsg) != SQLITE_OK){
+	if(sqlite3_load_extension(db, config->ext_sqlite_regex, NULL, &errmsg) != SQLITE_OK){
 		if(errmsg){
 			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
 			sqlite3_free(errmsg);
@@ -240,12 +240,17 @@ int mqtt3_db_backup(void)
 	sqlite3_backup *backup;
 
 	if(!db || !db_filepath) return 1;
-	if(sqlite3_open(db_filepath, &backup_db) != SQLITE_OK) return 1;
+	mqtt3_log_printf(MQTT3_LOG_INFO, "Saving in-memory database to %s.\n", db_filepath);
+	if(sqlite3_open(db_filepath, &backup_db) != SQLITE_OK){
+		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to open on-disk database for writing.\n");
+		return 1;
+	}
 	backup = sqlite3_backup_init(backup_db, "main", db, "main");
 	if(backup){
 		sqlite3_backup_step(backup, -1);
 		sqlite3_backup_finish(backup);
 	}else{
+		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to save in-memory database to disk.\n");
 		rc = 1;
 	}
 	sqlite3_close(backup_db);
