@@ -101,6 +101,7 @@ POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
+#include <errno.h>
 #include <sqlite3.h>
 #include <stdio.h>
 #include <string.h>
@@ -147,6 +148,7 @@ int mqtt3_db_open(mqtt3_config *config)
 	int rc = 0;
 	sqlite3_backup *restore;
 	sqlite3 *restore_db;
+	FILE *fptr;
 
 	if(!config) return 1;
 #ifdef WITH_REGEX
@@ -188,9 +190,24 @@ int mqtt3_db_open(mqtt3_config *config)
 			}
 			sqlite3_close(restore_db);
 		}else{
-			/* Can't restore DB, so create a new set of tables. */
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Warning: Couldn't restore database (%d).", dbrc);
-			if(_mqtt3_db_tables_create()) return 1;
+			fptr = fopen(db_filepath, "rb");
+			if(!fptr){
+				switch(errno){
+					case ENOENT:
+						/* File doesn't exist - ok to create */
+						if(_mqtt3_db_tables_create()){
+							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to populate new database. Try restarting mosquitto.");
+							return 1;
+						}
+						break;
+					case EACCES:
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Permission denied trying to restore persistent database %s.", db_filepath);
+						return 1;
+				}
+			}else{
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Possibly corrupt database file. Try restarting mosquitto.");
+				fclose(fptr);
+			}
 		}
 	}
 
