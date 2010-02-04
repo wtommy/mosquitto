@@ -8,6 +8,7 @@
 void mqtt3_config_init(mqtt3_config *config)
 {
 	/* Set defaults */
+	config->autosave_interval = 1800;
 	config->daemon = 0;
 #ifdef __CYGWIN__
 	config->ext_sqlite_regex = "./sqlite3-pcre.dll";
@@ -128,8 +129,16 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 			}
 			token = strtok(buf, " ");
 			if(token){
-
-				if(!strcmp(token, "ext_sqlite_regex")){
+				if(!strcmp(token, "autosave_interval")){
+					token = strtok(NULL, " ");
+					if(token){
+						config->autosave_interval = atoi(token);
+						if(config->autosave_interval < 0) config->autosave_interval = 0;
+					}else{
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty autosave_interval value in configuration.");
+						return 1;
+					}
+				}else if(!strcmp(token, "ext_sqlite_regex")){
 					token = strtok(NULL, " ");
 					if(token){
 						config->ext_sqlite_regex = mqtt3_strdup(token);

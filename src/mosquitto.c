@@ -117,6 +117,7 @@ int main(int argc, char *argv[])
 	time_t now;
 	mqtt3_config config;
 	time_t start_time = time(NULL);
+	time_t last_backup = time(NULL);
 	char buf[1024];
 	int i;
 	FILE *pid;
@@ -299,6 +300,11 @@ int main(int argc, char *argv[])
 				}
 			}
 		}
+		if(config.persistence && config.autosave_interval){
+			if(last_backup + config.autosave_interval < now){
+				mqtt3_db_backup();
+			}
+		}
 	}
 
 	mqtt3_log_printf(MQTT3_LOG_INFO, "mosquitto version %s terminating", VERSION);
@@ -321,6 +327,9 @@ int main(int argc, char *argv[])
 		mqtt3_free(listensock);
 	}
 
+	if(config.persistence && config.autosave_interval){
+		mqtt3_db_backup();
+	}
 	mqtt3_db_close();
 
 	if(config.pid_file){

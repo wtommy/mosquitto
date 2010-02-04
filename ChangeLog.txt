@@ -4,6 +4,11 @@
 - No longer store QoS=0 messages for disconnected clients that do not have
   clean start set.
 - Rename msg_timeout option to retry_interval for better rsmb compatibility.
+- Change persistence behaviour. The database is now stored in memory even if
+  persistence is enabled. It is written to disk when mosquitto exits and also at
+  periodic intervals as defined by the new autosave_interval option.
+- The writing of the persistence database may be forced by sending mosquitto
+  the SIGUSR1 signal.
 
 0.4.2 - 2010020x
 ================

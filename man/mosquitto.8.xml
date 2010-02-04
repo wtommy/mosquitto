@@ -193,6 +193,18 @@
 	</refsect1>
 
 	<refsect1>
+		<title>Signals</title>
+		<variablelist>
+			<varlistentry>
+				<term>SIGUSR1</term>
+				<listitem>
+					<para>Upon receiving the SIGUSR1 signal, mosquitto will write the persistence database to disk. This signal is only acted upon if persistence is enabled.</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsect1>
+
+	<refsect1>
 		<title>Files</title>
 		<variablelist>
 			<varlistentry>
