@@ -9,6 +9,8 @@
   periodic intervals as defined by the new autosave_interval option.
 - The writing of the persistence database may be forced by sending mosquitto
   the SIGUSR1 signal.
+- Clients that do not send CONNECT as their first command are now
+  disconnected.
 
 0.4.2 - 20100203
 ================

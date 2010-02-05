@@ -103,6 +103,7 @@ typedef struct _mqtt3_context{
 	time_t last_msg_out;
 	uint16_t keepalive;
 	bool clean_start;
+	bool connected;
 	char *id;
 	char *address;
 	struct _mqtt3_packet in_packet;

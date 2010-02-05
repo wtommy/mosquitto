@@ -49,6 +49,9 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	char *will_topic = NULL, *will_message = NULL;
 	uint8_t will, will_retain, will_qos, clean_start;
 	
+	/* Don't accept multiple CONNECT commands. */
+	if(context->connected) return 1;
+
 	if(mqtt3_read_string(context, &protocol_name)) return 1;
 	if(!protocol_name){
 		mqtt3_socket_close(context);
@@ -83,14 +86,6 @@ int mqtt3_handle_connect(mqtt3_context *context)
 		if(mqtt3_read_string(context, &will_message)) return 1;
 	}
 
-	if(context->id){
-		/* FIXME - second CONNECT!
-		 * FIXME - Need to check for existing client with same name
-		 * FIXME - Need to check for valid name
-		 */
-		mqtt3_free(context->id);
-	}
-
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
 	context->id = client_id;
 	context->clean_start = clean_start;
@@ -100,6 +95,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	if(will_topic) mqtt3_free(will_topic);
 	if(will_message) mqtt3_free(will_message);
 
+	context->connected = true;
 	return mqtt3_raw_connack(context, 0);
 }
 
