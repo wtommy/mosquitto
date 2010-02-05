@@ -111,7 +111,7 @@
 			<varlistentry>
 				<term><option>persistence</option></term>
 				<listitem>
-					<para>Can be 1 or 0, denoting true or false. If true, connection, subscription and message data will be written to the disk in mosquitto.db at the location dictated by persistence_location. When mosquitto is restarted, it will reload the information stored in mosquitto.db. The data will be written to disk when mosquitto closes and also at periodic intervals as defined by autosave_interval. Writing of the persistence database may also be forced by sending mosquitto the SIGUSR1 signal. If false, the data will be stored in memory only. Defaults to 0.</para>
+					<para>Can be true or false. If true, connection, subscription and message data will be written to the disk in mosquitto.db at the location dictated by persistence_location. When mosquitto is restarted, it will reload the information stored in mosquitto.db. The data will be written to disk when mosquitto closes and also at periodic intervals as defined by autosave_interval. Writing of the persistence database may also be forced by sending mosquitto the SIGUSR1 signal. If false, the data will be stored in memory only. Defaults to false.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

@@ -5,6 +5,7 @@
 #include <config.h>
 #include <mqtt3.h>
 
+int _mqtt3_conf_parse_bool(char **token, const char *name, bool *value);
 int _mqtt3_conf_parse_int(char **token, const char *name, int *value);
 
 void mqtt3_config_init(mqtt3_config *config)
@@ -216,17 +217,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty log_type value in configuration.");
 					}
 				}else if(!strcmp(token, "persistence")){
-					token = strtok(NULL, " ");
-					if(token){
-						config->persistence = atoi(token);
-						if(config->persistence != 1 && config->persistence != 0){
-							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid persistence value (%d).", config->persistence);
-							return 1;
-						}
-					}else{
-						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty persistence value in configuration.");
-						return 1;
-					}
+					if(_mqtt3_conf_parse_bool(&token, "persistence", &config->persistence)) return 1;
 				}else if(!strcmp(token, "persistence_location")){
 					token = strtok(NULL, " ");
 					if(token){
@@ -293,6 +284,25 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	return rc;
 }
 
+int _mqtt3_conf_parse_bool(char **token, const char *name, bool *value)
+{
+	*token = strtok(NULL, " ");
+	if(*token){
+		if(!strcmp(*token, "false") || !strcmp(*token, "0")){
+			*value = false;
+		}else if(!strcmp(*token, "true") || !strcmp(*token, "1")){
+			*value = true;
+		}else{
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid %s value (%s).", name, *token);
+		}
+	}else{
+		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty %s value in configuration.", name);
+		return 1;
+	}
+	
+	return 0;
+}
+
 int _mqtt3_conf_parse_int(char **token, const char *name, int *value)
 {
 	*token = strtok(NULL, " ");
@@ -305,4 +315,3 @@ int _mqtt3_conf_parse_int(char **token, const char *name, int *value)
 
 	return 0;
 }
-
