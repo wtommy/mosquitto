@@ -5,6 +5,8 @@
 #include <config.h>
 #include <mqtt3.h>
 
+int _mqtt3_conf_parse_int(char **token, const char *name, int *value);
+
 void mqtt3_config_init(mqtt3_config *config)
 {
 	/* Set defaults */
@@ -130,14 +132,8 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 			token = strtok(buf, " ");
 			if(token){
 				if(!strcmp(token, "autosave_interval")){
-					token = strtok(NULL, " ");
-					if(token){
-						config->autosave_interval = atoi(token);
-						if(config->autosave_interval < 0) config->autosave_interval = 0;
-					}else{
-						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty autosave_interval value in configuration.");
-						return 1;
-					}
+					if(_mqtt3_conf_parse_int(&token, "autosave_interval", &config->autosave_interval)) return 1;
+					if(config->autosave_interval < 0) config->autosave_interval = 0;
 				}else if(!strcmp(token, "ext_sqlite_regex")){
 					token = strtok(NULL, " ");
 					if(token){
@@ -245,47 +241,29 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						config->pid_file = mqtt3_strdup(token);
 					}
 				}else if(!strcmp(token, "port")){
-					token = strtok(NULL, " ");
-					if(token){
-						port_tmp = atoi(token);
-						if(port_tmp < 1 || port_tmp > 65535){
-							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid port value (%d).", port_tmp);
-							return 1;
-						}
-						config->iface_count++;
-						config->iface = mqtt3_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
-						if(!config->iface){
-							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
-							return 1;
-						}
-						config->iface[config->iface_count-1].iface = NULL;
-						config->iface[config->iface_count-1].port = port_tmp;
-					}else{
-						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty port value in configuration.");
+					if(_mqtt3_conf_parse_int(&token, "port", &port_tmp)) return 1;
+					if(port_tmp < 1 || port_tmp > 65535){
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid port value (%d).", port_tmp);
 						return 1;
 					}
+					config->iface_count++;
+					config->iface = mqtt3_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
+					if(!config->iface){
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
+						return 1;
+					}
+					config->iface[config->iface_count-1].iface = NULL;
+					config->iface[config->iface_count-1].port = port_tmp;
 				}else if(!strcmp(token, "retry_interval")){
-					token = strtok(NULL, " ");
-					if(token){
-						config->retry_interval = atoi(token);
-						if(config->retry_interval < 1 || config->retry_interval > 3600){
-							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid retry_interval value (%d).", config->retry_interval);
-							return 1;
-						}
-					}else{
-						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty retry_interval value in configuration.");
+					if(_mqtt3_conf_parse_int(&token, "retry_interval", &config->retry_interval)) return 1;
+					if(config->retry_interval < 1 || config->retry_interval > 3600){
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid retry_interval value (%d).", config->retry_interval);
 						return 1;
 					}
 				}else if(!strcmp(token, "sys_interval")){
-					token = strtok(NULL, " ");
-					if(token){
-						config->sys_interval = atoi(token);
-						if(config->sys_interval < 1 || config->sys_interval > 65535){
-							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid sys_interval value (%d).", config->sys_interval);
-							return 1;
-						}
-					}else{
-						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty sys_interval value in configuration.");
+					if(_mqtt3_conf_parse_int(&token, "sys_interval", &config->sys_interval)) return 1;
+					if(config->sys_interval < 1 || config->sys_interval > 65535){
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid sys_interval value (%d).", config->sys_interval);
 						return 1;
 					}
 				}else if(!strcmp(token, "user")){
@@ -314,3 +292,17 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 
 	return rc;
 }
+
+int _mqtt3_conf_parse_int(char **token, const char *name, int *value)
+{
+	*token = strtok(NULL, " ");
+	if(*token){
+		*value = atoi(*token);
+	}else{
+		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty %s value in configuration.", name);
+		return 1;
+	}
+
+	return 0;
+}
+
