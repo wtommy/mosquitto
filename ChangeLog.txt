@@ -10,7 +10,7 @@
 - The writing of the persistence database may be forced by sending mosquitto
   the SIGUSR1 signal.
 
-0.4.2 - 2010020x
+0.4.2 - 20100203
 ================
 
 - Fix segfault on client connect with invalid protocol name/version.
