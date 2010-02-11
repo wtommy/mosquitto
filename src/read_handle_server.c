@@ -58,12 +58,16 @@ int mqtt3_handle_connect(mqtt3_context *context)
 		return 3;
 	}
 	if(strcmp(protocol_name, PROTOCOL_NAME)){
+		mqtt3_log_printf(MQTT3_LOG_INFO, "Invalid protocol \"%s\" in CONNECT from %s.",
+				protocol_name, context->address);
 		mqtt3_free(protocol_name);
 		mqtt3_socket_close(context);
 		return 1;
 	}
 	if(mqtt3_read_byte(context, &protocol_version)) return 1;
 	if(protocol_version != PROTOCOL_VERSION){
+		mqtt3_log_printf(MQTT3_LOG_INFO, "Invalid protocol version %d in CONNECT from %s.",
+				protocol_version, context->address);
 		mqtt3_free(protocol_name);
 		mqtt3_raw_connack(context, 1);
 		mqtt3_socket_close(context);

@@ -13,6 +13,7 @@
   disconnected.
 - Boolean configuration values may now be specified with true/false as well as
   1/0.
+- Log message on CONNECT with invalid protocol or protocol version.
 
 0.4.2 - 20100203
 ================
