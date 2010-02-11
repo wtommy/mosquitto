@@ -16,7 +16,7 @@ void mqtt3_config_init(mqtt3_config *config)
 #ifdef __CYGWIN__
 	config->ext_sqlite_regex = "./sqlite3-pcre.dll";
 #else
-	config->ext_sqlite_regex = "./sqlite3-pcre.so";
+	config->ext_sqlite_regex = "/usr/lib/sqlite3/pcre.so";
 #endif
 	config->iface = NULL;
 	config->iface_count = 0;

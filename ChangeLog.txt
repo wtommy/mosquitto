@@ -14,6 +14,8 @@
 - Boolean configuration values may now be specified with true/false as well as
   1/0.
 - Log message on CONNECT with invalid protocol or protocol version.
+- Default sqlite3-pcre path on Linux is now /usr/lib/sqlite3/pcre.so to match
+  future sqlite3-pcre packages.
 
 0.4.2 - 20100203
 ================
