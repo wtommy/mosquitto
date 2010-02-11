@@ -38,7 +38,12 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int client_init(void)
 {
-	return mqtt3_db_open(NULL, ":memory:", NULL);
+	mqtt3_config config;
+
+	config.persistence = 0;
+	config.ext_sqlite_regex = NULL;
+
+	return mqtt3_db_open(&config);
 }
 
 void client_cleanup(void)
