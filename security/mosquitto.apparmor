@@ -1,0 +1,27 @@
+/usr/sbin/mosquitto flags=(complain) {
+	/usr/sbin/mosquitto r,
+
+	network inet stream,
+	network inet6 stream,
+
+	# Base
+	/dev/urandom r,
+	/etc/ld.so.cache rm,
+	/lib/tls/i686/cmov/libc-*.so rm,
+	/lib/tls/i686/cmov/libdl-*.so rm,
+	/lib/tls/i686/cmov/libnsl-*.so rm,
+	/lib/tls/i686/cmov/libpthread-*.so rm,
+
+	# sqlite
+	/usr/lib/libsqlite3.so* rm,
+	owner /var/tmp/etillqs_* rw,
+
+	# If using regex
+	/lib/libpcre.so*  rm,
+	/usr/lib/sqlite3-pcre.so rm,
+
+	# For tcp-wrappers
+	/lib/libwrap.so*  rm,
+	/etc/hosts.allow r,
+	/etc/hosts.deny r,
+}
