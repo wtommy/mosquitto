@@ -72,7 +72,7 @@ void my_connack_callback(int result)
 void print_usage(void)
 {
 	printf("mosquitto_sub is a simple mqtt client that will subscribe to a single topic and print all messages it receives.\n\n");
-	printf("Usage: mosquitto_sub [-h host] [-i id] [-k keepalive] [-p port] [-t topic] [-v]\n\n");
+	printf("Usage: mosquitto_sub [-h host] [-i id] [-k keepalive] [-p port] [-q qos] [-t topic] [-v]\n\n");
 	printf(" -h : mqtt host to connect to. Defaults to localhost.\n");
 	printf(" -i : id to use for this client. Defaults to mosquitto_sub_ appended with the process id.\n");
 	printf(" -k : keep alive in seconds for this client. Defaults to 60.\n");
