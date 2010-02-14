@@ -45,7 +45,7 @@
 				<term><option>-c</option></term>
 				<term><option>--config-file</option></term>
 				<listitem>
-					<para>Load configuration from a file. In not given, the default values as described in <citerefentry><refentrytitle>mosquitto.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> are used.</para>
+					<para>Load configuration from a file. If not given, the default values as described in <citerefentry><refentrytitle>mosquitto.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> are used.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
