@@ -70,7 +70,7 @@ void print_usage(void)
 	printf("mosquitto_pub is a simple mqtt client that will publish a message on a single topic and exit.\n\n");
 	printf("Usage: mosquitto_pub [-h host] [-i id] [-m message] [-p port] [-q qos] [-r] [-t topic]\n\n");
 	printf(" -h : mqtt host to connect to. Defaults to localhost.\n");
-	printf(" -i : id to use for this client. Defaults to mosquitto_client_ appended with the process id.\n");
+	printf(" -i : id to use for this client. Defaults to mosquitto_pub_ appended with the process id.\n");
 	printf(" -m : message payload to send.\n");
 	printf(" -p : network port to connect to. Defaults to 1883.\n");
 	printf(" -q : quality of service level to use for the message. Defaults to 0.\n");
