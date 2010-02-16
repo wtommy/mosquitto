@@ -99,14 +99,12 @@ int client_loop(mqtt3_context *context)
 	}else{
 		if(FD_ISSET(context->sock, &readfds)){
 			if(mqtt3_net_read(context)){
-				fprintf(stderr, "Read error on socket.\n");
 				mqtt3_socket_close(context);
 				return 1;
 			}
 		}
 		if(FD_ISSET(context->sock, &writefds)){
 			if(mqtt3_net_write(context)){
-				fprintf(stderr, "Write error on socket.\n");
 				mqtt3_socket_close(context);
 				return 1;
 			}
