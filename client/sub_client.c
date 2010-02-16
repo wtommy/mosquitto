@@ -50,7 +50,7 @@ int verbose = 0;
 int my_publish_callback(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
 {
 	if(verbose){
-		printf("%s %s\n", topic, qos, payload);
+		printf("%s %s\n", topic, payload);
 	}else{
 		printf("%s\n", payload);
 		fflush(stdout);
