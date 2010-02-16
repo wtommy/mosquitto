@@ -29,13 +29,19 @@ dist : reallyclean
 	@for d in ${DISTDIRS}; do $(MAKE) -C $${d} dist; done
 	
 	mkdir -p dist/mosquitto-${VERSION}
-	cp -r client logo man src windows ChangeLog.txt COPYING Makefile compiling.txt config.h config.mk readme.txt mosquitto.conf dist/mosquitto-${VERSION}/
+	cp -r client logo man misc security src windows ChangeLog.txt COPYING Makefile compiling.txt config.h config.mk readme.txt mosquitto.conf dist/mosquitto-${VERSION}/
 	cd dist; tar -zcf mosquitto-${VERSION}.tar.gz mosquitto-${VERSION}/
-	man2html man/mosquitto.8 > dist/mosquitto-8.html
-	man2html man/mosquitto.conf.5 > dist/mosquitto-conf-5.html
-	sed -i 's#http://localhost/cgi-bin/man/man2html?5+mosquitto.conf#mosquitto-conf-5.html#' dist/mosquitto-8.html dist/mosquitto-conf-5.html
-	sed -i 's#http://localhost/cgi-bin/man/man2html?8+mosquitto#mosquitto-8.html#' dist/mosquitto-8.html dist/mosquitto-conf-5.html
-	sed -i 's#http://localhost/cgi-bin/man/man2html#http://mosquitto.atchoo.org/#' dist/mosquitto-8.html dist/mosquitto-conf-5.html
+	for m in mosquitto.8 mosquitto.conf.5 mosquitto_pub.1 mosquitto_sub.1 mqtt.7; \
+		do \
+		hfile=$$(echo $${m} | sed -e 's/\./-/g'); \
+		man2html man/$${m} > dist/$${hfile}.html; \
+		sed -i 's#http://localhost/cgi-bin/man/man2html?8+mosquitto#mosquitto-8.html#' dist/$${hfile}.html; \
+		sed -i 's#http://localhost/cgi-bin/man/man2html?5+mosquitto.conf#mosquitto-conf-5.html#' dist/$${hfile}.html; \
+		sed -i 's#http://localhost/cgi-bin/man/man2html?1+mosquitto_pub#mosquitto_pub-1.html#' dist/$${hfile}.html; \
+		sed -i 's#http://localhost/cgi-bin/man/man2html?1+mosquitto_sub#mosquitto_sub-1.html#' dist/$${hfile}.html; \
+		sed -i 's#http://localhost/cgi-bin/man/man2html?7+mmqtt#mqtt-7.html#' dist/$${hfile}.html; \
+		sed -i 's#http://localhost/cgi-bin/man/man2html#http://mosquitto.atchoo.org/#' dist/$${hfile}.html; \
+	done
 
 distclean : clean
 	@for d in ${DISTDIRS}; do $(MAKE) -C $${d} distclean; done
