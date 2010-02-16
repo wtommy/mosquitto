@@ -62,7 +62,6 @@ int my_publish_callback(const char *topic, int qos, uint32_t payloadlen, const u
 void my_connack_callback(int result)
 {
 	if(!result){
-		fprintf(stderr, "Connected ok\n");
 		mqtt3_raw_subscribe(gcontext, false, topic, topic_qos);
 	}else{
 		fprintf(stderr, "Connect failed\n");
