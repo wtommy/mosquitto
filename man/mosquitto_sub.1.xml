@@ -1,0 +1,167 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<?xml-stylesheet type="text/xsl" href="http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN" "/usr/share/sgml/docbook/xml-dtd-4.4/docbookx.dtd">
+
+<refentry xml:id="mosquitto">
+	<refmeta>
+		<refentrytitle>mosquitto_sub</refentrytitle>
+		<manvolnum>1</manvolnum>
+	</refmeta>
+
+	<refnamediv>
+		<refname>mosquitto_sub</refname>
+		<refpurpose>an mqtt version 3 client for subscribing to topics</refpurpose>
+	</refnamediv>
+
+	<refsynopsisdiv>
+		<cmdsynopsis>
+			<command>mosquitto_sub</command>
+			<group choice='opt'>
+				<arg><option>-h</option> <replaceable>hostname</replaceable></arg>
+			</group>
+			<group choice='opt'>
+				<arg><option>-i</option> <replaceable>client_id</replaceable></arg>
+			</group>
+			<group choice='opt'>
+				<arg><option>-k</option> <replaceable>keepalive time</replaceable></arg>
+			</group>
+			<group choice='opt'>
+				<arg><option>-p</option> <replaceable>port number</replaceable></arg>
+			</group>
+			<group choice='opt'>
+				<arg><option>-q</option> <replaceable>message QoS</replaceable></arg>
+			</group>
+			<group choice='req'>
+				<arg><option>-t</option> <replaceable>message topic</replaceable></arg>
+			</group>
+			<group choice='opt'>
+				<arg><option>-v</option></arg>
+			</group>
+		</cmdsynopsis>
+	</refsynopsisdiv>
+
+	<refsect1>
+		<title>Description</title>
+		<para><command>mosquitto_sub</command> is a simple mqtt version 3
+		client that will sublish to a topic and print the messages that it
+		receives.</para>
+	</refsect1>
+
+	<refsect1>
+		<title>Options</title>
+		<variablelist>
+			<varlistentry>
+				<term><option>-h</option></term>
+				<term><option>--host</option></term>
+				<listitem>
+					<para>Specify the host to connect to. Defaults to localhost.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-i</option></term>
+				<term><option>--id</option></term>
+				<listitem>
+					<para>The id to use for this client. If not given, defaults
+					to mosquitto_sub_ appended with the process id of the
+					client.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-k</option></term>
+				<term><option>--keepalive</option></term>
+				<listitem>
+					<para>The number of seconds between sending PING commands
+					to the broker for the purposes of informing it we are still
+					connected and functioning. Defaults to 60 seconds.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-p</option></term>
+				<term><option>--port</option></term>
+				<listitem>
+					<para>Connect to the port specified instead of the default 1883.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-q</option></term>
+				<term><option>--qos</option></term>
+				<listitem>
+					<para>Specify the quality of service desired for the
+					incoming messages, from 0, 1 and 2. Defaults to 0. See
+					<citerefentry><refentrytitle>mqtt</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+					for more information on QoS.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-t</option></term>
+				<term><option>--topic</option></term>
+				<listitem>
+					<para>The mqtt topic on which to sublish the message. See
+					<citerefentry><refentrytitle>mqtt</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+					for more information on mqtt topics.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-v</option></term>
+				<term><option>--verbose</option></term>
+				<listitem>
+					<para>Print published messages verbosely. With this
+					argument, messages will be printed as "topic payload". When
+					this argument is not given, the messages are printed as
+					"payload".</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsect1>
+
+	<refsect1>
+		<title>Examples</title>
+		<para>Note that these really are examples - the subscriptions will work
+		if you run them as shown, but there must be something publishing
+		messages on those topics for you to receive anything.</para>
+		<para>Subscribe to temperature information on localhost with QoS 1:</para>
+		<itemizedlist mark="circle">
+			<listitem><para>mosquitto_sub -t sensors/temperature -q 1</para></listitem>
+		</itemizedlist>
+		<para>Subscribe to hard drive temperature updates on multiple
+		machines/hard drives. This expects each machine to be publishing its
+		hard drive temperature to
+		sensors/machines/HOSTNAME/temperature/HD_NAME.</para>
+		<itemizedlist mark="circle">
+			<listitem><para>mosquitto_sub -t sensors/machines/+/temperature/+</para></listitem>
+		</itemizedlist>
+		<para>Subscribe to all broker status messages:</para>
+		<itemizedlist mark="circle">
+			<listitem><para>mosquitto_sub -v -t \$SYS/#</para></listitem>
+		</itemizedlist>
+	</refsect1>
+
+	<refsect1>
+		<title>Bugs</title>
+		<para><command>mosquitto_sub</command> bug information can be found at
+		<uri type="webpage">http://launchpad.net/mosquitto</uri>.</para>
+	</refsect1>
+
+	<refsect1>
+		<title>See Also</title>
+		<para>
+			<citerefentry>
+				<refentrytitle>mqtt</refentrytitle>
+				<manvolnum>7</manvolnum>
+			</citerefentry>
+			<citerefentry>
+				<refentrytitle>mosquitto_pub</refentrytitle>
+				<manvolnum>1</manvolnum>
+			</citerefentry>
+			<citerefentry>
+				<refentrytitle>mosquitto</refentrytitle>
+				<manvolnum>8</manvolnum>
+			</citerefentry>
+		</para>
+	</refsect1>
+
+	<refsect1>
+		<title>Author</title>
+		<para>Roger Light <email>roger@atchoo.org</email></para>
+	</refsect1>
+</refentry>

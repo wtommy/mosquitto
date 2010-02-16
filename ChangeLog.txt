@@ -16,6 +16,9 @@
 - Log message on CONNECT with invalid protocol or protocol version.
 - Default sqlite3-pcre path on Linux is now /usr/lib/sqlite3/pcre.so to match
   future sqlite3-pcre packages.
+- Add mosquitto_sub and mosquitto_pub, simple clients for subscribe/publish.
+- Add man pages for clients.
+- Add general man page on mqtt.
 
 0.4.2 - 20100203
 ================

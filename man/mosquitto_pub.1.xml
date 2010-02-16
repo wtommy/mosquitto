@@ -1,0 +1,146 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<?xml-stylesheet type="text/xsl" href="http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN" "/usr/share/sgml/docbook/xml-dtd-4.4/docbookx.dtd">
+
+<refentry xml:id="mosquitto">
+	<refmeta>
+		<refentrytitle>mosquitto_pub</refentrytitle>
+		<manvolnum>1</manvolnum>
+	</refmeta>
+
+	<refnamediv>
+		<refname>mosquitto_pub</refname>
+		<refpurpose>an mqtt version 3 client for publishing simple messages</refpurpose>
+	</refnamediv>
+
+	<refsynopsisdiv>
+		<cmdsynopsis>
+			<command>mosquitto_pub</command>
+			<group choice='opt'>
+				<arg><option>-h</option> <replaceable>hostname</replaceable></arg>
+			</group>
+			<group choice='opt'>
+				<arg><option>-i</option> <replaceable>client_id</replaceable></arg>
+			</group>
+			<group choice='req'>
+				<arg><option>-m</option> <replaceable>message</replaceable></arg>
+			</group>
+			<group choice='opt'>
+				<arg><option>-p</option> <replaceable>port number</replaceable></arg>
+			</group>
+			<group choice='opt'>
+				<arg><option>-q</option> <replaceable>message QoS</replaceable></arg>
+			</group>
+			<group choice='opt'>
+				<arg><option>-r</option></arg>
+			</group>
+			<group choice='req'>
+				<arg><option>-t</option> <replaceable>message topic</replaceable></arg>
+			</group>
+		</cmdsynopsis>
+	</refsynopsisdiv>
+
+	<refsect1>
+		<title>Description</title>
+		<para><command>mosquitto_pub</command> is a simple mqtt version 3 client that will publish a single message on a topic and exit.</para>
+	</refsect1>
+
+	<refsect1>
+		<title>Options</title>
+		<variablelist>
+			<varlistentry>
+				<term><option>-h</option></term>
+				<term><option>--host</option></term>
+				<listitem>
+					<para>Specify the host to connect to. Defaults to localhost.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-i</option></term>
+				<term><option>--id</option></term>
+				<listitem>
+					<para>The id to use for this client. If not given, defaults to mosquitto_pub_ appended with the process id of the client.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-m</option></term>
+				<term><option>--message</option></term>
+				<listitem>
+					<para>The actual message payload to send.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-p</option></term>
+				<term><option>--port</option></term>
+				<listitem>
+					<para>Connect to the port specified instead of the default 1883.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-q</option></term>
+				<term><option>--qos</option></term>
+				<listitem>
+					<para>Specify the quality of service to use for the message, from 0, 1 and 2. Defaults to 0.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-r</option></term>
+				<term><option>--retain</option></term>
+				<listitem>
+					<para>If retain is given, the message will be retained as a "last know good" value on the broker. See <citerefentry><refentrytitle>mqtt</refentrytitle><manvolnum>7</manvolnum></citerefentry> for more information.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-t</option></term>
+				<term><option>--topic</option></term>
+				<listitem>
+					<para>The mqtt topic on which to publish the message. See <citerefentry><refentrytitle>mqtt</refentrytitle><manvolnum>7</manvolnum></citerefentry> for more information on mqtt topics.</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsect1>
+
+	<refsect1>
+		<title>Examples</title>
+		<para>Publish temperature information to localhost with QoS 1:</para>
+		<itemizedlist mark="circle">
+			<listitem><para>mosquitto_pub -t sensors/temperature -m 32 -q 1</para></listitem>
+		</itemizedlist>
+		<para>Publish timestamp and temperature information to a remote host on a non-standard port and QoS 0:</para>
+		<itemizedlist mark="circle">
+			<listitem><para>mosquitto_pub -h 192.168.1.1 -p 1885 -t sensors/temperature -m "1266193804 32"</para></listitem>
+		</itemizedlist>
+		<para>Publish light switch status. Message is set to retained because there may be a long period of time between light switch events:</para>
+		<itemizedlist mark="circle">
+			<listitem><para>mosquitto_pub -r -t switches/kitchen_lights/status -m "on"</para></listitem>
+		</itemizedlist>
+	</refsect1>
+
+	<refsect1>
+		<title>Bugs</title>
+		<para><command>mosquitto_pub</command> bug information can be found at <uri type="webpage">http://launchpad.net/mosquitto</uri>.</para>
+	</refsect1>
+
+	<refsect1>
+		<title>See Also</title>
+		<para>
+			<citerefentry>
+				<refentrytitle>mqtt</refentrytitle>
+				<manvolnum>7</manvolnum>
+			</citerefentry>
+			<citerefentry>
+				<refentrytitle>mosquitto_sub</refentrytitle>
+				<manvolnum>1</manvolnum>
+			</citerefentry>
+			<citerefentry>
+				<refentrytitle>mosquitto</refentrytitle>
+				<manvolnum>8</manvolnum>
+			</citerefentry>
+		</para>
+	</refsect1>
+
+	<refsect1>
+		<title>Author</title>
+		<para>Roger Light <email>roger@atchoo.org</email></para>
+	</refsect1>
+</refentry>

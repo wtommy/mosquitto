@@ -245,6 +245,14 @@
 				<refentrytitle>hosts_access</refentrytitle>
 				<manvolnum>5</manvolnum>
 			</citerefentry>
+			<citerefentry>
+				<refentrytitle>mosquitto_pub</refentrytitle>
+				<manvolnum>1</manvolnum>
+			</citerefentry>
+			<citerefentry>
+				<refentrytitle>mosquitto_sub</refentrytitle>
+				<manvolnum>1</manvolnum>
+			</citerefentry>
 		</para>
 	</refsect1>
 
