@@ -135,7 +135,7 @@ struct mqtt3_iface {
 
 typedef struct {
 	int autosave_interval;
-	int daemon;
+	bool daemon;
 	char *ext_sqlite_regex;
 	struct mqtt3_iface *iface;
 	int iface_count;

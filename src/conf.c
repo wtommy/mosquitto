@@ -12,7 +12,7 @@ void mqtt3_config_init(mqtt3_config *config)
 {
 	/* Set defaults */
 	config->autosave_interval = 1800;
-	config->daemon = 0;
+	config->daemon = false;
 #ifdef __CYGWIN__
 	config->ext_sqlite_regex = "./sqlite3-pcre.dll";
 #else
@@ -49,7 +49,7 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 			}
 			i++;
 		}else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--daemon")){
-			config->daemon = 1;
+			config->daemon = true;
 		}else if(!strcmp(argv[i], "-i") || !strcmp(argv[i], "--interface")){
 			if(i<argc-1){
 				i++;
