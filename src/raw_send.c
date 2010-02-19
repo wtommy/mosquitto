@@ -51,25 +51,41 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 	packetlen = 2+strlen(topic) + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
 	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
-	if(!packet) return 1;
+	if(!packet){
+		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed allocating packet memory.");
+		return 1;
+	}
 
 	packet->command = PUBLISH | (dup<<3) | (qos<<1) | retain;
 	packet->remaining_length = packetlen;
 	packet->payload = mqtt3_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){
+		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed allocating payload memory.");
 		mqtt3_free(packet);
 		return 1;
 	}
 	/* Variable header (topic string) */
-	if(mqtt3_write_string(packet, topic, strlen(topic))) return 1;
+	if(mqtt3_write_string(packet, topic, strlen(topic))){
+		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed writing topic.");
+	  	return 1;
+	}
 	if(qos > 0){
-		if(mqtt3_write_uint16(packet, mid)) return 1;
+		if(mqtt3_write_uint16(packet, mid)){
+			mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed writing mid.");
+			return 1;
+		}
 	}
 
 	/* Payload */
-	if(mqtt3_write_bytes(packet, payload, payloadlen)) return 1;
+	if(mqtt3_write_bytes(packet, payload, payloadlen)){
+		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed writing payload.");
+		return 1;
+	}
 
-	if(mqtt3_net_packet_queue(context, packet)) return 1;
+	if(mqtt3_net_packet_queue(context, packet)){
+		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed queuing packet.");
+		return 1;
+	}
 
 	return 0;
 }
