@@ -141,7 +141,7 @@ typedef struct {
 	int iface_count;
 	int log_dest;
 	int log_type;
-	int persistence;
+	bool persistence;
 	char *persistence_location;
 	int retry_interval;
 	int sys_interval;

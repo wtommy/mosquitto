@@ -22,7 +22,7 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->iface_count = 0;
 	config->log_dest = MQTT3_LOG_STDERR;
 	config->log_type = MQTT3_LOG_ERR | MQTT3_LOG_WARNING | MQTT3_LOG_NOTICE | MQTT3_LOG_INFO;
-	config->persistence = 0;
+	config->persistence = false;
 	config->persistence_location = NULL;
 	config->pid_file = NULL;
 	config->retry_interval = 20;
