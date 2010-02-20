@@ -38,6 +38,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sys/select.h>
 #include <time.h>
 
+#ifndef __GNUC__
+#define __attribute__(attrib)
+#endif
+
 /* For version 3 of the MQTT protocol */
 
 #define PROTOCOL_NAME "MQIsdp"
@@ -312,6 +316,6 @@ char *mqtt3_strdup(const char *s);
  * ============================================================ */
 int mqtt3_log_init(int level, int destinations);
 int mqtt3_log_close(void);
-int mqtt3_log_printf(int level, const char *fmt, ...);
+int mqtt3_log_printf(int level, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 
 #endif
