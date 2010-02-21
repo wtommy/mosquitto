@@ -19,6 +19,9 @@
 - Add mosquitto_sub and mosquitto_pub, simple clients for subscribe/publish.
 - Add man pages for clients.
 - Add general man page on mqtt.
+- Root privileges are now dropped only after attempting to write a pid file
+  (if configured). This means that the pid file can be written to /var/run/
+  directly and should fix bug #523183.
 
 0.4.2 - 20100203
 ================
