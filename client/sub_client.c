@@ -51,6 +51,7 @@ int my_publish_callback(const char *topic, int qos, uint32_t payloadlen, const u
 {
 	if(verbose){
 		printf("%s %s\n", topic, payload);
+		fflush(stdout);
 	}else{
 		printf("%s\n", payload);
 		fflush(stdout);
