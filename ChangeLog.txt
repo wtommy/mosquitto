@@ -1,3 +1,8 @@
+0.5.1 - 20100227
+================
+
+- Must daemonise before pid file is written.
+
 0.5 - 20100227
 ==============
 

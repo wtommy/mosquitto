@@ -129,18 +129,6 @@ int main(int argc, char *argv[])
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
 
-	if(config.daemon && config.pid_file){
-		pid = fopen(config.pid_file, "wt");
-		if(pid){
-			fprintf(pid, "%d", getpid());
-			fclose(pid);
-		}else{
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to write pid file.");
-			return 1;
-		}
-	}
-	if(drop_privileges(&config)) return 1;
-
 	if(config.daemon){
 		switch(fork()){
 			case 0:
@@ -152,6 +140,18 @@ int main(int argc, char *argv[])
 				return 0;
 		}
 	}
+
+	if(config.daemon && config.pid_file){
+		pid = fopen(config.pid_file, "wt");
+		if(pid){
+			fprintf(pid, "%d", getpid());
+			fclose(pid);
+		}else{
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to write pid file.");
+			return 1;
+		}
+	}
+	if(drop_privileges(&config)) return 1;
 
 	/* Preallocate enough memory for 100 connected clients.
 	 * This will grow in size once >100 clients connect.
