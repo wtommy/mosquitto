@@ -1,4 +1,4 @@
-0.5 - 20100226
+0.5 - 20100227
 ==============
 
 - No longer store QoS=0 messages for disconnected clients that do not have
