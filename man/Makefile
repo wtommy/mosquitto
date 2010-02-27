@@ -1,6 +1,6 @@
 include ../config.mk
 
-.PHONY : all clean install uninstall dist distclean
+.PHONY : all clean install uninstall dist 
 
 DOCBOOK2MAN=docbook2man.pl
 
@@ -45,12 +45,6 @@ mosquitto_sub.1 : mosquitto_sub.1.xml
 
 mqtt.7 : mqtt.7.xml
 	$(DOCBOOK2MAN) $^
-
-distclean :
-	-rm -f mosquitto*.8
-	-rm -f mosquitto.conf*.5
-	-rm -f mosquitto_pub*.1
-	-rm -f mosquitto_sub*.1
 
 # To merge new translations do:
 # /usr/bin/xml2po -p de.po chapter1.xml > chapter1.de.xml
