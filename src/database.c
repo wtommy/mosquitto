@@ -1607,7 +1607,7 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 	if(interval && now - interval > last_update){
 		_mqtt3_db_transaction_begin();
 
-		snprintf(buf, 100, "%d", (int)(now - start_time));
+		snprintf(buf, 100, "%d seconds", (int)(now - start_time));
 		mqtt3_db_messages_queue("$SYS/broker/uptime", 2, strlen(buf), (uint8_t *)buf, 1);
 
 		if(!mqtt3_db_message_count(&count)){
