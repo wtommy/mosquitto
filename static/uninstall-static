@@ -1,0 +1,13 @@
+#!/bin/sh
+
+rm -f /usr/local/bin/mosquitto
+rm -f /usr/local/bin/mosquitto_pub /usr/local/bin/mosquitto_sub 
+
+rm /usr/local/man/man8/mosquitto.8
+rm /usr/local/man/man1/mosquitto_pub.1 /usr/local/man/man1/mosquitto_sub.1
+rm /usr/local/man/man7/mqtt.7
+
+rm /etc/init.d/mosquitto
+rm /etc/defaults/mosquitto
+rm /etc/mosquitto.conf
+

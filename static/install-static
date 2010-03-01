@@ -1,0 +1,28 @@
+#!/bin/sh
+
+install -d ${DESTDIR}/usr/local/bin/
+install bin/mosquitto ${DESTDIR}/usr/local/bin/mosquitto
+install bin/mosquitto_pub bin/mosquitto_sub ${DESTDIR}/usr/local/bin/
+
+install -d ${DESTDIR}/usr/local/man/man1/
+install -d ${DESTDIR}/usr/local/man/man7/
+install -d ${DESTDIR}/usr/local/man/man8/
+install man/mosquitto.8 ${DESTDIR}/usr/local/man/man8/
+install man/mosquitto_pub.1 man/mosquitto_sub.1 ${DESTDIR}/usr/local/man/man1/
+install man/mqtt.7 ${DESTDIR}/usr/local/man/man7/
+
+install -d ${DESTDIR}/etc/init.d/
+install -d ${DESTDIR}/etc/defaults/
+install etc/init.d ${DESTDIR}/etc/init.d/mosquitto
+install etc/mosquitto.default ${DESTDIR}/etc/defaults/mosquitto
+install etc/mosquitto.conf ${DESTDIR}/etc/
+
+# Add mosquitto user if it doesn't exist
+if ! getent passwd mosquitto >/dev/null; then
+	adduser --quiet --system --no-create-home --home /var/lib/mosquitto --shell /usr/sbin/nologin mosquitto
+fi
+
+# Add directory for persistent db
+# Note that this isn't enabled by default
+install -d ${DESTDIR}/var/lib/mosquitto
+chown mosquitto ${DESTDIR}/var/lib/mosquitto
