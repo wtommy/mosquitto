@@ -12,9 +12,9 @@ install man/mosquitto_pub.1 man/mosquitto_sub.1 ${DESTDIR}/usr/local/man/man1/
 install man/mqtt.7 ${DESTDIR}/usr/local/man/man7/
 
 install -d ${DESTDIR}/etc/init.d/
-install -d ${DESTDIR}/etc/defaults/
+install -d ${DESTDIR}/etc/default/
 install etc/init.d ${DESTDIR}/etc/init.d/mosquitto
-install etc/mosquitto.default ${DESTDIR}/etc/defaults/mosquitto
+install etc/mosquitto.default ${DESTDIR}/etc/default/mosquitto
 install etc/mosquitto.conf ${DESTDIR}/etc/
 
 # Add mosquitto user if it doesn't exist
