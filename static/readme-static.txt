@@ -13,6 +13,9 @@ This will install mosquitto to the /usr/local hierarchy, except for the
 mosquitto config and init script, which are installed to /etc/mosquitto.conf
 and /etc/init.d/mosquitto.
 
+Note that you will still need to install sqlite3-pcre - Ubuntu users can do
+this from the mosquitto ppa at https://launchpad.net/~mosquitto-dev/
+
 To uninstall, use
 
 sudo ./uninstall-static
