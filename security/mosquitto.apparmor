@@ -1,5 +1,6 @@
 /usr/sbin/mosquitto flags=(complain) {
 	/usr/sbin/mosquitto r,
+	/etc/mosquitto.conf r,
 
 	network inet stream,
 	network inet6 stream,
@@ -13,12 +14,12 @@
 	/lib/tls/i686/cmov/libpthread-*.so rm,
 
 	# sqlite
-	/usr/lib/libsqlite3.so* rm,
+	/usr/lib{,32,64}/libsqlite3.so* rm,
 	owner /var/tmp/etillqs_* rw,
 
 	# If using regex
 	/lib/libpcre.so*  rm,
-	/usr/lib/sqlite3/pcre.so rm,
+	/usr/lib{,32,64}/sqlite3/pcre.so rm,
 
 	# For tcp-wrappers
 	/lib/libwrap.so*  rm,

@@ -301,6 +301,7 @@ int main(int argc, char *argv[])
 		if(config.persistence && config.autosave_interval){
 			if(last_backup + config.autosave_interval < now){
 				mqtt3_db_backup();
+				last_backup = time(NULL);
 			}
 		}
 	}
