@@ -32,10 +32,10 @@
 				<arg><option>-r</option></arg>
 			</group>
 			<group choice='plain'>
-				<arg><option>-m</option> <replaceable>"message"</replaceable></arg>
+				<arg><option>-m</option> <replaceable>message</replaceable></arg>
 			</group>
 			<group choice='plain'>
-				<arg><option>-t</option> <replaceable>"message-topic"</replaceable></arg>
+				<arg><option>-t</option> <replaceable>message-topic</replaceable></arg>
 			</group>
 		</cmdsynopsis>
 	</refsynopsisdiv>
