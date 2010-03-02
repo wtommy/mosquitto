@@ -3,7 +3,7 @@ include config.mk
 DIRS=client man src
 DISTDIRS=man
 
-.PHONY : all mosquitto clean reallyclean install uninstall dist distclean sign copy
+.PHONY : all mosquitto clean reallyclean install uninstall dist sign copy
 
 all : mosquitto
 
@@ -43,10 +43,6 @@ dist : reallyclean
 		sed -i 's#http://localhost/cgi-bin/man/man2html#http://mosquitto.atchoo.org/#' dist/$${hfile}.html; \
 	done
 
-distclean : clean
-	@for d in ${DISTDIRS}; do $(MAKE) -C $${d} distclean; done
-	
-	-rm -rf dist/
 
 sign : dist
 	cd dist; gpg --detach-sign -a mosquitto-${VERSION}.tar.gz

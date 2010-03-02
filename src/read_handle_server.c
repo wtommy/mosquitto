@@ -141,6 +141,13 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 
 		if(mqtt3_read_byte(context, &qos)) return 1;
 		if(sub){
+			if(sub[strlen(sub)-1] == '/'){
+				sub[strlen(sub)-1] = '\0';
+			}
+			if(!strlen(sub)){
+				mqtt3_log_printf(MQTT3_LOG_INFO, "Empty subscription string from %s, disconnecting.",
+					context->address);
+			}
 			mqtt3_log_printf(MQTT3_LOG_DEBUG, "\t%s (QoS %d)", sub, qos);
 			mqtt3_db_sub_insert(context->id, sub, qos);
 	
