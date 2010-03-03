@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
 						if(errno == EBADF){
 							mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket error on client %s, disconnecting.", contexts[i]->id);
 							contexts[i]->sock = -1;
-							mqtt3_db_client_will_queue(contexts[i]);
+							if(!contexts[i]->disconnecting) mqtt3_db_client_will_queue(contexts[i]);
 							mqtt3_context_cleanup(contexts[i]);
 							contexts[i] = NULL;
 						}
@@ -277,7 +277,7 @@ int main(int argc, char *argv[])
 					if(mqtt3_net_write(contexts[i])){
 						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket write error on client %s, disconnecting.", contexts[i]->id);
 						/* Write error or other that means we should disconnect */
-						mqtt3_db_client_will_queue(contexts[i]);
+						if(!contexts[i]->disconnecting) mqtt3_db_client_will_queue(contexts[i]);
 						mqtt3_context_cleanup(contexts[i]);
 						contexts[i] = NULL;
 					}
@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
 					if(mqtt3_net_read(contexts[i])){
 						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket read error on client %s, disconnecting.", contexts[i]->id);
 						/* Read error or other that means we should disconnect */
-						mqtt3_db_client_will_queue(contexts[i]);
+						if(!contexts[i]->disconnecting) mqtt3_db_client_will_queue(contexts[i]);
 						mqtt3_context_cleanup(contexts[i]);
 						contexts[i] = NULL;
 					}

@@ -108,6 +108,7 @@ typedef struct _mqtt3_context{
 	uint16_t keepalive;
 	bool clean_start;
 	bool connected;
+	bool disconnecting;
 	char *id;
 	char *address;
 	struct _mqtt3_packet in_packet;

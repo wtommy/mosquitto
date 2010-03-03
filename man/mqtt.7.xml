@@ -133,7 +133,7 @@
 		<title>Wills</title>
 		<para>When a client connects to a broker, it may inform the broker that
 		it has a will. This is a message that it wishes the broker to send when
-		the client disconnects for any reason. The will message has a topic,
+		the client disconnects unexpectedly. The will message has a topic,
 		QoS and retain status just the same as any other message.</para>
 	</refsect1>
 
