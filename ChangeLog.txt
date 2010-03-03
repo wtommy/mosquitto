@@ -1,6 +1,8 @@
 0.5.3 - 20100303
 ================
 
+- Fix retain regex creation when the subscription starts with a / or contains
+  multiple / in a row (//).
 - Do actually disconnect client when it sends an empty subscription string.
 
 0.5.2 - 20100302
