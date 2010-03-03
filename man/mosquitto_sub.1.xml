@@ -31,7 +31,7 @@
 			<group choice='opt'>
 				<arg><option>-q</option> <replaceable>message QoS</replaceable></arg>
 			</group>
-			<group choice='req'>
+			<group choice='opt'>
 				<arg><option>-t</option> <replaceable>message topic</replaceable></arg>
 			</group>
 			<group choice='opt'>
