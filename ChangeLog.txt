@@ -3,7 +3,8 @@
 
 - Fix all incoming topics/subscriptions that start with a / or contain
   multiple / in a row (//).
-- Do actually disconnect client when it sends an empty subscription string.
+- Do actually disconnect client when it sends an empty subscription/topic string.
+- Add missing $SYS/broker/clients/total to man page.
 
 0.5.2 - 20100302
 ================
