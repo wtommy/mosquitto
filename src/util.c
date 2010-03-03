@@ -27,9 +27,10 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdint.h>
-
 #include <config.h>
+#include <stdint.h>
+#include <string.h>
+
 #include <mqtt3.h>
 
 /* Convert mqtt command (as defined in mqtt3.h) to corresponding string. */
@@ -66,5 +67,31 @@ const char *mqtt3_command_to_string(uint8_t command)
 			return "UNSUBSCRIBE";
 	}
 	return "UNKNOWN";
+}
+
+/* Convert ////some////over/slashed///topic/etc/etc//
+ * into some/over/slashed/topic/etc/etc
+ */
+int mqtt3_fix_sub_topic(char **subtopic)
+{
+	char *fixed = NULL;
+	char *token;
+
+	if(!subtopic || !(*subtopic)) return 1;
+
+	fixed = mqtt3_calloc(strlen(*subtopic)+1, 1);
+	if(!fixed) return 1;
+
+	token = strtok(*subtopic, "/");
+	while(token){
+		strcat(fixed, token);
+		strcat(fixed, "/");
+		token = strtok(NULL, "/");
+	}
+
+	fixed[strlen(fixed)-1] = '\0';
+	mqtt3_free(*subtopic);
+	*subtopic = fixed;
+	return 0;
 }
 

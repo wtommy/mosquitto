@@ -137,6 +137,10 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	retain = (header & 0x01);
 
 	if(mqtt3_read_string(context, &topic)) return 1;
+	if(mqtt3_fix_sub_topic(&topic)) return 1;
+	if(!strlen(topic)){
+		return 1;
+	}
 
 	if(qos > 0){
 		if(mqtt3_read_uint16(context, &mid)){

@@ -167,6 +167,8 @@ extern void (*client_net_write_callback)(int);
  * ============================================================ */
 /* Return a string that corresponds to the MQTT command number (left shifted 4 bits). */
 const char *mqtt3_command_to_string(uint8_t command);
+/* Remove excessive slashes in a subscription/topic. */
+int mqtt3_fix_sub_topic(char **subtopic);
 
 /* ============================================================
  * Config functions

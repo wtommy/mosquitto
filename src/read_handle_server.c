@@ -141,10 +141,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 
 		if(mqtt3_read_byte(context, &qos)) return 1;
 		if(sub){
-			/* Remove trailing / from subscription: my/topic/// == my/topic */
-			while(sub[strlen(sub)-1] == '/'){
-				sub[strlen(sub)-1] = '\0';
-			}
+			if(mqtt3_fix_sub_topic(&sub)) return 1;
 			if(!strlen(sub)){
 				mqtt3_log_printf(MQTT3_LOG_INFO, "Empty subscription string from %s, disconnecting.",
 					context->address);

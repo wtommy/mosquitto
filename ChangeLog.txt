@@ -1,7 +1,7 @@
 0.5.3 - 20100303
 ================
 
-- Fix retain regex creation when the subscription starts with a / or contains
+- Fix all incoming topics/subscriptions that start with a / or contain
   multiple / in a row (//).
 - Do actually disconnect client when it sends an empty subscription string.
 

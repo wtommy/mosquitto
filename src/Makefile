@@ -6,7 +6,7 @@ CFLAGS_FINAL=${CFLAGS} -DVERSION="\"${VERSION}\"" -DTIMESTAMP="\"${TIMESTAMP}\""
 
 all : mosquitto
 
-mosquitto : mosquitto.o conf.o context.o database.o logging.o memory.o net.o raw_send.o raw_send_server.o read_handle.o read_handle_server.o
+mosquitto : mosquitto.o conf.o context.o database.o logging.o memory.o net.o raw_send.o raw_send_server.o read_handle.o read_handle_server.o util.o
 	${CC} $^ -o $@ ${LDFLAGS}
 
 mosquitto.o : mosquitto.c mqtt3.h
