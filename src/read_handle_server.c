@@ -141,7 +141,8 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 
 		if(mqtt3_read_byte(context, &qos)) return 1;
 		if(sub){
-			if(sub[strlen(sub)-1] == '/'){
+			/* Remove trailing / from subscription: my/topic/// == my/topic */
+			while(sub[strlen(sub)-1] == '/'){
 				sub[strlen(sub)-1] = '\0';
 			}
 			if(!strlen(sub)){
