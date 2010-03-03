@@ -45,6 +45,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 	if(!context) return NULL;
 	
 	context->connected = false;
+	context->disconnecting = false;
 	context->sock = sock;
 	context->last_msg_in = time(NULL);
 	context->last_msg_out = time(NULL);

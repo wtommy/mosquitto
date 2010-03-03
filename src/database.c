@@ -1254,19 +1254,30 @@ int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 		}
 		for(i=1; i<hier-1; i++){
 			token = strtok(NULL, "/");
-			if(!strcmp(token, "+")){
-				pos += sprintf(&(local_regex[pos]), "/[^/]+");
-			}else{
-				pos += sprintf(&(local_regex[pos]), "/\\Q%s\\E", token);
+			if(token){
+				/* Token may be NULL here if there are multiple / in a row in
+				 * the subscription string. */
+				if(!strcmp(token, "+")){
+					pos += sprintf(&(local_regex[pos]), "/[^/]+");
+				}else{
+					pos += sprintf(&(local_regex[pos]), "/\\Q%s\\E", token);
+				}
 			}
 		}
 		token = strtok(NULL, "/");
-		if(!strcmp(token, "+")){
-			pos += sprintf(&(local_regex[pos]), "/[^/]+$");
-		}else if(!strcmp(token, "#")){
-			pos += sprintf(&(local_regex[pos]), "/.*");
+		if(token){
+			if(!strcmp(token, "+")){
+				pos += sprintf(&(local_regex[pos]), "/[^/]+$");
+			}else if(!strcmp(token, "#")){
+				pos += sprintf(&(local_regex[pos]), "/.*");
+			}else{
+				pos += sprintf(&(local_regex[pos]), "/\\Q%s\\E$", token);
+			}
 		}else{
-			pos += sprintf(&(local_regex[pos]), "/\\Q%s\\E$", token);
+			/* If token is NULL, this means we have one hierarchy too few.
+			 * This is caused by the first character of the sub being / or by
+			 * multiple / (ie //) appearing in a row. */
+			pos += sprintf(&(local_regex[pos]), "$");
 		}
 	}else{
 		token = strtok(local_sub, "/");

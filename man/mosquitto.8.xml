@@ -108,6 +108,12 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>$SYS/broker/clients/total</option></term>
+				<listitem>
+					<para>The total number of clients currently either connected to the broker or disconnected but with clean start not set.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>$SYS/broker/heap/current size</option></term>
 				<listitem>
 					<para>The current size of the heap memory in use by mosquitto.</para>

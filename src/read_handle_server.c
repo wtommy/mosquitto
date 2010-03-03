@@ -106,6 +106,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 int mqtt3_handle_disconnect(mqtt3_context *context)
 {
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received DISCONNECT from %s", context->id);
+	context->disconnecting = true;
 	return mqtt3_socket_close(context);
 }
 
@@ -141,12 +142,11 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 
 		if(mqtt3_read_byte(context, &qos)) return 1;
 		if(sub){
-			if(sub[strlen(sub)-1] == '/'){
-				sub[strlen(sub)-1] = '\0';
-			}
+			if(mqtt3_fix_sub_topic(&sub)) return 1;
 			if(!strlen(sub)){
 				mqtt3_log_printf(MQTT3_LOG_INFO, "Empty subscription string from %s, disconnecting.",
 					context->address);
+				return 1;
 			}
 			mqtt3_log_printf(MQTT3_LOG_DEBUG, "\t%s (QoS %d)", sub, qos);
 			mqtt3_db_sub_insert(context->id, sub, qos);

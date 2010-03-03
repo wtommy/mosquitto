@@ -1,4 +1,4 @@
-VERSION=0.5.2
+VERSION=0.5.3
 TIMESTAMP:=$(shell date "+%F %T%z")
 
 #MANCOUNTRIES=en_GB
