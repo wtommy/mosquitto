@@ -1,3 +1,8 @@
+0.5.4 - 2010030x
+================
+
+- Fix memory allocation in mqtt3_fix_sub_topic().
+
 0.5.3 - 20100303
 ================
 
