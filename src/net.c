@@ -58,7 +58,7 @@ void (*client_net_write_callback)(int) = NULL;
 
 int _mqtt3_socket_listen(struct sockaddr *addr);
 
-int mqtt3_socket_accept(mqtt3_context **contexts, int context_count, int listensock)
+int mqtt3_socket_accept(mqtt3_context **contexts, int *context_count, int listensock)
 {
 	int i;
 	int new_sock = -1;
@@ -91,18 +91,18 @@ int mqtt3_socket_accept(mqtt3_context **contexts, int context_count, int listens
 #endif
 		new_context = mqtt3_context_init(new_sock);
 		mqtt3_log_printf(MQTT3_LOG_NOTICE, "New client connected from %s.", new_context->address);
-		for(i=0; i<context_count; i++){
+		for(i=0; i<(*context_count); i++){
 			if(contexts[i] == NULL){
 				contexts[i] = new_context;
 				break;
 			}
 		}
-		if(i==context_count){
-			context_count++;
-			tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*context_count);
+		if(i==(*context_count)){
+			(*context_count)++;
+			tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*(*context_count));
 			if(tmp_contexts){
 				contexts = tmp_contexts;
-				contexts[context_count-1] = new_context;
+				contexts[(*context_count)-1] = new_context;
 			}
 		}
 #ifdef WITH_WRAP

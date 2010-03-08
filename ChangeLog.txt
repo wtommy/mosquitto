@@ -2,6 +2,8 @@
 ================
 
 - Fix memory allocation in mqtt3_fix_sub_topic().
+- Fix new client connections for >100 connections (when context_count is
+  exceeded).
 
 0.5.3 - 20100303
 ================
