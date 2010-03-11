@@ -186,6 +186,7 @@ int main(int argc, char *argv[])
 	client_connack_callback = my_connack_callback;
 	client_net_write_callback = my_net_write_callback;
 	client_puback_callback = my_puback_callback;
+	client_pubcomp_callback = my_pubcomp_callback;
 
 	if(client_connect(&context, host, port, id, keepalive)){
 		fprintf(stderr, "Unable to connect.\n");
