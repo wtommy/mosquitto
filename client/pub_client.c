@@ -59,7 +59,7 @@ void my_connack_callback(int result)
 
 void my_net_write_callback(int command)
 {
-	if(command == PUBLISH){
+	if(qos == 0 && command == PUBLISH){
 		mqtt3_raw_disconnect(gcontext);
 	}
 }
