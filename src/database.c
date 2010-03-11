@@ -143,6 +143,9 @@ int (*client_publish_callback)(const char *, int, uint32_t, const uint8_t *, int
 
 int mqtt3_db_open(mqtt3_config *config)
 {
+#ifdef WITH_REGEX
+	char *errmsg = NULL;
+#endif
 	int dbrc;
 	int rc = 0;
 	sqlite3_backup *restore;
