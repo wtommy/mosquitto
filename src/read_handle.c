@@ -42,9 +42,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef WITH_CLIENT
 /* Client callback for puback events - this WILL change. */
-int (*client_puback_callback)(int) = NULL;
+void (*client_puback_callback)(int) = NULL;
 /* Client callback for pubcomp events - this WILL change. */
-int (*client_pubcomp_callback)(int) = NULL;
+void (*client_pubcomp_callback)(int) = NULL;
 #endif
 
 int mqtt3_packet_handle(mqtt3_context *context)
