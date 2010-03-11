@@ -1,9 +1,10 @@
 0.5.4 - 2010030x
 ================
 
-- Fix memory allocation in mqtt3_fix_sub_topic().
+- Fix memory allocation in mqtt3_fix_sub_topic() (bug #531861).
 - Fix new client connections for >100 connections (when context_count is
   exceeded).
+- Fix mosquitto_pub handling of messages with QoS>0 (bug #537061).
 
 0.5.3 - 20100303
 ================
