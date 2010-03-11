@@ -64,6 +64,11 @@ void my_net_write_callback(int command)
 	}
 }
 
+void my_pubcomp_callback(int mid)
+{
+	mqtt3_raw_disconnect(gcontext);
+}
+
 void print_usage(void)
 {
 	printf("mosquitto_pub is a simple mqtt client that will publish a message on a single topic and exit.\n\n");
