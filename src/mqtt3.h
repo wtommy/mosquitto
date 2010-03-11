@@ -159,6 +159,8 @@ typedef struct {
 extern int (*client_publish_callback)(const char *, int, uint32_t, const uint8_t *, int);
 /* Client callback for connack events - this WILL change. */
 extern void (*client_connack_callback)(int);
+/* Client callback for puback events - this WILL change. */
+extern void (*client_puback_callback)(int);
 /* Client callback for pubcomp events - this WILL change. */
 extern void (*client_pubcomp_callback)(int);
 /* Client callback for when a packet has been successfully written. */
