@@ -159,6 +159,10 @@ typedef struct {
 extern int (*client_publish_callback)(const char *, int, uint32_t, const uint8_t *, int);
 /* Client callback for connack events - this WILL change. */
 extern void (*client_connack_callback)(int);
+/* Client callback for puback events - this WILL change. */
+extern void (*client_puback_callback)(int);
+/* Client callback for pubcomp events - this WILL change. */
+extern void (*client_pubcomp_callback)(int);
 /* Client callback for when a packet has been successfully written. */
 extern void (*client_net_write_callback)(int);
 #endif
@@ -208,7 +212,7 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command);
 /* ============================================================
  * Network functions
  * ============================================================ */
-int mqtt3_socket_accept(mqtt3_context **contexts, int context_count, int listensock);
+int mqtt3_socket_accept(mqtt3_context **contexts, int *context_count, int listensock);
 int mqtt3_socket_connect(const char *host, uint16_t port);
 int mqtt3_socket_close(mqtt3_context *context);
 int mqtt3_socket_listen(uint16_t port);

@@ -79,7 +79,9 @@ int mqtt3_fix_sub_topic(char **subtopic)
 
 	if(!subtopic || !(*subtopic)) return 1;
 
-	fixed = mqtt3_calloc(strlen(*subtopic)+1, 1);
+	/* size of fixed here is +1 for the terminating 0 and +1 for the spurious /
+	 * that gets appended. */
+	fixed = mqtt3_calloc(strlen(*subtopic)+2, 1);
 	if(!fixed) return 1;
 
 	token = strtok(*subtopic, "/");
