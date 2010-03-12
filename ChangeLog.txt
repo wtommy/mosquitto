@@ -1,3 +1,8 @@
+0.6 - 2010xxxx
+==============
+
+- mosquitto_sub can now subscribe to multiple topics (limited to a global QoS).
+
 0.5.4 - 20100311
 ================
 

@@ -42,7 +42,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <client_shared.h>
 
-static char *topic = NULL;
+static char **topics = NULL;
+static int topic_count = 0;
 static int topic_qos = 0;
 static mqtt3_context *gcontext;
 int verbose = 0;
@@ -62,8 +63,15 @@ int my_publish_callback(const char *topic, int qos, uint32_t payloadlen, const u
 
 void my_connack_callback(int result)
 {
+	int i;
 	if(!result){
-		mqtt3_raw_subscribe(gcontext, false, topic, topic_qos);
+		if(topics){
+			for(i=0; i<topic_count; i++){
+				mqtt3_raw_subscribe(gcontext, false, topics[i], topic_qos);
+			}
+		}else{
+			mqtt3_raw_subscribe(gcontext, false, "#", topic_qos);
+		}
 	}else{
 		fprintf(stderr, "Connect failed\n");
 	}
@@ -92,7 +100,6 @@ int main(int argc, char *argv[])
 	int keepalive = 60;
 
 	sprintf(id, "mosquitto_sub_%d", getpid());
-	topic = "#";
 
 	for(i=1; i<argc; i++){
 		if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
@@ -162,7 +169,9 @@ int main(int argc, char *argv[])
 				print_usage();
 				return 1;
 			}else{
-				topic = argv[i+1];
+				topic_count++;
+				topics = mqtt3_realloc(topics, topic_count*sizeof(char *));
+				topics[topic_count-1] = argv[i+1];
 			}
 			i++;
 		}else if(!strcmp(argv[i], "-v") || !strcmp(argv[i], "--verbose")){
