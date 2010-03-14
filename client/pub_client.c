@@ -60,11 +60,9 @@ static FILE *fptr = NULL;
 void my_connack_callback(int result)
 {
 	if(!result){
-		printf("mode: %d\n", mode);
 		switch(mode){
 			case MSGMODE_CMD:
 			case MSGMODE_FILE:
-				printf("pub\n"); fflush(stdout);
 				mqtt3_raw_publish(gcontext, false, qos, retain, 1, topic, msglen, (uint8_t *)message);
 				break;
 		}
@@ -167,7 +165,6 @@ int main(int argc, char *argv[])
 				while(pos < msglen){
 					rlen = fread(&(message[pos]), sizeof(char), msglen-pos, fptr);
 					pos += rlen;
-					printf("%d %d\n", pos, msglen);
 				}
 				fclose(fptr);
 			}
