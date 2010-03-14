@@ -77,13 +77,16 @@ void my_pubcomp_callback(int mid)
 void print_usage(void)
 {
 	printf("mosquitto_pub is a simple mqtt client that will publish a message on a single topic and exit.\n\n");
-	printf("Usage: mosquitto_pub [-h host] [-i id] [-p port] [-q qos] [-r] -m message -t topic\n\n");
+	printf("Usage: mosquitto_pub [-h host] [-i id] [-p port] [-q qos] [-r] {-f file | -l | -m message} -t topic\n\n");
+	printf(" -f : send the contents of a file as the message.\n");
 	printf(" -h : mqtt host to connect to. Defaults to localhost.\n");
 	printf(" -i : id to use for this client. Defaults to mosquitto_pub_ appended with the process id.\n");
+	printf(" -l : read messages from stdin, sending a separate message for each line.\n");
 	printf(" -m : message payload to send.\n");
 	printf(" -p : network port to connect to. Defaults to 1883.\n");
-	printf(" -q : quality of service level to use for the message. Defaults to 0.\n");
+	printf(" -q : quality of service level to use for all messages. Defaults to 0.\n");
 	printf(" -r : message should be retained.\n");
+	printf(" -s : read message from stdin, sending the entire input as a message.\n");
 	printf(" -t : mqtt topic to publish to.\n");
 }
 

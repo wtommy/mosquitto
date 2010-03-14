@@ -31,8 +31,15 @@
 			<group choice='opt'>
 				<arg><option>-r</option></arg>
 			</group>
-			<group choice='plain'>
-				<arg><option>-m</option> <replaceable>message</replaceable></arg>
+			<group choice='req'>
+				<group choice='plain'>
+					<arg><option>-f</option> <replaceable>file</replaceable></arg>
+				</group>
+				<arg><option>-l</option></arg>
+				<group choice='plain'>
+					<arg><option>-m</option> <replaceable>message</replaceable></arg>
+				</group>
+				<arg><option>-s</option></arg>
 			</group>
 			<group choice='plain'>
 				<arg><option>-t</option> <replaceable>message-topic</replaceable></arg>
@@ -49,6 +56,13 @@
 		<title>Options</title>
 		<variablelist>
 			<varlistentry>
+				<term><option>-f</option></term>
+				<term><option>--file</option></term>
+				<listitem>
+					<para>Send the contents of a file as the message.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>-h</option></term>
 				<term><option>--host</option></term>
 				<listitem>
@@ -63,10 +77,17 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>-l</option></term>
+				<term><option>--stdin-line</option></term>
+				<listitem>
+					<para>Send messages read from stdin, splitting separate lines into separate messages.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>-m</option></term>
 				<term><option>--message</option></term>
 				<listitem>
-					<para>The actual message payload to send.</para>
+					<para>Send a single message from the command line.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -88,6 +109,13 @@
 				<term><option>--retain</option></term>
 				<listitem>
 					<para>If retain is given, the message will be retained as a "last know good" value on the broker. See <citerefentry><refentrytitle>mqtt</refentrytitle><manvolnum>7</manvolnum></citerefentry> for more information.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-s</option></term>
+				<term><option>--stdin-file</option></term>
+				<listitem>
+					<para>Send a message read from stdin, sending the entire content as a single message.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -113,6 +141,15 @@
 		<para>Publish light switch status. Message is set to retained because there may be a long period of time between light switch events:</para>
 		<itemizedlist mark="circle">
 			<listitem><para>mosquitto_pub -r -t switches/kitchen_lights/status -m "on"</para></listitem>
+		</itemizedlist>
+		<para>Send the contents of a file in two ways:</para>
+		<itemizedlist mark="circle">
+			<listitem><para>mosquitto_pub -t my/topic -f ./data</para></listitem>
+			<listitem><para>mosquitto_pub -t my/topic -s &lt; ./data</para></listitem>
+		</itemizedlist>
+		<para>Send parsed electricity usage data from a Current Cost meter, reading from stdin with one line/reading as one message:</para>
+		<itemizedlist mark="circle">
+			<listitem><para>read_cc128.pl | mosquitto_pub -t sensors/cc128 -l</para></listitem>
 		</itemizedlist>
 	</refsect1>
 
