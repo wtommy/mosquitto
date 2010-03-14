@@ -50,6 +50,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 static char *topic = NULL;
 static char *message = NULL;
+static long msglen = 0;
 static int qos = 0;
 static int retain = 0;
 static mqtt3_context *gcontext;
@@ -59,7 +60,7 @@ static char *file = NULL;
 void my_connack_callback(int result)
 {
 	if(!result){
-		mqtt3_raw_publish(gcontext, false, qos, retain, 1, topic, strlen(message), (uint8_t *)message);
+		mqtt3_raw_publish(gcontext, false, qos, retain, 1, topic, msglen, (uint8_t *)message);
 	}else{
 		fprintf(stderr, "Connect failed\n");
 	}
@@ -176,6 +177,7 @@ int main(int argc, char *argv[])
 				return 1;
 			}else{
 				message = argv[i+1];
+				msglen = strlen(message);
 				mode = MSGMODE_CMD;
 			}
 			i++;
