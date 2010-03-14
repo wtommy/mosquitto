@@ -42,11 +42,19 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <client_shared.h>
 
+#define MSGMODE_NONE 0
+#define MSGMODE_CMD 1
+#define MSGMODE_STDIN_LINE 2
+#define MSGMODE_STDIN_FILE 3
+#define MSGMODE_FILE 4
+
 static char *topic = NULL;
 static char *message = NULL;
 static int qos = 0;
 static int retain = 0;
 static mqtt3_context *gcontext;
+static int mode = MSGMODE_NONE;
+static char *file = NULL;
 
 void my_connack_callback(int result)
 {
@@ -116,6 +124,20 @@ int main(int argc, char *argv[])
 				}
 			}
 			i++;
+		}else if(!strcmp(argv[i], "-f") || !strcmp(argv[i], "--file")){
+			if(mode != MSGMODE_NONE){
+				fprintf(stderr, "Error: Only one type of message can be sent at once.\n\n");
+				print_usage();
+				return 1;
+			}else if(i==argc-1){
+				fprintf(stderr, "Error: -f argument given but no file specified.\n\n");
+				print_usage();
+				return 1;
+			}else{
+				file = argv[i+1];
+				mode = MSGMODE_FILE;
+			}
+			i++;
 		}else if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--host")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -h argument given but no host specified.\n\n");
@@ -135,13 +157,26 @@ int main(int argc, char *argv[])
 				snprintf(id, 29, "%s", argv[i+1]);
 			}
 			i++;
+		}else if(!strcmp(argv[i], "-l") || !strcmp(argv[i], "--stdin-line")){
+			if(mode != MSGMODE_NONE){
+				fprintf(stderr, "Error: Only one type of message can be sent at once.\n\n");
+				print_usage();
+				return 1;
+			}else{
+				mode = MSGMODE_STDIN_LINE;
+			}
 		}else if(!strcmp(argv[i], "-m") || !strcmp(argv[i], "--message")){
-			if(i==argc-1){
+			if(mode != MSGMODE_NONE){
+				fprintf(stderr, "Error: Only one type of message can be sent at once.\n\n");
+				print_usage();
+				return 1;
+			}else if(i==argc-1){
 				fprintf(stderr, "Error: -m argument given but no message specified.\n\n");
 				print_usage();
 				return 1;
 			}else{
 				message = argv[i+1];
+				mode = MSGMODE_CMD;
 			}
 			i++;
 		}else if(!strcmp(argv[i], "-q") || !strcmp(argv[i], "--qos")){
@@ -160,6 +195,14 @@ int main(int argc, char *argv[])
 			i++;
 		}else if(!strcmp(argv[i], "-r") || !strcmp(argv[i], "--retain")){
 			retain = 1;
+		}else if(!strcmp(argv[i], "-s") || !strcmp(argv[i], "--stdin-file")){
+			if(mode != MSGMODE_NONE){
+				fprintf(stderr, "Error: Only one type of message can be sent at once.\n\n");
+				print_usage();
+				return 1;
+			}else{
+				mode = MSGMODE_STDIN_FILE;
+			}
 		}else if(!strcmp(argv[i], "-t") || !strcmp(argv[i], "--topic")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -t argument given but no topic specified.\n\n");
