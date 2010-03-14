@@ -62,6 +62,7 @@ void my_connack_callback(int result)
 		switch(mode){
 			case MSGMODE_CMD:
 			case MSGMODE_FILE:
+			case MSGMODE_STDIN_FILE:
 				mqtt3_raw_publish(gcontext, false, qos, retain, 1, topic, msglen, (uint8_t *)message);
 				break;
 		}
@@ -85,6 +86,28 @@ void my_puback_callback(int mid)
 void my_pubcomp_callback(int mid)
 {
 	mqtt3_raw_disconnect(gcontext);
+}
+
+int load_stdin(void)
+{
+	long pos = 0, rlen;
+	char buf[1024];
+
+	mode = MSGMODE_STDIN_FILE;
+
+	while(!feof(stdin)){
+		rlen = fread(buf, 1, 1024, stdin);
+		message = mqtt3_realloc(message, pos+rlen);
+		if(!message){
+			fprintf(stderr, "Error: Out of memory.\n");
+			return 1;
+		}
+		memcpy(&(message[pos]), buf, rlen);
+		pos += rlen;
+	}
+	msglen = pos;
+
+	return 0;
 }
 
 int load_file(const char *filename)
@@ -240,7 +263,7 @@ int main(int argc, char *argv[])
 				print_usage();
 				return 1;
 			}else{
-				mode = MSGMODE_STDIN_FILE;
+				if(load_stdin()) return 1;
 			}
 		}else if(!strcmp(argv[i], "-t") || !strcmp(argv[i], "--topic")){
 			if(i==argc-1){
