@@ -55,12 +55,19 @@ static int qos = 0;
 static int retain = 0;
 static mqtt3_context *gcontext;
 static int mode = MSGMODE_NONE;
-static char *file = NULL;
+static FILE *fptr = NULL;
 
 void my_connack_callback(int result)
 {
 	if(!result){
-		mqtt3_raw_publish(gcontext, false, qos, retain, 1, topic, msglen, (uint8_t *)message);
+		printf("mode: %d\n", mode);
+		switch(mode){
+			case MSGMODE_CMD:
+			case MSGMODE_FILE:
+				printf("pub\n"); fflush(stdout);
+				mqtt3_raw_publish(gcontext, false, qos, retain, 1, topic, msglen, (uint8_t *)message);
+				break;
+		}
 	}else{
 		fprintf(stderr, "Connect failed\n");
 	}
@@ -107,6 +114,7 @@ int main(int argc, char *argv[])
 	char *host = "localhost";
 	int port = 1883;
 	int keepalive = 60;
+	long pos, rlen;
 
 	sprintf(id, "mosquitto_pub_%d", getpid());
 
@@ -135,8 +143,33 @@ int main(int argc, char *argv[])
 				print_usage();
 				return 1;
 			}else{
-				file = argv[i+1];
+				fptr = fopen(argv[i+1], "rb");
+				if(!fptr){
+					fprintf(stderr, "Error: Unable to open file \"%s\".\n", argv[i+1]);
+					return 1;
+				}
 				mode = MSGMODE_FILE;
+				fseek(fptr, 0, SEEK_END);
+				msglen = ftell(fptr);
+				if(msglen > 268435455){
+					fclose(fptr);
+					fprintf(stderr, "Error: File \"%s\" is too large (>268,435,455 bytes).\n", argv[i+1]);
+					return 1;
+				}
+				fseek(fptr, 0, SEEK_SET);
+				message = mqtt3_malloc(msglen);
+				if(!message){
+					fclose(fptr);
+					fprintf(stderr, "Error: Out of memory.\n");
+					return 1;
+				}
+				pos = 0;
+				while(pos < msglen){
+					rlen = fread(&(message[pos]), sizeof(char), msglen-pos, fptr);
+					pos += rlen;
+					printf("%d %d\n", pos, msglen);
+				}
+				fclose(fptr);
 			}
 			i++;
 		}else if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--host")){
@@ -243,6 +276,9 @@ int main(int argc, char *argv[])
 	gcontext = context;
 
 	while(!client_loop(context)){
+	}
+	if(message && mode == MSGMODE_FILE){
+		mqtt3_free(message);
 	}
 	client_cleanup();
 	return 0;
