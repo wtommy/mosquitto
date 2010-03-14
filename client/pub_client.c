@@ -55,7 +55,6 @@ static int qos = 0;
 static int retain = 0;
 static mqtt3_context *gcontext;
 static int mode = MSGMODE_NONE;
-static FILE *fptr = NULL;
 
 void my_connack_callback(int result)
 {
@@ -88,6 +87,40 @@ void my_pubcomp_callback(int mid)
 	mqtt3_raw_disconnect(gcontext);
 }
 
+int load_file(const char *filename)
+{
+	long pos, rlen;
+	FILE *fptr = NULL;
+
+	fptr = fopen(filename, "rb");
+	if(!fptr){
+		fprintf(stderr, "Error: Unable to open file \"%s\".\n", filename);
+		return 1;
+	}
+	mode = MSGMODE_FILE;
+	fseek(fptr, 0, SEEK_END);
+	msglen = ftell(fptr);
+	if(msglen > 268435455){
+		fclose(fptr);
+		fprintf(stderr, "Error: File \"%s\" is too large (>268,435,455 bytes).\n", filename);
+		return 1;
+	}
+	fseek(fptr, 0, SEEK_SET);
+	message = mqtt3_malloc(msglen);
+	if(!message){
+		fclose(fptr);
+		fprintf(stderr, "Error: Out of memory.\n");
+		return 1;
+	}
+	pos = 0;
+	while(pos < msglen){
+		rlen = fread(&(message[pos]), sizeof(char), msglen-pos, fptr);
+		pos += rlen;
+	}
+	fclose(fptr);
+	return 0;
+}
+
 void print_usage(void)
 {
 	printf("mosquitto_pub is a simple mqtt client that will publish a message on a single topic and exit.\n\n");
@@ -112,7 +145,6 @@ int main(int argc, char *argv[])
 	char *host = "localhost";
 	int port = 1883;
 	int keepalive = 60;
-	long pos, rlen;
 
 	sprintf(id, "mosquitto_pub_%d", getpid());
 
@@ -141,32 +173,7 @@ int main(int argc, char *argv[])
 				print_usage();
 				return 1;
 			}else{
-				fptr = fopen(argv[i+1], "rb");
-				if(!fptr){
-					fprintf(stderr, "Error: Unable to open file \"%s\".\n", argv[i+1]);
-					return 1;
-				}
-				mode = MSGMODE_FILE;
-				fseek(fptr, 0, SEEK_END);
-				msglen = ftell(fptr);
-				if(msglen > 268435455){
-					fclose(fptr);
-					fprintf(stderr, "Error: File \"%s\" is too large (>268,435,455 bytes).\n", argv[i+1]);
-					return 1;
-				}
-				fseek(fptr, 0, SEEK_SET);
-				message = mqtt3_malloc(msglen);
-				if(!message){
-					fclose(fptr);
-					fprintf(stderr, "Error: Out of memory.\n");
-					return 1;
-				}
-				pos = 0;
-				while(pos < msglen){
-					rlen = fread(&(message[pos]), sizeof(char), msglen-pos, fptr);
-					pos += rlen;
-				}
-				fclose(fptr);
+				if(load_file(argv[i+1])) return 1;
 			}
 			i++;
 		}else if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--host")){
