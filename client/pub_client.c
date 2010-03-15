@@ -30,6 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -48,6 +49,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MSGMODE_STDIN_FILE 3
 #define MSGMODE_FILE 4
 
+#define STATUS_CONNECTING 0
+#define STATUS_CONNACK_RECVD 1
+
 static char *topic = NULL;
 static char *message = NULL;
 static long msglen = 0;
@@ -55,6 +59,7 @@ static int qos = 0;
 static int retain = 0;
 static mqtt3_context *gcontext;
 static int mode = MSGMODE_NONE;
+static int status = STATUS_CONNECTING;
 
 void my_connack_callback(int result)
 {
@@ -65,6 +70,9 @@ void my_connack_callback(int result)
 			case MSGMODE_STDIN_FILE:
 				mqtt3_raw_publish(gcontext, false, qos, retain, 1, topic, msglen, (uint8_t *)message);
 				break;
+			case MSGMODE_STDIN_LINE:
+				status = STATUS_CONNACK_RECVD;
+				break;
 		}
 	}else{
 		fprintf(stderr, "Connect failed\n");
@@ -73,19 +81,23 @@ void my_connack_callback(int result)
 
 void my_net_write_callback(int command)
 {
-	if(qos == 0 && command == PUBLISH){
+	if(qos == 0 && command == PUBLISH && mode != MSGMODE_STDIN_LINE){
 		mqtt3_raw_disconnect(gcontext);
 	}
 }
 
 void my_puback_callback(int mid)
 {
-	mqtt3_raw_disconnect(gcontext);
+	if(mode != MSGMODE_STDIN_LINE){
+		mqtt3_raw_disconnect(gcontext);
+	}
 }
 
 void my_pubcomp_callback(int mid)
 {
-	mqtt3_raw_disconnect(gcontext);
+	if(mode != MSGMODE_STDIN_LINE){
+		mqtt3_raw_disconnect(gcontext);
+	}
 }
 
 int load_stdin(void)
@@ -178,6 +190,9 @@ int main(int argc, char *argv[])
 	char *host = "localhost";
 	int port = 1883;
 	int keepalive = 60;
+	int opt;
+	char buf[1024];
+	int mid_sent = 0;
 
 	sprintf(id, "mosquitto_pub_%d", getpid());
 
@@ -235,6 +250,11 @@ int main(int argc, char *argv[])
 				return 1;
 			}else{
 				mode = MSGMODE_STDIN_LINE;
+				opt = fcntl(fileno(stdin), F_GETFL, 0);
+				if(opt == -1 || fcntl(fileno(stdin), F_SETFL, opt | O_NONBLOCK) == -1){
+					fprintf(stderr, "Error: Unable to set stdin to non-blocking.\n");
+					return 1;
+				}
 			}
 		}else if(!strcmp(argv[i], "-m") || !strcmp(argv[i], "--message")){
 			if(mode != MSGMODE_NONE){
@@ -313,6 +333,18 @@ int main(int argc, char *argv[])
 	gcontext = context;
 
 	while(!client_loop(context)){
+		if(mode == MSGMODE_STDIN_LINE && status == STATUS_CONNACK_RECVD){
+			if(fgets(buf, 1024, stdin)){
+				buf[strlen(buf)-1] = '\0';
+				if(strlen(buf) > 0){
+					mid_sent++;
+					if(mid_sent > 65535) mid_sent = 1;
+					mqtt3_raw_publish(context, false, qos, retain, mid_sent, topic, strlen(buf), (uint8_t *)buf);
+				}
+			}else if(feof(stdin)){
+				mqtt3_raw_disconnect(gcontext);
+			}
+		}
 	}
 	if(message && mode == MSGMODE_FILE){
 		mqtt3_free(message);

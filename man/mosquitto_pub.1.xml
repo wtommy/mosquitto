@@ -80,7 +80,7 @@
 				<term><option>-l</option></term>
 				<term><option>--stdin-line</option></term>
 				<listitem>
-					<para>Send messages read from stdin, splitting separate lines into separate messages.</para>
+					<para>Send messages read from stdin, splitting separate lines into separate messages. Note that blank lines won't be sent.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
