@@ -393,6 +393,7 @@ int mqtt3_net_write(mqtt3_context *context)
 
 	if(!context || context->sock == -1) return 1;
 
+	printf("nw\n");
 	while(context->out_packet){
 		packet = context->out_packet;
 

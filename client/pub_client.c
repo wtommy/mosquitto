@@ -107,6 +107,11 @@ int load_stdin(void)
 	}
 	msglen = pos;
 
+	if(!msglen){
+		fprintf(stderr, "Error: Zero length input.\n");
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -126,6 +131,11 @@ int load_file(const char *filename)
 	if(msglen > 268435455){
 		fclose(fptr);
 		fprintf(stderr, "Error: File \"%s\" is too large (>268,435,455 bytes).\n", filename);
+		return 1;
+	}
+	if(msglen == 0){
+		fclose(fptr);
+		fprintf(stderr, "Error: File \"%s\" is empty.\n", filename);
 		return 1;
 	}
 	fseek(fptr, 0, SEEK_SET);
