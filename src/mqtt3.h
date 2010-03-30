@@ -154,6 +154,14 @@ typedef struct {
 	char *user;
 } mqtt3_config;
 
+struct _mqtt3_listener {
+	char *iface;
+	uint16_t port;
+	int max_connections;
+	char *mount_point;
+	int fd;
+};
+
 #ifdef WITH_CLIENT
 /* Client callback for publish events - this WILL change. */
 extern int (*client_publish_callback)(const char *, int, uint32_t, const uint8_t *, int);
