@@ -155,11 +155,12 @@ typedef struct {
 } mqtt3_config;
 
 struct _mqtt3_listener {
+	int fd;
 	char *iface;
 	uint16_t port;
 	int max_connections;
 	char *mount_point;
-	int fd;
+	char *client_prefix;
 };
 
 #ifdef WITH_CLIENT
