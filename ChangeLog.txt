@@ -5,6 +5,8 @@
 - mosquitto_pub can now send a file as a message.
 - mosquitto_pub can now read all of stdin and send it as a message.
 - mosquitto_pub can now read stdin and send each line as a message.
+- mosquitto will now run VACUUM on the persistent database on exit, instead of
+  the in-memory database.
 
 0.5.4 - 20100311
 ================

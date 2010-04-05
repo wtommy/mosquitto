@@ -230,13 +230,8 @@ int mqtt3_db_open(mqtt3_config *config)
 
 int mqtt3_db_close(void)
 {
-	char *errmsg = NULL;
 	_mqtt3_db_statements_finalize();
 
-	sqlite3_exec(db, "VACUUM", NULL, NULL, &errmsg);
-	if(errmsg){
-		sqlite3_free(errmsg);
-	}
 	sqlite3_close(db);
 	db = NULL;
 
@@ -245,8 +240,9 @@ int mqtt3_db_close(void)
 	return 0;
 }
 
-int mqtt3_db_backup(void)
+int mqtt3_db_backup(bool vacuum_backup)
 {
+	char *errmsg = NULL;
 	int rc = 0;
 	sqlite3 *backup_db;
 	sqlite3_backup *backup;
@@ -264,6 +260,12 @@ int mqtt3_db_backup(void)
 	}else{
 		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to save in-memory database to disk.");
 		rc = 1;
+	}
+	if(vacuum_backup){
+		sqlite3_exec(backup_db, "VACUUM", NULL, NULL, &errmsg);
+		if(errmsg){
+			sqlite3_free(errmsg);
+		}
 	}
 	sqlite3_close(backup_db);
 	return rc;
