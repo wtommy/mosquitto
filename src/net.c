@@ -56,7 +56,7 @@ static unsigned long msgs_sent = 0;
 void (*client_net_write_callback)(int) = NULL;
 #endif
 
-int _mqtt3_socket_listen(struct sockaddr *addr);
+static int _mqtt3_socket_listen(struct sockaddr *addr);
 
 int mqtt3_socket_accept(mqtt3_context **contexts, int *context_count, int listensock)
 {
@@ -182,7 +182,7 @@ int mqtt3_socket_connect(const char *host, uint16_t port)
  * Returns -1 on failure (addr is NULL, socket creation/listening error)
  * Returns sock number on success.
  */
-int _mqtt3_socket_listen(struct sockaddr *addr)
+static int _mqtt3_socket_listen(struct sockaddr *addr)
 {
 	int sock;
 	int opt = 1;

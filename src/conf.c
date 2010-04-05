@@ -5,8 +5,8 @@
 #include <config.h>
 #include <mqtt3.h>
 
-int _mqtt3_conf_parse_bool(char **token, const char *name, bool *value);
-int _mqtt3_conf_parse_int(char **token, const char *name, int *value);
+static int _mqtt3_conf_parse_bool(char **token, const char *name, bool *value);
+static int _mqtt3_conf_parse_int(char **token, const char *name, int *value);
 
 void mqtt3_config_init(mqtt3_config *config)
 {
@@ -284,7 +284,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	return rc;
 }
 
-int _mqtt3_conf_parse_bool(char **token, const char *name, bool *value)
+static int _mqtt3_conf_parse_bool(char **token, const char *name, bool *value)
 {
 	*token = strtok(NULL, " ");
 	if(*token){
@@ -303,7 +303,7 @@ int _mqtt3_conf_parse_bool(char **token, const char *name, bool *value)
 	return 0;
 }
 
-int _mqtt3_conf_parse_int(char **token, const char *name, int *value)
+static int _mqtt3_conf_parse_int(char **token, const char *name, int *value)
 {
 	*token = strtok(NULL, " ");
 	if(*token){

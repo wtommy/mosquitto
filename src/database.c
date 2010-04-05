@@ -123,18 +123,20 @@ static int g_stmt_count = 0;
 static struct stmt_array *g_stmts = NULL;
 static sqlite3_stmt *stmt_sub_search = NULL;
 
-int _mqtt3_db_tables_create(void);
-int _mqtt3_db_invalidate_sockets(void);
+static int _mqtt3_db_tables_create(void);
+static int _mqtt3_db_invalidate_sockets(void);
 #ifdef WITH_REGEX
-int _mqtt3_db_regex_create(const char *topic, char **regex);
-int _mqtt3_db_retain_regex_create(const char *sub, char **regex);
+static int _mqtt3_db_regex_create(const char *topic, char **regex);
+static int _mqtt3_db_retain_regex_create(const char *sub, char **regex);
 #endif
-sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query);
-void _mqtt3_db_statements_finalize(void);
-int _mqtt3_db_version_check(void);
-int _mqtt3_db_transaction_begin(void);
-int _mqtt3_db_transaction_end(void);
-int _mqtt3_db_transaction_rollback(void);
+static sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query);
+static void _mqtt3_db_statements_finalize(void);
+static int _mqtt3_db_version_check(void);
+static int _mqtt3_db_transaction_begin(void);
+static int _mqtt3_db_transaction_end(void);
+#if 0
+static int _mqtt3_db_transaction_rollback(void);
+#endif
 
 #ifdef WITH_CLIENT
 /* Client callback for publish events - this WILL change. */
@@ -271,7 +273,7 @@ int mqtt3_db_backup(bool vacuum_backup)
 	return rc;
 }
 
-int _mqtt3_db_tables_create(void)
+static int _mqtt3_db_tables_create(void)
 {
 	int rc = 0;
 	char *errmsg = NULL;
@@ -364,7 +366,7 @@ int _mqtt3_db_tables_create(void)
  * Returns 1 on non-match or failure (sqlite error)
  * Returns 0 on version match.
  */
-int _mqtt3_db_version_check(void)
+static int _mqtt3_db_version_check(void)
 {
 	int rc = 0;
 	int version;
@@ -394,7 +396,7 @@ int _mqtt3_db_version_check(void)
  * closing the db.
  * See also _mqtt3_db_statement_prepare().
  */
-void _mqtt3_db_statements_finalize(void)
+static void _mqtt3_db_statements_finalize(void)
 {
 	int i;
 	for(i=0; i<g_stmt_count; i++){
@@ -645,7 +647,7 @@ int mqtt3_db_client_find_socket(const char *client_id, int *sock)
  * Returns 1 on failure (sqlite error)
  * Returns 0 on success.
  */
-int _mqtt3_db_invalidate_sockets(void)
+static int _mqtt3_db_invalidate_sockets(void)
 {
 	int rc = 0;
 	char *query = NULL;
@@ -1134,7 +1136,7 @@ uint16_t mqtt3_db_mid_generate(const char *client_id)
  * Regular expression is returned in 'regex'. This memory must not be freed by
  * the caller.
  */
-int _mqtt3_db_regex_create(const char *topic, char **regex)
+static int _mqtt3_db_regex_create(const char *topic, char **regex)
 {
 	char *stmp;
 	int hier;
@@ -1216,7 +1218,7 @@ int _mqtt3_db_regex_create(const char *topic, char **regex)
 	return 0;
 }
 
-int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
+static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 {
 	char *stmp;
 	int hier;
@@ -1671,7 +1673,7 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
  * Returns NULL on failure
  * Returns a valid sqlite3_stmt on success.
  */
-sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query)
+static sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query)
 {
 	struct stmt_array *tmp;
 	sqlite3_stmt *stmt;
@@ -1696,7 +1698,7 @@ sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query)
  * Returns 1 on failure (sqlite error)
  * Returns 0 on success.
  */
-int _mqtt3_db_transaction_begin(void)
+static int _mqtt3_db_transaction_begin(void)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
@@ -1718,7 +1720,7 @@ int _mqtt3_db_transaction_begin(void)
  * Returns 1 on failure (sqlite error)
  * Returns 0 on success.
  */
-int _mqtt3_db_transaction_end(void)
+static int _mqtt3_db_transaction_end(void)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
@@ -1735,12 +1737,13 @@ int _mqtt3_db_transaction_end(void)
 	return rc;
 }
 
+#if 0
 /* Internal function.
  * Roll back a sqlite transaction.
  * Returns 1 on failure (sqlite error)
  * Returns 0 on success.
  */
-int _mqtt3_db_transaction_rollback(void)
+static int _mqtt3_db_transaction_rollback(void)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
@@ -1756,4 +1759,4 @@ int _mqtt3_db_transaction_rollback(void)
 
 	return rc;
 }
-
+#endif
