@@ -137,15 +137,26 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 		sub = NULL;
 		if(mqtt3_read_string(context, &sub)){
 			if(sub) mqtt3_free(sub);
+			if(payload) mqtt3_free(payload);
 			return 1;
 		}
 
-		if(mqtt3_read_byte(context, &qos)) return 1;
 		if(sub){
-			if(mqtt3_fix_sub_topic(&sub)) return 1;
+			if(mqtt3_read_byte(context, &qos)){
+				mqtt3_free(sub);
+				if(payload) mqtt3_free(payload);
+				return 1;
+			}
+			if(mqtt3_fix_sub_topic(&sub)){
+				mqtt3_free(sub);
+				if(payload) mqtt3_free(payload);
+				return 1;
+			}
 			if(!strlen(sub)){
 				mqtt3_log_printf(MQTT3_LOG_INFO, "Empty subscription string from %s, disconnecting.",
 					context->address);
+				mqtt3_free(sub);
+				if(payload) mqtt3_free(payload);
 				return 1;
 			}
 			mqtt3_log_printf(MQTT3_LOG_DEBUG, "\t%s (QoS %d)", sub, qos);
