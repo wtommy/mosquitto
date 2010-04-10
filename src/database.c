@@ -915,6 +915,37 @@ int mqtt3_db_messages_queue(const char *topic, int qos, uint32_t payloadlen, con
 	return rc;
 }
 
+int mqtt3_db_message_store(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, int64_t *store_id)
+{
+	/* Warning: Don't start transaction in this function. */
+	static sqlite3_stmt *stmt = NULL;
+	int rc = 0;
+
+	if(!topic || !payloadlen || !payload || !store_id) return 1;
+
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("INSERT INTO message_store " // FIXME
+				"(timestamp, qos, retain, topic, payloadlen, payload) "
+				"VALUES (?,?,?,?,?,?)");
+		if(!stmt){
+			return 1;
+		}
+	}
+	if(sqlite3_bind_int(stmt, 1, time(NULL)) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 2, qos) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 3, retain) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 4, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 5, payloadlen) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_blob(stmt, 6, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+	if(rc) return 1;
+	*store_id = sqlite3_last_insert_rowid(db);
+
+	return rc;
+}
+
 int mqtt3_db_message_timeout_check(unsigned int timeout)
 {
 	int rc = 0;
