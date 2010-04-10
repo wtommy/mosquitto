@@ -1385,12 +1385,13 @@ int mqtt3_db_retain_insert(const char *topic, int qos, uint32_t payloadlen, cons
 	return rc;
 }
 
-#ifdef WITH_REGEX
 int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;;
+#ifdef WITH_REGEX
 	char *regex = NULL;
+#endif
 	const char *topic;
 	int qos;
 	const uint8_t *payload;
@@ -1398,12 +1399,23 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 	uint16_t mid;
 
 	if(!stmt){
+#ifdef WITH_REGEX
 		stmt = _mqtt3_db_statement_prepare("SELECT topic,qos,payloadlen,payload FROM retain WHERE regexp(?, topic)");
+#else
+		stmt = _mqtt3_db_statement_prepare("SELECT topic,qos,payloadlen,payload FROM retain WHERE topic=?");
+#endif
 		if(!stmt) return 1;
 	}
+#ifdef WITH_REGEX
 	if(_mqtt3_db_retain_regex_create(sub, &regex)) return 1;
+#endif
 
+#ifdef WITH_REGEX
 	if(sqlite3_bind_text(stmt, 1, regex, strlen(regex), mqtt3_free) != SQLITE_OK) rc = 1;
+#else
+	if(sqlite3_bind_text(stmt, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+#endif
+
 	while(sqlite3_step(stmt) == SQLITE_ROW){
 		topic = (const char *)sqlite3_column_text(stmt, 0);
 		qos = sqlite3_column_int(stmt, 1);
@@ -1435,7 +1447,6 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 	sqlite3_clear_bindings(stmt);
 	return rc;
 }
-#endif
 
 /* Save a subscription for a client.
  * Returns 1 on failure (client_id or sub is NULL, sqlite error)
