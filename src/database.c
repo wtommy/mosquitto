@@ -924,7 +924,7 @@ int mqtt3_db_message_store(const char *topic, int qos, uint32_t payloadlen, cons
 	if(!topic || !payloadlen || !payload || !store_id) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("INSERT INTO message_store " // FIXME
+		stmt = _mqtt3_db_statement_prepare("INSERT INTO message_store "
 				"(timestamp, qos, retain, topic, payloadlen, payload) "
 				"VALUES (?,?,?,?,?,?)");
 		if(!stmt){
