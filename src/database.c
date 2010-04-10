@@ -346,6 +346,19 @@ static int _mqtt3_db_tables_create(void)
 	}
 
 	if(sqlite3_exec(db,
+		"CREATE TABLE IF NOT EXISTS message_store("
+		"id INTEGER PRIMARY KEY, timestamp INTEGER, qos INTEGER, "
+		"retain INTEGER, topic TEXT, payloadlen INTEGER, payload BLOB)",
+		NULL, NULL, &errmsg) != SQLITE_OK){
+
+		rc = 1;
+	}
+	if(errmsg){
+		sqlite3_free(errmsg);
+		errmsg = NULL;
+	}
+
+	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS messages("
 		"client_id TEXT, timestamp INTEGER, direction INTEGER, status INTEGER, "
 		"mid INTEGER, dup INTEGER, qos INTEGER, retain INTEGER, topic TEXT, payloadlen INTEGER, payload BLOB)",

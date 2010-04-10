@@ -48,7 +48,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define PROTOCOL_VERSION 3
 
 /* Database macros */
-#define MQTT_DB_VERSION 1
+#define MQTT_DB_VERSION 2
 
 /* Macros for accessing the MSB and LSB of a uint16_t */
 #define MQTT_MSB(A) (uint8_t)((A & 0xFF00) >> 8)
