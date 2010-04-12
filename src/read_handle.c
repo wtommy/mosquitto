@@ -149,6 +149,7 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	uint16_t mid;
 	int rc = 0;
 	uint8_t header = context->in_packet.command;
+	int64_t store_id = 0;
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBLISH from %s", context->id);
 	dup = (header & 0x08)>>3;
@@ -177,6 +178,12 @@ int mqtt3_handle_publish(mqtt3_context *context)
 #ifdef DEBUG
 	printf("%s: %s\n", topic, payload);
 #endif
+
+	if(mqtt3_db_message_store(topic, qos, payloadlen, payload, retain, &store_id)){
+		mqtt3_free(topic);
+		mqtt3_free(payload);
+		return 1;
+	}
 
 	switch(qos){
 		case 0:
