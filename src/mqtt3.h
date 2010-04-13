@@ -290,6 +290,7 @@ int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_dire
 int mqtt3_db_message_update(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status);
 int mqtt3_db_message_write(mqtt3_context *context);
 int mqtt3_db_messages_delete(const char *client_id);
+int mqtt3_db_messages_easy_queue(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain);
 int mqtt3_db_messages_queue(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain);
 int mqtt3_db_message_store(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, int64_t *store_id);
 /* Check all messages waiting on a client reply and resend if timeout has been exceeded. */

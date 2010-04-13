@@ -866,6 +866,17 @@ int mqtt3_db_messages_delete(const char *client_id)
 	return rc;
 }
 
+int mqtt3_db_messages_easy_queue(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
+{
+	int64_t store_id;
+
+	if(!topic || !payloadlen || !payload) return 1;
+
+	if(mqtt3_db_message_store(topic, qos, payloadlen, payload, retain, &store_id)) return 1;
+
+	return mqtt3_db_messages_queue(topic, qos, payloadlen, payload, retain);
+}
+
 int mqtt3_db_messages_queue(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
 {
 	/* Warning: Don't start transaction in this function. */
