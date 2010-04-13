@@ -765,7 +765,7 @@ int mqtt3_db_message_delete(const char *client_id, uint16_t mid, mqtt3_msg_direc
 	return rc;
 }
 
-int mqtt3_db_message_delete_by_oid(uint64_t oid)
+int mqtt3_db_message_delete_by_oid(int64_t oid)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
@@ -776,7 +776,7 @@ int mqtt3_db_message_delete_by_oid(uint64_t oid)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_int(stmt, 1, oid) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int64(stmt, 1, oid) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -964,7 +964,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	time_t now = time(NULL) - timeout;
 	static sqlite3_stmt *stmt_select = NULL;
 	static sqlite3_stmt *stmt_update = NULL;
-	uint64_t OID;
+	int64_t OID;
 	int status;
 	mqtt3_msg_status new_status = ms_invalid;
 
@@ -983,7 +983,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	_mqtt3_db_transaction_begin();
 	if(sqlite3_bind_int(stmt_select, 1, now) != SQLITE_OK) rc = 1;
 	while(sqlite3_step(stmt_select) == SQLITE_ROW){
-		OID = sqlite3_column_int(stmt_select, 0);
+		OID = sqlite3_column_int64(stmt_select, 0);
 		status = sqlite3_column_int(stmt_select, 1);
 		switch(status){
 			case ms_wait_puback:
@@ -1001,7 +1001,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 		}
 		if(new_status != ms_invalid){
 			if(sqlite3_bind_int(stmt_update, 1, new_status) != SQLITE_OK) rc = 1;
-			if(sqlite3_bind_int(stmt_update, 2, OID) != SQLITE_OK) rc = 1;
+			if(sqlite3_bind_int64(stmt_update, 2, OID) != SQLITE_OK) rc = 1;
 			if(sqlite3_step(stmt_update) != SQLITE_DONE) rc = 1;
 			sqlite3_reset(stmt_update);
 			sqlite3_clear_bindings(stmt_update);
@@ -1017,7 +1017,7 @@ int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_dire
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
-	uint64_t OID;
+	int64_t OID;
 	int qos;
 	int64_t store_id;
 	char *topic;
@@ -1036,7 +1036,7 @@ int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_dire
 	if(sqlite3_bind_int(stmt, 2, mid) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 3, dir) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) == SQLITE_ROW){
-		OID = sqlite3_column_int(stmt, 0);
+		OID = sqlite3_column_int64(stmt, 0);
 		store_id = sqlite3_column_int64(stmt, 1);
 		qos = sqlite3_column_int(stmt, 2);
 		topic = (char *)sqlite3_column_text(stmt, 3);
@@ -1057,7 +1057,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
-	uint64_t OID;
+	int64_t OID;
 	int status;
 	uint16_t mid;
 	int dup;
@@ -1080,7 +1080,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	if(sqlite3_bind_text(stmt, 1, context->id, strlen(context->id), SQLITE_STATIC) == SQLITE_OK){
 		_mqtt3_db_transaction_begin();
 		while(sqlite3_step(stmt) == SQLITE_ROW){
-			OID = sqlite3_column_int(stmt, 0);
+			OID = sqlite3_column_int64(stmt, 0);
 			status = sqlite3_column_int(stmt, 1);
 			mid = sqlite3_column_int(stmt, 2);
 			dup = sqlite3_column_int(stmt, 3);

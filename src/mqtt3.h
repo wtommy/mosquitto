@@ -284,7 +284,7 @@ int mqtt3_db_client_will_queue(mqtt3_context *context);
 /* Return the number of in-flight messages in count. */
 int mqtt3_db_message_count(int *count);
 int mqtt3_db_message_delete(const char *client_id, uint16_t mid, mqtt3_msg_direction dir);
-int mqtt3_db_message_delete_by_oid(uint64_t oid);
+int mqtt3_db_message_delete_by_oid(int64_t oid);
 int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, int qos, int64_t store_id);
 int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_direction dir);
 int mqtt3_db_message_update(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status);
