@@ -187,14 +187,14 @@ int mqtt3_handle_publish(mqtt3_context *context)
 
 	switch(qos){
 		case 0:
-			if(mqtt3_db_messages_queue(topic, qos, payloadlen, payload, retain)) rc = 1;
+			if(mqtt3_db_messages_queue(topic, qos, store_id)) rc = 1;
 			break;
 		case 1:
-			if(mqtt3_db_messages_queue(topic, qos, payloadlen, payload, retain)) rc = 1;
+			if(mqtt3_db_messages_queue(topic, qos, store_id)) rc = 1;
 			if(mqtt3_raw_puback(context, mid)) rc = 1;
 			break;
 		case 2:
-			if(mqtt3_db_message_insert(context->id, mid, md_in, ms_wait_pubrec, retain, topic, qos, payloadlen, payload)) rc = 1;
+			if(mqtt3_db_message_insert(context->id, mid, md_in, ms_wait_pubrec, qos, store_id)) rc = 1;
 			if(mqtt3_raw_pubrec(context, mid)) rc = 1;
 			break;
 	}

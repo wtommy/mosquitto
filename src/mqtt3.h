@@ -285,13 +285,13 @@ int mqtt3_db_client_will_queue(mqtt3_context *context);
 int mqtt3_db_message_count(int *count);
 int mqtt3_db_message_delete(const char *client_id, uint16_t mid, mqtt3_msg_direction dir);
 int mqtt3_db_message_delete_by_oid(uint64_t oid);
-int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, int retain, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload);
+int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, int qos, int64_t store_id);
 int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_direction dir);
 int mqtt3_db_message_update(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status);
 int mqtt3_db_message_write(mqtt3_context *context);
 int mqtt3_db_messages_delete(const char *client_id);
 int mqtt3_db_messages_easy_queue(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain);
-int mqtt3_db_messages_queue(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain);
+int mqtt3_db_messages_queue(const char *topic, int qos, int64_t store_id);
 int mqtt3_db_message_store(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, int64_t *store_id);
 /* Check all messages waiting on a client reply and resend if timeout has been exceeded. */
 int mqtt3_db_message_timeout_check(unsigned int timeout);
