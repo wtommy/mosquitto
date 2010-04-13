@@ -360,7 +360,7 @@ static int _mqtt3_db_tables_create(void)
 
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS messages("
-		"client_id TEXT, direction INTEGER, status INTEGER, "
+		"client_id TEXT, timestamp INTEGER, direction INTEGER, status INTEGER, "
 		"mid INTEGER, dup INTEGER, store_id INTEGER)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
@@ -794,18 +794,19 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direc
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("INSERT INTO messages "
-				"(client_id, direction, status, mid, dup, qos, store_id) "
-				"VALUES (?,?,?,?,0,?,?)");
+				"(client_id, timestamp, direction, status, mid, dup, qos, store_id) "
+				"VALUES (?,?,?,?,?,0,?,?)");
 		if(!stmt){
 			return 1;
 		}
 	}
 	if(sqlite3_bind_text(stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 2, dir) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 3, status) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 4, mid) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 5, qos) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int64(stmt, 6, store_id) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 2, time(NULL)) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 3, dir) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 4, status) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 5, mid) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 6, qos) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int64(stmt, 7, store_id) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
