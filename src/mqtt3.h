@@ -301,6 +301,7 @@ int mqtt3_db_retain_find(const char *topic, int *qos, uint32_t *payloadlen, uint
 /* Add a retained message for a topic, overwriting an existing one if necessary. */
 int mqtt3_db_retain_insert(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload);
 int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos);
+int mqtt3_db_store_clean(void);
 /* Insert a new subscription/qos for a client. */
 int mqtt3_db_sub_insert(const char *client_id, const char *sub, int qos);
 /* Remove a subscription for a client. */
