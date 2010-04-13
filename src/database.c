@@ -1074,9 +1074,12 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	if(!context || !context->id || context->sock == -1) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT OID,status,mid,retries,retain,topic,qos,payloadlen,payload FROM messages "
+		stmt = _mqtt3_db_statement_prepare("SELECT messages.OID,messages.status,messages.mid,"
+				"messages.retries,message_store.retain,message_store.topic,messages.qos,"
+				"message_store.payloadlen,message_store.payload "
+				"FROM messages JOIN message_store ON messages.store_id=message_store.id "
 				"WHERE (status=1 OR status=2 OR status=4 OR status=6 OR status=8) "
-				"AND direction=1 AND client_id=? ORDER BY timestamp");
+				"AND direction=1 AND client_id=? ORDER BY message_store.timestamp");
 		if(!stmt){
 			return 1;
 		}
