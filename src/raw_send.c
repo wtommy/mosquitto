@@ -56,7 +56,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 		return 1;
 	}
 
-	packet->command = PUBLISH | (dup<<3) | (qos<<1) | retain;
+	packet->command = PUBLISH | ((dup&0x1)<<3) | (qos<<1) | retain;
 	packet->remaining_length = packetlen;
 	packet->payload = mqtt3_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){

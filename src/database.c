@@ -361,7 +361,7 @@ static int _mqtt3_db_tables_create(void)
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS messages("
 		"client_id TEXT, timestamp INTEGER, direction INTEGER, status INTEGER, "
-		"mid INTEGER, dup INTEGER, store_id INTEGER)",
+		"mid INTEGER, retries INTEGER, store_id INTEGER)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
 		rc = 1;
@@ -794,7 +794,7 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direc
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("INSERT INTO messages "
-				"(client_id, timestamp, direction, status, mid, dup, qos, store_id) "
+				"(client_id, timestamp, direction, status, mid, retries, qos, store_id) "
 				"VALUES (?,?,?,?,?,0,?,?)");
 		if(!stmt){
 			return 1;
@@ -967,16 +967,17 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	static sqlite3_stmt *stmt_update = NULL;
 	int64_t OID;
 	int status;
+	int retries;
 	mqtt3_msg_status new_status = ms_invalid;
 
 	if(!stmt_select){
-		stmt_select = _mqtt3_db_statement_prepare("SELECT OID,status FROM messages WHERE timestamp<?");
+		stmt_select = _mqtt3_db_statement_prepare("SELECT OID,status,retries FROM messages WHERE timestamp<?");
 		if(!stmt_select){
 			return 1;
 		}
 	}
 	if(!stmt_update){
-		stmt_update = _mqtt3_db_statement_prepare("UPDATE messages SET status=?,dup=1 WHERE OID=?");
+		stmt_update = _mqtt3_db_statement_prepare("UPDATE messages SET status=?,retries=? WHERE OID=?");
 		if(!stmt_update){
 			return 1;
 		}
@@ -986,6 +987,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	while(sqlite3_step(stmt_select) == SQLITE_ROW){
 		OID = sqlite3_column_int64(stmt_select, 0);
 		status = sqlite3_column_int(stmt_select, 1);
+		retries = sqlite3_column_int(stmt_select, 2) + 1;
 		switch(status){
 			case ms_wait_puback:
 				new_status = ms_publish_puback;
@@ -1002,7 +1004,8 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 		}
 		if(new_status != ms_invalid){
 			if(sqlite3_bind_int(stmt_update, 1, new_status) != SQLITE_OK) rc = 1;
-			if(sqlite3_bind_int64(stmt_update, 2, OID) != SQLITE_OK) rc = 1;
+			if(sqlite3_bind_int(stmt_update, 2, retries) != SQLITE_OK) rc = 1;
+			if(sqlite3_bind_int64(stmt_update, 3, OID) != SQLITE_OK) rc = 1;
 			if(sqlite3_step(stmt_update) != SQLITE_DONE) rc = 1;
 			sqlite3_reset(stmt_update);
 			sqlite3_clear_bindings(stmt_update);
@@ -1061,7 +1064,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	int64_t OID;
 	int status;
 	uint16_t mid;
-	int dup;
+	int retries;
 	int retain;
 	const char *topic;
 	int qos;
@@ -1071,7 +1074,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	if(!context || !context->id || context->sock == -1) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT OID,status,mid,dup,retain,topic,qos,payloadlen,payload FROM messages "
+		stmt = _mqtt3_db_statement_prepare("SELECT OID,status,mid,retries,retain,topic,qos,payloadlen,payload FROM messages "
 				"WHERE (status=1 OR status=2 OR status=4 OR status=6 OR status=8) "
 				"AND direction=1 AND client_id=? ORDER BY timestamp");
 		if(!stmt){
@@ -1084,7 +1087,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 			OID = sqlite3_column_int64(stmt, 0);
 			status = sqlite3_column_int(stmt, 1);
 			mid = sqlite3_column_int(stmt, 2);
-			dup = sqlite3_column_int(stmt, 3);
+			retries = sqlite3_column_int(stmt, 3);
 			retain = sqlite3_column_int(stmt, 4);
 			topic = (const char *)sqlite3_column_text(stmt, 5);
 			qos = sqlite3_column_int(stmt, 6);
@@ -1092,19 +1095,19 @@ int mqtt3_db_message_write(mqtt3_context *context)
 			payload = sqlite3_column_blob(stmt, 8);
 			switch(status){
 				case ms_publish:
-					if(!mqtt3_raw_publish(context, dup, qos, retain, mid, topic, payloadlen, payload)){
+					if(!mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload)){
 						mqtt3_db_message_delete_by_oid(OID);
 					}
 					break;
 
 				case ms_publish_puback:
-					if(!mqtt3_raw_publish(context, dup, qos, retain, mid, topic, payloadlen, payload)){
+					if(!mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload)){
 						mqtt3_db_message_update(context->id, mid, md_out, ms_wait_puback);
 					}
 					break;
 
 				case ms_publish_pubrec:
-					if(!mqtt3_raw_publish(context, dup, qos, retain, mid, topic, payloadlen, payload)){
+					if(!mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload)){
 						mqtt3_db_message_update(context->id, mid, md_out, ms_wait_pubrec);
 					}
 					break;
