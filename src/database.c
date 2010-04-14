@@ -113,14 +113,6 @@ POSSIBILITY OF SUCH DAMAGE.
 static sqlite3 *db = NULL;
 static char *db_filepath = NULL;
 
-/* Need to make a struct here to have an array.
- * Don't know size of sqlite3_stmt so can't array it directly.
- */
-struct stmt_array {
-	sqlite3_stmt *stmt;
-};
-static int g_stmt_count = 0;
-static struct stmt_array *g_stmts = NULL;
 static sqlite3_stmt *stmt_sub_search = NULL;
 
 static int _mqtt3_db_tables_create(void);
@@ -416,13 +408,11 @@ static int _mqtt3_db_version_check(void)
  */
 static void _mqtt3_db_statements_finalize(void)
 {
-	int i;
-	for(i=0; i<g_stmt_count; i++){
-		if(g_stmts[i].stmt){
-			sqlite3_finalize(g_stmts[i].stmt);
-		}
+	sqlite3_stmt *stmt;
+
+	while((stmt = sqlite3_next_stmt(db, NULL))){
+		sqlite3_finalize(stmt);
 	}
-	mqtt3_free(g_stmts);
 }
 
 /* Adds a new client to the database.
@@ -1715,19 +1705,9 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
  */
 static sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query)
 {
-	struct stmt_array *tmp;
 	sqlite3_stmt *stmt;
 
 	if(sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK){
-		return NULL;
-	}
-
-	g_stmt_count++;
-	tmp = mqtt3_realloc(g_stmts, sizeof(struct stmt_array)*g_stmt_count);
-	if(tmp){
-		g_stmts = tmp;
-		g_stmts[g_stmt_count-1].stmt = stmt;
-	}else{
 		return NULL;
 	}
 	return stmt;
