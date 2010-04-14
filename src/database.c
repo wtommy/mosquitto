@@ -338,7 +338,7 @@ static int _mqtt3_db_tables_create(void)
 
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS retain("
-		"topic TEXT, store_id INTEGER)",
+		"topic TEXT UNIQUE, store_id INTEGER)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
 		rc = 1;
@@ -1412,36 +1412,23 @@ int mqtt3_db_retain_insert(const char *topic, int64_t store_id)
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
-	static sqlite3_stmt *stmt_update = NULL;
-	static sqlite3_stmt *stmt_insert = NULL;
+	static sqlite3_stmt *stmt = NULL;
 
 	if(!topic || !store_id) return 1;
 
-	if(!mqtt3_db_retain_find(topic, NULL, NULL, NULL)){
-		if(!stmt_update){
-			stmt_update = _mqtt3_db_statement_prepare("UPDATE retain SET store_id=? WHERE topic=?");
-			if(!stmt_update){
-				return 1;
-			}
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("REPLACE INTO retain (topic,store_id) VALUES (?,?)");
+		if(!stmt){
+			return 1;
 		}
-		if(sqlite3_bind_int64(stmt_update, 1, store_id) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_text(stmt_update, 2, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_step(stmt_update) != SQLITE_DONE) rc = 1;
-		sqlite3_reset(stmt_update);
-		sqlite3_clear_bindings(stmt_update);
-	}else{
-		if(!stmt_insert){
-			stmt_insert = _mqtt3_db_statement_prepare("INSERT INTO retain (topic,store_id) VALUES (?,?)");
-			if(!stmt_insert){
-				return 1;
-			}
-		}
-		if(sqlite3_bind_text(stmt_insert, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int64(stmt_insert, 2, store_id) != SQLITE_OK) rc = 1;
-		if(sqlite3_step(stmt_insert) != SQLITE_DONE) rc = 1;
-		sqlite3_reset(stmt_insert);
-		sqlite3_clear_bindings(stmt_insert);
 	}
+	if(sqlite3_bind_text(stmt, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int64(stmt, 2, store_id) != SQLITE_OK) rc = 1;
+	if(!rc){
+		if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
+	}
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
 
 	return rc;
 }
