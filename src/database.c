@@ -242,7 +242,7 @@ int mqtt3_db_close(void)
 	return 0;
 }
 
-int mqtt3_db_backup(bool vacuum_backup)
+int mqtt3_db_backup(bool cleanup)
 {
 	char *errmsg = NULL;
 	int rc = 0;
@@ -251,6 +251,9 @@ int mqtt3_db_backup(bool vacuum_backup)
 
 	if(!db || !db_filepath) return 1;
 	mqtt3_log_printf(MQTT3_LOG_INFO, "Saving in-memory database to %s.", db_filepath);
+	if(cleanup){
+		mqtt3_db_store_clean();
+	}
 	if(sqlite3_open(db_filepath, &backup_db) != SQLITE_OK){
 		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to open on-disk database for writing.");
 		return 1;
@@ -263,7 +266,7 @@ int mqtt3_db_backup(bool vacuum_backup)
 		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to save in-memory database to disk.");
 		rc = 1;
 	}
-	if(vacuum_backup){
+	if(cleanup){
 		sqlite3_exec(backup_db, "VACUUM", NULL, NULL, &errmsg);
 		if(errmsg){
 			sqlite3_free(errmsg);

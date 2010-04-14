@@ -122,6 +122,7 @@ int main(int argc, char *argv[])
 	mqtt3_config config;
 	time_t start_time = time(NULL);
 	time_t last_backup = time(NULL);
+	time_t last_store_clean = time(NULL);
 	char buf[1024];
 	int i;
 	FILE *pid;
@@ -303,6 +304,10 @@ int main(int argc, char *argv[])
 				mqtt3_db_backup(false);
 				last_backup = time(NULL);
 			}
+		}
+		if(last_store_clean + 10 < now){
+			mqtt3_db_store_clean();
+			last_store_clean = time(NULL);
 		}
 	}
 
