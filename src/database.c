@@ -338,7 +338,7 @@ static int _mqtt3_db_tables_create(void)
 
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS retain("
-		"topic TEXT, qos INTEGER, payloadlen INTEGER, payload BLOB)",
+		"topic TEXT, store_id INTEGER)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
 		rc = 1;
@@ -875,10 +875,10 @@ int mqtt3_db_messages_easy_queue(const char *topic, int qos, uint32_t payloadlen
 
 	if(mqtt3_db_message_store(topic, qos, payloadlen, payload, retain, &store_id)) return 1;
 
-	return mqtt3_db_messages_queue(topic, qos, store_id);
+	return mqtt3_db_messages_queue(topic, qos, retain, store_id);
 }
 
-int mqtt3_db_messages_queue(const char *topic, int qos, int64_t store_id)
+int mqtt3_db_messages_queue(const char *topic, int qos, int retain, int64_t store_id)
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
@@ -897,11 +897,9 @@ int mqtt3_db_messages_queue(const char *topic, int qos, int64_t store_id)
 	}
 	*/
 #endif
-	/* FIXME - for message store
 	if(retain){
-		if(mqtt3_db_retain_insert(topic, qos, payloadlen, payload)) rc = 1;
+		if(mqtt3_db_retain_insert(topic, store_id)) rc = 1;
 	}
-	*/
 	if(!mqtt3_db_sub_search_start(topic)){
 		while(!mqtt3_db_sub_search_next(&client_id, &client_qos)){
 			if(qos > client_qos){
@@ -1026,13 +1024,14 @@ int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_dire
 	static sqlite3_stmt *stmt = NULL;
 	int64_t OID;
 	int qos;
+	int retain;
 	int64_t store_id;
 	char *topic;
 
 	if(!client_id) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT messages.OID,message_store.id,message_store.qos,message_store.topic"
+		stmt = _mqtt3_db_statement_prepare("SELECT messages.OID,message_store.id,message_store.qos,message_store.retain,message_store.topic"
 				"FROM messages JOIN message_store on messages.store_id=message_store.id "
 				"WHERE messages.client_id=? AND messages.mid=? AND messages.direction=?");
 		if(!stmt){
@@ -1046,8 +1045,9 @@ int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_dire
 		OID = sqlite3_column_int64(stmt, 0);
 		store_id = sqlite3_column_int64(stmt, 1);
 		qos = sqlite3_column_int(stmt, 2);
-		topic = (char *)sqlite3_column_text(stmt, 3);
-		if(!mqtt3_db_messages_queue(topic, qos, store_id)){
+		retain = sqlite3_column_int(stmt, 3);
+		topic = (char *)sqlite3_column_text(stmt, 4);
+		if(!mqtt3_db_messages_queue(topic, qos, retain, store_id)){
 			if(mqtt3_db_message_delete_by_oid(OID)) rc = 1;
 		}else{
 			rc = 1;
@@ -1379,7 +1379,8 @@ int mqtt3_db_retain_find(const char *topic, int *qos, uint32_t *payloadlen, uint
 	if(!topic) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT qos,payloadlen,payload FROM retain WHERE topic=?");
+		stmt = _mqtt3_db_statement_prepare("SELECT qos,payloadlen,payload FROM message_store "
+				"JOIN retain ON message_store.id=retain.store_id WHERE retain.topic=?");
 		if(!stmt){
 			return 1;
 		}
@@ -1407,40 +1408,36 @@ int mqtt3_db_retain_find(const char *topic, int *qos, uint32_t *payloadlen, uint
  * Returns 1 on failure (topic, or payload are NULL, payloadlen is 0, sqlite error)
  * Returns 0 on success.
  */
-int mqtt3_db_retain_insert(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload)
+int mqtt3_db_retain_insert(const char *topic, int64_t store_id)
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	static sqlite3_stmt *stmt_update = NULL;
 	static sqlite3_stmt *stmt_insert = NULL;
 
-	if(!topic || !payloadlen || !payload) return 1;
+	if(!topic || !store_id) return 1;
 
 	if(!mqtt3_db_retain_find(topic, NULL, NULL, NULL)){
 		if(!stmt_update){
-			stmt_update = _mqtt3_db_statement_prepare("UPDATE retain SET qos=?,payloadlen=?,payload=? WHERE topic=?");
+			stmt_update = _mqtt3_db_statement_prepare("UPDATE retain SET store_id=? WHERE topic=?");
 			if(!stmt_update){
 				return 1;
 			}
 		}
-		if(sqlite3_bind_int(stmt_update, 1, qos) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt_update, 2, payloadlen) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_blob(stmt_update, 3, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_text(stmt_update, 4, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int64(stmt_update, 1, store_id) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt_update, 2, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_step(stmt_update) != SQLITE_DONE) rc = 1;
 		sqlite3_reset(stmt_update);
 		sqlite3_clear_bindings(stmt_update);
 	}else{
 		if(!stmt_insert){
-			stmt_insert = _mqtt3_db_statement_prepare("INSERT INTO retain VALUES (?,?,?,?)");
+			stmt_insert = _mqtt3_db_statement_prepare("INSERT INTO retain (topic,store_id) VALUES (?,?)");
 			if(!stmt_insert){
 				return 1;
 			}
 		}
 		if(sqlite3_bind_text(stmt_insert, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt_insert, 2, qos) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt_insert, 3, payloadlen) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_blob(stmt_insert, 4, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int64(stmt_insert, 2, store_id) != SQLITE_OK) rc = 1;
 		if(sqlite3_step(stmt_insert) != SQLITE_DONE) rc = 1;
 		sqlite3_reset(stmt_insert);
 		sqlite3_clear_bindings(stmt_insert);
@@ -1458,15 +1455,16 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 #endif
 	const char *topic;
 	int qos;
-	const uint8_t *payload;
-	uint32_t payloadlen;
+	int64_t store_id;
 	uint16_t mid;
 
 	if(!stmt){
 #ifdef WITH_REGEX
-		stmt = _mqtt3_db_statement_prepare("SELECT topic,qos,payloadlen,payload FROM retain WHERE regexp(?, topic)");
+		stmt = _mqtt3_db_statement_prepare("SELECT message_store.topic,qos,id FROM message_store "
+				"JOIN retain ON message_store.id=retain.store_id WHERE regexp(?, retain.topic)");
 #else
-		stmt = _mqtt3_db_statement_prepare("SELECT topic,qos,payloadlen,payload FROM retain WHERE topic=?");
+		stmt = _mqtt3_db_statement_prepare("SELECT message_store.topic,qos,id FROM message_store "
+				"JOIN retain ON message_store.id=retain.store_id WHERE retain.topic=?");
 #endif
 		if(!stmt) return 1;
 	}
@@ -1483,8 +1481,7 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 	while(sqlite3_step(stmt) == SQLITE_ROW){
 		topic = (const char *)sqlite3_column_text(stmt, 0);
 		qos = sqlite3_column_int(stmt, 1);
-		payloadlen = sqlite3_column_int(stmt, 2);
-		payload = sqlite3_column_blob(stmt, 3);
+		store_id = sqlite3_column_int64(stmt, 2);
 
 		if(qos > sub_qos) qos = sub_qos;
 		if(qos > 0){
@@ -1492,7 +1489,6 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 		}else{
 			mid = 0;
 		}
-		/* FIXME - for message store 
 		switch(qos){
 			case 0:
 				if(mqtt3_db_message_insert(context->id, mid, md_out, ms_publish, qos, store_id)) rc = 1;
@@ -1504,7 +1500,6 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 				if(mqtt3_db_message_insert(context->id, mid, md_out, ms_publish_pubrec, qos, store_id)) rc = 1;
 				break;
 		}
-		*/
 	}
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -1518,8 +1513,8 @@ int mqtt3_db_store_clean(void)
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("DELETE FROM message_store "
-				"WHERE id NOT IN (SELECT store_id FROM messages) ");
-//FIXME - with retain support				"AND id NOT IN (SELECT store_id FROM retain)"); 
+				"WHERE id NOT IN (SELECT store_id FROM messages) "
+				"AND id NOT IN (SELECT store_id FROM retain)"); 
 		if(!stmt){
 			return 1;
 		}

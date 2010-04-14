@@ -184,13 +184,12 @@ int mqtt3_handle_publish(mqtt3_context *context)
 		mqtt3_free(payload);
 		return 1;
 	}
-
 	switch(qos){
 		case 0:
-			if(mqtt3_db_messages_queue(topic, qos, store_id)) rc = 1;
+			if(mqtt3_db_messages_queue(topic, qos, retain, store_id)) rc = 1;
 			break;
 		case 1:
-			if(mqtt3_db_messages_queue(topic, qos, store_id)) rc = 1;
+			if(mqtt3_db_messages_queue(topic, qos, retain, store_id)) rc = 1;
 			if(mqtt3_raw_puback(context, mid)) rc = 1;
 			break;
 		case 2:
