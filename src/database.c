@@ -1078,7 +1078,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 				"messages.retries,message_store.retain,message_store.topic,messages.qos,"
 				"message_store.payloadlen,message_store.payload "
 				"FROM messages JOIN message_store ON messages.store_id=message_store.id "
-				"WHERE (status=1 OR status=2 OR status=4 OR status=6 OR status=8) "
+				"WHERE status IN (1, 2, 4, 6, 8) "
 				"AND direction=1 AND client_id=? ORDER BY message_store.timestamp");
 		if(!stmt){
 			return 1;
