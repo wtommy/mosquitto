@@ -1367,44 +1367,6 @@ static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 }
 #endif
 
-/* Find a single retained message matching 'topic'.
- * Return qos, payloadlen and payload only if those arguments are not NULL.
- * Returns 1 on failure (topic is NULL, sqlite error) or no retained message found.
- * Returns 0 on retained message successfully found.
- */
-int mqtt3_db_retain_find(const char *topic, int *qos, uint32_t *payloadlen, uint8_t **payload)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-	const uint8_t *payloadtmp;
-
-	if(!topic) return 1;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT qos,payloadlen,payload FROM message_store "
-				"JOIN retain ON message_store.id=retain.store_id WHERE retain.topic=?");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_bind_text(stmt, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt) == SQLITE_ROW){
-		if(qos) *qos = sqlite3_column_int(stmt, 0);
-		if(payloadlen) *payloadlen = sqlite3_column_int(stmt, 1);
-		if(payload && payloadlen && *payloadlen){
-			*payload = mqtt3_malloc(*payloadlen);
-			payloadtmp = sqlite3_column_blob(stmt, 2);
-			memcpy(*payload, payloadtmp, *payloadlen);
-		}
-	}else{
-		rc = 1;
-	}
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-
-	return rc;
-}
-
 /* Add a retained message to the database for a particular topic.
  * Only one retained message exists per topic, so does an update if one already exists.
  * Returns 1 on failure (topic, or payload are NULL, payloadlen is 0, sqlite error)
