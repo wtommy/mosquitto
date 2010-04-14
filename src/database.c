@@ -1515,8 +1515,8 @@ int mqtt3_db_store_clean(void)
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("DELETE FROM message_store "
-				"WHERE id NOT IN (SELECT store_id FROM messages) "
-				"AND id NOT IN (SELECT store_id FROM retain)"); 
+				"WHERE id NOT IN (SELECT store_id FROM messages) ");
+//FIXME - with retain support				"AND id NOT IN (SELECT store_id FROM retain)"); 
 		if(!stmt){
 			return 1;
 		}
