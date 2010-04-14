@@ -361,7 +361,7 @@ static int _mqtt3_db_tables_create(void)
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS messages("
 		"client_id TEXT, timestamp INTEGER, direction INTEGER, status INTEGER, "
-		"mid INTEGER, retries INTEGER, store_id INTEGER)",
+		"mid INTEGER, retries INTEGER, qos INTEGER, store_id INTEGER)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
 		rc = 1;
