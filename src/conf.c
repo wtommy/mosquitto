@@ -26,6 +26,7 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->persistence_location = NULL;
 	config->pid_file = NULL;
 	config->retry_interval = 20;
+	config->store_clean_interval = 10;
 	config->sys_interval = 10;
 	config->user = "mosquitto";
 }
@@ -249,6 +250,12 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					if(_mqtt3_conf_parse_int(&token, "retry_interval", &config->retry_interval)) return 1;
 					if(config->retry_interval < 1 || config->retry_interval > 3600){
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid retry_interval value (%d).", config->retry_interval);
+						return 1;
+					}
+				}else if(!strcmp(token, "store_clean_interval")){
+					if(_mqtt3_conf_parse_int(&token, "store_clean_interval", &config->store_clean_interval)) return 1;
+					if(config->store_clean_interval < 0 || config->store_clean_interval > 65535){
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid store_clean_interval value (%d).", config->store_clean_interval);
 						return 1;
 					}
 				}else if(!strcmp(token, "sys_interval")){

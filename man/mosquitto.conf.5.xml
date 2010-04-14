@@ -138,6 +138,18 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>store_clean_interval</option></term>
+				<listitem>
+					<para>The integer number of seconds between the internal
+					message store being cleaned of messages that are no longer
+					referenced.  Lower values will result in lower memory usage
+					but more processor time, higher values will have the
+					opposite effect. Setting a value of 0 means the
+					unreferenced messages will be disposed of as quickly as
+					possible. Defaults to 10 seconds.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>sys_interval</option></term>
 				<listitem>
 					<para>The integer number of seconds between updates of the $SYS subscription hierarchy, which provides status information about the broker. If unset, defaults to 10 seconds.</para>

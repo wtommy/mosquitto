@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
 				last_backup = time(NULL);
 			}
 		}
-		if(last_store_clean + 10 < now){
+		if(!config.store_clean_interval || last_store_clean + config.store_clean_interval < now){
 			mqtt3_db_store_clean();
 			last_store_clean = time(NULL);
 		}

@@ -149,6 +149,7 @@ typedef struct {
 	bool persistence;
 	char *persistence_location;
 	int retry_interval;
+	int store_clean_interval;
 	int sys_interval;
 	char *pid_file;
 	char *user;
