@@ -178,7 +178,6 @@ int mqtt3_db_open(mqtt3_config *config)
 			db_filepath = mqtt3_strdup("mosquitto.db");
 		}
 		dbrc = sqlite3_open_v2(db_filepath, &restore_db, SQLITE_OPEN_READONLY, NULL);
-		/* FIXME - need to handle all error conditions, *especially* file doesn't exist. */
 		if(dbrc == SQLITE_OK){
 			restore = sqlite3_backup_init(db, "main", restore_db, "main");
 			if(restore){
@@ -206,6 +205,9 @@ int mqtt3_db_open(mqtt3_config *config)
 						break;
 					case EACCES:
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Permission denied trying to restore persistent database %s.", db_filepath);
+						return 1;
+					default:
+						mqtt3_log_printf(MQTT3_LOG_ERR, "%s", strerror(errno));
 						return 1;
 				}
 			}else{
