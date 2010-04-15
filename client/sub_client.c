@@ -80,7 +80,8 @@ void my_connack_callback(int result)
 void print_usage(void)
 {
 	printf("mosquitto_sub is a simple mqtt client that will subscribe to a single topic and print all messages it receives.\n\n");
-	printf("Usage: mosquitto_sub [-h host] [-i id] [-k keepalive] [-p port] [-q qos] [-t topic] [-v]\n\n");
+	printf("Usage: mosquitto_sub [-c] [-i id] [-k keepalive] [-p port] [-q qos] [-t topic] [-v]\n\n");
+	printf(" -c : disable 'clean session' (store subscription and pending messages when client disconnects).\n");
 	printf(" -h : mqtt host to connect to. Defaults to localhost.\n");
 	printf(" -i : id to use for this client. Defaults to mosquitto_sub_ appended with the process id.\n");
 	printf(" -k : keep alive in seconds for this client. Defaults to 60.\n");
@@ -98,6 +99,7 @@ int main(int argc, char *argv[])
 	char *host = "localhost";
 	int port = 1883;
 	int keepalive = 60;
+	bool clean_session = true;
 
 	sprintf(id, "mosquitto_sub_%d", getpid());
 
@@ -116,6 +118,8 @@ int main(int argc, char *argv[])
 				}
 			}
 			i++;
+		}else if(!strcmp(argv[i], "-c") || !strcmp(argv[i], "--disable-clean-session")){
+			clean_session = false;
 		}else if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--host")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -h argument given but no host specified.\n\n");
@@ -189,7 +193,7 @@ int main(int argc, char *argv[])
 	client_publish_callback = my_publish_callback;
 	client_connack_callback = my_connack_callback;
 
-	if(client_connect(&context, host, port, id, keepalive)){
+	if(client_connect(&context, host, port, id, keepalive, clean_session)){
 		fprintf(stderr, "Unable to connect.\n");
 		return 1;
 	}

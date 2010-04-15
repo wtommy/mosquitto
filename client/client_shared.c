@@ -51,7 +51,7 @@ void client_cleanup(void)
 	mqtt3_db_close();
 }
 
-int client_connect(mqtt3_context **context, const char *host, int port, const char *id, int keepalive)
+int client_connect(mqtt3_context **context, const char *host, int port, const char *id, int keepalive, bool clean_session)
 {
 	int sock;
 
@@ -66,7 +66,7 @@ int client_connect(mqtt3_context **context, const char *host, int port, const ch
 	(*context)->id = mqtt3_strdup(id);
 	mqtt3_raw_connect(*context, id,
 			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
-			keepalive, /*cleansession*/true);
+			keepalive, clean_session);
 	return 0;
 }
 

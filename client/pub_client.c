@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
 	client_puback_callback = my_puback_callback;
 	client_pubcomp_callback = my_pubcomp_callback;
 
-	if(client_connect(&context, host, port, id, keepalive)){
+	if(client_connect(&context, host, port, id, keepalive, true)){
 		fprintf(stderr, "Unable to connect.\n");
 		return 1;
 	}

@@ -17,6 +17,9 @@
 		<cmdsynopsis>
 			<command>mosquitto_sub</command>
 			<group choice='opt'>
+				<arg><option>-c</option></arg>
+			</group>
+			<group choice='opt'>
 				<arg><option>-h</option> <replaceable>hostname</replaceable></arg>
 			</group>
 			<group choice='opt'>
@@ -50,6 +53,19 @@
 	<refsect1>
 		<title>Options</title>
 		<variablelist>
+			<varlistentry>
+				<term><option>-c</option></term>
+				<term><option>--disable-clean-session</option></term>
+				<listitem>
+					<para>Disable the 'clean session' flag. This means that all
+					of the subscriptions for the client will be maintained
+					after it disconnects, along with subsequent QoS 1 and QoS 2
+					messages that arrive. When the client reconnects, it will
+					receive all of the queued messages.</para>
+					<para>If using this option, it is recommended that the
+					client id is set manually with <option>--id</option></para>
+				</listitem>
+			</varlistentry>
 			<varlistentry>
 				<term><option>-h</option></term>
 				<term><option>--host</option></term>
