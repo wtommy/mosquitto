@@ -71,7 +71,7 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 	/* Variable header */
 	if(mqtt3_write_string(packet, PROTOCOL_NAME, strlen(PROTOCOL_NAME))) return 1;
 	if(mqtt3_write_byte(packet, PROTOCOL_VERSION)) return 1;
-	if(mqtt3_write_byte(packet, (will_retain<<5) | (will_qos<<3) | (will<<2) | (clean_session<<1))) return 1;
+	if(mqtt3_write_byte(packet, ((will_retain&0x1)<<5) | ((will_qos&0x3)<<3) | ((will&0x1)<<2) | ((clean_session&0x1)<<1))) return 1;
 	if(mqtt3_write_uint16(packet, keepalive)) return 1;
 
 	/* Payload */
