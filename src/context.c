@@ -50,7 +50,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context->last_msg_in = time(NULL);
 	context->last_msg_out = time(NULL);
 	context->keepalive = 60; /* Default to 60s */
-	context->clean_start = true;
+	context->clean_session = true;
 	context->id = NULL;
 
 	context->in_packet.payload = NULL;
@@ -71,7 +71,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 /* This should only be called from within mosquitto.c because that is the only
  * place that can work with the context array. To cause a context to be cleaned
  * in other places, call mqtt3_socket_close() instead. This will force the main
- * loop in mosquitto.c to clean the context and act on clean_start as
+ * loop in mosquitto.c to clean the context and act on clean_session as
  * appropriate.
  * This will result in any outgoing packets going unsent. If we're disconnected
  * forcefully then it is usually an error condition and shouldn't be a problem,
@@ -85,8 +85,8 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 	if(context->sock != -1){
 		mqtt3_socket_close(context);
 	}
-	if(context->clean_start){
-		mqtt3_db_subs_clean_start(context->id);
+	if(context->clean_session){
+		mqtt3_db_subs_clean_session(context->id);
 		mqtt3_db_messages_delete(context->id);
 		mqtt3_db_client_delete(context);
 	}

@@ -43,7 +43,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 #include <mqtt3.h>
 
-int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, const char *will_msg, uint16_t keepalive, bool clean_start)
+int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, const char *will_msg, uint16_t keepalive, bool clean_session)
 {
 	struct _mqtt3_packet *packet = NULL;
 	int payloadlen;
@@ -71,7 +71,7 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 	/* Variable header */
 	if(mqtt3_write_string(packet, PROTOCOL_NAME, strlen(PROTOCOL_NAME))) return 1;
 	if(mqtt3_write_byte(packet, PROTOCOL_VERSION)) return 1;
-	if(mqtt3_write_byte(packet, (will_retain<<5) | (will_qos<<3) | (will<<2) | (clean_start<<1))) return 1;
+	if(mqtt3_write_byte(packet, (will_retain<<5) | (will_qos<<3) | (will<<2) | (clean_session<<1))) return 1;
 	if(mqtt3_write_uint16(packet, keepalive)) return 1;
 
 	/* Payload */

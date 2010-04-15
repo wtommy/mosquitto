@@ -110,7 +110,7 @@
 			<varlistentry>
 				<term><option>$SYS/broker/clients/total</option></term>
 				<listitem>
-					<para>The total number of clients currently either connected to the broker or disconnected but with clean start not set.</para>
+					<para>The total number of clients currently either connected to the broker or disconnected but with clean session not set.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

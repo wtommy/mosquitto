@@ -311,7 +311,7 @@ static int _mqtt3_db_tables_create(void)
 		"CREATE TABLE IF NOT EXISTS clients("
 		"sock INTEGER, "
 		"id TEXT PRIMARY KEY, "
-		"clean_start INTEGER, "
+		"clean_session INTEGER, "
 		"will INTEGER, will_retain INTEGER, will_qos INTEGER, "
 		"will_topic TEXT, will_message TEXT, "
 		"last_mid INTEGER)",
@@ -454,7 +454,7 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 	}else{
 		if(!stmt){
 			stmt = _mqtt3_db_statement_prepare("INSERT INTO clients "
-					"(sock,id,clean_start,will,will_retain,will_qos,will_topic,will_message,last_mid) "
+					"(sock,id,clean_session,will,will_retain,will_qos,will_topic,will_message,last_mid) "
 					"SELECT ?,?,?,?,?,?,?,?,0 WHERE NOT EXISTS "
 					"(SELECT 1 FROM clients WHERE id=?)");
 			if(!stmt){
@@ -463,7 +463,7 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 		}
 		if(sqlite3_bind_int(stmt, 1, context->sock) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_text(stmt, 2, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt, 3, context->clean_start) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt, 3, context->clean_session) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(stmt, 4, will) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(stmt, 5, will_retain) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(stmt, 6, will_qos) != SQLITE_OK) rc = 1;
@@ -505,14 +505,14 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("UPDATE clients SET "
-				"sock=?,clean_start=?,will=?,will_retain=?,will_qos=?,"
+				"sock=?,clean_session=?,will=?,will_retain=?,will_qos=?,"
 				"will_topic=?,will_message=? WHERE id=?");
 		if(!stmt){
 			return 1;
 		}
 	}
 	if(sqlite3_bind_int(stmt, 1, context->sock) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 2, context->clean_start) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 2, context->clean_session) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 3, will) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 4, will_retain) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 5, will_qos) != SQLITE_OK) rc = 1;
@@ -1663,7 +1663,7 @@ int mqtt3_db_sub_search_next(char **client_id, uint8_t *qos)
  * Returns 1 on failure (client_id is NULL, sqlite error)
  * Returns 0 on success.
  */
-int mqtt3_db_subs_clean_start(const char *client_id)
+int mqtt3_db_subs_clean_session(const char *client_id)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;

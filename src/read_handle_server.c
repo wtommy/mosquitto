@@ -47,7 +47,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	uint8_t connect_flags;
 	char *client_id;
 	char *will_topic = NULL, *will_message = NULL;
-	uint8_t will, will_retain, will_qos, clean_start;
+	uint8_t will, will_retain, will_qos, clean_session;
 	
 	/* Don't accept multiple CONNECT commands. */
 	if(context->connected) return 1;
@@ -77,7 +77,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	mqtt3_free(protocol_name);
 
 	if(mqtt3_read_byte(context, &connect_flags)) return 1;
-	clean_start = connect_flags & 0x02;
+	clean_session = connect_flags & 0x02;
 	will = connect_flags & 0x04;
 	will_qos = (connect_flags & 0x18) >> 2;
 	will_retain = connect_flags & 0x20;
@@ -92,7 +92,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
 	context->id = client_id;
-	context->clean_start = clean_start;
+	context->clean_session = clean_session;
 
 	mqtt3_db_client_insert(context, will, will_retain, will_qos, will_topic, will_message);
 

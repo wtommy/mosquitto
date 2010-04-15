@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
 						mqtt3_context_cleanup(contexts[i]);
 						contexts[i] = NULL;
 					}
-				}else if(contexts[i]->clean_start){
+				}else if(contexts[i]->clean_session){
 					mqtt3_context_cleanup(contexts[i]);
 					contexts[i] = NULL;
 				}

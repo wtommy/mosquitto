@@ -106,7 +106,7 @@ typedef struct _mqtt3_context{
 	time_t last_msg_in;
 	time_t last_msg_out;
 	uint16_t keepalive;
-	bool clean_start;
+	bool clean_session;
 	bool connected;
 	bool disconnecting;
 	char *id;
@@ -205,7 +205,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename);
  */
 int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid);
 int mqtt3_raw_connack(mqtt3_context *context, uint8_t result);
-int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, const char *will_msg, uint16_t keepalive, bool clean_start);
+int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, const char *will_msg, uint16_t keepalive, bool clean_session);
 int mqtt3_raw_disconnect(mqtt3_context *context);
 int mqtt3_raw_pingreq(mqtt3_context *context);
 int mqtt3_raw_pingresp(mqtt3_context *context);
@@ -311,7 +311,7 @@ int mqtt3_db_sub_delete(const char *client_id, const char *sub);
 int mqtt3_db_sub_search_start(const char *topic);
 int mqtt3_db_sub_search_next(char **client_id, uint8_t *qos);
 /* Remove all subscriptions for a client. */
-int mqtt3_db_subs_clean_start(const char *client_id);
+int mqtt3_db_subs_clean_session(const char *client_id);
 void mqtt3_db_sys_update(int interval, time_t start_time);
 
 /* ============================================================
