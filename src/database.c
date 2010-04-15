@@ -116,7 +116,7 @@ static char *db_filepath = NULL;
 static sqlite3_stmt *stmt_sub_search = NULL;
 
 static int _mqtt3_db_tables_create(void);
-static int _mqtt3_db_invalidate_sockets(void);
+static int _mqtt3_db_cleanup(void);
 #ifdef WITH_REGEX
 static int _mqtt3_db_regex_create(const char *topic, char **regex);
 static int _mqtt3_db_retain_regex_create(const char *sub, char **regex);
@@ -219,7 +219,7 @@ int mqtt3_db_open(mqtt3_config *config)
 		return 1;
 	}
 #endif
-	if(_mqtt3_db_invalidate_sockets()) return 1;
+	if(_mqtt3_db_cleanup()) return 1;
 
 	return rc;
 }
@@ -651,11 +651,12 @@ int mqtt3_db_client_find_socket(const char *client_id, int *sock)
 }
 
 /* Internal function.
- * Set all stored sockets to -1 (invalid) when closing mosquitto.
+ * Set all stored sockets to -1 (invalid) when starting mosquitto.
+ * Also removes any stray clients and subcriptions that may be around from a prior crash.
  * Returns 1 on failure (sqlite error)
  * Returns 0 on success.
  */
-static int _mqtt3_db_invalidate_sockets(void)
+static int _mqtt3_db_cleanup(void)
 {
 	int rc = 0;
 	char *query = NULL;
@@ -664,6 +665,51 @@ static int _mqtt3_db_invalidate_sockets(void)
 	if(!db) return 1;
 
 	query = sqlite3_mprintf("UPDATE clients SET sock=-1");
+	if(query){
+		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+			rc = 1;
+		}
+		sqlite3_free(query);
+		if(errmsg){
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+			sqlite3_free(errmsg);
+		}
+	}else{
+		return 1;
+	}
+
+	/* Remove any stray clients that have clean session set. */
+	query = sqlite3_mprintf("DELETE FROM clients WHERE sock=-1 AND clean_session=1");
+	if(query){
+		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+			rc = 1;
+		}
+		sqlite3_free(query);
+		if(errmsg){
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+			sqlite3_free(errmsg);
+		}
+	}else{
+		return 1;
+	}
+
+	/* Remove any subs with no client. */
+	query = sqlite3_mprintf("DELETE FROM subs WHERE client_id NOT IN (SELECT id FROM clients)");
+	if(query){
+		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
+			rc = 1;
+		}
+		sqlite3_free(query);
+		if(errmsg){
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+			sqlite3_free(errmsg);
+		}
+	}else{
+		return 1;
+	}
+
+	/* Remove any messages with no client. */
+	query = sqlite3_mprintf("DELETE FROM messages WHERE client_id NOT IN (SELECT id FROM clients)");
 	if(query){
 		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
 			rc = 1;
