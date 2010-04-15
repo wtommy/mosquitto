@@ -12,6 +12,7 @@
 - Add the store_cleanup_interval config option for dealing with the internal
   message store.
 - Add support for disabling "clean session" for the sub client.
+- Add support for automatic upgrading of the mosquitto DB from v1 to v2.
 
 0.5.4 - 20100311
 ================

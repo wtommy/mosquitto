@@ -126,6 +126,10 @@ static void _mqtt3_db_statements_finalize(sqlite3 *fdb);
 static int _mqtt3_db_version_check(void);
 static int _mqtt3_db_transaction_begin(void);
 static int _mqtt3_db_transaction_end(void);
+#if defined(WITH_BROKER) && defined(WITH_DB_UPGRADE)
+static int _mqtt3_db_upgrade(void);
+static int _mqtt3_db_upgrade_1_2(void);
+#endif
 #if 0
 static int _mqtt3_db_transaction_rollback(void);
 #endif
@@ -176,12 +180,19 @@ int mqtt3_db_open(mqtt3_config *config)
 				sqlite3_backup_step(restore, -1);
 				sqlite3_backup_finish(restore);
 				if(_mqtt3_db_version_check()){
+#if defined(WITH_BROKER) && defined(WITH_DB_UPGRADE)
+					if(_mqtt3_db_upgrade()){
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to upgrade database.");
+						return 1;
+					}
+#else
 					mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid database version.");
-					rc = 1;
+					return 1;
+#endif
 				}
 			}else{
 				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Couldn't restore database %s (%d).", db_filepath, dbrc);
-				rc = 1;
+				return 1;
 			}
 			sqlite3_close(restore_db);
 		}else{
@@ -400,6 +411,210 @@ static int _mqtt3_db_version_check(void)
 
 	return rc;
 }
+
+#if defined(WITH_BROKER) && defined(WITH_DB_UPGRADE)
+static int _mqtt3_db_upgrade(void)
+{
+	int rc = 0;
+	sqlite3_stmt *stmt = NULL;
+	int version;
+
+	if(!db) return 1;
+
+	printf("up\n");
+	do{
+		if(sqlite3_prepare_v2(db, "SELECT value FROM config WHERE key='version'",
+				-1, &stmt, NULL) == SQLITE_OK){
+
+			if(sqlite3_step(stmt) == SQLITE_ROW){
+				version = sqlite3_column_int(stmt, 0);
+			}
+			sqlite3_finalize(stmt);
+		}else{
+			rc = 1;
+			break;
+		}
+		switch(version){
+			case 0:
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Upgrading from DB version 0 not supported.");
+				return 1;
+			case 1:
+				if(_mqtt3_db_upgrade_1_2()){
+					rc = 1;
+					break;
+				}
+		}
+	}while(!rc && version != MQTT_DB_VERSION);
+
+	return rc;
+}
+
+static int _mqtt3_db_upgrade_1_2(void)
+{
+	sqlite3 *old_db;
+	sqlite3_stmt *old_stmt, *new_stmt;
+	const char *client_id;
+	int rc = 0;
+	uint32_t payloadlen;
+	const uint8_t *payload;
+	const char *topic, *will_message;
+	int timestamp, mid, dup, qos, retain, status, direction;
+	int64_t store_id;
+
+
+	old_db = db;
+	db = NULL;
+	
+	mqtt3_log_printf(MQTT3_LOG_NOTICE, "Upgrading database from version 1 to 2.");
+
+	if(sqlite3_open_v2(":memory:", &db, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK){
+		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", sqlite3_errmsg(db));
+		db = old_db;
+		return 1;
+	}
+	if(_mqtt3_db_tables_create()) return 1;
+
+	/* ---------- New clients table and copy data ---------- */
+	if(sqlite3_prepare_v2(db, "INSERT INTO clients (sock,id,clean_session,will,will_retain,will_qos,will_topic,will_message,last_mid) "
+			"VALUES (?,?,?,?,?,?,?,?,?)", -1, &new_stmt, NULL) != SQLITE_OK){
+		sqlite3_close(db);
+		db = old_db;
+		return 1;
+	}
+	if(sqlite3_prepare_v2(old_db, "SELECT sock,id,clean_start,will,will_retain,will_qos,will_topic,will_message,last_mid FROM clients",
+			-1, &old_stmt, NULL) != SQLITE_OK){
+		sqlite3_finalize(new_stmt);
+		sqlite3_close(db);
+		db = old_db;
+		return 1;
+	}
+	while(sqlite3_step(old_stmt) == SQLITE_ROW){
+		if(sqlite3_bind_int(new_stmt, 1, sqlite3_column_int(old_stmt, 0)) != SQLITE_OK) rc = 1;
+		client_id = (const char *)sqlite3_column_text(old_stmt, 1);
+		if(sqlite3_bind_text(new_stmt, 2, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(new_stmt, 3, sqlite3_column_int(old_stmt, 2)) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(new_stmt, 4, sqlite3_column_int(old_stmt, 3)) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(new_stmt, 5, sqlite3_column_int(old_stmt, 4)) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(new_stmt, 6, sqlite3_column_int(old_stmt, 5)) != SQLITE_OK) rc = 1;
+		topic = (const char *)sqlite3_column_text(old_stmt, 6);
+		if(sqlite3_bind_text(new_stmt, 7, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		will_message = (const char *)sqlite3_column_text(old_stmt, 7);
+		if(sqlite3_bind_text(new_stmt, 8, will_message, strlen(will_message), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(new_stmt, 9, sqlite3_column_int(old_stmt, 8)) != SQLITE_OK) rc = 1;
+		if(sqlite3_step(new_stmt) != SQLITE_DONE) rc = 1;
+		sqlite3_reset(new_stmt);
+		sqlite3_clear_bindings(new_stmt);
+	}
+	sqlite3_finalize(new_stmt);
+	sqlite3_finalize(old_stmt);
+
+	/* ---------- Copy subs data ---------- */
+	if(sqlite3_prepare_v2(db, "INSERT INTO subs (client_id,sub,qos) VALUES (?,?,?)",
+			-1, &new_stmt, NULL) != SQLITE_OK){
+		sqlite3_close(db);
+		db = old_db;
+		return 1;
+	}
+	if(sqlite3_prepare_v2(old_db, "SELECT client_id,sub,qos FROM subs",
+			-1, &old_stmt, NULL) != SQLITE_OK){
+		sqlite3_finalize(new_stmt);
+		sqlite3_close(db);
+		db = old_db;
+		return 1;
+	}
+	while(sqlite3_step(old_stmt) == SQLITE_ROW){
+		client_id = (const char *)sqlite3_column_text(old_stmt, 0);
+		if(sqlite3_bind_text(new_stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		topic = (const char *)sqlite3_column_text(old_stmt, 1);
+		if(sqlite3_bind_text(new_stmt, 2, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(new_stmt, 3, sqlite3_column_int(old_stmt, 2)) != SQLITE_OK) rc = 1;
+		if(sqlite3_step(new_stmt) != SQLITE_DONE) rc = 1;
+		sqlite3_reset(new_stmt);
+		sqlite3_clear_bindings(new_stmt);
+	}
+	sqlite3_finalize(new_stmt);
+	sqlite3_finalize(old_stmt);
+
+	/* ---------- Copy retain messages to message store ---------- */
+	if(sqlite3_prepare_v2(db, "REPLACE INTO retain (topic,store_id) VALUES (?,?)",
+			-1, &new_stmt, NULL) != SQLITE_OK){
+		sqlite3_close(db);
+		db = old_db;
+		return 1;
+	}
+	if(sqlite3_prepare_v2(old_db, "SELECT topic,qos,payloadlen,payload FROM retain",
+			-1, &old_stmt, NULL) != SQLITE_OK){
+		sqlite3_finalize(new_stmt);
+		sqlite3_close(db);
+		db = old_db;
+		return 1;
+	}
+	while(sqlite3_step(old_stmt) == SQLITE_ROW){
+		topic = (const char *)sqlite3_column_text(old_stmt, 0);
+		qos = sqlite3_column_int(old_stmt, 1);
+		payloadlen = sqlite3_column_int(old_stmt, 2);
+		payload = sqlite3_column_blob(old_stmt, 3);
+
+		if(mqtt3_db_message_store(topic, qos, payloadlen, payload, 1, &store_id)) rc = 1;
+		if(sqlite3_bind_text(new_stmt, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int64(new_stmt, 2, store_id) != SQLITE_OK) rc = 1;
+		if(sqlite3_step(new_stmt) != SQLITE_DONE) rc = 1;
+		sqlite3_reset(new_stmt);
+		sqlite3_clear_bindings(new_stmt);
+	}
+	sqlite3_finalize(new_stmt);
+	sqlite3_finalize(old_stmt);
+
+	/* ---------- Copy messages to message store ---------- */
+	if(sqlite3_prepare_v2(db, "INSERT INTO messages (client_id,timestamp,direction,status,mid,retries,qos,store_id) VALUES (?,?,?,?,?,?,?,?)",
+			-1, &new_stmt, NULL) != SQLITE_OK){
+		sqlite3_close(db);
+		db = old_db;
+		return 1;
+	}
+	if(sqlite3_prepare_v2(old_db, "SELECT client_id,timestamp,direction,status,mid,dup,qos,retain,topic,payloadlen,payload FROM messages",
+			-1, &old_stmt, NULL) != SQLITE_OK){
+		sqlite3_finalize(new_stmt);
+		sqlite3_close(db);
+		db = old_db;
+		return 1;
+	}
+	while(sqlite3_step(old_stmt) == SQLITE_ROW){
+		client_id = (const char *)sqlite3_column_text(old_stmt, 0);
+		timestamp = sqlite3_column_int(old_stmt, 1);
+		direction = sqlite3_column_int(old_stmt, 2);
+		status = sqlite3_column_int(old_stmt, 3);
+		mid = sqlite3_column_int(old_stmt, 4);
+		dup = sqlite3_column_int(old_stmt, 5);
+		qos = sqlite3_column_int(old_stmt, 6);
+		retain = sqlite3_column_int(old_stmt, 7);
+		topic = (const char *)sqlite3_column_text(old_stmt, 8);
+		payloadlen = sqlite3_column_int(old_stmt, 9);
+		payload = sqlite3_column_blob(old_stmt, 10);
+
+		if(mqtt3_db_message_store(topic, qos, payloadlen, payload, 1, &store_id)) rc = 1;
+		if(sqlite3_bind_text(new_stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(new_stmt, 2, timestamp) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(new_stmt, 3, direction) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(new_stmt, 4, status) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(new_stmt, 5, mid) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(new_stmt, 6, dup) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(new_stmt, 7, timestamp) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int64(new_stmt, 8, store_id) != SQLITE_OK) rc = 1;
+		if(sqlite3_step(new_stmt) != SQLITE_DONE) rc = 1;
+		sqlite3_reset(new_stmt);
+		sqlite3_clear_bindings(new_stmt);
+	}
+	sqlite3_finalize(new_stmt);
+	sqlite3_finalize(old_stmt);
+
+	_mqtt3_db_statements_finalize(old_db);
+	sqlite3_close(old_db);
+	mqtt3_db_backup(false);
+
+	return rc;
+}
+#endif
 
 /* Internal function.
  * Finalise all sqlite statements bound to fdb. This must be done before

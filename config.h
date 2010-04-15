@@ -6,3 +6,7 @@
  * Comment out to disable.
  */
 #define WITH_REGEX
+
+/* Compile with database upgrading support? If disabled, mosquitto won't
+ * automatically upgrade old database versions. */
+#define WITH_DB_UPGRADE
