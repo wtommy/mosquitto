@@ -113,14 +113,6 @@ POSSIBILITY OF SUCH DAMAGE.
 static sqlite3 *db = NULL;
 static char *db_filepath = NULL;
 
-/* Need to make a struct here to have an array.
- * Don't know size of sqlite3_stmt so can't array it directly.
- */
-struct stmt_array {
-	sqlite3_stmt *stmt;
-};
-static int g_stmt_count = 0;
-static struct stmt_array *g_stmts = NULL;
 static sqlite3_stmt *stmt_sub_search = NULL;
 
 static int _mqtt3_db_tables_create(void);
@@ -178,7 +170,6 @@ int mqtt3_db_open(mqtt3_config *config)
 			db_filepath = mqtt3_strdup("mosquitto.db");
 		}
 		dbrc = sqlite3_open_v2(db_filepath, &restore_db, SQLITE_OPEN_READONLY, NULL);
-		/* FIXME - need to handle all error conditions, *especially* file doesn't exist. */
 		if(dbrc == SQLITE_OK){
 			restore = sqlite3_backup_init(db, "main", restore_db, "main");
 			if(restore){
@@ -206,6 +197,9 @@ int mqtt3_db_open(mqtt3_config *config)
 						break;
 					case EACCES:
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Permission denied trying to restore persistent database %s.", db_filepath);
+						return 1;
+					default:
+						mqtt3_log_printf(MQTT3_LOG_ERR, "%s", strerror(errno));
 						return 1;
 				}
 			}else{
@@ -414,13 +408,11 @@ static int _mqtt3_db_version_check(void)
  */
 static void _mqtt3_db_statements_finalize(void)
 {
-	int i;
-	for(i=0; i<g_stmt_count; i++){
-		if(g_stmts[i].stmt){
-			sqlite3_finalize(g_stmts[i].stmt);
-		}
+	sqlite3_stmt *stmt;
+
+	while((stmt = sqlite3_next_stmt(db, NULL))){
+		sqlite3_finalize(stmt);
 	}
-	mqtt3_free(g_stmts);
 }
 
 /* Adds a new client to the database.
@@ -1365,44 +1357,6 @@ static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 }
 #endif
 
-/* Find a single retained message matching 'topic'.
- * Return qos, payloadlen and payload only if those arguments are not NULL.
- * Returns 1 on failure (topic is NULL, sqlite error) or no retained message found.
- * Returns 0 on retained message successfully found.
- */
-int mqtt3_db_retain_find(const char *topic, int *qos, uint32_t *payloadlen, uint8_t **payload)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-	const uint8_t *payloadtmp;
-
-	if(!topic) return 1;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT qos,payloadlen,payload FROM message_store "
-				"JOIN retain ON message_store.id=retain.store_id WHERE retain.topic=?");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_bind_text(stmt, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt) == SQLITE_ROW){
-		if(qos) *qos = sqlite3_column_int(stmt, 0);
-		if(payloadlen) *payloadlen = sqlite3_column_int(stmt, 1);
-		if(payload && payloadlen && *payloadlen){
-			*payload = mqtt3_malloc(*payloadlen);
-			payloadtmp = sqlite3_column_blob(stmt, 2);
-			memcpy(*payload, payloadtmp, *payloadlen);
-		}
-	}else{
-		rc = 1;
-	}
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-
-	return rc;
-}
-
 /* Add a retained message to the database for a particular topic.
  * Only one retained message exists per topic, so does an update if one already exists.
  * Returns 1 on failure (topic, or payload are NULL, payloadlen is 0, sqlite error)
@@ -1751,19 +1705,9 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
  */
 static sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query)
 {
-	struct stmt_array *tmp;
 	sqlite3_stmt *stmt;
 
 	if(sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK){
-		return NULL;
-	}
-
-	g_stmt_count++;
-	tmp = mqtt3_realloc(g_stmts, sizeof(struct stmt_array)*g_stmt_count);
-	if(tmp){
-		g_stmts = tmp;
-		g_stmts[g_stmt_count-1].stmt = stmt;
-	}else{
 		return NULL;
 	}
 	return stmt;
