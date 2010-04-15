@@ -122,7 +122,7 @@ static int _mqtt3_db_regex_create(const char *topic, char **regex);
 static int _mqtt3_db_retain_regex_create(const char *sub, char **regex);
 #endif
 static sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query);
-static void _mqtt3_db_statements_finalize(void);
+static void _mqtt3_db_statements_finalize(sqlite3 *fdb);
 static int _mqtt3_db_version_check(void);
 static int _mqtt3_db_transaction_begin(void);
 static int _mqtt3_db_transaction_end(void);
@@ -226,7 +226,7 @@ int mqtt3_db_open(mqtt3_config *config)
 
 int mqtt3_db_close(void)
 {
-	_mqtt3_db_statements_finalize();
+	_mqtt3_db_statements_finalize(db);
 
 	sqlite3_close(db);
 	db = NULL;
@@ -402,15 +402,15 @@ static int _mqtt3_db_version_check(void)
 }
 
 /* Internal function.
- * Finalise all sqlite statements held in g_stmts. This must be done before
+ * Finalise all sqlite statements bound to fdb. This must be done before
  * closing the db.
  * See also _mqtt3_db_statement_prepare().
  */
-static void _mqtt3_db_statements_finalize(void)
+static void _mqtt3_db_statements_finalize(sqlite3 *fdb)
 {
 	sqlite3_stmt *stmt;
 
-	while((stmt = sqlite3_next_stmt(db, NULL))){
+	while((stmt = sqlite3_next_stmt(fdb, NULL))){
 		sqlite3_finalize(stmt);
 	}
 }
