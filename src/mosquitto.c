@@ -165,11 +165,6 @@ int main(int argc, char *argv[])
 		contexts[i] = NULL;
 	}
 
-	signal(SIGINT, handle_sigint);
-	signal(SIGTERM, handle_sigint);
-	signal(SIGUSR1, handle_sigusr1);
-	signal(SIGPIPE, SIG_IGN);
-
 	sigemptyset(&sigblock);
 	sigaddset(&sigblock, SIGINT);
 
@@ -204,6 +199,11 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
+
+	signal(SIGINT, handle_sigint);
+	signal(SIGTERM, handle_sigint);
+	signal(SIGUSR1, handle_sigusr1);
+	signal(SIGPIPE, SIG_IGN);
 
 	run = 1;
 	while(run){
