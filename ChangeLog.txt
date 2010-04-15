@@ -11,6 +11,7 @@
   message is held in the database, rather than one per subscribed client.
 - Add the store_cleanup_interval config option for dealing with the internal
   message store.
+- Add support for disabling "clean session" for the sub client.
 
 0.5.4 - 20100311
 ================
