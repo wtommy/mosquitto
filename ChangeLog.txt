@@ -1,6 +1,8 @@
 0.6 - 2010xxxx
 ==============
 
+- Experimental support for connecting multiple MQTT brokers togethers
+  (bridging).
 - mosquitto_sub can now subscribe to multiple topics (limited to a global QoS).
 - mosquitto_pub can now send a file as a message.
 - mosquitto_pub can now read all of stdin and send it as a message.

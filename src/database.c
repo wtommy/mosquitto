@@ -1304,7 +1304,7 @@ int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_dire
 	if(!client_id) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT messages.OID,message_store.id,message_store.qos,message_store.retain,message_store.topic"
+		stmt = _mqtt3_db_statement_prepare("SELECT messages.OID,message_store.id,message_store.qos,message_store.retain,message_store.topic "
 				"FROM messages JOIN message_store on messages.store_id=message_store.id "
 				"WHERE messages.client_id=? AND messages.mid=? AND messages.direction=?");
 		if(!stmt){

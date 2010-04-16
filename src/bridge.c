@@ -32,7 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 #include <mqtt3.h>
 
-int mqtt3_bridge_new(mqtt3_context **contexts, int context_count, struct _mqtt3_bridge *bridge)
+int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3_bridge *bridge)
 {
 	int i;
 	int new_sock = -1;
@@ -52,25 +52,25 @@ int mqtt3_bridge_new(mqtt3_context **contexts, int context_count, struct _mqtt3_
 		return 1;
 	}
 	new_context->bridge = bridge;
-	for(i=0; i<context_count; i++){
+	for(i=0; i<(*context_count); i++){
 		if(contexts[i] == NULL){
 			contexts[i] = new_context;
 			break;
 		}
 	}
-	if(i==context_count){
-		context_count++;
-		tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*context_count);
+	if(i==(*context_count)){
+		(*context_count)++;
+		tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*(*context_count));
 		if(tmp_contexts){
 			contexts = tmp_contexts;
-			contexts[context_count-1] = new_context;
+			contexts[(*context_count)-1] = new_context;
 		}
 	}
 
 	new_context->id = mqtt3_strdup(bridge->name);
 	mqtt3_raw_connect(new_context, new_context->id,
 			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
-			30/*keepalive*/, /*cleanstart*/true);
+			60/*keepalive*/, /*cleanstart*/true);
 
 	return 0;
 }
