@@ -102,6 +102,7 @@ struct _mqtt3_packet{
 };
 
 struct _mqtt3_bridge{
+	char *name;
 	char *address;
 	uint16_t port;
 	char *topic;
