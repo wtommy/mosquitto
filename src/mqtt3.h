@@ -161,6 +161,8 @@ typedef struct {
 	int sys_interval;
 	char *pid_file;
 	char *user;
+	struct _mqtt3_bridge *bridges;
+	int bridge_count;
 } mqtt3_config;
 
 struct _mqtt3_listener {
