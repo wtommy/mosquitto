@@ -342,6 +342,13 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	}
 	fclose(fptr);
 
+	for(i=0; i<config->bridge_count; i++){
+		if(!config->bridges[i].name || !config->bridges[i].address || !config->bridges[i].port || !config->bridges[i].topic){
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid bridge configuration.");
+			return 1;
+		}
+	}
+
 	if(log_dest_set){
 		config->log_dest = log_dest;
 	}
