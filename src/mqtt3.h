@@ -101,6 +101,12 @@ struct _mqtt3_packet{
 	struct _mqtt3_packet *next;
 };
 
+struct _mqtt3_bridge{
+	char *address;
+	uint16_t port;
+	char *topic;
+};
+
 typedef struct _mqtt3_context{
 	int sock;
 	time_t last_msg_in;
@@ -113,6 +119,7 @@ typedef struct _mqtt3_context{
 	char *address;
 	struct _mqtt3_packet in_packet;
 	struct _mqtt3_packet *out_packet;
+	struct _mqtt3_bridge *bridge;
 } mqtt3_context;
 
 typedef enum {
