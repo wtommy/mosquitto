@@ -346,4 +346,9 @@ int mqtt3_log_init(int level, int destinations);
 int mqtt3_log_close(void);
 int mqtt3_log_printf(int level, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 
+/* ============================================================
+ * Bridge functions
+ * ============================================================ */
+int mqtt3_bridge_new(mqtt3_context **contexts, int context_count, struct _mqtt3_bridge *bridge);
+
 #endif
