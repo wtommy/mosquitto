@@ -1,12 +1,12 @@
 include ../config.mk
 
-CFLAGS_FINAL=${CFLAGS} -DVERSION="\"${VERSION}\"" -DTIMESTAMP="\"${TIMESTAMP}\"" -DWITH_BROKER
+CFLAGS_FINAL=${CFLAGS} -DVERSION="\"${VERSION}\"" -DTIMESTAMP="\"${TIMESTAMP}\"" -DWITH_BROKER -DWITH_BRIDGE
 
 .PHONY: all install uninstall clean reallyclean
 
 all : mosquitto
 
-mosquitto : mosquitto.o conf.o context.o database.o logging.o memory.o net.o raw_send.o raw_send_server.o read_handle.o read_handle_server.o util.o
+mosquitto : mosquitto.o conf.o context.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o raw_send_server.o read_handle.o read_handle_client.o read_handle_server.o util.o
 	${CC} $^ -o $@ ${LDFLAGS}
 
 mosquitto.o : mosquitto.c mqtt3.h
@@ -33,10 +33,16 @@ net.o : net.c mqtt3.h
 raw_send.o : raw_send.c mqtt3.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
+raw_send_client.o : raw_send_client.c mqtt3.h
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
+
 raw_send_server.o : raw_send_server.c mqtt3.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 read_handle.o : read_handle.c mqtt3.h
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
+
+read_handle_client.o : read_handle_client.c mqtt3.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 read_handle_server.o : read_handle_server.c mqtt3.h
