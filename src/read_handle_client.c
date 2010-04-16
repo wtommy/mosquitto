@@ -55,6 +55,9 @@ int mqtt3_handle_connack(mqtt3_context *context)
 	}
 	switch(rc){
 		case 0:
+			if(context->bridge){
+				mqtt3_raw_subscribe(context, false, context->bridge->topic, 2);
+			}
 			return 0;
 		case 1:
 			mqtt3_log_printf(MQTT3_LOG_ERR, "Connection Refused: unacceptable protocol version");
