@@ -124,6 +124,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	int log_dest_set = 0;
 	int log_type = MQTT3_LOG_NONE;
 	int log_type_set = 0;
+	int i;
 	
 	fptr = fopen(filename, "rt");
 	if(!fptr) return 1;
