@@ -76,7 +76,7 @@ int mqtt3_packet_handle(mqtt3_context *context)
 		case UNSUBSCRIBE:
 			return mqtt3_handle_unsubscribe(context);
 #endif
-#ifdef WITH_CLIENT
+#if defined(WITH_CLIENT) || defined(WITH_BRIDGE)
 		case CONNACK:
 			return mqtt3_handle_connack(context);
 		case SUBACK:
