@@ -421,7 +421,6 @@ static int _mqtt3_db_upgrade(void)
 
 	if(!db) return 1;
 
-	printf("up\n");
 	do{
 		if(sqlite3_prepare_v2(db, "SELECT value FROM config WHERE key='version'",
 				-1, &stmt, NULL) == SQLITE_OK){
@@ -1153,17 +1152,14 @@ int mqtt3_db_messages_queue(const char *topic, int qos, int retain, int64_t stor
 		if(!stmt){
 			stmt = _mqtt3_db_statement_prepare("SELECT payloadlen,payload FROM message_store WHERE id=?");
 			if(!stmt){
-				printf("bad stmt\n");
 				return 1;
 			}
 		}
 		if(sqlite3_bind_int64(stmt, 1, store_id) != SQLITE_OK) rc = 1;
-		printf("rc: %d\n");
 		if(!rc && sqlite3_step(stmt) == SQLITE_ROW){
 			payloadlen = sqlite3_column_int(stmt, 0);
 			payload = sqlite3_column_blob(stmt, 1);
 
-			printf("rc: %d\n");
 			client_publish_callback(topic, qos, payloadlen, payload, retain);
 		}
 		sqlite3_reset(stmt);

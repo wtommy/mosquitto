@@ -90,6 +90,7 @@ int mqtt3_socket_accept(mqtt3_context **contexts, int *context_count, int listen
 	}else{
 #endif
 		new_context = mqtt3_context_init(new_sock);
+		if(!new_context) return -1;
 		mqtt3_log_printf(MQTT3_LOG_NOTICE, "New client connected from %s.", new_context->address);
 		for(i=0; i<(*context_count); i++){
 			if(contexts[i] == NULL){
