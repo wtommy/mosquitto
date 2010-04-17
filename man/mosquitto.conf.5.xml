@@ -31,8 +31,10 @@
 
 	<refsect1>
 		<title>File Format</title>
-		<para>All lines with a # as the very first character are treated as a comment.</para>
-		<para>Configuration lines start with a variable name. The variable value is separated from the name by a single space.</para>
+		<para>All lines with a # as the very first character are treated as a
+		comment.</para>
+		<para>Configuration lines start with a variable name. The variable
+		value is separated from the name by a single space.</para>
 	</refsect1>
 
 	<refsect1>
@@ -103,19 +105,32 @@
 			<varlistentry>
 				<term><option>port</option></term>
 				<listitem>
-					<para>Set the network port to listen on. Defaults to 1883. This option may be given any number of times. A socket will be created for each port listed.</para>
+					<para>Set the network port to listen on. Defaults to 1883.
+					This option may be given any number of times. A socket will
+					be created for each port listed.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>persistence</option></term>
 				<listitem>
-					<para>Can be true or false. If true, connection, subscription and message data will be written to the disk in mosquitto.db at the location dictated by persistence_location. When mosquitto is restarted, it will reload the information stored in mosquitto.db. The data will be written to disk when mosquitto closes and also at periodic intervals as defined by autosave_interval. Writing of the persistence database may also be forced by sending mosquitto the SIGUSR1 signal. If false, the data will be stored in memory only. Defaults to false.</para>
+					<para>Can be true or false. If true, connection,
+					subscription and message data will be written to the disk
+					in mosquitto.db at the location dictated by
+					persistence_location. When mosquitto is restarted, it will
+					reload the information stored in mosquitto.db. The data
+					will be written to disk when mosquitto closes and also at
+					periodic intervals as defined by autosave_interval. Writing
+					of the persistence database may also be forced by sending
+					mosquitto the SIGUSR1 signal. If false, the data will be
+					stored in memory only. Defaults to false.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>persistence_location</option></term>
 				<listitem>
-					<para>The path where the persistence database should be stored. Must end in a trailing slash. If not given, then the current directory is used.</para>
+					<para>The path where the persistence database should be
+					stored. Must end in a trailing slash. If not given, then
+					the current directory is used.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -134,7 +149,10 @@
 			<varlistentry>
 				<term><option>retry_interval</option></term>
 				<listitem>
-					<para>The integer number of seconds after a QoS=1 or QoS=2 message has been sent that mosquitto will wait before retrying when no response is received. If unset, defaults to 20 seconds.</para>
+					<para>The integer number of seconds after a QoS=1 or QoS=2
+					message has been sent that mosquitto will wait before
+					retrying when no response is received. If unset, defaults
+					to 20 seconds.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -152,7 +170,10 @@
 			<varlistentry>
 				<term><option>sys_interval</option></term>
 				<listitem>
-					<para>The integer number of seconds between updates of the $SYS subscription hierarchy, which provides status information about the broker. If unset, defaults to 10 seconds.</para>
+					<para>The integer number of seconds between updates of the
+					$SYS subscription hierarchy, which provides status
+					information about the broker. If unset, defaults to 10
+					seconds.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -170,13 +191,50 @@
 	</refsect1>
 
 	<refsect1>
+		<title>Configuring Bridges</title>
+		<para>Multiple bridges (connections to other brokers) can be configured
+		using the following variables.</para>
+		<variablelist>
+			<varlistentry>
+				<term><option>addresses</option> <replaceable>addresss[:port]</replaceable></term>
+				<listitem>
+					<para>Specify the address and optionally the port of the
+					bridge to connect to. This must be given for each bridge
+					connection. If the port is not specified, the default of
+					1883 is used.</para>
+					<para>Unlike rsmb, it is not currently possible to specify
+					multiple addresses for a single bridge connection
+					here.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>connection</option> <replaceable>name</replaceable></term>
+				<listitem>
+					<para>This variable marks the start of a new bridge
+					connection. It is also used to give the bridge a
+					name which is used as the client id on the remote
+					broker.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>topic</option> <replaceable>pattern</replaceable></term>
+				<listitem>
+					<para>
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsect1>
+
+	<refsect1>
 		<title>Files</title>
 		<para>mosquitto.conf</para>
 	</refsect1>
 
 	<refsect1>
 		<title>Bugs</title>
-		<para><command>mosquitto</command> bug information can be found at <uri type="webpage">http://launchpad.net/mosquitto</uri>.</para>
+		<para><command>mosquitto</command> bug information can be found at <uri
+		type="webpage">http://launchpad.net/mosquitto</uri>.</para>
 	</refsect1>
 
 	<refsect1>
