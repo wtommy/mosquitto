@@ -57,6 +57,7 @@ int mqtt3_handle_connack(mqtt3_context *context)
 		case 0:
 			if(context->bridge){
 				mqtt3_raw_subscribe(context, false, context->bridge->topic, 2);
+				mqtt3_db_sub_insert(context->id, context->bridge->topic, 2);
 			}
 			return 0;
 		case 1:
