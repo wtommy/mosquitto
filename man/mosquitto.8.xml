@@ -82,7 +82,7 @@
 		<title>Limitations</title>
 		<para><command>mosquitto</command> implements all of the mqtt protocol version 3, but there are some significant limitations compared to rsmb.</para>
 		<itemizedlist mark="circle">
-			<listitem><para>There is no bridge support.</para></listitem>
+			<listitem><para>There is only basic bridge support.</para></listitem>
 			<listitem><para>There are vastly fewer configuration options.</para></listitem>
 			<listitem><para>There is less logging information.</para></listitem>
 			<listitem><para>The $SYS hierarchy is smaller.</para></listitem>
@@ -196,6 +196,22 @@
 		subscription of "a/b+/c" is not valid use of a wildcard. The
 		<option>#</option> wildcard must only ever be used as the final
 		character of a subscription.</para>
+	</refsect1>
+
+	<refsect1>
+		<title>Bridges</title>
+		<para>Multiple brokers can be connected together with the bridging
+		functionality. This is useful where it is desirable to share
+		information between locations, but where not all of the information
+		needs to be shared. An example could be where a number of users are
+		running a broker to help record power usage and for a number of other
+		reasons. The power usage could be shared through bridging all of the
+		user brokers to a common broker, allowing the power usage of all
+		users to be collected and compared. The other information would remain
+		local to each
+		broker.</para>
+		<para>For information on configuring bridges, see
+		<citerefentry><refentrytitle>mosquitto.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
 	</refsect1>
 
 	<refsect1>
