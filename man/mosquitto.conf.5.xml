@@ -196,7 +196,7 @@
 		using the following variables.</para>
 		<variablelist>
 			<varlistentry>
-				<term><option>addresses</option> <replaceable>addresss[:port]</replaceable></term>
+				<term><option>address</option> <replaceable>address[:port]</replaceable></term>
 				<listitem>
 					<para>Specify the address and optionally the port of the
 					bridge to connect to. This must be given for each bridge
