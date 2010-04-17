@@ -205,6 +205,12 @@ int main(int argc, char *argv[])
 	signal(SIGUSR1, handle_sigusr1);
 	signal(SIGPIPE, SIG_IGN);
 
+	for(i=0; i<config.bridge_count; i++){
+		if(mqtt3_bridge_new(contexts, &context_count, &(config.bridges[i]))){
+			mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Unable to connect to bridge %s.", 
+					config.bridges[i].name);
+		}
+	}
 	run = 1;
 	while(run){
 		mqtt3_db_sys_update(config.sys_interval, start_time);

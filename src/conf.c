@@ -29,6 +29,8 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->store_clean_interval = 10;
 	config->sys_interval = 10;
 	config->user = "mosquitto";
+	config->bridges = NULL;
+	config->bridge_count = 0;
 }
 
 int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
@@ -122,6 +124,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	int log_dest_set = 0;
 	int log_type = MQTT3_LOG_NONE;
 	int log_type_set = 0;
+	int i;
 	
 	fptr = fopen(filename, "rt");
 	if(!fptr) return 1;
@@ -133,7 +136,37 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 			}
 			token = strtok(buf, " ");
 			if(token){
-				if(!strcmp(token, "autosave_interval")){
+				if(!strcmp(token, "addresses")){
+					if(!config->bridges || config->bridges[config->bridge_count-1].address){
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid bridge configuration.");
+						return 1;
+					}
+					token = strtok(NULL, " ");
+					if(token){
+						token = strtok(token, ":");
+						if(token){
+							config->bridges[config->bridge_count-1].address = mqtt3_strdup(token);
+							if(!config->bridges[config->bridge_count-1].address){
+								mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
+								return 1;
+							}
+							token = strtok(NULL, ":");
+							if(token){
+								port_tmp = atoi(token);
+								if(port_tmp < 1 || port_tmp > 65535){
+									mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid port value (%d).", port_tmp);
+									return 1;
+								}
+								config->bridges[config->bridge_count-1].port = port_tmp;
+							}else{
+								config->bridges[config->bridge_count-1].port = 1883;
+							}
+						}
+					}else{
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty interface value in configuration.");
+						return 1;
+					}
+				}else if(!strcmp(token, "autosave_interval")){
 					if(_mqtt3_conf_parse_int(&token, "autosave_interval", &config->autosave_interval)) return 1;
 					if(config->autosave_interval < 0) config->autosave_interval = 0;
 				}else if(!strcmp(token, "ext_sqlite_regex")){
@@ -142,6 +175,23 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						config->ext_sqlite_regex = mqtt3_strdup(token);
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty ext_sqlite_regex value in config.");
+						return 1;
+					}
+				}else if(!strcmp(token, "connection")){
+					token = strtok(NULL, " ");
+					if(token){
+						config->bridge_count++;
+						config->bridges = mqtt3_realloc(config->bridges, config->bridge_count*sizeof(struct _mqtt3_bridge));
+						if(!config->bridges){
+							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
+							return 1;
+						}
+						config->bridges[config->bridge_count-1].name = mqtt3_strdup(token);
+						config->bridges[config->bridge_count-1].address = NULL;
+						config->bridges[config->bridge_count-1].port = 0;
+						config->bridges[config->bridge_count-1].topic = NULL;
+					}else{
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty connection value in configuration.");
 						return 1;
 					}
 				}else if(!strcmp(token, "interface")){
@@ -264,6 +314,18 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid sys_interval value (%d).", config->sys_interval);
 						return 1;
 					}
+				}else if(!strcmp(token, "topic")){
+					if(!config->bridges || config->bridges[config->bridge_count-1].topic){
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid bridge configuration.");
+						return 1;
+					}
+					token = strtok(NULL, " ");
+					if(token){
+						config->bridges[config->bridge_count-1].topic = mqtt3_strdup(token);
+					}else{
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty topic value in configuration.");
+						return 1;
+					}
 				}else if(!strcmp(token, "user")){
 					token = strtok(NULL, " ");
 					if(token){
@@ -280,6 +342,13 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 		}
 	}
 	fclose(fptr);
+
+	for(i=0; i<config->bridge_count; i++){
+		if(!config->bridges[i].name || !config->bridges[i].address || !config->bridges[i].port || !config->bridges[i].topic){
+			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid bridge configuration.");
+			return 1;
+		}
+	}
 
 	if(log_dest_set){
 		config->log_dest = log_dest;

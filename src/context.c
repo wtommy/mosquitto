@@ -64,6 +64,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 			context->address = mqtt3_strdup(address);
 		}
 	}
+	context->bridge = NULL;
 	
 	return context;
 }

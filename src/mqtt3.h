@@ -101,6 +101,13 @@ struct _mqtt3_packet{
 	struct _mqtt3_packet *next;
 };
 
+struct _mqtt3_bridge{
+	char *name;
+	char *address;
+	uint16_t port;
+	char *topic;
+};
+
 typedef struct _mqtt3_context{
 	int sock;
 	time_t last_msg_in;
@@ -113,6 +120,7 @@ typedef struct _mqtt3_context{
 	char *address;
 	struct _mqtt3_packet in_packet;
 	struct _mqtt3_packet *out_packet;
+	struct _mqtt3_bridge *bridge;
 } mqtt3_context;
 
 typedef enum {
@@ -153,6 +161,8 @@ typedef struct {
 	int sys_interval;
 	char *pid_file;
 	char *user;
+	struct _mqtt3_bridge *bridges;
+	int bridge_count;
 } mqtt3_config;
 
 struct _mqtt3_listener {
@@ -335,5 +345,10 @@ char *mqtt3_strdup(const char *s);
 int mqtt3_log_init(int level, int destinations);
 int mqtt3_log_close(void);
 int mqtt3_log_printf(int level, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+
+/* ============================================================
+ * Bridge functions
+ * ============================================================ */
+int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3_bridge *bridge);
 
 #endif
