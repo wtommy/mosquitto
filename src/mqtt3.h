@@ -101,12 +101,19 @@ struct _mqtt3_packet{
 	struct _mqtt3_packet *next;
 };
 
+typedef enum {
+	bd_out = 0
+	bd_in = 1,
+	bd_both = 2
+} mqtt3_bridge_direction;
+
 struct _mqtt3_bridge{
 	char *name;
 	char *address;
 	uint16_t port;
 	char *topic;
 	time_t restart_t;
+	mqtt3_bridge_direction direction;
 };
 
 typedef struct _mqtt3_context{

@@ -191,6 +191,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						config->bridges[config->bridge_count-1].port = 0;
 						config->bridges[config->bridge_count-1].topic = NULL;
 						config->bridges[config->bridge_count-1].restart_t = 0;
+						config->bridges[config->bridge_count-1].direction = mqtt3_bd_out;
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty connection value in configuration.");
 						return 1;
@@ -326,6 +327,19 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty topic value in configuration.");
 						return 1;
+					}
+					token = strtok(NULL, " ");
+					if(token){
+						if(!stricmp(token, "out")){
+							config->bridges[config->bridge_count-1].direction = mqtt3_db_out;
+						}else if(!stricmp(token, "in")){
+							config->bridges[config->bridge_count-1].direction = mqtt3_db_in;
+						}else if(!stricmp(token, "both")){
+							config->bridges[config->bridge_count-1].direction = mqtt3_db_both;
+						}else{
+							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid bridge topic direction '%s'.", token);
+							return 1;
+						}
 					}
 				}else if(!strcmp(token, "user")){
 					token = strtok(NULL, " ");
