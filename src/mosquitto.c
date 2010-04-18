@@ -285,7 +285,7 @@ int main(int argc, char *argv[])
 									}
 								}else{
 									mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket error on client %s, disconnecting.", contexts[i]->id);
-									if(!contexts[i]->disconnecting) mqtt3_db_client_will_queue(contexts[i]);
+									mqtt3_db_client_will_queue(contexts[i]);
 								}
 							}else{
 								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
 					if(mqtt3_net_write(contexts[i])){
 						if(!contexts[i]->disconnecting){
 							mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket write error on client %s, disconnecting.", contexts[i]->id);
-							if(!contexts[i]->disconnecting) mqtt3_db_client_will_queue(contexts[i]);
+							mqtt3_db_client_will_queue(contexts[i]);
 						}else{
 							mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
 						}
