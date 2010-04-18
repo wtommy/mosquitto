@@ -102,7 +102,7 @@ struct _mqtt3_packet{
 };
 
 typedef enum {
-	bd_out = 0
+	bd_out = 0,
 	bd_in = 1,
 	bd_both = 2
 } mqtt3_bridge_direction;

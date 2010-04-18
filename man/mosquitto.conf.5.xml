@@ -217,7 +217,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>topic</option> <replaceable>pattern</replaceable></term>
+				<term><option>topic</option> <replaceable>pattern</replaceable> <replaceable>[ out | in | both ]</replaceable></term>
 				<listitem>
 					<para>
 					</para>

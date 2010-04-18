@@ -191,7 +191,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						config->bridges[config->bridge_count-1].port = 0;
 						config->bridges[config->bridge_count-1].topic = NULL;
 						config->bridges[config->bridge_count-1].restart_t = 0;
-						config->bridges[config->bridge_count-1].direction = mqtt3_bd_out;
+						config->bridges[config->bridge_count-1].direction = bd_out;
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty connection value in configuration.");
 						return 1;
@@ -330,12 +330,12 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					}
 					token = strtok(NULL, " ");
 					if(token){
-						if(!stricmp(token, "out")){
-							config->bridges[config->bridge_count-1].direction = mqtt3_db_out;
-						}else if(!stricmp(token, "in")){
-							config->bridges[config->bridge_count-1].direction = mqtt3_db_in;
-						}else if(!stricmp(token, "both")){
-							config->bridges[config->bridge_count-1].direction = mqtt3_db_both;
+						if(!strcasecmp(token, "out")){
+							config->bridges[config->bridge_count-1].direction = bd_out;
+						}else if(!strcasecmp(token, "in")){
+							config->bridges[config->bridge_count-1].direction = bd_in;
+						}else if(!strcasecmp(token, "both")){
+							config->bridges[config->bridge_count-1].direction = bd_both;
 						}else{
 							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid bridge topic direction '%s'.", token);
 							return 1;

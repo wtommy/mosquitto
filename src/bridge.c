@@ -61,7 +61,10 @@ int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3
 	}
 
 	new_context->id = mqtt3_strdup(bridge->name);
-	return mqtt3_bridge_connect(new_context);
+	if(!mqtt3_db_client_insert(new_context, 0, 0, 0, NULL, NULL)){
+		return mqtt3_bridge_connect(new_context);
+	}
+	return 1;
 }
 
 int mqtt3_bridge_connect(mqtt3_context *context)
@@ -78,8 +81,15 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 
 	context->sock = new_sock;
 
-	return mqtt3_raw_connect(context, context->id,
+	if(!mqtt3_raw_connect(context, context->id,
 			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
-			60/*keepalive*/, /*cleanstart*/true);
+			60/*keepalive*/, /*cleanstart*/true)){
+
+		if(context->bridge && (context->bridge->direction == bd_out
+					|| context->bridge->direction == bd_both)){
+			return mqtt3_db_sub_insert(context->id, context->bridge->topic, 2);
+		}
+	}
+	return 1;
 }
 
