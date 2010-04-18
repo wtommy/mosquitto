@@ -190,6 +190,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						config->bridges[config->bridge_count-1].address = NULL;
 						config->bridges[config->bridge_count-1].port = 0;
 						config->bridges[config->bridge_count-1].topic = NULL;
+						config->bridges[config->bridge_count-1].restart_t = 0;
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty connection value in configuration.");
 						return 1;

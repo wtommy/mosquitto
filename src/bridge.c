@@ -35,19 +35,12 @@ POSSIBILITY OF SUCH DAMAGE.
 int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3_bridge *bridge)
 {
 	int i;
-	int new_sock = -1;
 	mqtt3_context *new_context = NULL;
 	mqtt3_context **tmp_contexts;
 
 	if(!contexts || !bridge) return 1;
 
-	new_sock = mqtt3_socket_connect(bridge->address, bridge->port);
-	if(new_sock == -1){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error creating bridge.");
-		return 1;
-	}
-
-	new_context = mqtt3_context_init(new_sock);
+	new_context = mqtt3_context_init(-1);
 	if(!new_context){
 		return 1;
 	}
@@ -68,10 +61,25 @@ int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3
 	}
 
 	new_context->id = mqtt3_strdup(bridge->name);
-	mqtt3_raw_connect(new_context, new_context->id,
+	return mqtt3_bridge_connect(new_context);
+}
+
+int mqtt3_bridge_connect(mqtt3_context *context)
+{
+	int new_sock = -1;
+
+	if(!context || !context->bridge) return 1;
+
+	new_sock = mqtt3_socket_connect(context->bridge->address, context->bridge->port);
+	if(new_sock == -1){
+		mqtt3_log_printf(MQTT3_LOG_ERR, "Error creating bridge.");
+		return 1;
+	}
+
+	context->sock = new_sock;
+
+	return mqtt3_raw_connect(context, context->id,
 			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
 			60/*keepalive*/, /*cleanstart*/true);
-
-	return 0;
 }
 

@@ -274,8 +274,19 @@ int main(int argc, char *argv[])
 					if(contexts[i] && fstat(contexts[i]->sock, &statbuf) == -1){
 						if(errno == EBADF){
 							if(!contexts[i]->disconnecting){
-								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket error on client %s, disconnecting.", contexts[i]->id);
-								if(!contexts[i]->disconnecting) mqtt3_db_client_will_queue(contexts[i]);
+								if(contexts[i]->bridge){
+									if(!contexts[i]->bridge->restart_t){
+										contexts[i]->bridge->restart_t = time(NULL)+30;
+									}else{
+										if(time(NULL) > contexts[i]->bridge->restart_t){
+											contexts[i]->bridge->restart_t = 0;
+											mqtt3_bridge_connect(contexts[i]);
+										}
+									}
+								}else{
+									mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket error on client %s, disconnecting.", contexts[i]->id);
+									if(!contexts[i]->disconnecting) mqtt3_db_client_will_queue(contexts[i]);
+								}
 							}else{
 								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
 							}
@@ -297,8 +308,13 @@ int main(int argc, char *argv[])
 							mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
 						}
 						/* Write error or other that means we should disconnect */
-						mqtt3_context_cleanup(contexts[i]);
-						contexts[i] = NULL;
+						/* Bridges don't get cleaned up because they will reconnect later. */
+						if(contexts[i]->bridge){
+							mqtt3_socket_close(contexts[i]);
+						}else{
+							mqtt3_context_cleanup(contexts[i]);
+							contexts[i] = NULL;
+						}
 					}
 				}
 				if(contexts[i] && contexts[i]->sock != -1 && FD_ISSET(contexts[i]->sock, &readfds)){
@@ -310,8 +326,13 @@ int main(int argc, char *argv[])
 							mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
 						}
 						/* Read error or other that means we should disconnect */
-						mqtt3_context_cleanup(contexts[i]);
-						contexts[i] = NULL;
+						/* Bridges don't get cleaned up because they will reconnect later. */
+						if(contexts[i]->bridge){
+							mqtt3_socket_close(contexts[i]);
+						}else{
+							mqtt3_context_cleanup(contexts[i]);
+							contexts[i] = NULL;
+						}
 					}
 				}
 			}
