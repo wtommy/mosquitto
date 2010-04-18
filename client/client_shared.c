@@ -70,13 +70,6 @@ int client_connect(mqtt3_context **context, const char *host, int port, const ch
 	return 0;
 }
 
-void mqtt3_check_keepalive(mqtt3_context *context)
-{
-	if(time(NULL) - context->last_msg_out >= context->keepalive){
-		mqtt3_raw_pingreq(context);
-	}
-}
-
 int client_loop(mqtt3_context *context)
 {
 	struct timespec timeout;
