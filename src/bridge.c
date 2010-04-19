@@ -85,9 +85,10 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
 			60/*keepalive*/, /*cleanstart*/true)){
 
-		if(context->bridge && (context->bridge->direction == bd_out
-					|| context->bridge->direction == bd_both)){
+		if(context->bridge->direction == bd_out || context->bridge->direction == bd_both){
 			return mqtt3_db_sub_insert(context->id, context->bridge->topic, 2);
+		}else{
+			return 0;
 		}
 	}
 	return 1;
