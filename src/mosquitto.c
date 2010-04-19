@@ -250,6 +250,17 @@ int main(int argc, char *argv[])
 						mqtt3_context_cleanup(contexts[i]);
 						contexts[i] = NULL;
 					}
+				}else if(contexts[i]->bridge){
+					/* Want to try to restart the bridge connection */
+					if(!contexts[i]->bridge->restart_t){
+						contexts[i]->bridge->restart_t = time(NULL)+30;
+					}else{
+						if(time(NULL) > contexts[i]->bridge->restart_t){
+							mqtt3_log_printf(MQTT3_LOG_INFO, "Attempting to reconnect to bridge %s.", contexts[i]->id);
+							contexts[i]->bridge->restart_t = 0;
+							mqtt3_bridge_connect(contexts[i]);
+						}
+					}
 				}else if(contexts[i]->clean_session){
 					mqtt3_context_cleanup(contexts[i]);
 					contexts[i] = NULL;
@@ -273,19 +284,8 @@ int main(int argc, char *argv[])
 					if(contexts[i] && fstat(contexts[i]->sock, &statbuf) == -1){
 						if(errno == EBADF){
 							if(!contexts[i]->disconnecting){
-								if(contexts[i]->bridge){
-									if(!contexts[i]->bridge->restart_t){
-										contexts[i]->bridge->restart_t = time(NULL)+30;
-									}else{
-										if(time(NULL) > contexts[i]->bridge->restart_t){
-											contexts[i]->bridge->restart_t = 0;
-											mqtt3_bridge_connect(contexts[i]);
-										}
-									}
-								}else{
-									mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket error on client %s, disconnecting.", contexts[i]->id);
-									mqtt3_db_client_will_queue(contexts[i]);
-								}
+								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket error on client %s, disconnecting.", contexts[i]->id);
+								mqtt3_db_client_will_queue(contexts[i]);
 							}else{
 								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
 							}
