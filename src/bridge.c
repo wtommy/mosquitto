@@ -81,6 +81,9 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 
 	context->sock = new_sock;
 
+	context->connected = false;
+	context->disconnecting = false;
+
 	if(!mqtt3_raw_connect(context, context->id,
 			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
 			60/*keepalive*/, /*cleanstart*/true)){
