@@ -125,6 +125,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	int log_type = MQTT3_LOG_NONE;
 	int log_type_set = 0;
 	int i;
+	struct _mqtt3_bridge *cur_bridge = NULL;
 	
 	fptr = fopen(filename, "rt");
 	if(!fptr) return 1;
@@ -137,7 +138,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 			token = strtok(buf, " ");
 			if(token){
 				if(!strcmp(token, "address")){
-					if(!config->bridges || config->bridges[config->bridge_count-1].address){
+					if(!cur_bridge || cur_bridge->address){
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid bridge configuration.");
 						return 1;
 					}
@@ -145,8 +146,8 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					if(token){
 						token = strtok(token, ":");
 						if(token){
-							config->bridges[config->bridge_count-1].address = mqtt3_strdup(token);
-							if(!config->bridges[config->bridge_count-1].address){
+							cur_bridge->address = mqtt3_strdup(token);
+							if(!cur_bridge->address){
 								mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
 								return 1;
 							}
@@ -157,9 +158,9 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 									mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid port value (%d).", port_tmp);
 									return 1;
 								}
-								config->bridges[config->bridge_count-1].port = port_tmp;
+								cur_bridge->port = port_tmp;
 							}else{
-								config->bridges[config->bridge_count-1].port = 1883;
+								cur_bridge->port = 1883;
 							}
 						}
 					}else{
@@ -186,12 +187,13 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
 							return 1;
 						}
-						config->bridges[config->bridge_count-1].name = mqtt3_strdup(token);
-						config->bridges[config->bridge_count-1].address = NULL;
-						config->bridges[config->bridge_count-1].port = 0;
-						config->bridges[config->bridge_count-1].topic = NULL;
-						config->bridges[config->bridge_count-1].restart_t = 0;
-						config->bridges[config->bridge_count-1].direction = bd_out;
+						cur_bridge = &(config->bridges[config->bridge_count-1]);
+						cur_bridge->name = mqtt3_strdup(token);
+						cur_bridge->address = NULL;
+						cur_bridge->port = 0;
+						cur_bridge->topic = NULL;
+						cur_bridge->restart_t = 0;
+						cur_bridge->direction = bd_out;
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty connection value in configuration.");
 						return 1;
@@ -317,13 +319,13 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						return 1;
 					}
 				}else if(!strcmp(token, "topic")){
-					if(!config->bridges || config->bridges[config->bridge_count-1].topic){
+					if(!cur_bridge || cur_bridge->topic){
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid bridge configuration.");
 						return 1;
 					}
 					token = strtok(NULL, " ");
 					if(token){
-						config->bridges[config->bridge_count-1].topic = mqtt3_strdup(token);
+						cur_bridge->topic = mqtt3_strdup(token);
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty topic value in configuration.");
 						return 1;
@@ -331,11 +333,11 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					token = strtok(NULL, " ");
 					if(token){
 						if(!strcasecmp(token, "out")){
-							config->bridges[config->bridge_count-1].direction = bd_out;
+							cur_bridge->direction = bd_out;
 						}else if(!strcasecmp(token, "in")){
-							config->bridges[config->bridge_count-1].direction = bd_in;
+							cur_bridge->direction = bd_in;
 						}else if(!strcasecmp(token, "both")){
-							config->bridges[config->bridge_count-1].direction = bd_both;
+							cur_bridge->direction = bd_both;
 						}else{
 							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid bridge topic direction '%s'.", token);
 							return 1;
