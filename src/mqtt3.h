@@ -107,13 +107,18 @@ typedef enum {
 	bd_both = 2
 } mqtt3_bridge_direction;
 
+struct _mqtt3_bridge_topic{
+	char *topic;
+	mqtt3_bridge_direction direction;
+};
+
 struct _mqtt3_bridge{
 	char *name;
 	char *address;
 	uint16_t port;
-	char *topic;
+	struct _mqtt3_bridge_topic *topics;
+	int topic_count;
 	time_t restart_t;
-	mqtt3_bridge_direction direction;
 };
 
 typedef struct _mqtt3_context{

@@ -46,6 +46,7 @@ int mqtt3_handle_connack(mqtt3_context *context)
 {
 	uint8_t byte;
 	uint8_t rc;
+	int i;
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received CONNACK");
 	if(mqtt3_read_byte(context, &byte)) return 1; // Reserved byte, not used
@@ -55,9 +56,14 @@ int mqtt3_handle_connack(mqtt3_context *context)
 	}
 	switch(rc){
 		case 0:
-			if(context->bridge && (context->bridge->direction == bd_in
-					|| context->bridge->direction == bd_both)){
-				mqtt3_raw_subscribe(context, false, context->bridge->topic, 2);
+			if(context->bridge){
+				for(i=0; i<context->bridge->topic_count; i++){
+					if(context->bridge->topics[i].direction == bd_in || context->bridge->topics[i].direction == bd_both){
+						if(mqtt3_raw_subscribe(context, false, context->bridge->topics[i].topic, 2)){
+							return 1;
+						}
+					}
+				}
 			}
 			return 0;
 		case 1:
