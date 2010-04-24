@@ -24,6 +24,7 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->log_type = MQTT3_LOG_ERR | MQTT3_LOG_WARNING | MQTT3_LOG_NOTICE | MQTT3_LOG_INFO;
 	config->persistence = false;
 	config->persistence_location = NULL;
+	config->persistence_file = "mosquitto.db";
 	config->pid_file = NULL;
 	config->retry_interval = 20;
 	config->store_clean_interval = 10;
@@ -273,6 +274,14 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					}
 				}else if(!strcmp(token, "persistence")){
 					if(_mqtt3_conf_parse_bool(&token, "persistence", &config->persistence)) return 1;
+				}else if(!strcmp(token, "persistence_file")){
+					token = strtok(NULL, " ");
+					if(token){
+						config->persistence_file = mqtt3_strdup(token);
+					}else{
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty persistence_file value in configuration.");
+						return 1
+					}
 				}else if(!strcmp(token, "persistence_location")){
 					token = strtok(NULL, " ");
 					if(token){

@@ -126,6 +126,12 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>persistence_file</option></term>
+				<listitem>
+					<para>The filename to use for the persistent database. Defaults to mosquitto.db.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>persistence_location</option></term>
 				<listitem>
 					<para>The path where the persistence database should be

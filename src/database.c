@@ -167,11 +167,11 @@ int mqtt3_db_open(mqtt3_config *config)
 		if(_mqtt3_db_tables_create()) return 1;
 	}else{
 		if(config->persistence_location && strlen(config->persistence_location)){
-			db_filepath = mqtt3_malloc(strlen(config->persistence_location) + strlen("mosquitto.db") + 1);
+			db_filepath = mqtt3_malloc(strlen(config->persistence_location) + strlen(config->persistence_file) + 1);
 			if(!db_filepath) return 1;
-			sprintf(db_filepath, "%smosquitto.db", config->persistence_location);
+			sprintf(db_filepath, "%s%s", config->persistence_location, config->persistence_file);
 		}else{
-			db_filepath = mqtt3_strdup("mosquitto.db");
+			db_filepath = mqtt3_strdup(config->persistence_file);
 		}
 		dbrc = sqlite3_open_v2(db_filepath, &restore_db, SQLITE_OPEN_READONLY, NULL);
 		if(dbrc == SQLITE_OK){

@@ -169,6 +169,7 @@ typedef struct {
 	int log_type;
 	bool persistence;
 	char *persistence_location;
+	char *persistence_file;
 	int retry_interval;
 	int store_clean_interval;
 	int sys_interval;

@@ -15,6 +15,9 @@
   message store.
 - Add support for disabling "clean session" for the sub client.
 - Add support for automatic upgrading of the mosquitto DB from v1 to v2.
+- Add persistence_file config option to allow changing the filename of the
+  persistence database. This allows multiple mosquitto DBs to be stored in the
+  same location whilst keeping persistence_location compatible with rsmb.
 
 0.5.4 - 20100311
 ================
