@@ -366,6 +366,6 @@ int mqtt3_log_printf(int level, const char *fmt, ...) __attribute__((format(prin
  * ============================================================ */
 int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3_bridge *bridge);
 int mqtt3_bridge_connect(mqtt3_context *context);
-int mqtt3_bridge_packet_cleanup(mqtt3_context *context);
+void mqtt3_bridge_packet_cleanup(mqtt3_context *context);
 
 #endif
