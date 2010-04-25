@@ -110,8 +110,6 @@ void mqtt3_bridge_packet_cleanup(mqtt3_context *context)
 		mqtt3_context_packet_cleanup(context->out_packet);
 		context->out_packet = context->out_packet->next;
 	}
-    while(context->in_packet){
-		mqtt3_context_packet_cleanup(context->in_packet);
-		context->in_packet = context->in_packet->next;
-	}
+
+	mqtt3_context_packet_cleanup(&(context->in_packet));
 }
