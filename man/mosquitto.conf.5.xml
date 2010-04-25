@@ -223,10 +223,23 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>topic</option> <replaceable>pattern</replaceable> <replaceable>[ out | in | both ]</replaceable></term>
+				<term><option>topic</option> <replaceable>pattern</replaceable> [ out | in | both ]</term>
 				<listitem>
-					<para>
-					</para>
+					<para>Define a topic pattern to be shared between the two
+					brokers. Any topics matching the pattern (which may include
+					wildcards) are shared. The second parameter defines the
+					direction that the messages will be shared in, so it is
+					possible to import messages from a remote broker using
+					"in", export messages to a remote broker using "out" or
+					share messages in both directions. If this parameter is not
+					defined, the default of "out" is used.</para>
+					<para>This option can be specified multiple times per
+					bridge.</para>
+					<para>Care must be taken to ensure that loops are not
+					created with this option. If you are experiencing high CPU
+					load from a broker, it is possible that you have a loop
+					where each broker is forever forwarding each other the same
+					messages.</para>
 				</listitem>
 			</varlistentry>
 		</variablelist>
