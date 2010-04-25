@@ -280,7 +280,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						config->persistence_file = mqtt3_strdup(token);
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty persistence_file value in configuration.");
-						return 1
+						return 1;
 					}
 				}else if(!strcmp(token, "persistence_location")){
 					token = strtok(NULL, " ");
