@@ -46,7 +46,7 @@
 	<refsect1>
 		<title>Description</title>
 		<para><command>mosquitto_sub</command> is a simple mqtt version 3
-		client that will sublish to a topic and print the messages that it
+		client that will publish to a topic and print the messages that it
 		receives.</para>
 	</refsect1>
 
@@ -114,7 +114,7 @@
 				<term><option>-t</option></term>
 				<term><option>--topic</option></term>
 				<listitem>
-					<para>The mqtt topic on which to sublish the message. See
+					<para>The mqtt topic on which to publish the message. See
 					<citerefentry><refentrytitle>mqtt</refentrytitle><manvolnum>7</manvolnum></citerefentry>
 					for more information on mqtt topics.</para>
 					<para>This option may be repeated.</para>
