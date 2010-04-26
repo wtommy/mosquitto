@@ -1,5 +1,5 @@
-/* Compile with tcpd/libwrap support? */
-#define WITH_WRAP
+/* Uncomment to compile with tcpd/libwrap support. */
+//#define WITH_WRAP
 
 /* Compile with regex topic matching support?  If disabled, wildcard topic
  * matching won't be possible.
