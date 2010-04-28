@@ -1,6 +1,6 @@
 CC=cc
 CFLAGS=-I../src -I. -Wall -ggdb -DWITH_CLIENT
-LDFLAGS=-lsqlite3 -nopie
+LDFLAGS=-lsqlite3
 OBJS=client_shared.o context.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o read_handle.o read_handle_client.o util.o
 INSTALL=install
 prefix=/usr/local
