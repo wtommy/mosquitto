@@ -319,7 +319,8 @@ static int _mqtt3_db_tables_create(void)
 		"clean_session INTEGER, "
 		"will INTEGER, will_retain INTEGER, will_qos INTEGER, "
 		"will_topic TEXT, will_message TEXT, "
-		"last_mid INTEGER)",
+		"last_mid INTEGER,
+		is_bridge INTEGER)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
 		rc = 1;
@@ -474,8 +475,8 @@ static int _mqtt3_db_upgrade_1_2(void)
 	if(_mqtt3_db_tables_create()) return 1;
 
 	/* ---------- New clients table and copy data ---------- */
-	if(sqlite3_prepare_v2(db, "INSERT INTO clients (sock,id,clean_session,will,will_retain,will_qos,will_topic,will_message,last_mid) "
-			"VALUES (?,?,?,?,?,?,?,?,?)", -1, &new_stmt, NULL) != SQLITE_OK){
+	if(sqlite3_prepare_v2(db, "INSERT INTO clients (sock,id,clean_session,will,will_retain,will_qos,will_topic,will_message,last_mid,is_bridge) "
+			"VALUES (?,?,?,?,?,?,?,?,?,0)", -1, &new_stmt, NULL) != SQLITE_OK){
 		sqlite3_close(db);
 		db = old_db;
 		return 1;
@@ -660,8 +661,8 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 	}else{
 		if(!stmt){
 			stmt = _mqtt3_db_statement_prepare("INSERT INTO clients "
-					"(sock,id,clean_session,will,will_retain,will_qos,will_topic,will_message,last_mid) "
-					"SELECT ?,?,?,?,?,?,?,?,0 WHERE NOT EXISTS "
+					"(sock,id,clean_session,will,will_retain,will_qos,will_topic,will_message,last_mid,is_bridge) "
+					"SELECT ?,?,?,?,?,?,?,?,0,? WHERE NOT EXISTS "
 					"(SELECT 1 FROM clients WHERE id=?)");
 			if(!stmt){
 				return 1;
@@ -684,6 +685,7 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 			if(sqlite3_bind_text(stmt, 8, "", 0, SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		}
 		if(sqlite3_bind_text(stmt, 9, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt, 10, (context->bridge)?1:0) != SQLITE_OK) rc = 1;
 		if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 		sqlite3_reset(stmt);
 		sqlite3_clear_bindings(stmt);
