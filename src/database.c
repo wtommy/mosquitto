@@ -554,7 +554,7 @@ static int _mqtt3_db_upgrade_1_2(void)
 		payloadlen = sqlite3_column_int(old_stmt, 2);
 		payload = sqlite3_column_blob(old_stmt, 3);
 
-		if(mqtt3_db_message_store(topic, qos, payloadlen, payload, 1, &store_id)) rc = 1;
+		if(mqtt3_db_message_store("", topic, qos, payloadlen, payload, 1, &store_id)) rc = 1;
 		if(sqlite3_bind_text(new_stmt, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int64(new_stmt, 2, store_id) != SQLITE_OK) rc = 1;
 		if(sqlite3_step(new_stmt) != SQLITE_DONE) rc = 1;
@@ -591,7 +591,7 @@ static int _mqtt3_db_upgrade_1_2(void)
 		payloadlen = sqlite3_column_int(old_stmt, 9);
 		payload = sqlite3_column_blob(old_stmt, 10);
 
-		if(mqtt3_db_message_store(topic, qos, payloadlen, payload, 1, &store_id)) rc = 1;
+		if(mqtt3_db_message_store("", topic, qos, payloadlen, payload, 1, &store_id)) rc = 1;
 		if(sqlite3_bind_text(new_stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(new_stmt, 2, timestamp) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(new_stmt, 3, direction) != SQLITE_OK) rc = 1;
@@ -770,7 +770,7 @@ int mqtt3_db_client_will_queue(mqtt3_context *context)
 		payload = sqlite3_column_text(stmt, 2);
 		retain = sqlite3_column_int(stmt, 3);
 		if(!rc){
-			if(mqtt3_db_messages_easy_queue(topic, qos, strlen((const char *)payload), payload, retain)) rc = 1;
+			if(mqtt3_db_messages_easy_queue(context->id, topic, qos, strlen((const char *)payload), payload, retain)) rc = 1;
 		}
 	}else if(dbrc != SQLITE_DONE){
 		rc = 1;
@@ -1119,13 +1119,13 @@ int mqtt3_db_messages_delete(const char *client_id)
 	return rc;
 }
 
-int mqtt3_db_messages_easy_queue(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
+int mqtt3_db_messages_easy_queue(const char *client_id, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
 {
 	int64_t store_id;
 
 	if(!topic || !payloadlen || !payload) return 1;
 
-	if(mqtt3_db_message_store(topic, qos, payloadlen, payload, retain, &store_id)) return 1;
+	if(mqtt3_db_message_store(client_id, topic, qos, payloadlen, payload, retain, &store_id)) return 1;
 
 	return mqtt3_db_messages_queue(topic, qos, retain, store_id);
 }
@@ -1198,18 +1198,18 @@ int mqtt3_db_messages_queue(const char *topic, int qos, int retain, int64_t stor
 	return rc;
 }
 
-int mqtt3_db_message_store(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, int64_t *store_id)
+int mqtt3_db_message_store(const char *client_id, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, int64_t *store_id)
 {
 	/* Warning: Don't start transaction in this function. */
 	static sqlite3_stmt *stmt = NULL;
 	int rc = 0;
 
-	if(!topic || !payloadlen || !payload || !store_id) return 1;
+	if(!client_id || !topic || !payloadlen || !payload || !store_id) return 1;
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("INSERT INTO message_store "
-				"(timestamp, qos, retain, topic, payloadlen, payload) "
-				"VALUES (?,?,?,?,?,?)");
+				"(timestamp, qos, retain, topic, payloadlen, payload, source) "
+				"VALUES (?,?,?,?,?,?,?)");
 		if(!stmt){
 			return 1;
 		}
@@ -1220,6 +1220,7 @@ int mqtt3_db_message_store(const char *topic, int qos, uint32_t payloadlen, cons
 	if(sqlite3_bind_text(stmt, 4, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 5, payloadlen) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_blob(stmt, 6, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 7, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -1957,32 +1958,32 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 		_mqtt3_db_transaction_begin();
 
 		snprintf(buf, 100, "%d seconds", (int)(now - start_time));
-		mqtt3_db_messages_easy_queue("$SYS/broker/uptime", 2, strlen(buf), (uint8_t *)buf, 1);
+		mqtt3_db_messages_easy_queue("", "$SYS/broker/uptime", 2, strlen(buf), (uint8_t *)buf, 1);
 
 		if(!mqtt3_db_message_count(&count)){
 			snprintf(buf, 100, "%d", count);
-			mqtt3_db_messages_easy_queue("$SYS/broker/messages/inflight", 2, strlen(buf), (uint8_t *)buf, 1);
+			mqtt3_db_messages_easy_queue("", "$SYS/broker/messages/inflight", 2, strlen(buf), (uint8_t *)buf, 1);
 		}
 
 		if(!mqtt3_db_client_count(&count)){
 			snprintf(buf, 100, "%d", count);
-			mqtt3_db_messages_easy_queue("$SYS/broker/clients/total", 2, strlen(buf), (uint8_t *)buf, 1);
+			mqtt3_db_messages_easy_queue("", "$SYS/broker/clients/total", 2, strlen(buf), (uint8_t *)buf, 1);
 		}
 
 		snprintf(buf, 100, "%d", mqtt3_memory_used());
-		mqtt3_db_messages_easy_queue("$SYS/broker/heap/current size", 2, strlen(buf), (uint8_t *)buf, 1);
+		mqtt3_db_messages_easy_queue("", "$SYS/broker/heap/current size", 2, strlen(buf), (uint8_t *)buf, 1);
 
 		snprintf(buf, 100, "%lu", mqtt3_net_msgs_total_received());
-		mqtt3_db_messages_easy_queue("$SYS/broker/messages/received", 2, strlen(buf), (uint8_t *)buf, 1);
+		mqtt3_db_messages_easy_queue("", "$SYS/broker/messages/received", 2, strlen(buf), (uint8_t *)buf, 1);
 		
 		snprintf(buf, 100, "%lu", mqtt3_net_msgs_total_sent());
-		mqtt3_db_messages_easy_queue("$SYS/broker/messages/sent", 2, strlen(buf), (uint8_t *)buf, 1);
+		mqtt3_db_messages_easy_queue("", "$SYS/broker/messages/sent", 2, strlen(buf), (uint8_t *)buf, 1);
 
 		snprintf(buf, 100, "%llu", (unsigned long long)mqtt3_net_bytes_total_received());
-		mqtt3_db_messages_easy_queue("$SYS/broker/bytes/received", 2, strlen(buf), (uint8_t *)buf, 1);
+		mqtt3_db_messages_easy_queue("", "$SYS/broker/bytes/received", 2, strlen(buf), (uint8_t *)buf, 1);
 		
 		snprintf(buf, 100, "%llu", (unsigned long long)mqtt3_net_bytes_total_sent());
-		mqtt3_db_messages_easy_queue("$SYS/broker/bytes/sent", 2, strlen(buf), (uint8_t *)buf, 1);
+		mqtt3_db_messages_easy_queue("", "$SYS/broker/bytes/sent", 2, strlen(buf), (uint8_t *)buf, 1);
 		
 		last_update = time(NULL);
 

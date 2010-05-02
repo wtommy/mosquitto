@@ -188,7 +188,7 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	printf("%s: %s\n", topic, payload);
 #endif
 
-	if(mqtt3_db_message_store(topic, qos, payloadlen, payload, retain, &store_id)){
+	if(mqtt3_db_message_store(context->id, topic, qos, payloadlen, payload, retain, &store_id)){
 		mqtt3_free(topic);
 		mqtt3_free(payload);
 		return 1;

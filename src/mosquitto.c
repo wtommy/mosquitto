@@ -179,9 +179,9 @@ int main(int argc, char *argv[])
 
 	/* Set static $SYS messages */
 	snprintf(buf, 1024, "mosquitto version %s", VERSION);
-	mqtt3_db_messages_easy_queue("$SYS/broker/version", 2, strlen(buf), (uint8_t *)buf, 1);
+	mqtt3_db_messages_easy_queue("", "$SYS/broker/version", 2, strlen(buf), (uint8_t *)buf, 1);
 	snprintf(buf, 1024, "%s", TIMESTAMP);
-	mqtt3_db_messages_easy_queue("$SYS/broker/timestamp", 2, strlen(buf), (uint8_t *)buf, 1);
+	mqtt3_db_messages_easy_queue("", "$SYS/broker/timestamp", 2, strlen(buf), (uint8_t *)buf, 1);
 
 	listensock = mqtt3_malloc(sizeof(int)*config.iface_count);
 	for(i=0; i<config.iface_count; i++){
