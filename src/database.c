@@ -356,7 +356,7 @@ static int _mqtt3_db_tables_create(void)
 	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS message_store("
 		"id INTEGER PRIMARY KEY, timestamp INTEGER, qos INTEGER, "
-		"retain INTEGER, topic TEXT, payloadlen INTEGER, payload BLOB)",
+		"retain INTEGER, topic TEXT, payloadlen INTEGER, payload BLOB, source TEXT)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
 		rc = 1;
@@ -565,7 +565,7 @@ static int _mqtt3_db_upgrade_1_2(void)
 	sqlite3_finalize(old_stmt);
 
 	/* ---------- Copy messages to message store ---------- */
-	if(sqlite3_prepare_v2(db, "INSERT INTO messages (client_id,timestamp,direction,status,mid,retries,qos,store_id) VALUES (?,?,?,?,?,?,?,?)",
+	if(sqlite3_prepare_v2(db, "INSERT INTO messages (client_id,timestamp,direction,status,mid,retries,qos,store_id,source) VALUES (?,?,?,?,?,?,?,?,\"\")",
 			-1, &new_stmt, NULL) != SQLITE_OK){
 		sqlite3_close(db);
 		db = old_db;
