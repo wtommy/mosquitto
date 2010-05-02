@@ -325,6 +325,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout);
 uint16_t mqtt3_db_mid_generate(const char *client_id);
 /* Add a retained message for a topic, overwriting an existing one if necessary. */
 int mqtt3_db_retain_insert(const char *topic, int64_t store_id);
+int mqtt3_db_retain_delete(const char *topic);
 int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos);
 int mqtt3_db_store_clean(void);
 /* Insert a new subscription/qos for a client. */

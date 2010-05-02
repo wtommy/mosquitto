@@ -22,6 +22,9 @@
   wasn't correctly fixed in version 0.5.
 - Don't disconnect clients if they send a PUBLISH with zero length payload
   (bug #573610).
+- If a retained message is received with a zero length payload, the retained
+  message for that topic is deleted - messages of zero length never get sent
+  on to other clients.
 
 0.5.4 - 20100311
 ================

@@ -1664,6 +1664,29 @@ int mqtt3_db_retain_insert(const char *topic, int64_t store_id)
 	return rc;
 }
 
+int mqtt3_db_retain_delete(const char *topic)
+{
+	int rc = 0;
+	static sqlite3_stmt *stmt = NULL;
+
+	if(!topic) return 1;
+
+	if(!stmt){
+		stmt = _mqtt3_db_statement_prepare("DELETE FROM retain WHERE topic=?");
+		if(!stmt){
+			return 1;
+		}
+	}
+	if(sqlite3_bind_text(stmt, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(!rc){
+		if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
+	}
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+
+	return rc;
+}
+
 int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 {
 	int rc = 0;

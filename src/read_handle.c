@@ -171,8 +171,13 @@ int mqtt3_handle_publish(mqtt3_context *context)
 
 	payloadlen = context->in_packet.remaining_length - context->in_packet.pos;
 	if(!payloadlen){
+		if(retain){
+			/* If retain is set and we have a zero payloadlen, delete the
+			 * retained message because the last message was a null! */
+			rc = mqtt3_db_retain_delete(topic);
+		}
 		mqtt3_free(topic);
-		return 0;
+		return rc;
 	}
 	payload = mqtt3_calloc(payloadlen+1, sizeof(uint8_t));
 	if(mqtt3_read_bytes(context, payload, payloadlen)){
