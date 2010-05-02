@@ -170,6 +170,10 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	}
 
 	payloadlen = context->in_packet.remaining_length - context->in_packet.pos;
+	if(!payloadlen){
+		mqtt3_free(topic);
+		return 0;
+	}
 	payload = mqtt3_calloc(payloadlen+1, sizeof(uint8_t));
 	if(mqtt3_read_bytes(context, payload, payloadlen)){
 		mqtt3_free(topic);

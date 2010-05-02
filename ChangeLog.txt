@@ -20,6 +20,8 @@
   same location whilst keeping persistence_location compatible with rsmb.
 - Don't store QoS=0 messages for disconnected clients. Fixes bug #572608. This
   wasn't correctly fixed in version 0.5.
+- Don't disconnect clients if they send a PUBLISH with zero length payload
+  (bug #573610).
 
 0.5.4 - 20100311
 ================
