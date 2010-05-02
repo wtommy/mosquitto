@@ -1845,14 +1845,16 @@ int mqtt3_db_sub_search_start(const char *topic)
 	if(!topic) return 1;
 
 	if(!stmt_sub_search){
+		/* Only queue messages for clients that are connected, or clients that
+		 * are disconnected and have QoS>0. */
 #ifdef WITH_REGEX
 		stmt_sub_search = _mqtt3_db_statement_prepare("SELECT client_id,qos FROM subs "
 				"JOIN clients ON subs.client_id=clients.id "
-				"WHERE (subs.qos<>0 OR clients.sock<>-1) AND regexp(?, subs.sub)");
+				"WHERE ((clients.sock=-1 AND subs.qos<>0) OR clients.sock<>-1) AND regexp(?, subs.sub)");
 #else
 		stmt_sub_search = _mqtt3_db_statement_prepare("SELECT client_id,qos FROM subs "
 				"JOIN clients ON subs.client_id=clients.id "
-				"WHERE subs.sub=? AND (subs.qos<>0 OR clients.sock<>-1)");
+				"WHERE subs.sub=? AND ((clients.sock=-1 AND subs.qos<>0) OR clients.sock<>-1)");
 #endif
 		if(!stmt_sub_search){
 			return 1;
