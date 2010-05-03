@@ -372,6 +372,28 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid user value.");
 						return 1;
 					}
+				}else if(!strcmp(token, "autosave_on_changes")
+						|| !strcmp(token, "bind_address")
+						|| !strcmp(token, "clientid_prefixes")
+						|| !strcmp(token, "connection_messages")
+						|| !strcmp(token, "listener")
+						|| !strcmp(token, "max_connections")
+						|| !strcmp(token, "max_inflight_messages")
+						|| !strcmp(token, "max_queued_messages")
+						|| !strcmp(token, "retained_persistence")
+						|| !strcmp(token, "trace_level")
+						|| !strcmp(token, "addresses")
+						|| !strcmp(token, "cleansession")
+						|| !strcmp(token, "idle_timeout")
+						|| !strcmp(token, "keepalive_interval")
+						|| !strcmp(token, "notifications")
+						|| !strcmp(token, "notification_topic")
+						|| !strcmp(token, "round_robin")
+						|| !strcmp(token, "start_type")
+						|| !strcmp(token, "threshold")
+						|| !strcmp(token, "try_private")
+						|| !strcmp(token, "mount_point")){
+					mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Unsupported rsmb configuration option \"%s\".", token);
 				}else{
 					mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unknown configuration variable \"%s\".", token);
 					return 1;

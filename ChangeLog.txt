@@ -25,6 +25,7 @@
 - If a retained message is received with a zero length payload, the retained
   message for that topic is deleted - messages of zero length never get sent
   on to other clients.
+- Produce a warning on unsupported rsmb options instead of quitting.
 
 0.5.4 - 20100311
 ================
