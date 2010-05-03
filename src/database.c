@@ -319,8 +319,8 @@ static int _mqtt3_db_tables_create(void)
 		"clean_session INTEGER, "
 		"will INTEGER, will_retain INTEGER, will_qos INTEGER, "
 		"will_topic TEXT, will_message TEXT, "
-		"last_mid INTEGER,
-		is_bridge INTEGER)",
+		"last_mid INTEGER, "
+		"is_bridge INTEGER)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
 
 		rc = 1;
@@ -684,8 +684,7 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 		}else{
 			if(sqlite3_bind_text(stmt, 8, "", 0, SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		}
-		if(sqlite3_bind_text(stmt, 9, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt, 10, (context->bridge)?1:0) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt, 9, (context->bridge)?1:0) != SQLITE_OK) rc = 1;
 		if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 		sqlite3_reset(stmt);
 		sqlite3_clear_bindings(stmt);
@@ -1129,10 +1128,10 @@ int mqtt3_db_messages_easy_queue(const char *client_id, const char *topic, int q
 
 	if(mqtt3_db_message_store(client_id, topic, qos, payloadlen, payload, retain, &store_id)) return 1;
 
-	return mqtt3_db_messages_queue(topic, qos, retain, store_id);
+	return mqtt3_db_messages_queue(client_id, topic, qos, retain, store_id);
 }
 
-int mqtt3_db_messages_queue(const char *topic, int qos, int retain, int64_t store_id)
+int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, int retain, int64_t store_id)
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
@@ -1147,7 +1146,7 @@ int mqtt3_db_messages_queue(const char *topic, int qos, int retain, int64_t stor
 #endif
 
 	/* Find all clients that subscribe to topic and put messages into the db for them. */
-	if(!topic || !store_id) return 1;
+	if(!source_id || !topic || !store_id) return 1;
 
 #ifdef WITH_CLIENT
 	if(client_publish_callback){
@@ -1171,7 +1170,7 @@ int mqtt3_db_messages_queue(const char *topic, int qos, int retain, int64_t stor
 	if(retain){
 		if(mqtt3_db_retain_insert(topic, store_id)) rc = 1;
 	}
-	if(!mqtt3_db_sub_search_start(topic)){
+	if(!mqtt3_db_sub_search_start(source_id, topic)){
 		while(!mqtt3_db_sub_search_next(&client_id, &client_qos)){
 			if(qos > client_qos){
 				msg_qos = client_qos;
@@ -1299,11 +1298,12 @@ int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_dire
 	int retain;
 	int64_t store_id;
 	char *topic;
+	char *source_id;
 
 	if(!client_id) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT messages.OID,message_store.id,message_store.qos,message_store.retain,message_store.topic "
+		stmt = _mqtt3_db_statement_prepare("SELECT messages.OID,message_store.id,message_store.qos,message_store.retain,message_store.topic,message_store.source_id "
 				"FROM messages JOIN message_store on messages.store_id=message_store.id "
 				"WHERE messages.client_id=? AND messages.mid=? AND messages.direction=?");
 		if(!stmt){
@@ -1319,7 +1319,8 @@ int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_dire
 		qos = sqlite3_column_int(stmt, 2);
 		retain = sqlite3_column_int(stmt, 3);
 		topic = (char *)sqlite3_column_text(stmt, 4);
-		if(!mqtt3_db_messages_queue(topic, qos, retain, store_id)){
+		source_id = (char *)sqlite3_column_text(stmt, 5);
+		if(!mqtt3_db_messages_queue(source_id, topic, qos, retain, store_id)){
 			if(mqtt3_db_message_delete_by_oid(OID)) rc = 1;
 		}else{
 			rc = 1;
@@ -1860,7 +1861,7 @@ int mqtt3_db_sub_delete(const char *client_id, const char *sub)
  * Will use regex for pattern matching if compiled with WITH_REGEX defined.
  * Wildcards in subscriptions are disabled if WITH_REGEX not defined.
  */
-int mqtt3_db_sub_search_start(const char *topic)
+int mqtt3_db_sub_search_start(const char *source_id, const char *topic)
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
@@ -1868,7 +1869,7 @@ int mqtt3_db_sub_search_start(const char *topic)
 	char *regex;
 #endif
 
-	if(!topic) return 1;
+	if(!source_id || !topic) return 1;
 
 	if(!stmt_sub_search){
 		/* Only queue messages for clients that are connected, or clients that
@@ -1876,11 +1877,15 @@ int mqtt3_db_sub_search_start(const char *topic)
 #ifdef WITH_REGEX
 		stmt_sub_search = _mqtt3_db_statement_prepare("SELECT client_id,qos FROM subs "
 				"JOIN clients ON subs.client_id=clients.id "
-				"WHERE ((clients.sock=-1 AND subs.qos<>0) OR clients.sock<>-1) AND regexp(?, subs.sub)");
+				"WHERE regexp(?, subs.sub)"
+				" AND ((clients.sock=-1 AND subs.qos<>0) OR clients.sock<>-1)"
+				" AND (clients.is_bridge=0 OR (clients.is_bridge=1 AND clients.id<>?))");
 #else
 		stmt_sub_search = _mqtt3_db_statement_prepare("SELECT client_id,qos FROM subs "
 				"JOIN clients ON subs.client_id=clients.id "
-				"WHERE subs.sub=? AND ((clients.sock=-1 AND subs.qos<>0) OR clients.sock<>-1)");
+				"WHERE subs.sub=?"
+				" AND ((clients.sock=-1 AND subs.qos<>0) OR clients.sock<>-1)"
+				" AND (clients.is_bridge=0 OR (clients.is_bridge=1 AND clients.id<>?))");
 #endif
 		if(!stmt_sub_search){
 			return 1;
@@ -1895,6 +1900,7 @@ int mqtt3_db_sub_search_start(const char *topic)
 #else
 	if(sqlite3_bind_text(stmt_sub_search, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 #endif
+	if(sqlite3_bind_text(stmt_sub_search, 2, source_id, strlen(source_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 
 	return rc;
 }

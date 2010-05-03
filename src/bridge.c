@@ -85,7 +85,7 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 	context->connected = false;
 	context->disconnecting = false;
 	context->last_msg_in = time(NULL);
-
+	mqtt3_db_client_update(context, 0, 0, 0, NULL, NULL);
 	if(mqtt3_raw_connect(context, context->id,
 			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
 			60/*keepalive*/, /*cleanstart*/true)){
