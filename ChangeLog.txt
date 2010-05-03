@@ -1,14 +1,12 @@
 0.6 - 2010xxxx
 ==============
 
-- Experimental support for connecting multiple MQTT brokers togethers
-  (bridging).
+- Basic support for connecting multiple MQTT brokers together (bridging).
 - mosquitto_sub can now subscribe to multiple topics (limited to a global QoS).
 - mosquitto_pub can now send a file as a message.
 - mosquitto_pub can now read all of stdin and send it as a message.
 - mosquitto_pub can now read stdin and send each line as a message.
-- mosquitto will now run VACUUM on the persistent database on exit, instead of
-  the in-memory database.
+- mosquitto will now correctly run VACUUM on the persistent database on exit.
 - Implement a more efficient database design, so that only one copy of each
   message is held in the database, rather than one per subscribed client.
 - Add the store_cleanup_interval config option for dealing with the internal
