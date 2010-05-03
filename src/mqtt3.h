@@ -307,6 +307,7 @@ int mqtt3_db_client_find_socket(const char *client_id, int *sock);
 int mqtt3_db_client_invalidate_socket(const char *client_id, int sock);
 /* Add the will of the client in context to the queue of clients subscribed to the appropriate topic. */
 int mqtt3_db_client_will_queue(mqtt3_context *context);
+void mqtt3_db_limits_set(int inflight, int queued);
 /* Return the number of in-flight messages in count. */
 int mqtt3_db_message_count(int *count);
 int mqtt3_db_message_delete(const char *client_id, uint16_t mid, mqtt3_msg_direction dir);

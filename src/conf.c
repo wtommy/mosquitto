@@ -127,6 +127,8 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	int log_type_set = 0;
 	int i;
 	struct _mqtt3_bridge *cur_bridge = NULL;
+	int max_inflight_messages = 10;
+	int max_queued_messages = 100;
 	
 	fptr = fopen(filename, "rt");
 	if(!fptr) return 1;
@@ -272,6 +274,20 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty log_type value in configuration.");
 					}
+				}else if(!strcmp(token, "max_inflight_messages")){
+					token = strtok(NULL, " ");
+					if(token){
+						max_inflight_messages = atoi(token);
+					}else{
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty max_inflight_messages value in configuration.");
+					}
+				}else if(!strcmp(token, "max_queued_messages")){
+					token = strtok(NULL, " ");
+					if(token){
+						max_queued_messages = atoi(token);
+					}else{
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty max_queued_messages value in configuration.");
+					}
 				}else if(!strcmp(token, "persistence")){
 					if(_mqtt3_conf_parse_bool(&token, "persistence", &config->persistence)) return 1;
 				}else if(!strcmp(token, "persistence_file")){
@@ -378,8 +394,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						|| !strcmp(token, "connection_messages")
 						|| !strcmp(token, "listener")
 						|| !strcmp(token, "max_connections")
-						|| !strcmp(token, "max_inflight_messages")
-						|| !strcmp(token, "max_queued_messages")
 						|| !strcmp(token, "retained_persistence")
 						|| !strcmp(token, "trace_level")
 						|| !strcmp(token, "addresses")
@@ -402,6 +416,8 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 		}
 	}
 	fclose(fptr);
+
+	mqtt3_db_limits_set(max_inflight_messages, max_queued_messages);
 
 	for(i=0; i<config->bridge_count; i++){
 		if(!config->bridges[i].name || !config->bridges[i].address || !config->bridges[i].port || !config->bridges[i].topic_count){

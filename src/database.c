@@ -114,6 +114,8 @@ static sqlite3 *db = NULL;
 static char *db_filepath = NULL;
 
 static sqlite3_stmt *stmt_sub_search = NULL;
+static int max_inflight = 10;
+static int max_queued = 100;
 
 static int _mqtt3_db_tables_create(void);
 static int _mqtt3_db_cleanup(void);
@@ -1045,8 +1047,38 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direc
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
+	static sqlite3_stmt *select_stmt = NULL;
+	int count = 0;
+	int sock = -1;
+	int limited = 0;
 
 	if(!client_id || !store_id) return 1;
+
+	if(!select_stmt){
+		select_stmt = _mqtt3_db_statement_prepare("SELECT "
+				"(SELECT COUNT(*) FROM messages WHERE client_id=?),"
+				"(SELECT sock FROM clients WHERE id=?)");
+		if(!select_stmt){
+			return 1;
+		}
+	}
+	if(max_inflight || max_queued){
+		if(sqlite3_bind_text(select_stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(select_stmt, 2, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_step(select_stmt) == SQLITE_ROW){
+			count = sqlite3_column_int(select_stmt, 0);
+			sock = sqlite3_column_int(select_stmt, 1);
+
+			if(sock == -1){
+				if(max_queued > 0 && count >= max_queued) limited = 1;
+			}else{
+				if(max_inflight > 0 && count >= max_inflight) limited = 1;
+			}
+		}
+		sqlite3_reset(select_stmt);
+		sqlite3_clear_bindings(select_stmt);
+		if(limited) return 0;
+	}
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("INSERT INTO messages "
@@ -2091,3 +2123,10 @@ static int _mqtt3_db_transaction_rollback(void)
 	return rc;
 }
 #endif
+
+void mqtt3_db_limits_set(int inflight, int queued)
+{
+	max_inflight = inflight;
+	max_queued = queued;
+}
+

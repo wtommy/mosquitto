@@ -103,6 +103,24 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>max_inflight_messages</option></term>
+				<listitem>
+					<para>The maximum number of messages that can be being
+					processed by a connected client at one time. This includes
+					messages currently going through handshakes for QoS 1 or 2
+					and messages that are being retried. Defaults to 10. Set to
+					0 for no maximum.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>max_queued_messages</option></term>
+				<listitem>
+					<para>The maximum number of QoS 1 or 2 messages to hold in
+					a queue for a disconnected client. Defaults to 100. Set to
+					0 for no maximum.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>port</option></term>
 				<listitem>
 					<para>Set the network port to listen on. Defaults to 1883.

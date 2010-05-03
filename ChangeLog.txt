@@ -27,6 +27,8 @@
   on to other clients.
 - Produce a warning on unsupported rsmb options instead of quitting.
 - Describe clean session flag in the mqtt man page.
+- Implement the max_inflight_messages and max_queued_messages features in the
+  broker.
 
 0.5.4 - 20100311
 ================
