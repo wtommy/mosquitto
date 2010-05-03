@@ -26,6 +26,7 @@
   message for that topic is deleted - messages of zero length never get sent
   on to other clients.
 - Produce a warning on unsupported rsmb options instead of quitting.
+- Describe clean session flag in the mqtt man page.
 
 0.5.4 - 20100311
 ================

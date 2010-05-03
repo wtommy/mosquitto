@@ -130,6 +130,17 @@
 	</refsect1>
 
 	<refsect1>
+		<title>Clean session / Durable connections</title>
+		<para>On connection, a client sets the "clean session" flag, which is
+		sometimes also known as the "clean start" flag. If clean session is set
+		to false, then the connection is treated as durable.  This means that
+		when the client disconnects, any subscriptions it has will remain and
+		any subsequent QoS 1 or 2 messages will be stored until it connects
+		again in the future. If clean session is true, then all subscriptions
+		will be removed for the client when it disconnects.</para>
+	</refsect1>
+
+	<refsect1>
 		<title>Wills</title>
 		<para>When a client connects to a broker, it may inform the broker that
 		it has a will. This is a message that it wishes the broker to send when
