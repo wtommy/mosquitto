@@ -54,7 +54,7 @@ int my_publish_callback(const char *topic, int qos, uint32_t payloadlen, const u
 		if(payloadlen){
 			printf("%s %s\n", topic, payload);
 		}else{
-			printf("%s (null)\n");
+			printf("%s (null)\n", topic);
 		}
 		fflush(stdout);
 	}else{
