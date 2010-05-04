@@ -143,7 +143,7 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 int mqtt3_handle_publish(mqtt3_context *context)
 {
 	char *topic;
-	uint8_t *payload;
+	uint8_t *payload = NULL;
 	uint32_t payloadlen;
 	uint8_t dup, qos, retain;
 	uint16_t mid;
@@ -170,27 +170,23 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	}
 
 	payloadlen = context->in_packet.remaining_length - context->in_packet.pos;
-	if(!payloadlen){
+	if(payloadlen){
+		payload = mqtt3_calloc(payloadlen+1, sizeof(uint8_t));
+		if(mqtt3_read_bytes(context, payload, payloadlen)){
+			mqtt3_free(topic);
+			return 1;
+		}
+	}else{
 		if(retain){
 			/* If retain is set and we have a zero payloadlen, delete the
 			 * retained message because the last message was a null! */
 			rc = mqtt3_db_retain_delete(topic);
 		}
-		mqtt3_free(topic);
-		return rc;
 	}
-	payload = mqtt3_calloc(payloadlen+1, sizeof(uint8_t));
-	if(mqtt3_read_bytes(context, payload, payloadlen)){
-		mqtt3_free(topic);
-		return 1;
-	}
-#ifdef DEBUG
-	printf("%s: %s\n", topic, payload);
-#endif
 
 	if(mqtt3_db_message_store(context->id, topic, qos, payloadlen, payload, retain, &store_id)){
 		mqtt3_free(topic);
-		mqtt3_free(payload);
+		if(payload) mqtt3_free(payload);
 		return 1;
 	}
 	switch(qos){
@@ -207,7 +203,7 @@ int mqtt3_handle_publish(mqtt3_context *context)
 			break;
 	}
 	mqtt3_free(topic);
-	mqtt3_free(payload);
+	if(payload) mqtt3_free(payload);
 
 	return rc;
 }

@@ -1156,7 +1156,7 @@ int mqtt3_db_messages_easy_queue(const char *client_id, const char *topic, int q
 {
 	int64_t store_id;
 
-	if(!topic || !payloadlen || !payload) return 1;
+	if(!topic) return 1;
 
 	if(mqtt3_db_message_store(client_id, topic, qos, payloadlen, payload, retain, &store_id)) return 1;
 
@@ -1174,7 +1174,7 @@ int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, i
 #ifdef WITH_CLIENT
 	static sqlite3_stmt *stmt = NULL;
 	uint32_t payloadlen;
-	const uint8_t *payload;
+	const uint8_t *payload = NULL;
 #endif
 
 	/* Find all clients that subscribe to topic and put messages into the db for them. */
@@ -1191,7 +1191,9 @@ int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, i
 		if(sqlite3_bind_int64(stmt, 1, store_id) != SQLITE_OK) rc = 1;
 		if(!rc && sqlite3_step(stmt) == SQLITE_ROW){
 			payloadlen = sqlite3_column_int(stmt, 0);
-			payload = sqlite3_column_blob(stmt, 1);
+			if(payloadlen){
+				payload = sqlite3_column_blob(stmt, 1);
+			}
 
 			client_publish_callback(topic, qos, payloadlen, payload, retain);
 		}
@@ -1237,7 +1239,7 @@ int mqtt3_db_message_store(const char *client_id, const char *topic, int qos, ui
 	static sqlite3_stmt *stmt = NULL;
 	int rc = 0;
 
-	if(!client_id || !topic || !payloadlen || !payload || !store_id) return 1;
+	if(!client_id || !topic || !store_id) return 1;
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("INSERT INTO message_store "
@@ -1403,7 +1405,11 @@ int mqtt3_db_message_write(mqtt3_context *context)
 			topic = (const char *)sqlite3_column_text(stmt, 5);
 			qos = sqlite3_column_int(stmt, 6);
 			payloadlen = sqlite3_column_int(stmt, 7);
-			payload = sqlite3_column_blob(stmt, 8);
+			if(payloadlen){
+				payload = sqlite3_column_blob(stmt, 8);
+			}else{
+				payload = NULL;
+			}
 			switch(status){
 				case ms_publish:
 					if(!mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload)){
@@ -1672,7 +1678,7 @@ static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 
 /* Add a retained message to the database for a particular topic.
  * Only one retained message exists per topic, so does an update if one already exists.
- * Returns 1 on failure (topic, or payload are NULL, payloadlen is 0, sqlite error)
+ * Returns 1 on failure (topic is NULL, sqlite error)
  * Returns 0 on success.
  */
 int mqtt3_db_retain_insert(const char *topic, int64_t store_id)

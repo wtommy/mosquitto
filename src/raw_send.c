@@ -44,7 +44,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 	struct _mqtt3_packet *packet = NULL;
 	int packetlen;
 
-	if(!context || context->sock == -1 || !topic || !payload) return 1;
+	if(!context || context->sock == -1 || !topic) return 1;
 
 	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBLISH to %s (%d, %d, %d, %d, '%s', ... (%ld bytes))", context->id, dup, qos, retain, mid, topic, (long)payloadlen);
 
@@ -77,7 +77,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 	}
 
 	/* Payload */
-	if(mqtt3_write_bytes(packet, payload, payloadlen)){
+	if(payloadlen && mqtt3_write_bytes(packet, payload, payloadlen)){
 		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed writing payload.");
 		return 1;
 	}
