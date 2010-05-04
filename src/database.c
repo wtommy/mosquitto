@@ -1254,7 +1254,9 @@ int mqtt3_db_message_store(const char *client_id, const char *topic, int qos, ui
 	if(sqlite3_bind_int(stmt, 3, retain) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_text(stmt, 4, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 5, payloadlen) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_blob(stmt, 6, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(payloadlen){
+		if(sqlite3_bind_blob(stmt, 6, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	}
 	if(sqlite3_bind_text(stmt, 7, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
