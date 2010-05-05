@@ -114,7 +114,7 @@ static sqlite3 *db = NULL;
 static char *db_filepath = NULL;
 
 static sqlite3_stmt *stmt_sub_search = NULL;
-static int max_inflight = 10;
+static int max_inflight = 20;
 static int max_queued = 100;
 
 static int _mqtt3_db_tables_create(void);

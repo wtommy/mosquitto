@@ -127,7 +127,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	int log_type_set = 0;
 	int i;
 	struct _mqtt3_bridge *cur_bridge = NULL;
-	int max_inflight_messages = 10;
+	int max_inflight_messages = 20;
 	int max_queued_messages = 100;
 	
 	fptr = fopen(filename, "rt");
@@ -278,6 +278,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					token = strtok(NULL, " ");
 					if(token){
 						max_inflight_messages = atoi(token);
+						if(max_inflight_messages < 0) max_inflight_messages = 0;
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty max_inflight_messages value in configuration.");
 					}
@@ -285,6 +286,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					token = strtok(NULL, " ");
 					if(token){
 						max_queued_messages = atoi(token);
+						if(max_queued_messages < 0) max_queued_messages = 0;
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty max_queued_messages value in configuration.");
 					}

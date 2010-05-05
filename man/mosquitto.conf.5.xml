@@ -108,7 +108,7 @@
 					<para>The maximum number of messages that can be being
 					processed by a connected client at one time. This includes
 					messages currently going through handshakes for QoS 1 or 2
-					and messages that are being retried. Defaults to 10. Set to
+					and messages that are being retried. Defaults to 20. Set to
 					0 for no maximum.</para>
 				</listitem>
 			</varlistentry>
