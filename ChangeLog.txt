@@ -1,4 +1,4 @@
-0.6 - 2010xxxx
+0.6 - 20100505
 ==============
 
 - Basic support for connecting multiple MQTT brokers together (bridging).
