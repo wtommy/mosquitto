@@ -568,7 +568,7 @@ static int _mqtt3_db_upgrade_1_2(void)
 	sqlite3_finalize(old_stmt);
 
 	/* ---------- Copy messages to message store ---------- */
-	if(sqlite3_prepare_v2(db, "INSERT INTO messages (client_id,timestamp,direction,status,mid,retries,qos,store_id,source_id) VALUES (?,?,?,?,?,?,?,?,\"\")",
+	if(sqlite3_prepare_v2(db, "INSERT INTO messages (client_id,timestamp,direction,status,mid,retries,qos,store_id) VALUES (?,?,?,?,?,?,?,?)",
 			-1, &new_stmt, NULL) != SQLITE_OK){
 		sqlite3_close(db);
 		db = old_db;
