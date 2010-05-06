@@ -88,6 +88,7 @@ void print_usage(void)
 	printf("mosquitto_sub is a simple mqtt client that will subscribe to a single topic and print all messages it receives.\n\n");
 	printf("Usage: mosquitto_sub [-c] [-i id] [-k keepalive] [-p port] [-q qos] [-t topic] [-v]\n\n");
 	printf(" -c : disable 'clean session' (store subscription and pending messages when client disconnects).\n");
+	printf(" -d : enable debug messages.\n");
 	printf(" -h : mqtt host to connect to. Defaults to localhost.\n");
 	printf(" -i : id to use for this client. Defaults to mosquitto_sub_ appended with the process id.\n");
 	printf(" -k : keep alive in seconds for this client. Defaults to 60.\n");
@@ -106,6 +107,7 @@ int main(int argc, char *argv[])
 	int port = 1883;
 	int keepalive = 60;
 	bool clean_session = true;
+	bool debug = false;
 
 	sprintf(id, "mosquitto_sub_%d", getpid());
 
@@ -126,6 +128,8 @@ int main(int argc, char *argv[])
 			i++;
 		}else if(!strcmp(argv[i], "-c") || !strcmp(argv[i], "--disable-clean-session")){
 			clean_session = false;
+		}else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--debug")){
+			debug = true;
 		}else if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--host")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -h argument given but no host specified.\n\n");
@@ -191,6 +195,10 @@ int main(int argc, char *argv[])
 			print_usage();
 			return 1;
 		}
+	}
+	if(debug){
+		mqtt3_log_init(MQTT3_LOG_DEBUG | MQTT3_LOG_ERR | MQTT3_LOG_WARNING
+				| MQTT3_LOG_NOTICE | MQTT3_LOG_INFO, MQTT3_LOG_STDERR);
 	}
 	if(client_init()){
 		fprintf(stderr, "Error: Unable to initialise database.\n");

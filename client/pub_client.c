@@ -173,7 +173,8 @@ int load_file(const char *filename)
 void print_usage(void)
 {
 	printf("mosquitto_pub is a simple mqtt client that will publish a message on a single topic and exit.\n\n");
-	printf("Usage: mosquitto_pub [-h host] [-i id] [-p port] [-q qos] [-r] {-f file | -l | -n | -m message} -t topic\n\n");
+	printf("Usage: mosquitto_pub [-d] [-h host] [-i id] [-p port] [-q qos] [-r] {-f file | -l | -n | -m message} -t topic\n\n");
+	printf(" -d : enable debug messages.\n");
 	printf(" -f : send the contents of a file as the message.\n");
 	printf(" -h : mqtt host to connect to. Defaults to localhost.\n");
 	printf(" -i : id to use for this client. Defaults to mosquitto_pub_ appended with the process id.\n");
@@ -198,6 +199,7 @@ int main(int argc, char *argv[])
 	int opt;
 	char buf[1024];
 	int mid_sent = 0;
+	bool debug = false;
 
 	sprintf(id, "mosquitto_pub_%d", getpid());
 
@@ -216,6 +218,8 @@ int main(int argc, char *argv[])
 				}
 			}
 			i++;
+		}else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--debug")){
+			debug = true;
 		}else if(!strcmp(argv[i], "-f") || !strcmp(argv[i], "--file")){
 			if(mode != MSGMODE_NONE){
 				fprintf(stderr, "Error: Only one type of message can be sent at once.\n\n");
@@ -324,6 +328,11 @@ int main(int argc, char *argv[])
 		}
 	}
 	fflush(stdout);
+	if(debug){
+		mqtt3_log_init(MQTT3_LOG_DEBUG | MQTT3_LOG_ERR | MQTT3_LOG_WARNING
+				| MQTT3_LOG_NOTICE | MQTT3_LOG_INFO, MQTT3_LOG_STDERR);
+	}
+
 	if(!topic || mode == MSGMODE_NONE){
 		fprintf(stderr, "Error: Both topic and message must be supplied.\n");
 		print_usage();

@@ -17,6 +17,9 @@
 		<cmdsynopsis>
 			<command>mosquitto_pub</command>
 			<group choice='opt'>
+				<arg><option>-d</option></arg>
+			</group>
+			<group choice='opt'>
 				<arg><option>-h</option> <replaceable>hostname</replaceable></arg>
 			</group>
 			<group choice='opt'>
@@ -56,6 +59,13 @@
 	<refsect1>
 		<title>Options</title>
 		<variablelist>
+			<varlistentry>
+				<term><option>-d</option></term>
+				<term><option>--debug</option></term>
+				<listitem>
+					<para>Enable debug messages.</para>
+				</listitem>
+			</varlistentry>
 			<varlistentry>
 				<term><option>-f</option></term>
 				<term><option>--file</option></term>

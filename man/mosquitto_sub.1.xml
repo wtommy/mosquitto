@@ -20,6 +20,9 @@
 				<arg><option>-c</option></arg>
 			</group>
 			<group choice='opt'>
+				<arg><option>-d</option></arg>
+			</group>
+			<group choice='opt'>
 				<arg><option>-h</option> <replaceable>hostname</replaceable></arg>
 			</group>
 			<group choice='opt'>
@@ -64,6 +67,13 @@
 					receive all of the queued messages.</para>
 					<para>If using this option, it is recommended that the
 					client id is set manually with <option>--id</option></para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-d</option></term>
+				<term><option>--debug</option></term>
+				<listitem>
+					<para>Enable debug messages.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

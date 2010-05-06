@@ -6,6 +6,7 @@
   QoS>0.
 - accept() all available sockets when new clients are connecting, rather than
   just one.
+- Add option to print debug messages in pub and sub clients.
 
 0.6.1 - 20100506
 ================
