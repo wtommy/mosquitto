@@ -4,6 +4,8 @@
 - mosquitto_pub can now send null (zero length) messages.
 - Don't store QoS=0 messages for disconnected clients with subscriptions of
   QoS>0.
+- accept() all available sockets when new clients are connecting, rather than
+  just one.
 
 0.6.1 - 20100506
 ================
