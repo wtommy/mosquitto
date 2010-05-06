@@ -333,7 +333,7 @@ int mqtt3_db_store_clean(void);
 int mqtt3_db_sub_insert(const char *client_id, const char *sub, int qos);
 /* Remove a subscription for a client. */
 int mqtt3_db_sub_delete(const char *client_id, const char *sub);
-int mqtt3_db_sub_search_start(const char *source_id, const char *topic);
+int mqtt3_db_sub_search_start(const char *source_id, const char *topic, int qos);
 int mqtt3_db_sub_search_next(char **client_id, uint8_t *qos);
 /* Remove all subscriptions for a client. */
 int mqtt3_db_subs_clean_session(const char *client_id);

@@ -1204,7 +1204,7 @@ int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, i
 	if(retain){
 		if(mqtt3_db_retain_insert(topic, store_id)) rc = 1;
 	}
-	if(!mqtt3_db_sub_search_start(source_id, topic)){
+	if(!mqtt3_db_sub_search_start(source_id, topic, qos)){
 		while(!mqtt3_db_sub_search_next(&client_id, &client_qos)){
 			if(qos > client_qos){
 				msg_qos = client_qos;
@@ -1901,7 +1901,7 @@ int mqtt3_db_sub_delete(const char *client_id, const char *sub)
  * Will use regex for pattern matching if compiled with WITH_REGEX defined.
  * Wildcards in subscriptions are disabled if WITH_REGEX not defined.
  */
-int mqtt3_db_sub_search_start(const char *source_id, const char *topic)
+int mqtt3_db_sub_search_start(const char *source_id, const char *topic, int qos)
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
@@ -1918,13 +1918,13 @@ int mqtt3_db_sub_search_start(const char *source_id, const char *topic)
 		stmt_sub_search = _mqtt3_db_statement_prepare("SELECT client_id,qos FROM subs "
 				"JOIN clients ON subs.client_id=clients.id "
 				"WHERE regexp(?, subs.sub)"
-				" AND ((clients.sock=-1 AND subs.qos<>0) OR clients.sock<>-1)"
+				" AND ((clients.sock=-1 AND subs.qos<>0 AND ?<>0) OR clients.sock<>-1)"
 				" AND (clients.is_bridge=0 OR (clients.is_bridge=1 AND clients.id<>?))");
 #else
 		stmt_sub_search = _mqtt3_db_statement_prepare("SELECT client_id,qos FROM subs "
 				"JOIN clients ON subs.client_id=clients.id "
 				"WHERE subs.sub=?"
-				" AND ((clients.sock=-1 AND subs.qos<>0) OR clients.sock<>-1)"
+				" AND ((clients.sock=-1 AND subs.qos<>0 AND ?<>0) OR clients.sock<>-1)"
 				" AND (clients.is_bridge=0 OR (clients.is_bridge=1 AND clients.id<>?))");
 #endif
 		if(!stmt_sub_search){
@@ -1940,7 +1940,8 @@ int mqtt3_db_sub_search_start(const char *source_id, const char *topic)
 #else
 	if(sqlite3_bind_text(stmt_sub_search, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 #endif
-	if(sqlite3_bind_text(stmt_sub_search, 2, source_id, strlen(source_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt_sub_search, 2, qos) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt_sub_search, 3, source_id, strlen(source_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 
 	return rc;
 }
