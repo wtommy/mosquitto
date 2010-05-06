@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
 			}
 			for(i=0; i<config.iface_count; i++){
 				if(FD_ISSET(listensock[i], &readfds)){
-					mqtt3_socket_accept(contexts, &context_count, listensock[i]);
+					mqtt3_socket_accept(&contexts, &context_count, listensock[i]);
 				}
 			}
 		}
