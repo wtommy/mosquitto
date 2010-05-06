@@ -72,7 +72,11 @@ const char *mqtt3_command_to_string(uint8_t command)
 void mqtt3_check_keepalive(mqtt3_context *context)
 {
 	if(time(NULL) - context->last_msg_out >= context->keepalive){
-		mqtt3_raw_pingreq(context);
+		if(context->connected){
+			mqtt3_raw_pingreq(context);
+		}else{
+			mqtt3_socket_close(context);
+		}
 	}
 }
 
