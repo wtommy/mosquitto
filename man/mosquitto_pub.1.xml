@@ -39,6 +39,7 @@
 				<group choice='plain'>
 					<arg><option>-m</option> <replaceable>message</replaceable></arg>
 				</group>
+				<arg><option>-n</option></arg>
 				<arg><option>-s</option></arg>
 			</group>
 			<group choice='plain'>
@@ -88,6 +89,13 @@
 				<term><option>--message</option></term>
 				<listitem>
 					<para>Send a single message from the command line.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-n</option></term>
+				<term><option>--null-message</option></term>
+				<listitem>
+					<para>Send a null (zero length) message.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

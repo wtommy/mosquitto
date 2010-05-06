@@ -48,6 +48,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MSGMODE_STDIN_LINE 2
 #define MSGMODE_STDIN_FILE 3
 #define MSGMODE_FILE 4
+#define MSGMODE_NULL 5
 
 #define STATUS_CONNECTING 0
 #define STATUS_CONNACK_RECVD 1
@@ -69,6 +70,9 @@ void my_connack_callback(int result)
 			case MSGMODE_FILE:
 			case MSGMODE_STDIN_FILE:
 				mqtt3_raw_publish(gcontext, false, qos, retain, 1, topic, msglen, (uint8_t *)message);
+				break;
+			case MSGMODE_NULL:
+				mqtt3_raw_publish(gcontext, false, qos, retain, 1, topic, 0, NULL);
 				break;
 			case MSGMODE_STDIN_LINE:
 				status = STATUS_CONNACK_RECVD;
@@ -169,12 +173,13 @@ int load_file(const char *filename)
 void print_usage(void)
 {
 	printf("mosquitto_pub is a simple mqtt client that will publish a message on a single topic and exit.\n\n");
-	printf("Usage: mosquitto_pub [-h host] [-i id] [-p port] [-q qos] [-r] {-f file | -l | -m message} -t topic\n\n");
+	printf("Usage: mosquitto_pub [-h host] [-i id] [-p port] [-q qos] [-r] {-f file | -l | -n | -m message} -t topic\n\n");
 	printf(" -f : send the contents of a file as the message.\n");
 	printf(" -h : mqtt host to connect to. Defaults to localhost.\n");
 	printf(" -i : id to use for this client. Defaults to mosquitto_pub_ appended with the process id.\n");
 	printf(" -l : read messages from stdin, sending a separate message for each line.\n");
 	printf(" -m : message payload to send.\n");
+	printf(" -n : send a null (zero length) message.\n");
 	printf(" -p : network port to connect to. Defaults to 1883.\n");
 	printf(" -q : quality of service level to use for all messages. Defaults to 0.\n");
 	printf(" -r : message should be retained.\n");
@@ -271,6 +276,14 @@ int main(int argc, char *argv[])
 				mode = MSGMODE_CMD;
 			}
 			i++;
+		}else if(!strcmp(argv[i], "-n") || !strcmp(argv[i], "--null-message")){
+			if(mode != MSGMODE_NONE){
+				fprintf(stderr, "Error: Only one type of message can be sent at once.\n\n");
+				print_usage();
+				return 1;
+			}else{
+				mode = MSGMODE_NULL;
+			}
 		}else if(!strcmp(argv[i], "-q") || !strcmp(argv[i], "--qos")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -q argument given but no QoS specified.\n\n");
