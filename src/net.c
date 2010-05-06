@@ -122,7 +122,9 @@ int mqtt3_socket_close(mqtt3_context *context)
 
 	if(!context) return 1;
 	if(context->sock != -1){
-		mqtt3_db_client_invalidate_socket(context->id, context->sock);
+		if(context->id){
+			mqtt3_db_client_invalidate_socket(context->id, context->sock);
+		}
 		rc = close(context->sock);
 		context->sock = -1;
 	}
