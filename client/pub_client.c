@@ -358,11 +358,9 @@ int main(int argc, char *argv[])
 		if(mode == MSGMODE_STDIN_LINE && status == STATUS_CONNACK_RECVD){
 			if(fgets(buf, 1024, stdin)){
 				buf[strlen(buf)-1] = '\0';
-				if(strlen(buf) > 0){
-					mid_sent++;
-					if(mid_sent > 65535) mid_sent = 1;
-					mqtt3_raw_publish(context, false, qos, retain, mid_sent, topic, strlen(buf), (uint8_t *)buf);
-				}
+				mid_sent++;
+				if(mid_sent > 65535) mid_sent = 1;
+				mqtt3_raw_publish(context, false, qos, retain, mid_sent, topic, strlen(buf), (uint8_t *)buf);
 			}else if(feof(stdin)){
 				mqtt3_raw_disconnect(gcontext);
 			}
