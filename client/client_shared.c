@@ -76,6 +76,9 @@ int client_loop(mqtt3_context *context)
 	fd_set readfds, writefds;
 	int fdcount;
 
+	if(!context || context->sock < 0){
+		return 1;
+	}
 	FD_ZERO(&readfds);
 	FD_SET(context->sock, &readfds);
 	FD_ZERO(&writefds);
