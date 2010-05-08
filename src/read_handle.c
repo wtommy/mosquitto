@@ -94,6 +94,9 @@ int mqtt3_handle_puback(mqtt3_context *context)
 {
 	uint16_t mid;
 
+	if(!context || !context->in_packet || context->in_packet->remaining_length != 2){
+		return 1;
+	}
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBACK from %s (Mid: %d)", context->id, mid);
 
@@ -111,12 +114,18 @@ int mqtt3_handle_puback(mqtt3_context *context)
 
 int mqtt3_handle_pingreq(mqtt3_context *context)
 {
+	if(!context || !context->in_packet || context->in_packet->remaining_length != 0){
+		return 1;
+	}
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGREQ from %s", context->id);
 	return mqtt3_raw_pingresp(context);
 }
 
 int mqtt3_handle_pingresp(mqtt3_context *context)
 {
+	if(!context || !context->in_packet || context->in_packet->remaining_length != 0){
+		return 1;
+	}
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGRESP from %s", context->id);
 	return 0;
 }
@@ -125,6 +134,9 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 {
 	uint16_t mid;
 
+	if(!context || !context->in_packet || context->in_packet->remaining_length != 2){
+		return 1;
+	}
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBCOMP from %s (Mid: %d)", context->id, mid);
 
@@ -212,6 +224,9 @@ int mqtt3_handle_pubrec(mqtt3_context *context)
 {
 	uint16_t mid;
 
+	if(!context || !context->in_packet || context->in_packet->remaining_length != 2){
+		return 1;
+	}
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREC from %s (Mid: %d)", context->id, mid);
 
@@ -225,6 +240,9 @@ int mqtt3_handle_pubrel(mqtt3_context *context)
 {
 	uint16_t mid;
 
+	if(!context || !context->in_packet || context->in_packet->remaining_length != 2){
+		return 1;
+	}
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREL from %s (Mid: %d)", context->id, mid);
 

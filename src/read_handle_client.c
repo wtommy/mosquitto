@@ -48,6 +48,9 @@ int mqtt3_handle_connack(mqtt3_context *context)
 	uint8_t rc;
 	int i;
 
+	if(!context || !context->in_packet || context->in_packet->remaining_length != 2){
+		return 1;
+	}
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received CONNACK");
 	if(mqtt3_read_byte(context, &byte)) return 1; // Reserved byte, not used
 	if(mqtt3_read_byte(context, &rc)) return 1;
@@ -99,6 +102,9 @@ int mqtt3_handle_unsuback(mqtt3_context *context)
 {
 	uint16_t mid;
 
+	if(!context || !context->in_packet || context->in_packet->remaining_length != 2){
+		return 1;
+	}
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received UNSUBACK");
 	if(mqtt3_read_uint16(context, &mid)) return 1;
 
