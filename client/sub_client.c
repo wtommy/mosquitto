@@ -71,6 +71,7 @@ void my_connack_callback(int result)
 {
 	int i;
 	if(!result){
+		gcontext->connected = true;
 		if(topics){
 			for(i=0; i<topic_count; i++){
 				mqtt3_raw_subscribe(gcontext, false, topics[i], topic_qos);

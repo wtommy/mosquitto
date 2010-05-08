@@ -65,6 +65,7 @@ static int status = STATUS_CONNECTING;
 void my_connack_callback(int result)
 {
 	if(!result){
+		gcontext->connected = true;
 		switch(mode){
 			case MSGMODE_CMD:
 			case MSGMODE_FILE:
