@@ -249,6 +249,7 @@ int main(int argc, char *argv[])
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", contexts[i]->id);
 						/* Client has exceeded keepalive*1.5 */
+						mqtt3_db_client_will_queue(contexts[i]);
 						mqtt3_context_cleanup(contexts[i]);
 						contexts[i] = NULL;
 					}
@@ -322,7 +323,7 @@ int main(int argc, char *argv[])
 					if(mqtt3_net_read(contexts[i])){
 						if(!contexts[i]->disconnecting){
 							mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket read error on client %s, disconnecting.", contexts[i]->id);
-							if(!contexts[i]->disconnecting) mqtt3_db_client_will_queue(contexts[i]);
+							mqtt3_db_client_will_queue(contexts[i]);
 						}else{
 							mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
 						}
