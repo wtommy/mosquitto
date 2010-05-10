@@ -7,6 +7,7 @@
 - accept() all available sockets when new clients are connecting, rather than
   just one.
 - Add option to print debug messages in pub and sub clients.
+- hg revision is now exported via $SYS/broker/changeset
 
 0.6.1 - 20100506
 ================

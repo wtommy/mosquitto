@@ -108,6 +108,12 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>$SYS/broker/changeset</option></term>
+				<listitem>
+					<para>The repository changeset (revision) associated with this build.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>$SYS/broker/clients/total</option></term>
 				<listitem>
 					<para>The total number of clients currently either connected to the broker or disconnected but with clean session not set.</para>
