@@ -105,7 +105,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 
 int mqtt3_handle_disconnect(mqtt3_context *context)
 {
-	if(!context || !context->in_packet || context->in_packet->remaining_length != 0){
+	if(!context || context->in_packet.remaining_length != 0){
 		return 1;
 	}
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received DISCONNECT from %s", context->id);
