@@ -332,7 +332,6 @@ int main(int argc, char *argv[])
 		}else{
 			for(i=0; i<context_count; i++){
 				if(contexts[i] && contexts[i]->sock != -1){
-
 					if(pollfds[contexts[i]->sock].revents & POLLOUT){
 						if(mqtt3_net_write(contexts[i])){
 							if(!contexts[i]->disconnecting){
@@ -351,7 +350,8 @@ int main(int argc, char *argv[])
 							}
 						}
 					}
-
+				}
+				if(contexts[i] && contexts[i]->sock != -1){
 					if(pollfds[contexts[i]->sock].revents & POLLIN){
 						if(mqtt3_net_read(contexts[i])){
 							if(!contexts[i]->disconnecting){
