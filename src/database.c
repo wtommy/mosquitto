@@ -657,7 +657,7 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 		}else if(oldsock != context->sock){
 			/* Client is already connected, disconnect old version */
 			mqtt3_log_printf(MQTT3_LOG_ERR, "Client %s already connected, closing old connection.", context->id);
-			close(oldsock);
+			mqtt3_context_close_duplicate(oldsock);
 		}
 		mqtt3_db_client_update(context, will, will_retain, will_qos, will_topic, will_message);
 	}else{

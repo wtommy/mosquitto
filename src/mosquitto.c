@@ -56,6 +56,9 @@ int allow_severity = LOG_INFO;
 int deny_severity = LOG_INFO;
 #endif
 
+static mqtt3_context **contexts = NULL;
+static int context_count;
+
 int drop_privileges(mqtt3_config *config);
 void handle_sigint(int signal);
 void handle_sigusr1(int signal);
@@ -95,6 +98,26 @@ int drop_privileges(mqtt3_config *config)
 	return 0;
 }
 
+/* Close and cleanup a client based on its sock number. Assumes that the client
+ * is a duplicate, so mqtt3_context_cleanup() won't remove details from the DB.
+ */
+void mqtt3_context_close_duplicate(int sock)
+{
+	int i;
+
+	for(i=0; i<context_count; i++){
+		if(contexts[i]){
+			if(contexts[i]->sock == sock){
+				contexts[i]->duplicate = true;
+				mqtt3_db_client_will_queue(contexts[i]);
+				mqtt3_context_cleanup(contexts[i]);
+				contexts[i] = NULL;
+				return;
+			}
+		}
+	}
+}
+
 /* Signal handler for SIGINT and SIGTERM - just stop gracefully. */
 void handle_sigint(int signal)
 {
@@ -114,8 +137,6 @@ int main(int argc, char *argv[])
 	sigset_t sigblock;
 	int fdcount;
 	int *listensock = NULL;
-	mqtt3_context **contexts = NULL;
-	int context_count;
 	int sockmax;
 	struct stat statbuf;
 	time_t now;

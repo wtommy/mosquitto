@@ -10,6 +10,7 @@
 - hg revision is now exported via $SYS/broker/changeset
 - Send Will when client exceeds keepalive timer and is disconnected.
 - Check to see if a client has a will before sending it.
+- Correctly deal with clients connecting with the same id multiple times.
 
 0.6.1 - 20100506
 ================

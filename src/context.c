@@ -46,6 +46,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 	
 	context->connected = false;
 	context->disconnecting = false;
+	context->duplicate = false;
 	context->sock = sock;
 	context->last_msg_in = time(NULL);
 	context->last_msg_out = time(NULL);
@@ -86,7 +87,7 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 	if(context->sock != -1){
 		mqtt3_socket_close(context);
 	}
-	if(context->clean_session){
+	if(context->clean_session && !context->duplicate){
 		mqtt3_db_subs_clean_session(context->id);
 		mqtt3_db_messages_delete(context->id);
 		mqtt3_db_client_delete(context);

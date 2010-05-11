@@ -129,6 +129,7 @@ typedef struct _mqtt3_context{
 	bool clean_session;
 	bool connected;
 	bool disconnecting;
+	bool duplicate;
 	char *id;
 	char *address;
 	struct _mqtt3_packet in_packet;
@@ -345,6 +346,7 @@ void mqtt3_db_sys_update(int interval, time_t start_time);
 mqtt3_context *mqtt3_context_init(int sock);
 void mqtt3_context_cleanup(mqtt3_context *context);
 void mqtt3_context_packet_cleanup(struct _mqtt3_packet *packet);
+void mqtt3_context_close_duplicate(int sock);
 
 /* ============================================================
  * Memory functions
