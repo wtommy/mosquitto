@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	pollfd_count = context_count + listener_count;
+	pollfd_count = 4 + context_count + listener_count;
 	pollfds = mqtt3_malloc(sizeof(struct pollfd)*pollfd_count);
 	if(!pollfds) return 1;
 
@@ -243,8 +243,8 @@ int main(int argc, char *argv[])
 	while(run){
 		mqtt3_db_sys_update(config.sys_interval, start_time);
 
-		if(listener_count + context_count > pollfd_count){
-			pollfd_count = listener_count + context_count;
+		if(4 + listener_count + context_count > pollfd_count){
+			pollfd_count = 4 + listener_count + context_count;
 			pollfds = mqtt3_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
 			if(!pollfds){
 				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
