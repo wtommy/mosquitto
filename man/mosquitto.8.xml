@@ -136,13 +136,13 @@
 			<varlistentry>
 				<term><option>$SYS/broker/messages/received</option></term>
 				<listitem>
-					<para>The total number of messages received since the broker started. (not yet implemented)</para>
+					<para>The total number of messages received since the broker started.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>$SYS/broker/messages/sent</option></term>
 				<listitem>
-					<para>The total number of messages sent since the broker started. (not yet implemented)</para>
+					<para>The total number of messages sent since the broker started.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
