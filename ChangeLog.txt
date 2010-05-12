@@ -11,6 +11,7 @@
 - Send Will when client exceeds keepalive timer and is disconnected.
 - Check to see if a client has a will before sending it.
 - Correctly deal with clients connecting with the same id multiple times.
+- Add compile time option to disable heap memory tracking.
 
 0.6.1 - 20100506
 ================

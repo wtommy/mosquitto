@@ -122,7 +122,9 @@
 			<varlistentry>
 				<term><option>$SYS/broker/heap/current size</option></term>
 				<listitem>
-					<para>The current size of the heap memory in use by mosquitto.</para>
+					<para>The current size of the heap memory in use by
+					mosquitto. Note that this topic may be unavailable
+					depending on compile time options.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

@@ -41,11 +41,14 @@ struct _memlist {
 	size_t size;
 };
 
+#ifdef WITH_MEMORY_TRACKING
 static struct _memlist *memlist = NULL;
 static uint32_t memcount = 0;
+#endif
 
 void *mqtt3_calloc(size_t nmemb, size_t size)
 {
+#ifdef WITH_MEMORY_TRACKING
 	void *mem = calloc(nmemb, size);
 	struct _memlist *list = NULL;
 
@@ -60,10 +63,14 @@ void *mqtt3_calloc(size_t nmemb, size_t size)
 	}
 
 	return mem;
+#else
+	return calloc(nmemb, size);
+#endif
 }
 
 void mqtt3_free(void *mem)
 {
+#ifdef WITH_MEMORY_TRACKING
 	struct _memlist *list;
 	struct _memlist *prev = NULL;
 
@@ -83,10 +90,14 @@ void mqtt3_free(void *mem)
 			prev = list;
 		}
 	}
+#else
+	free(mem);
+#endif
 }
 
 void *mqtt3_malloc(size_t size)
 {
+#ifdef WITH_MEMORY_TRACKING
 	void *mem = malloc(size);
 	struct _memlist *list = NULL;
 
@@ -101,15 +112,21 @@ void *mqtt3_malloc(size_t size)
 	}
 
 	return mem;
+#else
+	return malloc(size);
+#endif
 }
 
+#ifdef WITH_MEMORY_TRACKING
 uint32_t mqtt3_memory_used(void)
 {
 	return memcount + sqlite3_memory_used();
 }
+#endif
 
 void *mqtt3_realloc(void *ptr, size_t size)
 {
+#ifdef WITH_MEMORY_TRACKING
 	void *mem = NULL;
 	struct _memlist *list = NULL;
 
@@ -133,10 +150,14 @@ void *mqtt3_realloc(void *ptr, size_t size)
 		memcount += size;
 	}
 	return mem;
+#else
+	return realloc(ptr, size);
+#endif
 }
 
 char *mqtt3_strdup(const char *s)
 {
+#ifdef WITH_MEMORY_TRACKING
 	char *str;
 	struct _memlist *list = NULL;
 
@@ -153,5 +174,8 @@ char *mqtt3_strdup(const char *s)
 		memcount += strlen(str);
 	}
 	return str;
+#else
+	return strdup(s);
+#endif
 }
 

@@ -2026,8 +2026,10 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 			mqtt3_db_messages_easy_queue("", "$SYS/broker/clients/total", 2, strlen(buf), (uint8_t *)buf, 1);
 		}
 
+#ifdef WITH_MEMORY_TRACKING
 		snprintf(buf, 100, "%d", mqtt3_memory_used());
 		mqtt3_db_messages_easy_queue("", "$SYS/broker/heap/current size", 2, strlen(buf), (uint8_t *)buf, 1);
+#endif
 
 		snprintf(buf, 100, "%lu", mqtt3_net_msgs_total_received());
 		mqtt3_db_messages_easy_queue("", "$SYS/broker/messages/received", 2, strlen(buf), (uint8_t *)buf, 1);
