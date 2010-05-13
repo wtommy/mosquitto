@@ -30,16 +30,7 @@ while (my $line = <SUB>) {
 		my $watts = $3;
 
 		my $now = time;
-		my $sec;
-		my $min;
-		my $hour;
-		my $mday;
-		my $month;
-		my $year;
-		my $wday;
-		my $yday;
-		my $isdst;
-		my $r_stamp;
+		my ($sec,$min,$hour,$mday,$month,$year,$wday,$yday,$isdst,$r_stamp);
 
 		($sec,$min,$hour,$mday,$month,$year,$wday,$yday,$isdst) = localtime($now);
 		$year += 1900;
