@@ -13,7 +13,6 @@ my $subclient = "/usr/local/bin/mosquitto_sub -t sensors/cc128/raw -q 2";
 my $pubclient = "/usr/local/bin/mosquitto_pub -t sensors/cc128 -q 2 -l";
 my $pubclient_ch1 = "/usr/local/bin/mosquitto_pub -t sensors/cc128/ch1 -q 2 -l";
 
-local $| = 1;
 open(SUB, "$subclient|");
 open(PUB, "|$pubclient");
 open(PUB_CH1, "|$pubclient_ch1");
