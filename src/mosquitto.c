@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <errno.h>
 #include <netinet/in.h>
+#include <poll.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -40,7 +41,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <syslog.h>
 #include <sys/types.h>
-#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #ifdef WITH_WRAP
@@ -132,12 +132,9 @@ void handle_sigusr1(int signal)
 
 int main(int argc, char *argv[])
 {
-	struct timespec timeout;
-	fd_set readfds, writefds;
-	sigset_t sigblock;
+	sigset_t sigblock, origsig;
 	int fdcount;
 	int *listensock = NULL;
-	int sockmax;
 	struct stat statbuf;
 	time_t now;
 	mqtt3_config config;
@@ -147,6 +144,9 @@ int main(int argc, char *argv[])
 	char buf[1024];
 	int i;
 	FILE *pid;
+	struct pollfd *pollfds = NULL;
+	int pollfd_count;
+	int listener_count;
 
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
@@ -206,7 +206,8 @@ int main(int argc, char *argv[])
 	snprintf(buf, 1024, "%s", "$Revision$"); // Requires hg keyword extension.
 	mqtt3_db_messages_easy_queue("", "$SYS/broker/changeset", 2, strlen(buf), (uint8_t *)buf, 1);
 
-	listensock = mqtt3_malloc(sizeof(int)*config.iface_count);
+	listener_count = config.iface_count;
+	listensock = mqtt3_malloc(sizeof(int)*listener_count);
 	for(i=0; i<config.iface_count; i++){
 		if(config.iface[i].iface){
 			listensock[i] = mqtt3_socket_listen_if(config.iface[i].iface, config.iface[i].port);
@@ -223,6 +224,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	pollfd_count = 4 + context_count + listener_count;
+	pollfds = mqtt3_malloc(sizeof(struct pollfd)*pollfd_count);
+	if(!pollfds) return 1;
+
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
 	signal(SIGUSR1, handle_sigusr1);
@@ -238,15 +243,21 @@ int main(int argc, char *argv[])
 	while(run){
 		mqtt3_db_sys_update(config.sys_interval, start_time);
 
-		FD_ZERO(&readfds);
-		FD_ZERO(&writefds);
-
-		sockmax = 0;
-		for(i=0; i<config.iface_count; i++){
-			FD_SET(listensock[i], &readfds);
-			if(listensock[i] > sockmax){
-				sockmax = listensock[i];
+		if(4 + listener_count + context_count > pollfd_count){
+			pollfd_count = 4 + listener_count + context_count;
+			pollfds = mqtt3_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
+			if(!pollfds){
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
+				return 1;
 			}
+		}
+
+		memset(pollfds, -1, sizeof(struct pollfd)*pollfd_count);
+
+		for(i=0; i<config.iface_count; i++){
+			pollfds[listensock[i]].fd = listensock[i];
+			pollfds[listensock[i]].events = POLLIN | POLLPRI;
+			pollfds[listensock[i]].revents = 0;
 		}
 
 		now = time(NULL);
@@ -260,12 +271,11 @@ int main(int argc, char *argv[])
 						if(mqtt3_db_message_write(contexts[i])){
 							// FIXME - do something here.
 						}
-						FD_SET(contexts[i]->sock, &readfds);
-						if(contexts[i]->sock > sockmax){
-							sockmax = contexts[i]->sock;
-						}
+						pollfds[contexts[i]->sock].fd = contexts[i]->sock;
+						pollfds[contexts[i]->sock].events = POLLIN | POLLPRI;
+						pollfds[contexts[i]->sock].revents = 0;
 						if(contexts[i]->out_packet){
-							FD_SET(contexts[i]->sock, &writefds);
+							pollfds[contexts[i]->sock].events |= POLLOUT;
 						}
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", contexts[i]->id);
@@ -294,10 +304,9 @@ int main(int argc, char *argv[])
 
 		mqtt3_db_message_timeout_check(config.retry_interval);
 
-		timeout.tv_sec = 1;
-		timeout.tv_nsec = 0;
-
-		fdcount = pselect(sockmax+1, &readfds, &writefds, NULL, &timeout, &sigblock);
+		sigprocmask(SIG_SETMASK, &sigblock, &origsig);
+		fdcount = poll(pollfds, pollfd_count, 1000);
+		sigprocmask(SIG_SETMASK, &origsig, NULL);
 		if(fdcount == -1){
 			/* Error ocurred, probably an fd has been closed. 
 			 * Loop through and check them all.
@@ -322,45 +331,49 @@ int main(int argc, char *argv[])
 			}
 		}else{
 			for(i=0; i<context_count; i++){
-				if(contexts[i] && contexts[i]->sock != -1 && FD_ISSET(contexts[i]->sock, &writefds)){
-					if(mqtt3_net_write(contexts[i])){
-						if(!contexts[i]->disconnecting){
-							mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket write error on client %s, disconnecting.", contexts[i]->id);
-							mqtt3_db_client_will_queue(contexts[i]);
-						}else{
-							mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
-						}
-						/* Write error or other that means we should disconnect */
-						/* Bridges don't get cleaned up because they will reconnect later. */
-						if(contexts[i]->bridge){
-							mqtt3_socket_close(contexts[i]);
-						}else{
-							mqtt3_context_cleanup(contexts[i]);
-							contexts[i] = NULL;
+				if(contexts[i] && contexts[i]->sock != -1){
+					if(pollfds[contexts[i]->sock].revents & POLLOUT){
+						if(mqtt3_net_write(contexts[i])){
+							if(!contexts[i]->disconnecting){
+								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket write error on client %s, disconnecting.", contexts[i]->id);
+								mqtt3_db_client_will_queue(contexts[i]);
+							}else{
+								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
+							}
+							/* Write error or other that means we should disconnect */
+							/* Bridges don't get cleaned up because they will reconnect later. */
+							if(contexts[i]->bridge){
+								mqtt3_socket_close(contexts[i]);
+							}else{
+								mqtt3_context_cleanup(contexts[i]);
+								contexts[i] = NULL;
+							}
 						}
 					}
 				}
-				if(contexts[i] && contexts[i]->sock != -1 && FD_ISSET(contexts[i]->sock, &readfds)){
-					if(mqtt3_net_read(contexts[i])){
-						if(!contexts[i]->disconnecting){
-							mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket read error on client %s, disconnecting.", contexts[i]->id);
-							mqtt3_db_client_will_queue(contexts[i]);
-						}else{
-							mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
-						}
-						/* Read error or other that means we should disconnect */
-						/* Bridges don't get cleaned up because they will reconnect later. */
-						if(contexts[i]->bridge){
-							mqtt3_socket_close(contexts[i]);
-						}else{
-							mqtt3_context_cleanup(contexts[i]);
-							contexts[i] = NULL;
+				if(contexts[i] && contexts[i]->sock != -1){
+					if(pollfds[contexts[i]->sock].revents & POLLIN){
+						if(mqtt3_net_read(contexts[i])){
+							if(!contexts[i]->disconnecting){
+								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket read error on client %s, disconnecting.", contexts[i]->id);
+								mqtt3_db_client_will_queue(contexts[i]);
+							}else{
+								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
+							}
+							/* Read error or other that means we should disconnect */
+							/* Bridges don't get cleaned up because they will reconnect later. */
+							if(contexts[i]->bridge){
+								mqtt3_socket_close(contexts[i]);
+							}else{
+								mqtt3_context_cleanup(contexts[i]);
+								contexts[i] = NULL;
+							}
 						}
 					}
 				}
 			}
 			for(i=0; i<config.iface_count; i++){
-				if(FD_ISSET(listensock[i], &readfds)){
+				if(pollfds[listensock[i]].revents & (POLLIN | POLLPRI)){
 					while(mqtt3_socket_accept(&contexts, &context_count, listensock[i]) != -1){
 					}
 				}
