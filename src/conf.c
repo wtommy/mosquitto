@@ -22,6 +22,7 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->iface_count = 0;
 	config->log_dest = MQTT3_LOG_STDERR;
 	config->log_type = MQTT3_LOG_ERR | MQTT3_LOG_WARNING | MQTT3_LOG_NOTICE | MQTT3_LOG_INFO;
+	config->max_connections = -1;
 	config->persistence = false;
 	config->persistence_location = NULL;
 	config->persistence_file = "mosquitto.db";
@@ -273,6 +274,14 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						}
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty log_type value in configuration.");
+					}
+				}else if(!strcmp(token, "max_connections")){
+					token = strtok(NULL, " ");
+					if(token){
+						config->max_connections = atoi(token);
+						if(config->max_connections < 0) config->max_connections = -1;
+					}else{
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty max_connections value in configuration.");
 					}
 				}else if(!strcmp(token, "max_inflight_messages")){
 					token = strtok(NULL, " ");

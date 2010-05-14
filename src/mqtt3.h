@@ -168,6 +168,7 @@ typedef struct {
 	int iface_count;
 	int log_dest;
 	int log_type;
+	int max_connections;
 	bool persistence;
 	char *persistence_location;
 	char *persistence_file;
