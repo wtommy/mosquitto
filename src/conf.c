@@ -404,7 +404,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						|| !strcmp(token, "clientid_prefixes")
 						|| !strcmp(token, "connection_messages")
 						|| !strcmp(token, "listener")
-						|| !strcmp(token, "max_connections")
 						|| !strcmp(token, "retained_persistence")
 						|| !strcmp(token, "trace_level")
 						|| !strcmp(token, "addresses")
@@ -429,6 +428,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	fclose(fptr);
 
 	mqtt3_db_limits_set(max_inflight_messages, max_queued_messages);
+	mqtt3_net_set_max_connections(config->max_connections);
 
 	for(i=0; i<config->bridge_count; i++){
 		if(!config->bridges[i].name || !config->bridges[i].address || !config->bridges[i].port || !config->bridges[i].topic_count){

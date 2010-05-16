@@ -178,8 +178,13 @@ int main(int argc, char *argv[])
 	/* Preallocate enough memory for 100 connected clients.
 	 * This will grow in size once >100 clients connect.
 	 * Setting it to 100 here prevents excessive allocations.
+	 * If max_connections is set and <100 then use that instead.
 	 */
-	context_count = 100;
+	if(config.max_connections > 0 && config.max_connections < 100){
+		context_count = config.max_connections;
+	}else{
+		context_count = 100;
+	}
 	contexts = mqtt3_malloc(sizeof(mqtt3_context*)*context_count);
 	if(!contexts) return 1;
 	for(i=0; i<context_count; i++){

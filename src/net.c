@@ -51,12 +51,18 @@ static uint64_t bytes_received = 0;
 static uint64_t bytes_sent = 0;
 static unsigned long msgs_received = 0;
 static unsigned long msgs_sent = 0;
+static int max_connections = -1;
 
 #ifdef WITH_CLIENT
 void (*client_net_write_callback)(int) = NULL;
 #endif
 
 static int _mqtt3_socket_listen(struct sockaddr *addr);
+
+void mqtt3_net_set_max_connections(int max)
+{
+	max_connections = max;
+}
 
 int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int listensock)
 {
@@ -69,6 +75,9 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 	struct request_info wrap_req;
 #endif
 
+	if(max_connections > 0 && (*context_count) >= max_connections){
+		return -1;
+	}
 	new_sock = accept(listensock, NULL, 0);
 	if(new_sock < 0) return -1;
 	/* Set non-blocking */

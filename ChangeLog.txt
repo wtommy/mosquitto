@@ -13,6 +13,7 @@
 - Correctly deal with clients connecting with the same id multiple times.
 - Add compile time option to disable heap memory tracking.
 - Use poll() instead of select() to allow >1024 clients.
+- Implement max_connections.
 
 0.6.1 - 20100506
 ================

@@ -268,6 +268,7 @@ int mqtt3_write_bytes(struct _mqtt3_packet *packet, const uint8_t *bytes, uint32
 int mqtt3_write_string(struct _mqtt3_packet *packet, const char *str, uint16_t length);
 int mqtt3_write_uint16(struct _mqtt3_packet *packet, uint16_t word);
 
+void mqtt3_net_set_max_connections(int max);
 uint64_t mqtt3_net_bytes_total_received(void);
 uint64_t mqtt3_net_bytes_total_sent(void);
 unsigned long mqtt3_net_msgs_total_received(void);

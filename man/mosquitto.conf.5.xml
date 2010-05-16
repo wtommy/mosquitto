@@ -103,6 +103,15 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>max_connections</option></term>
+				<listitem>
+					<para>Limit the total number of clients connected. Set to
+					-1 to have "unlimited" connections. Note that other limits
+					may be imposed that are outside the control of mosquitto.
+					See e.g. <citerefentry><refentrytitle>limits.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>max_inflight_messages</option></term>
 				<listitem>
 					<para>The maximum number of messages that can be being
@@ -280,6 +289,10 @@
 			<citerefentry>
 				<refentrytitle>mosquitto</refentrytitle>
 				<manvolnum>8</manvolnum>
+			</citerefentry>
+			<citerefentry>
+				<refentrytitle>limits.conf</refentrytitle>
+				<manvolnum>5</manvolnum>
 			</citerefentry>
 		</para>
 	</refsect1>
