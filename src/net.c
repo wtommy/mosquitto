@@ -75,11 +75,13 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 	struct request_info wrap_req;
 #endif
 
-	if(max_connections > 0 && (*context_count) >= max_connections){
-		return -1;
-	}
 	new_sock = accept(listensock, NULL, 0);
 	if(new_sock < 0) return -1;
+
+	if(max_connections > 0 && (*context_count)+1 > max_connections){
+		close(new_sock);
+		return -1;
+	}
 	/* Set non-blocking */
 	opt = fcntl(new_sock, F_GETFL, 0);
 	if(opt == -1 || fcntl(new_sock, F_SETFL, opt | O_NONBLOCK) == -1){
