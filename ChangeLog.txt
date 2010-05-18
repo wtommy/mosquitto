@@ -14,6 +14,7 @@
 - Add compile time option to disable heap memory tracking.
 - Use poll() instead of select() to allow >1024 clients.
 - Implement max_connections.
+- Run VACUUM on in-memory database on receiving SIGUSR2.
 
 0.6.1 - 20100506
 ================

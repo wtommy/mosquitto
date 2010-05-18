@@ -2148,3 +2148,12 @@ void mqtt3_db_limits_set(int inflight, int queued)
 	max_queued = queued;
 }
 
+void mqtt3_db_vacuum(void)
+{
+	char *errmsg = NULL;
+	sqlite3_exec(db, "VACUUM", NULL, NULL, &errmsg);
+	if(errmsg){
+		sqlite3_free(errmsg);
+	}
+}
+

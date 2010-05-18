@@ -62,6 +62,7 @@ static int context_count;
 int drop_privileges(mqtt3_config *config);
 void handle_sigint(int signal);
 void handle_sigusr1(int signal);
+void handle_sigusr2(int signal);
 
 /* mosquitto shouldn't run as root.
  * This function will attempt to change to an unprivileged user and group if
@@ -128,6 +129,12 @@ void handle_sigint(int signal)
 void handle_sigusr1(int signal)
 {
 	mqtt3_db_backup(false);
+}
+
+/* Signal handler for SIGUSR2 - vacuum the db. */
+void handle_sigusr2(int signal)
+{
+	mqtt3_db_vacuum();
 }
 
 int main(int argc, char *argv[])
@@ -225,6 +232,7 @@ int main(int argc, char *argv[])
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
 	signal(SIGUSR1, handle_sigusr1);
+	signal(SIGUSR2, handle_sigusr2);
 	signal(SIGPIPE, SIG_IGN);
 
 	for(i=0; i<config.bridge_count; i++){

@@ -341,6 +341,7 @@ int mqtt3_db_sub_search_next(char **client_id, uint8_t *qos);
 /* Remove all subscriptions for a client. */
 int mqtt3_db_subs_clean_session(const char *client_id);
 void mqtt3_db_sys_update(int interval, time_t start_time);
+void mqtt3_db_vacuum(void);
 
 /* ============================================================
  * Context functions
