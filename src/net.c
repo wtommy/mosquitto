@@ -78,7 +78,7 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 	new_sock = accept(listensock, NULL, 0);
 	if(new_sock < 0) return -1;
 
-	if(max_connections > 0 && (*context_count)+1 > max_connections){
+	if(max_connections > 0 && (*context_count) >= max_connections){
 		close(new_sock);
 		return -1;
 	}
