@@ -40,7 +40,7 @@ dist : reallyclean
 		sed -i 's#http://localhost/cgi-bin/man/man2html?1+mosquitto_pub#mosquitto_pub-1.html#' dist/$${hfile}.html; \
 		sed -i 's#http://localhost/cgi-bin/man/man2html?1+mosquitto_sub#mosquitto_sub-1.html#' dist/$${hfile}.html; \
 		sed -i 's#http://localhost/cgi-bin/man/man2html?7+mmqtt#mqtt-7.html#' dist/$${hfile}.html; \
-		sed -i 's#http://localhost/cgi-bin/man/man2html#http://mosquitto.atchoo.org/#' dist/$${hfile}.html; \
+		sed -i 's#http://localhost/cgi-bin/man/man2html#http://mosquitto.org/#' dist/$${hfile}.html; \
 	done
 
 
@@ -48,7 +48,7 @@ sign : dist
 	cd dist; gpg --detach-sign -a mosquitto-${VERSION}.tar.gz
 
 copy : sign
-	cd dist; scp mosquitto-${VERSION}.tar.gz mosquitto-${VERSION}.tar.gz.asc atchoo:mosquitto.atchoo.org/files/source/
-	cd dist; scp *.html atchoo:mosquitto.atchoo.org/man/
-	scp ChangeLog.txt atchoo:mosquitto.atchoo.org/
+	cd dist; scp mosquitto-${VERSION}.tar.gz mosquitto-${VERSION}.tar.gz.asc mosquitto:mosquitto.org/files/source/
+	cd dist; scp *.html mosquitto:mosquitto.org/man/
+	scp ChangeLog.txt mosquitto:mosquitto.org/
 

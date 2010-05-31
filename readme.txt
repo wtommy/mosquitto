@@ -13,7 +13,7 @@ http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft
 
 Mosquitto project information is available at the following locations:
 
-http://mosquitto.atchoo.org/ (main homepage)
+http://mosquitto.org/ (main homepage)
 http://launchpad.net/mosquitto (bug tracking, translations)
 http://bitbucket.org/oojah/mosquitto (hg source code repository)
 
