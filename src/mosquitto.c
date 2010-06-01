@@ -63,6 +63,8 @@ int drop_privileges(mqtt3_config *config);
 void handle_sigint(int signal);
 void handle_sigusr1(int signal);
 void handle_sigusr2(int signal);
+static void loop_handle_errors(void);
+static void loop_handle_reads_writes(struct pollfd *pollfds);
 
 /* mosquitto shouldn't run as root.
  * This function will attempt to change to an unprivileged user and group if
@@ -97,6 +99,79 @@ int drop_privileges(mqtt3_config *config)
 		}
 	}
 	return 0;
+}
+
+/* Error ocurred, probably an fd has been closed. 
+ * Loop through and check them all.
+ */
+static void loop_handle_errors(void)
+{
+	struct stat statbuf;
+	int i;
+
+	for(i=0; i<context_count; i++){
+		if(contexts[i] && fstat(contexts[i]->sock, &statbuf) == -1){
+			if(errno == EBADF){
+				if(!contexts[i]->disconnecting){
+					mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket error on client %s, disconnecting.", contexts[i]->id);
+					mqtt3_db_client_will_queue(contexts[i]);
+				}else{
+					mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
+				}
+				contexts[i]->sock = -1;
+				mqtt3_context_cleanup(contexts[i]);
+				contexts[i] = NULL;
+			}
+		}
+	}
+}
+
+static void loop_handle_reads_writes(struct pollfd *pollfds)
+{
+	int i;
+
+	for(i=0; i<context_count; i++){
+		if(contexts[i] && contexts[i]->sock != -1){
+			if(pollfds[contexts[i]->sock].revents & POLLOUT){
+				if(mqtt3_net_write(contexts[i])){
+					if(!contexts[i]->disconnecting){
+						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket write error on client %s, disconnecting.", contexts[i]->id);
+						mqtt3_db_client_will_queue(contexts[i]);
+					}else{
+						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
+					}
+					/* Write error or other that means we should disconnect */
+					/* Bridges don't get cleaned up because they will reconnect later. */
+					if(contexts[i]->bridge){
+						mqtt3_socket_close(contexts[i]);
+					}else{
+						mqtt3_context_cleanup(contexts[i]);
+						contexts[i] = NULL;
+					}
+				}
+			}
+		}
+		if(contexts[i] && contexts[i]->sock != -1){
+			if(pollfds[contexts[i]->sock].revents & POLLIN){
+				if(mqtt3_net_read(contexts[i])){
+					if(!contexts[i]->disconnecting){
+						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket read error on client %s, disconnecting.", contexts[i]->id);
+						mqtt3_db_client_will_queue(contexts[i]);
+					}else{
+						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
+					}
+					/* Read error or other that means we should disconnect */
+					/* Bridges don't get cleaned up because they will reconnect later. */
+					if(contexts[i]->bridge){
+						mqtt3_socket_close(contexts[i]);
+					}else{
+						mqtt3_context_cleanup(contexts[i]);
+						contexts[i] = NULL;
+					}
+				}
+			}
+		}
+	}
 }
 
 /* Close and cleanup a client based on its sock number. Assumes that the client
@@ -142,7 +217,6 @@ int main(int argc, char *argv[])
 	sigset_t sigblock, origsig;
 	int fdcount;
 	int *listensock = NULL;
-	struct stat statbuf;
 	time_t now;
 	mqtt3_config config;
 	time_t start_time = time(NULL);
@@ -310,70 +384,10 @@ int main(int argc, char *argv[])
 		fdcount = poll(pollfds, pollfd_count, 1000);
 		sigprocmask(SIG_SETMASK, &origsig, NULL);
 		if(fdcount == -1){
-			/* Error ocurred, probably an fd has been closed. 
-			 * Loop through and check them all.
-			 */
-			
-			if(contexts){
-				for(i=0; i<context_count; i++){
-					if(contexts[i] && fstat(contexts[i]->sock, &statbuf) == -1){
-						if(errno == EBADF){
-							if(!contexts[i]->disconnecting){
-								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket error on client %s, disconnecting.", contexts[i]->id);
-								mqtt3_db_client_will_queue(contexts[i]);
-							}else{
-								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
-							}
-							contexts[i]->sock = -1;
-							mqtt3_context_cleanup(contexts[i]);
-							contexts[i] = NULL;
-						}
-					}
-				}
-			}
+			loop_handle_errors();
 		}else{
-			for(i=0; i<context_count; i++){
-				if(contexts[i] && contexts[i]->sock != -1){
-					if(pollfds[contexts[i]->sock].revents & POLLOUT){
-						if(mqtt3_net_write(contexts[i])){
-							if(!contexts[i]->disconnecting){
-								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket write error on client %s, disconnecting.", contexts[i]->id);
-								mqtt3_db_client_will_queue(contexts[i]);
-							}else{
-								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
-							}
-							/* Write error or other that means we should disconnect */
-							/* Bridges don't get cleaned up because they will reconnect later. */
-							if(contexts[i]->bridge){
-								mqtt3_socket_close(contexts[i]);
-							}else{
-								mqtt3_context_cleanup(contexts[i]);
-								contexts[i] = NULL;
-							}
-						}
-					}
-				}
-				if(contexts[i] && contexts[i]->sock != -1){
-					if(pollfds[contexts[i]->sock].revents & POLLIN){
-						if(mqtt3_net_read(contexts[i])){
-							if(!contexts[i]->disconnecting){
-								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket read error on client %s, disconnecting.", contexts[i]->id);
-								mqtt3_db_client_will_queue(contexts[i]);
-							}else{
-								mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
-							}
-							/* Read error or other that means we should disconnect */
-							/* Bridges don't get cleaned up because they will reconnect later. */
-							if(contexts[i]->bridge){
-								mqtt3_socket_close(contexts[i]);
-							}else{
-								mqtt3_context_cleanup(contexts[i]);
-								contexts[i] = NULL;
-							}
-						}
-					}
-				}
-			}
+			loop_handle_reads_writes(pollfds);
+
 			for(i=0; i<config.iface_count; i++){
 				if(pollfds[listensock[i]].revents & (POLLIN | POLLPRI)){
 					while(mqtt3_socket_accept(&contexts, &context_count, listensock[i]) != -1){
