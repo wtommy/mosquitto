@@ -101,6 +101,119 @@ int drop_privileges(mqtt3_config *config)
 	return 0;
 }
 
+int loop(mqtt3_config *config, int *listensock, int listener_count)
+{
+	time_t start_time = time(NULL);
+	time_t last_backup = time(NULL);
+	time_t last_store_clean = time(NULL);
+	time_t now;
+	int fdcount;
+	sigset_t sigblock, origsig;
+	int i;
+	struct pollfd *pollfds = NULL;
+	int pollfd_count;
+
+	sigemptyset(&sigblock);
+	sigaddset(&sigblock, SIGINT);
+
+	pollfd_count = 4 + context_count + listener_count;
+	pollfds = mqtt3_malloc(sizeof(struct pollfd)*pollfd_count);
+	if(!pollfds) return 1;
+
+	while(run){
+		mqtt3_db_sys_update(config->sys_interval, start_time);
+
+		if(4 + listener_count + context_count > pollfd_count){
+			pollfd_count = 4 + listener_count + context_count;
+			pollfds = mqtt3_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
+			if(!pollfds){
+				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
+				return 1;
+			}
+		}
+
+		memset(pollfds, -1, sizeof(struct pollfd)*pollfd_count);
+
+		for(i=0; i<config->iface_count; i++){
+			pollfds[listensock[i]].fd = listensock[i];
+			pollfds[listensock[i]].events = POLLIN | POLLPRI;
+			pollfds[listensock[i]].revents = 0;
+		}
+
+		now = time(NULL);
+		for(i=0; i<context_count; i++){
+			if(contexts[i]){
+				if(contexts[i]->sock != -1){
+					if(contexts[i]->bridge){
+						mqtt3_check_keepalive(contexts[i]);
+					 }
+					 if(!(contexts[i]->keepalive) || now - contexts[i]->last_msg_in < contexts[i]->keepalive*3/2){
+						if(mqtt3_db_message_write(contexts[i])){
+							// FIXME - do something here.
+						}
+						pollfds[contexts[i]->sock].fd = contexts[i]->sock;
+						pollfds[contexts[i]->sock].events = POLLIN | POLLPRI;
+						pollfds[contexts[i]->sock].revents = 0;
+						if(contexts[i]->out_packet){
+							pollfds[contexts[i]->sock].events |= POLLOUT;
+						}
+					}else{
+						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", contexts[i]->id);
+						/* Client has exceeded keepalive*1.5 */
+						mqtt3_db_client_will_queue(contexts[i]);
+						mqtt3_context_cleanup(contexts[i]);
+						contexts[i] = NULL;
+					}
+				}else if(contexts[i]->bridge){
+					/* Want to try to restart the bridge connection */
+					if(!contexts[i]->bridge->restart_t){
+						contexts[i]->bridge->restart_t = time(NULL)+30;
+					}else{
+						if(time(NULL) > contexts[i]->bridge->restart_t){
+							mqtt3_log_printf(MQTT3_LOG_INFO, "Attempting to reconnect to bridge %s.", contexts[i]->id);
+							contexts[i]->bridge->restart_t = 0;
+							mqtt3_bridge_connect(contexts[i]);
+						}
+					}
+				}else{
+					mqtt3_context_cleanup(contexts[i]);
+					contexts[i] = NULL;
+				}
+			}
+		}
+
+		mqtt3_db_message_timeout_check(config->retry_interval);
+
+		sigprocmask(SIG_SETMASK, &sigblock, &origsig);
+		fdcount = poll(pollfds, pollfd_count, 1000);
+		sigprocmask(SIG_SETMASK, &origsig, NULL);
+		if(fdcount == -1){
+			loop_handle_errors();
+		}else{
+			loop_handle_reads_writes(pollfds);
+
+			for(i=0; i<config->iface_count; i++){
+				if(pollfds[listensock[i]].revents & (POLLIN | POLLPRI)){
+					while(mqtt3_socket_accept(&contexts, &context_count, listensock[i]) != -1){
+					}
+				}
+			}
+		}
+		if(config->persistence && config->autosave_interval){
+			if(last_backup + config->autosave_interval < now){
+				mqtt3_db_backup(false);
+				last_backup = time(NULL);
+			}
+		}
+		if(!config->store_clean_interval || last_store_clean + config->store_clean_interval < now){
+			mqtt3_db_store_clean();
+			last_store_clean = time(NULL);
+		}
+	}
+
+	return 0;
+}
+
 /* Error ocurred, probably an fd has been closed. 
  * Loop through and check them all.
  */
@@ -214,20 +327,13 @@ void handle_sigusr2(int signal)
 
 int main(int argc, char *argv[])
 {
-	sigset_t sigblock, origsig;
-	int fdcount;
 	int *listensock = NULL;
-	time_t now;
 	mqtt3_config config;
-	time_t start_time = time(NULL);
-	time_t last_backup = time(NULL);
-	time_t last_store_clean = time(NULL);
 	char buf[1024];
 	int i;
 	FILE *pid;
-	struct pollfd *pollfds = NULL;
-	int pollfd_count;
 	int listener_count;
+	int rc;
 
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
@@ -260,9 +366,6 @@ int main(int argc, char *argv[])
 	contexts = mqtt3_malloc(sizeof(mqtt3_context*)*context_count);
 	if(!contexts) return 1;
 	contexts[0] = NULL;
-
-	sigemptyset(&sigblock);
-	sigaddset(&sigblock, SIGINT);
 
 	if(mqtt3_db_open(&config)){
 		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Couldn't open database.");
@@ -299,10 +402,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	pollfd_count = 4 + context_count + listener_count;
-	pollfds = mqtt3_malloc(sizeof(struct pollfd)*pollfd_count);
-	if(!pollfds) return 1;
-
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
 	signal(SIGUSR1, handle_sigusr1);
@@ -316,99 +415,9 @@ int main(int argc, char *argv[])
 		}
 	}
 	run = 1;
-	while(run){
-		mqtt3_db_sys_update(config.sys_interval, start_time);
-
-		if(4 + listener_count + context_count > pollfd_count){
-			pollfd_count = 4 + listener_count + context_count;
-			pollfds = mqtt3_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
-			if(!pollfds){
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
-				return 1;
-			}
-		}
-
-		memset(pollfds, -1, sizeof(struct pollfd)*pollfd_count);
-
-		for(i=0; i<config.iface_count; i++){
-			pollfds[listensock[i]].fd = listensock[i];
-			pollfds[listensock[i]].events = POLLIN | POLLPRI;
-			pollfds[listensock[i]].revents = 0;
-		}
-
-		now = time(NULL);
-		for(i=0; i<context_count; i++){
-			if(contexts[i]){
-				if(contexts[i]->sock != -1){
-					if(contexts[i]->bridge){
-						mqtt3_check_keepalive(contexts[i]);
-					 }
-					 if(!(contexts[i]->keepalive) || now - contexts[i]->last_msg_in < contexts[i]->keepalive*3/2){
-						if(mqtt3_db_message_write(contexts[i])){
-							// FIXME - do something here.
-						}
-						pollfds[contexts[i]->sock].fd = contexts[i]->sock;
-						pollfds[contexts[i]->sock].events = POLLIN | POLLPRI;
-						pollfds[contexts[i]->sock].revents = 0;
-						if(contexts[i]->out_packet){
-							pollfds[contexts[i]->sock].events |= POLLOUT;
-						}
-					}else{
-						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", contexts[i]->id);
-						/* Client has exceeded keepalive*1.5 */
-						mqtt3_db_client_will_queue(contexts[i]);
-						mqtt3_context_cleanup(contexts[i]);
-						contexts[i] = NULL;
-					}
-				}else if(contexts[i]->bridge){
-					/* Want to try to restart the bridge connection */
-					if(!contexts[i]->bridge->restart_t){
-						contexts[i]->bridge->restart_t = time(NULL)+30;
-					}else{
-						if(time(NULL) > contexts[i]->bridge->restart_t){
-							mqtt3_log_printf(MQTT3_LOG_INFO, "Attempting to reconnect to bridge %s.", contexts[i]->id);
-							contexts[i]->bridge->restart_t = 0;
-							mqtt3_bridge_connect(contexts[i]);
-						}
-					}
-				}else{
-					mqtt3_context_cleanup(contexts[i]);
-					contexts[i] = NULL;
-				}
-			}
-		}
-
-		mqtt3_db_message_timeout_check(config.retry_interval);
-
-		sigprocmask(SIG_SETMASK, &sigblock, &origsig);
-		fdcount = poll(pollfds, pollfd_count, 1000);
-		sigprocmask(SIG_SETMASK, &origsig, NULL);
-		if(fdcount == -1){
-			loop_handle_errors();
-		}else{
-			loop_handle_reads_writes(pollfds);
-
-			for(i=0; i<config.iface_count; i++){
-				if(pollfds[listensock[i]].revents & (POLLIN | POLLPRI)){
-					while(mqtt3_socket_accept(&contexts, &context_count, listensock[i]) != -1){
-					}
-				}
-			}
-		}
-		if(config.persistence && config.autosave_interval){
-			if(last_backup + config.autosave_interval < now){
-				mqtt3_db_backup(false);
-				last_backup = time(NULL);
-			}
-		}
-		if(!config.store_clean_interval || last_store_clean + config.store_clean_interval < now){
-			mqtt3_db_store_clean();
-			last_store_clean = time(NULL);
-		}
-	}
+	rc = loop(&config, listensock, listener_count);
 
 	mqtt3_log_printf(MQTT3_LOG_INFO, "mosquitto version %s terminating", VERSION);
-
 	mqtt3_log_close();
 
 	for(i=0; i<context_count; i++){
@@ -436,6 +445,6 @@ int main(int argc, char *argv[])
 		remove(config.pid_file);
 	}
 
-	return 0;
+	return rc;
 }
 
