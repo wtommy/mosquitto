@@ -774,7 +774,11 @@ int mqtt3_db_client_will_queue(mqtt3_context *context)
 	dbrc = sqlite3_step(stmt);
 	if(dbrc == SQLITE_ROW){
 		will = sqlite3_column_int(stmt, 0);
-		if(!will) return 0;
+		if(!will){
+			sqlite3_reset(stmt);
+			sqlite3_clear_bindings(stmt);
+			return 0;
+		}
 		topic = (const char *)sqlite3_column_text(stmt, 1);
 		qos = sqlite3_column_int(stmt, 2);
 		payload = sqlite3_column_text(stmt, 3);
