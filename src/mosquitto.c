@@ -101,7 +101,7 @@ int drop_privileges(mqtt3_config *config)
 	return 0;
 }
 
-int loop(mqtt3_config *config, int *listensock, int listener_count)
+int loop(mqtt3_config *config, int *listensock, int listener_max)
 {
 	time_t start_time = time(NULL);
 	time_t last_backup = time(NULL);
@@ -116,15 +116,15 @@ int loop(mqtt3_config *config, int *listensock, int listener_count)
 	sigemptyset(&sigblock);
 	sigaddset(&sigblock, SIGINT);
 
-	pollfd_count = 4 + context_count + listener_count;
+	pollfd_count = listener_max+1 + context_count;
 	pollfds = mqtt3_malloc(sizeof(struct pollfd)*pollfd_count);
 	if(!pollfds) return 1;
 
 	while(run){
 		mqtt3_db_sys_update(config->sys_interval, start_time);
 
-		if(4 + listener_count + context_count > pollfd_count){
-			pollfd_count = 4 + listener_count + context_count;
+		if(listener_max+1 + context_count > pollfd_count){
+			pollfd_count = listener_max+1 + context_count;
 			pollfds = mqtt3_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
 			if(!pollfds){
 				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
@@ -332,7 +332,7 @@ int main(int argc, char *argv[])
 	char buf[1024];
 	int i;
 	FILE *pid;
-	int listener_count;
+	int listener_max;
 	int rc;
 
 	mqtt3_config_init(&config);
@@ -384,8 +384,8 @@ int main(int argc, char *argv[])
 	snprintf(buf, 1024, "%s", "$Revision$"); // Requires hg keyword extension.
 	mqtt3_db_messages_easy_queue("", "$SYS/broker/changeset", 2, strlen(buf), (uint8_t *)buf, 1);
 
-	listener_count = config.iface_count;
-	listensock = mqtt3_malloc(sizeof(int)*listener_count);
+	listener_max = -1;
+	listensock = mqtt3_malloc(sizeof(int)*config.iface_count);
 	for(i=0; i<config.iface_count; i++){
 		if(config.iface[i].iface){
 			listensock[i] = mqtt3_socket_listen_if(config.iface[i].iface, config.iface[i].port);
@@ -399,6 +399,9 @@ int main(int argc, char *argv[])
 				remove(config.pid_file);
 			}
 			return 1;
+		}
+		if(listensock[i] > listener_max){
+			listener_max = listensock[i];
 		}
 	}
 
@@ -415,7 +418,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	run = 1;
-	rc = loop(&config, listensock, listener_count);
+	rc = loop(&config, listensock, listener_max);
 
 	mqtt3_log_printf(MQTT3_LOG_INFO, "mosquitto version %s terminating", VERSION);
 	mqtt3_log_close();
