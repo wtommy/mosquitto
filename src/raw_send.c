@@ -67,11 +67,13 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 	/* Variable header (topic string) */
 	if(mqtt3_write_string(packet, topic, strlen(topic))){
 		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed writing topic.");
+		mqtt3_free(packet);
 	  	return 1;
 	}
 	if(qos > 0){
 		if(mqtt3_write_uint16(packet, mid)){
 			mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed writing mid.");
+			mqtt3_free(packet);
 			return 1;
 		}
 	}
@@ -79,11 +81,13 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 	/* Payload */
 	if(payloadlen && mqtt3_write_bytes(packet, payload, payloadlen)){
 		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed writing payload.");
+		mqtt3_free(packet);
 		return 1;
 	}
 
 	if(mqtt3_net_packet_queue(context, packet)){
 		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed queuing packet.");
+		mqtt3_free(packet);
 		return 1;
 	}
 
@@ -142,7 +146,10 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command)
 	packet->command = command;
 	packet->remaining_length = 0;
 
-	if(mqtt3_net_packet_queue(context, packet)) return 1;
+	if(mqtt3_net_packet_queue(context, packet)){
+		mqtt3_free(packet);
+		return 1;
+	}
 
 	return 0;
 }
