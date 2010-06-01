@@ -1011,7 +1011,7 @@ int mqtt3_db_message_count(int *count)
 	return rc;
 }
 
-int mqtt3_db_message_delete(const char *client_id, uint16_t mid, mqtt3_msg_direction dir)
+int mqtt3_db_message_delete(const char *client_id, uint16_t mid, enum mqtt3_msg_direction dir)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
@@ -1053,7 +1053,7 @@ int mqtt3_db_message_delete_by_oid(int64_t oid)
 	return rc;
 }
 
-int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, int qos, int64_t store_id)
+int mqtt3_db_message_insert(const char *client_id, uint16_t mid, enum mqtt3_msg_direction dir, enum mqtt3_msg_status status, int qos, int64_t store_id)
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
@@ -1113,7 +1113,7 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direc
 	return rc;
 }
 
-int mqtt3_db_message_update(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status)
+int mqtt3_db_message_update(const char *client_id, uint16_t mid, enum mqtt3_msg_direction dir, enum mqtt3_msg_status status)
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
@@ -1287,7 +1287,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	int64_t OID;
 	int status;
 	int retries;
-	mqtt3_msg_status new_status = ms_invalid;
+	enum mqtt3_msg_status new_status = ms_invalid;
 
 	if(!stmt_select){
 		stmt_select = _mqtt3_db_statement_prepare("SELECT OID,status,retries FROM messages WHERE timestamp<?");
@@ -1336,7 +1336,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	return 0;
 }
 
-int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_direction dir)
+int mqtt3_db_message_release(const char *client_id, uint16_t mid, enum mqtt3_msg_direction dir)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;

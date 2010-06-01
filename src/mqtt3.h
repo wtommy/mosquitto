@@ -101,7 +101,7 @@ struct _mqtt3_packet{
 	struct _mqtt3_packet *next;
 };
 
-typedef enum {
+enum mqtt3_bridge_direction{
 	bd_out = 0,
 	bd_in = 1,
 	bd_both = 2
@@ -109,7 +109,7 @@ typedef enum {
 
 struct _mqtt3_bridge_topic{
 	char *topic;
-	mqtt3_bridge_direction direction;
+	enum mqtt3_bridge_direction direction;
 };
 
 struct _mqtt3_bridge{
@@ -137,7 +137,7 @@ typedef struct _mqtt3_context{
 	struct _mqtt3_bridge *bridge;
 } mqtt3_context;
 
-typedef enum {
+enum mqtt3_msg_status {
 	ms_invalid = 0,
 	ms_publish = 1,
 	ms_publish_puback = 2,
@@ -148,12 +148,12 @@ typedef enum {
 	ms_wait_pubrel = 7,
 	ms_resend_pubcomp = 8,
 	ms_wait_pubcomp = 9
-} mqtt3_msg_status;
+};
 
-typedef enum {
+enum mqtt3_msg_direction {
 	md_in = 0,
 	md_out = 1
-} mqtt3_msg_direction;
+};
 
 struct mqtt3_iface {
 	char *iface;
@@ -313,11 +313,11 @@ int mqtt3_db_client_will_queue(mqtt3_context *context);
 void mqtt3_db_limits_set(int inflight, int queued);
 /* Return the number of in-flight messages in count. */
 int mqtt3_db_message_count(int *count);
-int mqtt3_db_message_delete(const char *client_id, uint16_t mid, mqtt3_msg_direction dir);
+int mqtt3_db_message_delete(const char *client_id, uint16_t mid, enum mqtt3_msg_direction dir);
 int mqtt3_db_message_delete_by_oid(int64_t oid);
-int mqtt3_db_message_insert(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status, int qos, int64_t store_id);
-int mqtt3_db_message_release(const char *client_id, uint16_t mid, mqtt3_msg_direction dir);
-int mqtt3_db_message_update(const char *client_id, uint16_t mid, mqtt3_msg_direction dir, mqtt3_msg_status status);
+int mqtt3_db_message_insert(const char *client_id, uint16_t mid, enum mqtt3_msg_direction dir, enum mqtt3_msg_status status, int qos, int64_t store_id);
+int mqtt3_db_message_release(const char *client_id, uint16_t mid, enum mqtt3_msg_direction dir);
+int mqtt3_db_message_update(const char *client_id, uint16_t mid, enum mqtt3_msg_direction dir, enum mqtt3_msg_status status);
 int mqtt3_db_message_write(mqtt3_context *context);
 int mqtt3_db_messages_delete(const char *client_id);
 int mqtt3_db_messages_easy_queue(const char *client_id, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain);
