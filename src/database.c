@@ -246,6 +246,8 @@ int mqtt3_db_close(void)
 
 	sqlite3_shutdown();
 
+	if(db_filepath) mqtt3_free(db_filepath);
+
 	return 0;
 }
 
