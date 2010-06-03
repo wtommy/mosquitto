@@ -104,11 +104,14 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 
 void mqtt3_bridge_packet_cleanup(mqtt3_context *context)
 {
+	struct _mqtt3_packet *packet;
 	if(!context) return;
 
     while(context->out_packet){
 		mqtt3_context_packet_cleanup(context->out_packet);
+		packet = context->out_packet;
 		context->out_packet = context->out_packet->next;
+		mqtt3_free(packet);
 	}
 
 	mqtt3_context_packet_cleanup(&(context->in_packet));
