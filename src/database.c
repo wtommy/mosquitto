@@ -1216,7 +1216,9 @@ int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, i
 		if(mqtt3_db_retain_insert(topic, store_id)) rc = 1;
 	}
 	if(!mqtt3_db_sub_search_start(source_id, topic, qos)){
-		while(!mqtt3_db_sub_search_next(&client_id, &client_qos)){
+		while(sqlite3_step(stmt_sub_search) == SQLITE_ROW){
+			client_id = (char *)sqlite3_column_text(stmt_sub_search, 0);
+			client_qos = sqlite3_column_int(stmt_sub_search, 1);
 			if(qos > client_qos){
 				msg_qos = client_qos;
 			}else{
@@ -1238,9 +1240,10 @@ int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, i
 					if(mqtt3_db_message_insert(client_id, mid, md_out, ms_publish_pubrec, msg_qos, store_id)) rc = 1;
 					break;
 			}
-			if(client_id) mqtt3_free(client_id);
 		}
 	}
+	sqlite3_reset(stmt_sub_search);
+	sqlite3_clear_bindings(stmt_sub_search);
 	return rc;
 }
 
@@ -1942,8 +1945,6 @@ int mqtt3_db_sub_search_start(const char *source_id, const char *topic, int qos)
 			return 1;
 		}
 	}
-	sqlite3_reset(stmt_sub_search);
-	sqlite3_clear_bindings(stmt_sub_search);
 
 #ifdef WITH_REGEX
 	if(_mqtt3_db_regex_create(topic, &regex)) return 1;
@@ -1955,25 +1956,6 @@ int mqtt3_db_sub_search_start(const char *source_id, const char *topic, int qos)
 	if(sqlite3_bind_text(stmt_sub_search, 3, source_id, strlen(source_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 
 	return rc;
-}
-
-/* Retrieve next matching subscription from search.
- * mqtt3_db_sub_search_start() must have been called prior to calling this function.
- * Returns matching client id and qos in client_id and qos, which must not be NULL.
- * Returns 1 on failure (m_d_s_s_s() not called, client_id or qos is NULL, sqlite error)
- * Returns 0 on success.
- */
-int mqtt3_db_sub_search_next(char **client_id, uint8_t *qos)
-{
-	/* Warning: Don't start transaction in this function. */
-	if(!stmt_sub_search || !client_id || !qos) return 1;
-	if(sqlite3_step(stmt_sub_search) != SQLITE_ROW){
-		return 1;
-	}
-	*client_id = mqtt3_strdup((char *)sqlite3_column_text(stmt_sub_search, 0));
-	*qos = sqlite3_column_int(stmt_sub_search, 1);
-
-	return 0;
 }
 
 /* Remove all subscriptions for a client.
