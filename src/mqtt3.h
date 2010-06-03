@@ -105,7 +105,7 @@ enum mqtt3_bridge_direction{
 	bd_out = 0,
 	bd_in = 1,
 	bd_both = 2
-} mqtt3_bridge_direction;
+};
 
 struct _mqtt3_bridge_topic{
 	char *topic;
