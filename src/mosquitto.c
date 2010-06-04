@@ -111,20 +111,35 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 	sigset_t sigblock, origsig;
 	int i;
 	struct pollfd *pollfds = NULL;
-	int pollfd_count;
+	int pollfd_count = 0;
+	int new_clients = 1;
+	int client_max = 0;
+	int sock_max = 0;
+
 
 	sigemptyset(&sigblock);
 	sigaddset(&sigblock, SIGINT);
 
-	pollfd_count = listener_max+1 + context_count;
-	pollfds = mqtt3_malloc(sizeof(struct pollfd)*pollfd_count);
-	if(!pollfds) return 1;
-
 	while(run){
 		mqtt3_db_sys_update(config->sys_interval, start_time);
 
-		if(listener_max+1 + context_count > pollfd_count){
-			pollfd_count = listener_max+1 + context_count;
+		if(new_clients){
+			client_max = -1;
+			for(i=0; i<context_count; i++){
+				if(contexts[i] && contexts[i]->sock != -1 && contexts[i]->sock > sock_max){
+					client_max = contexts[i]->sock;
+				}
+			}
+			new_clients = 0;
+		}
+
+		if(client_max > listener_max){
+			sock_max = client_max;
+		}else{
+			sock_max = listener_max;
+		}
+		if(sock_max+1 > pollfd_count){
+			pollfd_count = sock_max+1;
 			pollfds = mqtt3_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
 			if(!pollfds){
 				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
@@ -194,6 +209,7 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 
 			for(i=0; i<config->iface_count; i++){
 				if(pollfds[listensock[i]].revents & (POLLIN | POLLPRI)){
+					new_clients = 1;
 					while(mqtt3_socket_accept(&contexts, &context_count, listensock[i]) != -1){
 					}
 				}
@@ -211,6 +227,7 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 		}
 	}
 
+	mqtt3_free(pollfds);
 	return 0;
 }
 
