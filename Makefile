@@ -39,7 +39,7 @@ dist : reallyclean
 		sed -i 's#http://localhost/cgi-bin/man/man2html?5+mosquitto.conf#mosquitto-conf-5.html#' dist/$${hfile}.html; \
 		sed -i 's#http://localhost/cgi-bin/man/man2html?1+mosquitto_pub#mosquitto_pub-1.html#' dist/$${hfile}.html; \
 		sed -i 's#http://localhost/cgi-bin/man/man2html?1+mosquitto_sub#mosquitto_sub-1.html#' dist/$${hfile}.html; \
-		sed -i 's#http://localhost/cgi-bin/man/man2html?7+mmqtt#mqtt-7.html#' dist/$${hfile}.html; \
+		sed -i 's#http://localhost/cgi-bin/man/man2html?7+mqtt#mqtt-7.html#' dist/$${hfile}.html; \
 		sed -i 's#http://localhost/cgi-bin/man/man2html#http://mosquitto.org/#' dist/$${hfile}.html; \
 	done
 
