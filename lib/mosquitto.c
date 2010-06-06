@@ -27,56 +27,5 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdint.h>
-#include <cstdlib>
 #include <mosquitto.h>
-#include <mosquittopp.h>
-
-mosquitto::mosquitto()
-{
-}
-
-mosquitto::~mosquitto()
-{
-}
-
-int mosquitto::connect(const char *host, int port)
-{
-	return 0;
-}
-
-int mosquitto::disconnect()
-{
-	return 0;
-}
-
-int mosquitto::publish(const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
-{
-	return 0;
-}
-
-int mosquitto::subscribe(const char *sub, int qos)
-{
-	return 0;
-}
-
-int mosquitto::unsubscribe(const char *sub)
-{
-	return 0;
-}
-
-int mosquitto::loop()
-{
-	return 0;
-}
-
-int mosquitto::read()
-{
-	return 0;
-}
-
-int mosquitto::write()
-{
-	return 0;
-}
 
