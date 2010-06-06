@@ -41,6 +41,7 @@ dist : reallyclean
 		sed -i 's#http://localhost/cgi-bin/man/man2html?1+mosquitto_sub#mosquitto_sub-1.html#' dist/$${hfile}.html; \
 		sed -i 's#http://localhost/cgi-bin/man/man2html?7+mqtt#mqtt-7.html#' dist/$${hfile}.html; \
 		sed -i 's#http://localhost/cgi-bin/man/man2html#http://mosquitto.org/#' dist/$${hfile}.html; \
+		sed -i '1,2d' dist/$${hfile}.html; \
 	done
 
 
