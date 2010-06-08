@@ -176,8 +176,10 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", contexts[i]->id);
 						/* Client has exceeded keepalive*1.5 */
 						mqtt3_db_client_will_queue(contexts[i]);
-						mqtt3_context_cleanup(contexts[i]);
-						contexts[i] = NULL;
+						if(!contexts[i]->bridge){
+							mqtt3_context_cleanup(contexts[i]);
+							contexts[i] = NULL;
+						}
 					}
 				}else if(contexts[i]->bridge){
 					/* Want to try to restart the bridge connection */
