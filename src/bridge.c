@@ -74,6 +74,7 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 
 	if(!context || !context->bridge) return 1;
 
+	mqtt3_log_printf(MQTT3_LOG_NOTICE, "Connecting bridge %s", context->bridge->name);
 	new_sock = mqtt3_socket_connect(context->bridge->address, context->bridge->port);
 	if(new_sock == -1){
 		mqtt3_log_printf(MQTT3_LOG_ERR, "Error creating bridge.");

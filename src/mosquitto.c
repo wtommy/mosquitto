@@ -185,7 +185,6 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 						contexts[i]->bridge->restart_t = time(NULL)+30;
 					}else{
 						if(time(NULL) > contexts[i]->bridge->restart_t){
-							mqtt3_log_printf(MQTT3_LOG_INFO, "Attempting to reconnect to bridge %s.", contexts[i]->id);
 							contexts[i]->bridge->restart_t = 0;
 							mqtt3_bridge_connect(contexts[i]);
 						}
