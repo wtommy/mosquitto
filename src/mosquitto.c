@@ -249,8 +249,10 @@ static void loop_handle_errors(void)
 					mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
 				}
 				contexts[i]->sock = -1;
-				mqtt3_context_cleanup(contexts[i]);
-				contexts[i] = NULL;
+				if(!contexts[i]->bridge){
+					mqtt3_context_cleanup(contexts[i]);
+					contexts[i] = NULL;
+				}
 			}
 		}
 	}
