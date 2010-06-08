@@ -161,8 +161,8 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 				if(contexts[i]->sock != -1){
 					if(contexts[i]->bridge){
 						mqtt3_check_keepalive(contexts[i]);
-					 }
-					 if(!(contexts[i]->keepalive) || now - contexts[i]->last_msg_in < contexts[i]->keepalive*3/2){
+					}
+					if(!(contexts[i]->keepalive) || now - contexts[i]->last_msg_in < contexts[i]->keepalive*3/2){
 						if(mqtt3_db_message_write(contexts[i])){
 							// FIXME - do something here.
 						}
