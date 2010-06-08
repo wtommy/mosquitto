@@ -181,19 +181,21 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 							contexts[i] = NULL;
 						}
 					}
-				}else if(contexts[i]->bridge){
-					/* Want to try to restart the bridge connection */
-					if(!contexts[i]->bridge->restart_t){
-						contexts[i]->bridge->restart_t = time(NULL)+30;
-					}else{
-						if(time(NULL) > contexts[i]->bridge->restart_t){
-							contexts[i]->bridge->restart_t = 0;
-							mqtt3_bridge_connect(contexts[i]);
-						}
-					}
 				}else{
-					mqtt3_context_cleanup(contexts[i]);
-					contexts[i] = NULL;
+					if(contexts[i]->bridge){
+						/* Want to try to restart the bridge connection */
+						if(!contexts[i]->bridge->restart_t){
+							contexts[i]->bridge->restart_t = time(NULL)+30;
+						}else{
+							if(time(NULL) > contexts[i]->bridge->restart_t){
+								contexts[i]->bridge->restart_t = 0;
+								mqtt3_bridge_connect(contexts[i]);
+							}
+						}
+					}else{
+						mqtt3_context_cleanup(contexts[i]);
+						contexts[i] = NULL;
+					}
 				}
 			}
 		}
