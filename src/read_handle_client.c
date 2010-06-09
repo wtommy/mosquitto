@@ -68,6 +68,7 @@ int mqtt3_handle_connack(mqtt3_context *context)
 					}
 				}
 			}
+			context->connected = true;
 			return 0;
 		case 1:
 			mqtt3_log_printf(MQTT3_LOG_ERR, "Connection Refused: unacceptable protocol version");
