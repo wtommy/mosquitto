@@ -232,7 +232,7 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 		}
 	}
 
-	mqtt3_free(pollfds);
+	if(pollfds) mqtt3_free(pollfds);
 	return 0;
 }
 
