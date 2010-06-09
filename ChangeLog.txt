@@ -15,6 +15,7 @@
 - Use poll() instead of select() to allow >1024 clients.
 - Implement max_connections.
 - Run VACUUM on in-memory database on receiving SIGUSR2.
+- Fix bridge keepalive timeouts and reconnects.
 
 0.6.1 - 20100506
 ================
