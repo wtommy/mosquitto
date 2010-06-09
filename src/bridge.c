@@ -71,7 +71,6 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 {
 	int new_sock = -1;
 	int i;
-	struct _mqtt3_packet *packet;
 
 	if(!context || !context->bridge) return 1;
 
@@ -84,13 +83,8 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 	context->keepalive = 60; /* Default to 60s */
 	context->clean_session = true;
 	context->in_packet.payload = NULL;
-	mqtt3_context_packet_cleanup(&context->in_packet);
-	while(context->out_packet){
-		mqtt3_context_packet_cleanup(context->out_packet);
-		packet = context->out_packet;
-		context->out_packet = context->out_packet->next;
-		mqtt3_free(packet);
-	}
+	mqtt3_bridge_packet_cleanup(context);
+
 	mqtt3_log_printf(MQTT3_LOG_NOTICE, "Connecting bridge %s", context->bridge->name);
 	new_sock = mqtt3_socket_connect(context->bridge->address, context->bridge->port);
 	if(new_sock == -1){
