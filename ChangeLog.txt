@@ -1,4 +1,4 @@
-0.7 - 2010xxxx
+0.7 - 20100615
 ==============
 
 - mosquitto_pub can now send null (zero length) messages.
