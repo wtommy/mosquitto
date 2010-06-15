@@ -9,9 +9,9 @@ use FileHandle;
 
 local $| = 1;
 
-my $subclient = "/usr/local/bin/mosquitto_sub -t sensors/cc128/raw -q 2";
-my $pubclient = "/usr/local/bin/mosquitto_pub -t sensors/cc128 -q 2 -l";
-my $pubclient_ch1 = "/usr/local/bin/mosquitto_pub -t sensors/cc128/ch1 -q 2 -l";
+my $subclient = "/usr/bin/mosquitto_sub -t sensors/cc128/raw -q 2";
+my $pubclient = "/usr/bin/mosquitto_pub -t sensors/cc128 -q 2 -l";
+my $pubclient_ch1 = "/usr/bin/mosquitto_pub -t sensors/cc128/ch1 -q 2 -l";
 
 open(SUB, "$subclient|");
 open(PUB, "|$pubclient");
