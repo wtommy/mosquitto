@@ -76,9 +76,9 @@ static void loop_handle_reads_writes(struct pollfd *pollfds);
  */
 int drop_privileges(mqtt3_config *config)
 {
+#ifndef __CYGWIN__
 	struct passwd *pwd;
 
-#ifndef __CYGWIN__
 	if(geteuid() == 0){
 		if(config->user){
 			pwd = getpwnam(config->user);
