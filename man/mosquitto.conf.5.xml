@@ -218,6 +218,9 @@
 					specified must have read/write access to the persistence
 					database if it is to be written. If run as a non-root user,
 					this setting has no effect. Defaults to mosquitto.</para>
+					<para>This setting has no effect on Windows and so you
+					should run mosquitto as the user you wish it to run
+					as.</para>
 				</listitem>
 			</varlistentry>
 		</variablelist>

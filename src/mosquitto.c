@@ -78,6 +78,7 @@ int drop_privileges(mqtt3_config *config)
 {
 	struct passwd *pwd;
 
+#ifndef __CYGWIN__
 	if(geteuid() == 0){
 		if(config->user){
 			pwd = getpwnam(config->user);
@@ -98,6 +99,7 @@ int drop_privileges(mqtt3_config *config)
 			mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Mosquitto should not be run as root/administrator.");
 		}
 	}
+#endif
 	return 0;
 }
 

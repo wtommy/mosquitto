@@ -16,6 +16,8 @@
 - Implement max_connections.
 - Run VACUUM on in-memory database on receiving SIGUSR2.
 - Fix bridge keepalive timeouts and reconnects.
+- Don't attempt to drop root privileges when running on Windows as this isn't
+  well supported (bug #586231).
 
 0.6.1 - 20100506
 ================
