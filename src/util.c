@@ -95,6 +95,9 @@ int mqtt3_fix_sub_topic(char **subtopic)
 	fixed = mqtt3_calloc(strlen(*subtopic)+2, 1);
 	if(!fixed) return 1;
 
+	if((*subtopic)[0] == '/'){
+		fixed[0] = '/';
+	}
 	token = strtok(*subtopic, "/");
 	while(token){
 		strcat(fixed, token);

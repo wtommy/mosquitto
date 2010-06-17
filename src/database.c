@@ -1541,16 +1541,22 @@ static int _mqtt3_db_regex_create(const char *topic, char **regex)
 	int pos;
 	int i;
 	int sys = 0;
+	char *start_slash;
 
 	if(!topic || !regex) return 1;
 
-	local_topic = mqtt3_strdup(topic);
-	if(!local_topic) return 1;
-
-	if(!strncmp(local_topic, "$SYS", 4)){
+	if(!strncmp(topic, "$SYS", 4)){
 		sys = 1;
 	}
 	hier = 0;
+	if(topic[0] == '/'){
+		local_topic = mqtt3_strdup(topic+1);
+		start_slash = "/";
+	}else{
+		local_topic = mqtt3_strdup(topic);
+		start_slash = "";
+	}
+	if(!local_topic) return 1;
 	stmp = local_topic;
 	while(stmp){
 		stmp = index(stmp, '/');
@@ -1576,7 +1582,7 @@ static int _mqtt3_db_regex_create(const char *topic, char **regex)
 	if(hier > 1){
 		token = strtok(local_topic, "/");
 		if(!sys){
-			pos = sprintf(local_regex, "^(?:(?:(?:\\Q%s\\E|\\+)(?!$))", token);
+			pos = sprintf(local_regex, "^%s(?:(?:(?:\\Q%s\\E|\\+)(?!$))", start_slash, token);
 		}else{
 			pos = sprintf(local_regex, "^(?:(?:(?:\\Q%s\\E)(?!$))", token);
 		}
@@ -1601,7 +1607,7 @@ static int _mqtt3_db_regex_create(const char *topic, char **regex)
 		}
 	}else{
 		if(!sys){
-			pos = sprintf(local_regex, "^(?:(?:(?:\\Q%s\\E|\\+))|#)$", local_topic);
+			pos = sprintf(local_regex, "^%s(?:(?:(?:\\Q%s\\E|\\+))|#)$", start_slash, local_topic);
 		}else{
 			pos = sprintf(local_regex, "^(?:(?:(?:%s|\\+)))$", local_topic);
 		}
@@ -1626,13 +1632,18 @@ static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 	if(!sub || !regex) return 1;
 
 	if(strncmp(sub, "$SYS", 4)){
-		sys = "^(?!\\$SYS)";
+		if(sub[0] == '/'){
+			sys = "^/(?!\\$SYS)";
+			local_sub = mqtt3_strdup(sub+1);
+		}else{
+			sys = "^(?!\\$SYS)";
+			local_sub = mqtt3_strdup(sub);
+		}
 	}else{
 		sys = "^";
+		local_sub = mqtt3_strdup(sub);
 	}
-	local_sub = mqtt3_strdup(sub);
 	if(!local_sub) return 1;
-
 	hier = 0;
 	stmp = local_sub;
 	while(stmp){

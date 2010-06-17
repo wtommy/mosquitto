@@ -1,3 +1,10 @@
+0.8 - 2010xxxx
+==============
+
+- Topics starting with a / are treated as distinct to those not starting with
+  a /. For example, /topic/path is different to topic/path. This matches the
+  behaviour of rsmb.
+
 0.7 - 20100615
 ==============
 
