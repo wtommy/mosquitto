@@ -1,6 +1,6 @@
 include config.mk
 
-DIRS=client src man
+DIRS=lib client src man
 DISTDIRS=man
 
 .PHONY : all mosquitto clean reallyclean install uninstall dist sign copy
