@@ -27,3 +27,27 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef _MOSQUITTO_H_
+#define _MOSQUITTO_H_
+#include <stdint.h>
+#include <stdlib.h>
+
+struct mosquitto {
+	int sock;
+};
+
+void mosquitto_lib_init(void);
+void mosquitto_lib_cleanup(void);
+
+struct mosquitto *mosquitto_new(void);
+void mosquitto_destroy(struct mosquitto *mosq);
+int mosquitto_connect(struct mosquitto *mosq, const char *host, int port);
+int mosquitto_disconnect(struct mosquitto *mosq);
+int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
+int mosquitto_subscribe(struct mosquitto *mosq, const char *sub, int qos);
+int mosquitto_unsubscribe(struct mosquitto *mosq, const char *sub);
+int mosquitto_loop(struct mosquitto *mosq);
+int mosquitto_read(struct mosquitto *mosq);
+int mosquitto_write(struct mosquitto *mosq);
+
+#endif
