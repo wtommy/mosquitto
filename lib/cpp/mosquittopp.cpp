@@ -32,50 +32,50 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mosquitto.h>
 #include <mosquittopp.h>
 
-mosquitto::mosquitto()
+mosquittopp::mosquittopp()
 {
 }
 
-mosquitto::~mosquitto()
+mosquittopp::~mosquittopp()
 {
 }
 
-int mosquitto::connect(const char *host, int port)
-{
-	return 0;
-}
-
-int mosquitto::disconnect()
+int mosquittopp::connect(const char *host, int port)
 {
 	return 0;
 }
 
-int mosquitto::publish(const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
+int mosquittopp::disconnect()
 {
 	return 0;
 }
 
-int mosquitto::subscribe(const char *sub, int qos)
+int mosquittopp::publish(const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
 	return 0;
 }
 
-int mosquitto::unsubscribe(const char *sub)
+int mosquittopp::subscribe(const char *sub, int qos)
 {
 	return 0;
 }
 
-int mosquitto::loop()
+int mosquittopp::unsubscribe(const char *sub)
 {
 	return 0;
 }
 
-int mosquitto::read()
+int mosquittopp::loop()
 {
 	return 0;
 }
 
-int mosquitto::write()
+int mosquittopp::read()
+{
+	return 0;
+}
+
+int mosquittopp::write()
 {
 	return 0;
 }
