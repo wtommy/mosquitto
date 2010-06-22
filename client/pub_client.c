@@ -64,7 +64,7 @@ static int status = STATUS_CONNECTING;
 static struct mosquitto *mosq = NULL;
 static int mid_sent = 0;
 
-void my_connack_callback(int result)
+void my_connect_callback(void *obj, int result)
 {
 	if(!result){
 		gcontext->connected = true;
@@ -346,7 +346,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	client_connack_callback = my_connack_callback;
+	mosq->on_connect = my_connect_callback;
 	client_net_write_callback = my_net_write_callback;
 	client_puback_callback = my_puback_callback;
 	client_pubcomp_callback = my_pubcomp_callback;
