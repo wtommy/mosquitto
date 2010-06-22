@@ -72,7 +72,7 @@ int mosquitto_disconnect(struct mosquitto *mosq)
 	return 0;
 }
 
-int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
+int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, int retain)
 {
 	return 0;
 }

@@ -37,7 +37,7 @@ struct mosquitto {
 	int sock;
 	void (*on_connect)(void *obj, int rc);
 	void (*on_publish)(void *obj, int mid);
-	void (*on_message)(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
+	void (*on_message)(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, int retain);
 	void (*on_subscribe)(void *obj, int mid);
 	void (*on_unsubscribe)(void *obj, int mid);
 	//void (*on_error)();
@@ -50,7 +50,7 @@ struct mosquitto *mosquitto_new(void *obj);
 void mosquitto_destroy(struct mosquitto *mosq);
 int mosquitto_connect(struct mosquitto *mosq, const char *host, int port);
 int mosquitto_disconnect(struct mosquitto *mosq);
-int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
+int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, int retain);
 int mosquitto_subscribe(struct mosquitto *mosq, const char *sub, int qos);
 int mosquitto_unsubscribe(struct mosquitto *mosq, const char *sub);
 int mosquitto_loop(struct mosquitto *mosq);
