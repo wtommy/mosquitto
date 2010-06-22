@@ -62,6 +62,7 @@ static mqtt3_context *gcontext;
 static int mode = MSGMODE_NONE;
 static int status = STATUS_CONNECTING;
 static struct mosquitto *mosq = NULL;
+static int mid_sent = 0;
 
 void my_connack_callback(int result)
 {
@@ -71,10 +72,10 @@ void my_connack_callback(int result)
 			case MSGMODE_CMD:
 			case MSGMODE_FILE:
 			case MSGMODE_STDIN_FILE:
-				mqtt3_raw_publish(gcontext, false, qos, retain, 1, topic, msglen, (uint8_t *)message);
+				mid_sent = mosquitto_publish(mosq, topic, msglen, (uint8_t *)message, qos, retain);
 				break;
 			case MSGMODE_NULL:
-				mqtt3_raw_publish(gcontext, false, qos, retain, 1, topic, 0, NULL);
+				mid_sent = mosquitto_publish(mosq, topic, 0, NULL, qos, retain);
 				break;
 			case MSGMODE_STDIN_LINE:
 				status = STATUS_CONNACK_RECVD;
@@ -88,21 +89,21 @@ void my_connack_callback(int result)
 void my_net_write_callback(int command)
 {
 	if(qos == 0 && command == PUBLISH && mode != MSGMODE_STDIN_LINE){
-		mqtt3_raw_disconnect(gcontext);
+		mosquitto_disconnect(mosq);
 	}
 }
 
 void my_puback_callback(int mid)
 {
 	if(mode != MSGMODE_STDIN_LINE){
-		mqtt3_raw_disconnect(gcontext);
+		mosquitto_disconnect(mosq);
 	}
 }
 
 void my_pubcomp_callback(int mid)
 {
 	if(mode != MSGMODE_STDIN_LINE){
-		mqtt3_raw_disconnect(gcontext);
+		mosquitto_disconnect(mosq);
 	}
 }
 
@@ -200,7 +201,6 @@ int main(int argc, char *argv[])
 	int keepalive = 60;
 	int opt;
 	char buf[1024];
-	int mid_sent = 0;
 	bool debug = false;
 
 	sprintf(id, "mosquitto_pub_%d", getpid());
@@ -362,11 +362,9 @@ int main(int argc, char *argv[])
 		if(mode == MSGMODE_STDIN_LINE && status == STATUS_CONNACK_RECVD){
 			if(fgets(buf, 1024, stdin)){
 				buf[strlen(buf)-1] = '\0';
-				mid_sent++;
-				if(mid_sent > 65535) mid_sent = 1;
-				mqtt3_raw_publish(context, false, qos, retain, mid_sent, topic, strlen(buf), (uint8_t *)buf);
+				mid_sent = mosquitto_publish(mosq, topic, strlen(buf), (uint8_t *)buf, qos, retain);
 			}else if(feof(stdin)){
-				mqtt3_raw_disconnect(gcontext);
+				mosquitto_disconnect(mosq);
 			}
 		}
 	}
