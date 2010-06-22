@@ -32,8 +32,37 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mosquitto.h>
 #include <mosquittopp.h>
 
+static void on_publish_wrapper(void *obj, int mid)
+{
+	class mosquittopp *m = (class mosquittopp *)obj;
+	m->on_publish(mid);
+}
+
+static void on_message_wrapper(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
+{
+	class mosquittopp *m = (class mosquittopp *)obj;
+	m->on_message(topic, payloadlen, payload, qos, retain);
+}
+
+static void on_subscribe_wrapper(void *obj, int mid)
+{
+	class mosquittopp *m = (class mosquittopp *)obj;
+	m->on_subscribe(mid);
+}
+
+static void on_unsubscribe_wrapper(void *obj, int mid)
+{
+	class mosquittopp *m = (class mosquittopp *)obj;
+	m->on_unsubscribe(mid);
+}
+
 mosquittopp::mosquittopp()
 {
+	mosq = mosquitto_new(this);
+	mosq->on_publish = on_publish_wrapper;
+	mosq->on_message = on_message_wrapper;
+	mosq->on_subscribe = on_subscribe_wrapper;
+	mosq->on_unsubscribe = on_unsubscribe_wrapper;
 }
 
 mosquittopp::~mosquittopp()

@@ -33,13 +33,19 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 
 struct mosquitto {
+	void *obj;
 	int sock;
+	void (*on_publish)(void *obj, int mid);
+	void (*on_message)(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
+	void (*on_subscribe)(void *obj, int mid);
+	void (*on_unsubscribe)(void *obj, int mid);
+	//void (*on_error)();
 };
 
 void mosquitto_lib_init(void);
 void mosquitto_lib_cleanup(void);
 
-struct mosquitto *mosquitto_new(void);
+struct mosquitto *mosquitto_new(void *obj);
 void mosquitto_destroy(struct mosquitto *mosq);
 int mosquitto_connect(struct mosquitto *mosq, const char *host, int port);
 int mosquitto_disconnect(struct mosquitto *mosq);

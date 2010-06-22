@@ -51,11 +51,11 @@ class mosquittopp {
 		int read();
 		int write();
 		
-		virtual int on_publish() {return 0;};
-		virtual int on_message() {return 0;};
-		virtual int on_subscribe() {return 0;};
-		virtual int on_unsubscribe() {return 0;};
-		virtual int on_error() {return 0;};
+		virtual void on_publish(int mid) {return;};
+		virtual void on_message(const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain) {return;};
+		virtual void on_subscribe(int mid) {return;};
+		virtual void on_unsubscribe(int mid) {return;};
+		virtual void on_error() {return;};
 };
 
 #endif
