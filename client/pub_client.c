@@ -116,7 +116,7 @@ int load_stdin(void)
 
 	while(!feof(stdin)){
 		rlen = fread(buf, 1, 1024, stdin);
-		message = mqtt3_realloc(message, pos+rlen);
+		message = realloc(message, pos+rlen);
 		if(!message){
 			fprintf(stderr, "Error: Out of memory.\n");
 			return 1;
@@ -158,7 +158,7 @@ int load_file(const char *filename)
 		return 1;
 	}
 	fseek(fptr, 0, SEEK_SET);
-	message = mqtt3_malloc(msglen);
+	message = malloc(msglen);
 	if(!message){
 		fclose(fptr);
 		fprintf(stderr, "Error: Out of memory.\n");
@@ -368,7 +368,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	if(message && mode == MSGMODE_FILE){
-		mqtt3_free(message);
+		free(message);
 	}
 	mosquitto_destroy(mosq);
 	mosquitto_lib_cleanup();
