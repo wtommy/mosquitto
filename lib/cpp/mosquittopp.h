@@ -27,14 +27,19 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef _MOSQUITTOPP_H_
+#define _MOSQUITTOPP_H_
+
 #include <stdint.h>
 #include <cstdlib>
-//#include <mosquitto.h>
+#include <mosquitto.h>
 
-class mosquitto {
+class mosquittopp {
+	private:
+		struct mosquitto *mosq;
 	public:
-		mosquitto();
-		~mosquitto();
+		mosquittopp();
+		~mosquittopp();
 
 		int connect(const char *host, int port=1883);
 		int disconnect();
@@ -52,3 +57,5 @@ class mosquitto {
 		virtual int on_unsubscribe() {return 0;};
 		virtual int on_error() {return 0;};
 };
+
+#endif
