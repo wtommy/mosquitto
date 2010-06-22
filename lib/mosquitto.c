@@ -29,3 +29,76 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mosquitto.h>
 
+#include <stdint.h>
+#include <stdlib.h>
+
+void mosquitto_lib_init(void)
+{
+}
+
+void mosquitto_lib_cleanup(void)
+{
+}
+
+struct mosquitto *mosquitto_new(void *obj)
+{
+	struct mosquitto *mosq = NULL;
+
+	mosq = (struct mosquitto *)calloc(1, sizeof(struct mosquitto));
+	if(mosq){
+		mosq->obj = obj;
+		mosq->sock = -1;
+		mosq->on_connect = NULL;
+		mosq->on_publish = NULL;
+		mosq->on_message = NULL;
+		mosq->on_subscribe = NULL;
+		mosq->on_unsubscribe = NULL;
+	}
+	return mosq;
+}
+
+void mosquitto_destroy(struct mosquitto *mosq)
+{
+	free(mosq);
+}
+
+int mosquitto_connect(struct mosquitto *mosq, const char *host, int port)
+{
+	return 0;
+}
+
+int mosquitto_disconnect(struct mosquitto *mosq)
+{
+	return 0;
+}
+
+int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
+{
+	return 0;
+}
+
+int mosquitto_subscribe(struct mosquitto *mosq, const char *sub, int qos)
+{
+	return 0;
+}
+
+int mosquitto_unsubscribe(struct mosquitto *mosq, const char *sub)
+{
+	return 0;
+}
+
+int mosquitto_loop(struct mosquitto *mosq)
+{
+	return 0;
+}
+
+int mosquitto_read(struct mosquitto *mosq)
+{
+	return 0;
+}
+
+int mosquitto_write(struct mosquitto *mosq)
+{
+	return 0;
+}
+
