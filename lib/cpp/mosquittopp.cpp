@@ -67,6 +67,7 @@ mosquittopp::mosquittopp()
 
 mosquittopp::~mosquittopp()
 {
+	mosquitto_destroy(mosq);
 }
 
 int mosquittopp::connect(const char *host, int port)
