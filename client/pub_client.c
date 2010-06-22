@@ -331,7 +331,10 @@ int main(int argc, char *argv[])
 	}
 	mosquitto_lib_init();
 	mosq = mosquitto_new(NULL);
-	fflush(stdout);
+	if(!mosq){
+		fprintf(stderr, "Error: Out of memory.\n");
+		return 1;
+	}
 	if(debug){
 		mqtt3_log_init(MQTT3_LOG_DEBUG | MQTT3_LOG_ERR | MQTT3_LOG_WARNING
 				| MQTT3_LOG_NOTICE | MQTT3_LOG_INFO, MQTT3_LOG_STDERR);
@@ -343,10 +346,6 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if(client_init()){
-		fprintf(stderr, "Error: Unable to initialise database.\n");
-		return 1;
-	}
 	client_connack_callback = my_connack_callback;
 	client_net_write_callback = my_net_write_callback;
 	client_puback_callback = my_puback_callback;
@@ -371,7 +370,6 @@ int main(int argc, char *argv[])
 	if(message && mode == MSGMODE_FILE){
 		mqtt3_free(message);
 	}
-	client_cleanup();
 	mosquitto_destroy(mosq);
 	mosquitto_lib_cleanup();
 	return 0;
