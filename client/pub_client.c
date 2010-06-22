@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
 	}
 	gcontext = context;
 
-	while(!client_loop(context)){
+	while(!mosquitto_loop(mosq)){
 		if(mode == MSGMODE_STDIN_LINE && status == STATUS_CONNACK_RECVD){
 			if(fgets(buf, 1024, stdin)){
 				buf[strlen(buf)-1] = '\0';
