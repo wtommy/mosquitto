@@ -40,7 +40,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sys/select.h>
 #include <unistd.h>
 
-#include <mqtt3.h>
+#include <mosquitto.h>
 #include <client_shared.h>
 
 #define MSGMODE_NONE 0
@@ -61,6 +61,7 @@ static int retain = 0;
 static mqtt3_context *gcontext;
 static int mode = MSGMODE_NONE;
 static int status = STATUS_CONNECTING;
+static struct mosquitto *mosq = NULL;
 
 void my_connack_callback(int result)
 {
@@ -328,6 +329,8 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
+	mosquitto_lib_init();
+	mosq = mosquitto_new(NULL);
 	fflush(stdout);
 	if(debug){
 		mqtt3_log_init(MQTT3_LOG_DEBUG | MQTT3_LOG_ERR | MQTT3_LOG_WARNING
@@ -371,5 +374,7 @@ int main(int argc, char *argv[])
 		mqtt3_free(message);
 	}
 	client_cleanup();
+	mosquitto_destroy(mosq);
+	mosquitto_lib_cleanup();
 	return 0;
 }
