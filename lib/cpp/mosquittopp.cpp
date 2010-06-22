@@ -42,41 +42,41 @@ mosquittopp::~mosquittopp()
 
 int mosquittopp::connect(const char *host, int port)
 {
-	return 0;
+	return mosquitto_connect(mosq, host, port);
 }
 
 int mosquittopp::disconnect()
 {
-	return 0;
+	return mosquitto_disconnect(mosq);
 }
 
 int mosquittopp::publish(const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
-	return 0;
+	return mosquitto_publish(mosq, topic, payloadlen, payload, qos, retain);
 }
 
 int mosquittopp::subscribe(const char *sub, int qos)
 {
-	return 0;
+	return mosquitto_subscribe(mosq, sub, qos);
 }
 
 int mosquittopp::unsubscribe(const char *sub)
 {
-	return 0;
+	return mosquitto_unsubscribe(mosq, sub);
 }
 
 int mosquittopp::loop()
 {
-	return 0;
+	return mosquitto_loop(mosq);
 }
 
 int mosquittopp::read()
 {
-	return 0;
+	return mosquitto_read(mosq);
 }
 
 int mosquittopp::write()
 {
-	return 0;
+	return mosquitto_write(mosq);
 }
 
