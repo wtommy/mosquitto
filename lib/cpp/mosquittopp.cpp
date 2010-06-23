@@ -62,9 +62,9 @@ static void on_unsubscribe_wrapper(void *obj, int mid)
 	m->on_unsubscribe(mid);
 }
 
-mosquittopp::mosquittopp()
+mosquittopp::mosquittopp(const char *id)
 {
-	mosq = mosquitto_new(this);
+	mosq = mosquitto_new(this, id);
 	mosq->on_connect = on_connect_wrapper;
 	mosq->on_publish = on_publish_wrapper;
 	mosq->on_message = on_message_wrapper;
@@ -77,9 +77,9 @@ mosquittopp::~mosquittopp()
 	mosquitto_destroy(mosq);
 }
 
-int mosquittopp::connect(const char *host, int port)
+int mosquittopp::connect(const char *host, int port, int keepalive, bool clean_session)
 {
-	return mosquitto_connect(mosq, host, port);
+	return mosquitto_connect(mosq, host, port, keepalive, clean_session);
 }
 
 int mosquittopp::disconnect()

@@ -41,7 +41,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 
 #include <mosquitto.h>
-#include <client_shared.h>
 
 #define MSGMODE_NONE 0
 #define MSGMODE_CMD 1
@@ -177,7 +176,6 @@ void print_usage(void)
 
 int main(int argc, char *argv[])
 {
-	mqtt3_context *context;
 	char id[30];
 	int i;
 	char *host = "localhost";
@@ -319,10 +317,12 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Error: Out of memory.\n");
 		return 1;
 	}
+	#if 0
 	if(debug){
 		mqtt3_log_init(MQTT3_LOG_DEBUG | MQTT3_LOG_ERR | MQTT3_LOG_WARNING
 				| MQTT3_LOG_NOTICE | MQTT3_LOG_INFO, MQTT3_LOG_STDERR);
 	}
+	#endif
 
 	if(!topic || mode == MSGMODE_NONE){
 		fprintf(stderr, "Error: Both topic and message must be supplied.\n");
@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
 	mosq->on_connect = my_connect_callback;
 	mosq->on_publish = my_publish_callback;
 
-	if(client_connect(&context, host, port, id, keepalive, true)){
+	if(mosquitto_connect(mosq, host, port, keepalive, true)){
 		fprintf(stderr, "Unable to connect.\n");
 		return 1;
 	}

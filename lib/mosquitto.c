@@ -75,7 +75,7 @@ void mosquitto_destroy(struct mosquitto *mosq)
 	free(mosq);
 }
 
-int mosquitto_connect(struct mosquitto *mosq, const char *host, int port)
+int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, int clean_session)
 {
 	return 0;
 }

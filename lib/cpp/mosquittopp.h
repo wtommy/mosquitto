@@ -38,10 +38,10 @@ class mosquittopp {
 	private:
 		struct mosquitto *mosq;
 	public:
-		mosquittopp();
+		mosquittopp(const char *id);
 		~mosquittopp();
 
-		int connect(const char *host, int port=1883);
+		int connect(const char *host, int port=1883, int keepalive=60, bool clean_session=true);
 		int disconnect();
 		int publish(const char *topic, uint32_t payloadlen=0, const uint8_t *payload=NULL, int qos=0, bool retain=false);
 		int subscribe(const char *sub, int qos=0);

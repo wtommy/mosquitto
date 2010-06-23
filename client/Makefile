@@ -9,7 +9,7 @@ prefix=/usr/local
 
 all : mosquitto_pub mosquitto_sub
 
-mosquitto_pub : pub_client.o $(OBJS)
+mosquitto_pub : pub_client.o
 	${CC} $^ -o $@ ${LDFLAGS}
 
 mosquitto_sub : sub_client.o $(OBJS)
