@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mosquitto.h>
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -75,7 +76,7 @@ void mosquitto_destroy(struct mosquitto *mosq)
 	free(mosq);
 }
 
-int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, int clean_session)
+int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session)
 {
 	return 0;
 }
@@ -85,7 +86,7 @@ int mosquitto_disconnect(struct mosquitto *mosq)
 	return 0;
 }
 
-int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, int retain)
+int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
 	return 0;
 }

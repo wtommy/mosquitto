@@ -44,7 +44,7 @@ static void on_publish_wrapper(void *obj, int mid)
 	m->on_publish(mid);
 }
 
-static void on_message_wrapper(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, int retain)
+static void on_message_wrapper(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
 	class mosquittopp *m = (class mosquittopp *)obj;
 	m->on_message(topic, payloadlen, payload, qos, retain);

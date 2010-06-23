@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef _MOSQUITTO_H_
 #define _MOSQUITTO_H_
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -37,15 +38,15 @@ struct mosquitto {
 	int sock;
 	char *id;
 	int keepalive;
-	int will;
+	bool will;
 	char *will_topic;
 	uint32_t will_payloadlen;
 	uint8_t *will_payload;
 	int will_qos;
-	int will_retain;
+	bool will_retain;
 	void (*on_connect)(void *obj, int rc);
 	void (*on_publish)(void *obj, int mid);
-	void (*on_message)(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, int retain);
+	void (*on_message)(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
 	void (*on_subscribe)(void *obj, int mid);
 	void (*on_unsubscribe)(void *obj, int mid);
 	//void (*on_error)();
@@ -56,9 +57,9 @@ void mosquitto_lib_cleanup(void);
 
 struct mosquitto *mosquitto_new(void *obj, const char *id);
 void mosquitto_destroy(struct mosquitto *mosq);
-int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, int clean_session);
+int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session);
 int mosquitto_disconnect(struct mosquitto *mosq);
-int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, int retain);
+int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
 int mosquitto_subscribe(struct mosquitto *mosq, const char *sub, int qos);
 int mosquitto_unsubscribe(struct mosquitto *mosq, const char *sub);
 int mosquitto_loop(struct mosquitto *mosq);

@@ -40,7 +40,7 @@ static int topic_qos = 0;
 int verbose = 0;
 static struct mosquitto *mosq = NULL;
 
-void my_message_callback(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, int retain)
+void my_message_callback(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
 	if(verbose){
 		if(payloadlen){
