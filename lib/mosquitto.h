@@ -36,6 +36,13 @@ struct mosquitto {
 	void *obj;
 	int sock;
 	char *id;
+	int keepalive;
+	int will;
+	char *will_topic;
+	uint32_t will_payloadlen;
+	uint8_t *will_payload;
+	int will_qos;
+	int will_retain;
 	void (*on_connect)(void *obj, int rc);
 	void (*on_publish)(void *obj, int mid);
 	void (*on_message)(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, int retain);

@@ -51,7 +51,14 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 	if(mosq){
 		mosq->obj = obj;
 		mosq->sock = -1;
+		mosq->keepalive = 60;
 		mosq->id = strdup(id);
+		mosq->will = 0;
+		mosq->will_topic = NULL;
+		mosq->will_payloadlen = 0;
+		mosq->will_payload = NULL;
+		mosq->will_qos = 0;
+		mosq->will_retain = 0;
 		mosq->on_connect = NULL;
 		mosq->on_publish = NULL;
 		mosq->on_message = NULL;
