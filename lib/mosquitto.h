@@ -52,7 +52,7 @@ struct mosquitto {
 	//void (*on_error)();
 };
 
-void mosquitto_lib_init(void);
+int mosquitto_lib_init(void);
 void mosquitto_lib_cleanup(void);
 
 struct mosquitto *mosquitto_new(void *obj, const char *id);
