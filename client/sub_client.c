@@ -27,8 +27,6 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <config.h>
-
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -39,16 +37,15 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sys/select.h>
 #include <unistd.h>
 
-#include <mqtt3.h>
-#include <client_shared.h>
+#include <mosquitto.h>
 
 static char **topics = NULL;
 static int topic_count = 0;
 static int topic_qos = 0;
-static mqtt3_context *gcontext;
 int verbose = 0;
+static struct mosquitto *mosq = NULL;
 
-int my_publish_callback(const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
+void my_message_callback(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, int retain)
 {
 	if(verbose){
 		if(payloadlen){
@@ -63,21 +60,18 @@ int my_publish_callback(const char *topic, int qos, uint32_t payloadlen, const u
 			fflush(stdout);
 		}
 	}
-
-	return 0;
 }
 
-void my_connack_callback(int result)
+void my_connect_callback(void *obj, int result)
 {
 	int i;
 	if(!result){
-		gcontext->connected = true;
 		if(topics){
 			for(i=0; i<topic_count; i++){
-				mqtt3_raw_subscribe(gcontext, false, topics[i], topic_qos);
+				mosquitto_subscribe(mosq, topics[i], topic_qos);
 			}
 		}else{
-			mqtt3_raw_subscribe(gcontext, false, "#", topic_qos);
+			mosquitto_subscribe(mosq, "#", topic_qos);
 		}
 	}else{
 		fprintf(stderr, "Connect failed\n");
@@ -101,7 +95,6 @@ void print_usage(void)
 
 int main(int argc, char *argv[])
 {
-	mqtt3_context *context;
 	char id[30];
 	int i;
 	char *host = "localhost";
@@ -185,7 +178,7 @@ int main(int argc, char *argv[])
 				return 1;
 			}else{
 				topic_count++;
-				topics = mqtt3_realloc(topics, topic_count*sizeof(char *));
+				topics = realloc(topics, topic_count*sizeof(char *));
 				topics[topic_count-1] = argv[i+1];
 			}
 			i++;
@@ -197,26 +190,30 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
+	#if 0
 	if(debug){
 		mqtt3_log_init(MQTT3_LOG_DEBUG | MQTT3_LOG_ERR | MQTT3_LOG_WARNING
 				| MQTT3_LOG_NOTICE | MQTT3_LOG_INFO, MQTT3_LOG_STDERR);
 	}
-	if(client_init()){
-		fprintf(stderr, "Error: Unable to initialise database.\n");
+	#endif
+	mosquitto_lib_init();
+	mosq = mosquitto_new(NULL, id);
+	if(!mosq){
+		fprintf(stderr, "Error: Out of memory.\n");
 		return 1;
 	}
-	client_publish_callback = my_publish_callback;
-	client_connack_callback = my_connack_callback;
+	mosq->on_connect = my_connect_callback;
+	mosq->on_message = my_message_callback;
 
-	if(client_connect(&context, host, port, id, keepalive, clean_session)){
+	if(mosquitto_connect(mosq, host, port, keepalive, clean_session)){
 		fprintf(stderr, "Unable to connect.\n");
 		return 1;
 	}
-	gcontext = context;
 
-	while(!client_loop(context)){
+	while(!mosquitto_loop(mosq)){
 	}
-	client_cleanup();
+	mosquitto_destroy(mosq);
+	mosquitto_lib_cleanup();
 	return 0;
 }
 
