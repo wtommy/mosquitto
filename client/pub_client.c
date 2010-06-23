@@ -86,21 +86,7 @@ void my_connect_callback(void *obj, int result)
 	}
 }
 
-void my_net_write_callback(int command)
-{
-	if(qos == 0 && command == PUBLISH && mode != MSGMODE_STDIN_LINE){
-		mosquitto_disconnect(mosq);
-	}
-}
-
-void my_puback_callback(int mid)
-{
-	if(mode != MSGMODE_STDIN_LINE){
-		mosquitto_disconnect(mosq);
-	}
-}
-
-void my_pubcomp_callback(int mid)
+void my_publish_callback(void *obj, int mid)
 {
 	if(mode != MSGMODE_STDIN_LINE){
 		mosquitto_disconnect(mosq);
@@ -347,9 +333,7 @@ int main(int argc, char *argv[])
 	}
 
 	mosq->on_connect = my_connect_callback;
-	client_net_write_callback = my_net_write_callback;
-	client_puback_callback = my_puback_callback;
-	client_pubcomp_callback = my_pubcomp_callback;
+	mosq->on_publish = my_publish_callback;
 
 	if(client_connect(&context, host, port, id, keepalive, true)){
 		fprintf(stderr, "Unable to connect.\n");
