@@ -58,7 +58,6 @@ static char *message = NULL;
 static long msglen = 0;
 static int qos = 0;
 static int retain = 0;
-static mqtt3_context *gcontext;
 static int mode = MSGMODE_NONE;
 static int status = STATUS_CONNECTING;
 static struct mosquitto *mosq = NULL;
@@ -67,7 +66,6 @@ static int mid_sent = 0;
 void my_connect_callback(void *obj, int result)
 {
 	if(!result){
-		gcontext->connected = true;
 		switch(mode){
 			case MSGMODE_CMD:
 			case MSGMODE_FILE:
@@ -339,7 +337,6 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Unable to connect.\n");
 		return 1;
 	}
-	gcontext = context;
 
 	while(!mosquitto_loop(mosq)){
 		if(mode == MSGMODE_STDIN_LINE && status == STATUS_CONNACK_RECVD){
