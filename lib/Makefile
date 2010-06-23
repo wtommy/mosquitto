@@ -12,10 +12,13 @@ clean :
 	-rm -f *.o libmosquitto.so.0 libmosquitto.so
 	make -C cpp clean
 
-libmosquitto.so.0 : mosquitto.o
-	$(CC) -shared -Wl,-soname,libmosquitto.so.0 $< -o $@
+libmosquitto.so.0 : mosquitto.o database_mosq.o
+	$(CC) -shared -Wl,-soname,libmosquitto.so.0 $^ -o $@
 	ln -sf libmosquitto.so.0 libmosquitto.so
 
 mosquitto.o : mosquitto.c mosquitto.h
+	$(CC) $(CFLAGS) -fPIC -c $< -o $@
+
+database_mosq.o : database_mosq.c database_mosq.h
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 

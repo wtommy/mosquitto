@@ -108,6 +108,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 
 #include <config.h>
+#include <mosq_database.h>
 #include <mqtt3.h>
 
 static sqlite3 *db = NULL;
@@ -123,17 +124,11 @@ static int _mqtt3_db_cleanup(void);
 static int _mqtt3_db_regex_create(const char *topic, char **regex);
 static int _mqtt3_db_retain_regex_create(const char *sub, char **regex);
 #endif
-static sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query);
 static void _mqtt3_db_statements_finalize(sqlite3 *fdb);
 static int _mqtt3_db_version_check(void);
-static int _mqtt3_db_transaction_begin(void);
-static int _mqtt3_db_transaction_end(void);
 #if defined(WITH_BROKER) && defined(WITH_DB_UPGRADE)
 static int _mqtt3_db_upgrade(void);
 static int _mqtt3_db_upgrade_1_2(void);
-#endif
-#if 0
-static int _mqtt3_db_transaction_rollback(void);
 #endif
 
 #ifdef WITH_CLIENT
@@ -623,7 +618,7 @@ static int _mqtt3_db_upgrade_1_2(void)
 /* Internal function.
  * Finalise all sqlite statements bound to fdb. This must be done before
  * closing the db.
- * See also _mqtt3_db_statement_prepare().
+ * See also _mosquitto_db_statement_prepare(db).
  */
 static void _mqtt3_db_statements_finalize(sqlite3 *fdb)
 {
@@ -668,7 +663,7 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 		mqtt3_db_client_update(context, will, will_retain, will_qos, will_topic, will_message);
 	}else{
 		if(!stmt){
-			stmt = _mqtt3_db_statement_prepare("INSERT INTO clients "
+			stmt = _mosquitto_db_statement_prepare(db,"INSERT INTO clients "
 					"(sock,id,clean_session,will,will_retain,will_qos,will_topic,will_message,last_mid,is_bridge) "
 					"SELECT ?,?,?,?,?,?,?,?,0,? WHERE NOT EXISTS "
 					"(SELECT 1 FROM clients WHERE id=?)");
@@ -719,7 +714,7 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 	if(will && (!will_topic || !will_message)) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("UPDATE clients SET "
+		stmt = _mosquitto_db_statement_prepare(db,"UPDATE clients SET "
 				"sock=?,clean_session=?,will=?,will_retain=?,will_qos=?,"
 				"will_topic=?,will_message=? WHERE id=?");
 		if(!stmt){
@@ -767,7 +762,7 @@ int mqtt3_db_client_will_queue(mqtt3_context *context)
 	if(!context || !context->id) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT will,will_topic,will_qos,will_message,will_retain FROM clients WHERE id=?");
+		stmt = _mosquitto_db_statement_prepare(db,"SELECT will,will_topic,will_qos,will_message,will_retain FROM clients WHERE id=?");
 		if(!stmt){
 			return 1;
 		}
@@ -810,7 +805,7 @@ int mqtt3_db_client_count(int *count)
 	if(!count) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT COUNT(*) FROM clients");
+		stmt = _mosquitto_db_statement_prepare(db,"SELECT COUNT(*) FROM clients");
 		if(!stmt){
 			return 1;
 		}
@@ -838,7 +833,7 @@ int mqtt3_db_client_delete(mqtt3_context *context)
 	if(!context || !(context->id)) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM clients WHERE id=?");
+		stmt = _mosquitto_db_statement_prepare(db,"DELETE FROM clients WHERE id=?");
 		if(!stmt){
 			return 1;
 		}
@@ -863,7 +858,7 @@ int mqtt3_db_client_find_socket(const char *client_id, int *sock)
 	if(!client_id || !sock) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT sock FROM clients WHERE id=?");
+		stmt = _mosquitto_db_statement_prepare(db,"SELECT sock FROM clients WHERE id=?");
 		if(!stmt){
 			return 1;
 		}
@@ -970,7 +965,7 @@ int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
 	if(!db || !client_id) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("UPDATE clients SET sock=-1 WHERE id=? AND sock=?");
+		stmt = _mosquitto_db_statement_prepare(db,"UPDATE clients SET sock=-1 WHERE id=? AND sock=?");
 		if(!stmt){
 			return 1;
 		}
@@ -998,7 +993,7 @@ int mqtt3_db_message_count(int *count)
 	if(!count) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT COUNT(client_id) FROM messages");
+		stmt = _mosquitto_db_statement_prepare(db,"SELECT COUNT(client_id) FROM messages");
 		if(!stmt){
 			return 1;
 		}
@@ -1021,7 +1016,7 @@ int mqtt3_db_message_delete(const char *client_id, uint16_t mid, enum mqtt3_msg_
 	if(!client_id) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM messages WHERE client_id=? AND mid=? AND direction=?");
+		stmt = _mosquitto_db_statement_prepare(db,"DELETE FROM messages WHERE client_id=? AND mid=? AND direction=?");
 		if(!stmt){
 			return 1;
 		}
@@ -1042,7 +1037,7 @@ int mqtt3_db_message_delete_by_oid(int64_t oid)
 	static sqlite3_stmt *stmt = NULL;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM messages WHERE OID=?");
+		stmt = _mosquitto_db_statement_prepare(db,"DELETE FROM messages WHERE OID=?");
 		if(!stmt){
 			return 1;
 		}
@@ -1068,7 +1063,7 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, enum mqtt3_msg_
 	if(!client_id || !store_id) return 1;
 
 	if(!select_stmt){
-		select_stmt = _mqtt3_db_statement_prepare("SELECT "
+		select_stmt = _mosquitto_db_statement_prepare(db,"SELECT "
 				"(SELECT COUNT(*) FROM messages WHERE client_id=?),"
 				"(SELECT sock FROM clients WHERE id=?)");
 		if(!select_stmt){
@@ -1094,7 +1089,7 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, enum mqtt3_msg_
 	}
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("INSERT INTO messages "
+		stmt = _mosquitto_db_statement_prepare(db,"INSERT INTO messages "
 				"(client_id, timestamp, direction, status, mid, retries, qos, store_id) "
 				"VALUES (?,?,?,?,?,0,?,?)");
 		if(!stmt){
@@ -1125,7 +1120,7 @@ int mqtt3_db_message_update(const char *client_id, uint16_t mid, enum mqtt3_msg_
 	if(!client_id || !mid) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("UPDATE messages SET status=?,timestamp=? "
+		stmt = _mosquitto_db_statement_prepare(db,"UPDATE messages SET status=?,timestamp=? "
 				"WHERE client_id=? AND mid=? AND direction=?");
 		if(!stmt){
 			return 1;
@@ -1152,7 +1147,7 @@ int mqtt3_db_messages_delete(const char *client_id)
 	if(!client_id) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM messages WHERE client_id=?");
+		stmt = _mosquitto_db_statement_prepare(db,"DELETE FROM messages WHERE client_id=?");
 		if(!stmt){
 			return 1;
 		}
@@ -1196,7 +1191,7 @@ int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, i
 #ifdef WITH_CLIENT
 	if(client_publish_callback){
 		if(!stmt){
-			stmt = _mqtt3_db_statement_prepare("SELECT payloadlen,payload FROM message_store WHERE id=?");
+			stmt = _mosquitto_db_statement_prepare(db,"SELECT payloadlen,payload FROM message_store WHERE id=?");
 			if(!stmt){
 				return 1;
 			}
@@ -1258,7 +1253,7 @@ int mqtt3_db_message_store(const char *client_id, const char *topic, int qos, ui
 	if(!client_id || !topic || !store_id) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("INSERT INTO message_store "
+		stmt = _mosquitto_db_statement_prepare(db,"INSERT INTO message_store "
 				"(timestamp, qos, retain, topic, payloadlen, payload, source_id) "
 				"VALUES (?,?,?,?,?,?,?)");
 		if(!stmt){
@@ -1295,18 +1290,18 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	enum mqtt3_msg_status new_status = ms_invalid;
 
 	if(!stmt_select){
-		stmt_select = _mqtt3_db_statement_prepare("SELECT OID,status,retries FROM messages WHERE timestamp<?");
+		stmt_select = _mosquitto_db_statement_prepare(db,"SELECT OID,status,retries FROM messages WHERE timestamp<?");
 		if(!stmt_select){
 			return 1;
 		}
 	}
 	if(!stmt_update){
-		stmt_update = _mqtt3_db_statement_prepare("UPDATE messages SET status=?,retries=? WHERE OID=?");
+		stmt_update = _mosquitto_db_statement_prepare(db,"UPDATE messages SET status=?,retries=? WHERE OID=?");
 		if(!stmt_update){
 			return 1;
 		}
 	}
-	_mqtt3_db_transaction_begin();
+	_mosquitto_db_transaction_begin(db);
 	if(sqlite3_bind_int(stmt_select, 1, now) != SQLITE_OK) rc = 1;
 	while(sqlite3_step(stmt_select) == SQLITE_ROW){
 		OID = sqlite3_column_int64(stmt_select, 0);
@@ -1337,7 +1332,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	}
 	sqlite3_reset(stmt_select);
 	sqlite3_clear_bindings(stmt_select);
-	_mqtt3_db_transaction_end();
+	_mosquitto_db_transaction_end(db);
 	return 0;
 }
 
@@ -1355,7 +1350,7 @@ int mqtt3_db_message_release(const char *client_id, uint16_t mid, enum mqtt3_msg
 	if(!client_id) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT messages.OID,message_store.id,message_store.qos,message_store.retain,message_store.topic,message_store.source_id "
+		stmt = _mosquitto_db_statement_prepare(db,"SELECT messages.OID,message_store.id,message_store.qos,message_store.retain,message_store.topic,message_store.source_id "
 				"FROM messages JOIN message_store on messages.store_id=message_store.id "
 				"WHERE messages.client_id=? AND messages.mid=? AND messages.direction=?");
 		if(!stmt){
@@ -1402,7 +1397,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	if(!context || !context->id || context->sock == -1) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT messages.OID,messages.status,messages.mid,"
+		stmt = _mosquitto_db_statement_prepare(db,"SELECT messages.OID,messages.status,messages.mid,"
 				"messages.retries,message_store.retain,message_store.topic,messages.qos,"
 				"message_store.payloadlen,message_store.payload "
 				"FROM messages JOIN message_store ON messages.store_id=message_store.id "
@@ -1413,7 +1408,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 		}
 	}
 	if(sqlite3_bind_text(stmt, 1, context->id, strlen(context->id), SQLITE_STATIC) == SQLITE_OK){
-		_mqtt3_db_transaction_begin();
+		_mosquitto_db_transaction_begin(db);
 		while(sqlite3_step(stmt) == SQLITE_ROW){
 			OID = sqlite3_column_int64(stmt, 0);
 			status = sqlite3_column_int(stmt, 1);
@@ -1460,7 +1455,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 					break;
 			}
 		}
-		_mqtt3_db_transaction_end();
+		_mosquitto_db_transaction_end(db);
 	}else{
 		rc = 1;
 	}
@@ -1485,13 +1480,13 @@ uint16_t mqtt3_db_mid_generate(const char *client_id)
 	if(!client_id) return 1;
 
 	if(!stmt_select){
-		stmt_select = _mqtt3_db_statement_prepare("SELECT last_mid FROM clients WHERE id=?");
+		stmt_select = _mosquitto_db_statement_prepare(db,"SELECT last_mid FROM clients WHERE id=?");
 		if(!stmt_select){
 			return 1;
 		}
 	}
 	if(!stmt_update){
-		stmt_update = _mqtt3_db_statement_prepare("UPDATE clients SET last_mid=? WHERE id=?");
+		stmt_update = _mosquitto_db_statement_prepare(db,"UPDATE clients SET last_mid=? WHERE id=?");
 		if(!stmt_update){
 			return 1;
 		}
@@ -1708,7 +1703,7 @@ int mqtt3_db_retain_insert(const char *topic, int64_t store_id)
 	if(!topic || !store_id) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("REPLACE INTO retain (topic,store_id) VALUES (?,?)");
+		stmt = _mosquitto_db_statement_prepare(db,"REPLACE INTO retain (topic,store_id) VALUES (?,?)");
 		if(!stmt){
 			return 1;
 		}
@@ -1732,7 +1727,7 @@ int mqtt3_db_retain_delete(const char *topic)
 	if(!topic) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM retain WHERE topic=?");
+		stmt = _mosquitto_db_statement_prepare(db,"DELETE FROM retain WHERE topic=?");
 		if(!stmt){
 			return 1;
 		}
@@ -1761,10 +1756,10 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 
 	if(!stmt){
 #ifdef WITH_REGEX
-		stmt = _mqtt3_db_statement_prepare("SELECT message_store.topic,qos,id FROM message_store "
+		stmt = _mosquitto_db_statement_prepare(db,"SELECT message_store.topic,qos,id FROM message_store "
 				"JOIN retain ON message_store.id=retain.store_id WHERE regexp(?, retain.topic)");
 #else
-		stmt = _mqtt3_db_statement_prepare("SELECT message_store.topic,qos,id FROM message_store "
+		stmt = _mosquitto_db_statement_prepare(db,"SELECT message_store.topic,qos,id FROM message_store "
 				"JOIN retain ON message_store.id=retain.store_id WHERE retain.topic=?");
 #endif
 		if(!stmt) return 1;
@@ -1813,7 +1808,7 @@ int mqtt3_db_store_clean(void)
 	int rc = 0;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM message_store "
+		stmt = _mosquitto_db_statement_prepare(db,"DELETE FROM message_store "
 				"WHERE id NOT IN (SELECT store_id FROM messages) "
 				"AND id NOT IN (SELECT store_id FROM retain)"); 
 		if(!stmt){
@@ -1842,19 +1837,19 @@ int mqtt3_db_sub_insert(const char *client_id, const char *sub, int qos)
 	if(!client_id || !sub) return 1;
 
 	if(!stmt_insert){
-		stmt_insert = _mqtt3_db_statement_prepare("INSERT INTO subs (client_id,sub,qos) VALUES (?,?,?)");
+		stmt_insert = _mosquitto_db_statement_prepare(db,"INSERT INTO subs (client_id,sub,qos) VALUES (?,?,?)");
 		if(!stmt_insert){
 			return 1;
 		}
 	}
 	if(!stmt_select){
-		stmt_select = _mqtt3_db_statement_prepare("SELECT 1 FROM subs WHERE client_id=? AND sub=?");
+		stmt_select = _mosquitto_db_statement_prepare(db,"SELECT 1 FROM subs WHERE client_id=? AND sub=?");
 		if(!stmt_select){
 			return 1;
 		}
 	}
 	if(!stmt_update){
-		stmt_update = _mqtt3_db_statement_prepare("UPDATE subs SET qos=? WHERE client_id=? AND sub=?");
+		stmt_update = _mosquitto_db_statement_prepare(db,"UPDATE subs SET qos=? WHERE client_id=? AND sub=?");
 		if(!stmt_update){
 			return 1;
 		}
@@ -1897,7 +1892,7 @@ int mqtt3_db_sub_delete(const char *client_id, const char *sub)
 	if(!client_id || !sub) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM subs WHERE client_id=? AND sub=?");
+		stmt = _mosquitto_db_statement_prepare(db,"DELETE FROM subs WHERE client_id=? AND sub=?");
 		if(!stmt){
 			return 1;
 		}
@@ -1931,13 +1926,13 @@ int mqtt3_db_sub_search_start(const char *source_id, const char *topic, int qos)
 		/* Only queue messages for clients that are connected, or clients that
 		 * are disconnected and have QoS>0. */
 #ifdef WITH_REGEX
-		stmt_sub_search = _mqtt3_db_statement_prepare("SELECT client_id,qos FROM subs "
+		stmt_sub_search = _mosquitto_db_statement_prepare(db,"SELECT client_id,qos FROM subs "
 				"JOIN clients ON subs.client_id=clients.id "
 				"WHERE regexp(?, subs.sub)"
 				" AND ((clients.sock=-1 AND subs.qos<>0 AND ?<>0) OR clients.sock<>-1)"
 				" AND (clients.is_bridge=0 OR (clients.is_bridge=1 AND clients.id<>?))");
 #else
-		stmt_sub_search = _mqtt3_db_statement_prepare("SELECT client_id,qos FROM subs "
+		stmt_sub_search = _mosquitto_db_statement_prepare(db,"SELECT client_id,qos FROM subs "
 				"JOIN clients ON subs.client_id=clients.id "
 				"WHERE subs.sub=?"
 				" AND ((clients.sock=-1 AND subs.qos<>0 AND ?<>0) OR clients.sock<>-1)"
@@ -1972,7 +1967,7 @@ int mqtt3_db_subs_clean_session(const char *client_id)
 	if(!client_id) return 1;
 
 	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM subs WHERE client_id=?");
+		stmt = _mosquitto_db_statement_prepare(db,"DELETE FROM subs WHERE client_id=?");
 		if(!stmt){
 			return 1;
 		}
@@ -1999,7 +1994,7 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 	int count;
 
 	if(interval && now - interval > last_update){
-		_mqtt3_db_transaction_begin();
+		_mosquitto_db_transaction_begin(db);
 
 		snprintf(buf, 100, "%d seconds", (int)(now - start_time));
 		mqtt3_db_messages_easy_queue("", "$SYS/broker/uptime", 2, strlen(buf), (uint8_t *)buf, 1);
@@ -2033,102 +2028,9 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 		
 		last_update = time(NULL);
 
-		_mqtt3_db_transaction_end();
+		_mosquitto_db_transaction_end(db);
 	}
 }
-
-/* Internal function.
- * Prepare a sqlite query.
- * All of the regularly used sqlite queries are prepared as parameterised
- * queries so they only need to be parsed once and to increase security by
- * removing the need to carry out string escaping.
- * Before closing the database, all currently prepared queries must be released.
- * To do this, each function that needs to make a query has a static
- * sqlite3_stmt variable to hold the query statement. _m_d_s_p() prepares the
- * statement and the function stores it in its static variable. _m_d_s_p() also
- * adds the statement to a global static array so that the statements can be
- * released when mosquitto is closing.
- *
- * Returns NULL on failure
- * Returns a valid sqlite3_stmt on success.
- */
-static sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query)
-{
-	sqlite3_stmt *stmt;
-
-	if(sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK){
-		return NULL;
-	}
-	return stmt;
-}
-
-/* Internal function.
- * Begin a sqlite transaction.
- * Returns 1 on failure (sqlite error)
- * Returns 0 on success.
- */
-static int _mqtt3_db_transaction_begin(void)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("BEGIN TRANSACTION");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-
-	return rc;
-}
-
-/* Internal function.
- * End a sqlite transaction.
- * Returns 1 on failure (sqlite error)
- * Returns 0 on success.
- */
-static int _mqtt3_db_transaction_end(void)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("END TRANSACTION");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-
-	return rc;
-}
-
-#if 0
-/* Internal function.
- * Roll back a sqlite transaction.
- * Returns 1 on failure (sqlite error)
- * Returns 0 on success.
- */
-static int _mqtt3_db_transaction_rollback(void)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("ROLLBACK TRANSACTION");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-
-	return rc;
-}
-#endif
 
 void mqtt3_db_limits_set(int inflight, int queued)
 {
