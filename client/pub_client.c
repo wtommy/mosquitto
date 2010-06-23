@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	mosquitto_lib_init();
-	mosq = mosquitto_new(NULL);
+	mosq = mosquitto_new(NULL, id);
 	if(!mosq){
 		fprintf(stderr, "Error: Out of memory.\n");
 		return 1;

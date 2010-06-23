@@ -35,6 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 struct mosquitto {
 	void *obj;
 	int sock;
+	char *id;
 	void (*on_connect)(void *obj, int rc);
 	void (*on_publish)(void *obj, int mid);
 	void (*on_message)(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, int retain);
@@ -46,7 +47,7 @@ struct mosquitto {
 void mosquitto_lib_init(void);
 void mosquitto_lib_cleanup(void);
 
-struct mosquitto *mosquitto_new(void *obj);
+struct mosquitto *mosquitto_new(void *obj, const char *id);
 void mosquitto_destroy(struct mosquitto *mosq);
 int mosquitto_connect(struct mosquitto *mosq, const char *host, int port);
 int mosquitto_disconnect(struct mosquitto *mosq);

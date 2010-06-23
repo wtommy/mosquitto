@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 void mosquitto_lib_init(void)
 {
@@ -40,14 +41,17 @@ void mosquitto_lib_cleanup(void)
 {
 }
 
-struct mosquitto *mosquitto_new(void *obj)
+struct mosquitto *mosquitto_new(void *obj, const char *id)
 {
 	struct mosquitto *mosq = NULL;
+
+	if(!id) return NULL;
 
 	mosq = (struct mosquitto *)calloc(1, sizeof(struct mosquitto));
 	if(mosq){
 		mosq->obj = obj;
 		mosq->sock = -1;
+		mosq->id = strdup(id);
 		mosq->on_connect = NULL;
 		mosq->on_publish = NULL;
 		mosq->on_message = NULL;
@@ -59,6 +63,8 @@ struct mosquitto *mosquitto_new(void *obj)
 
 void mosquitto_destroy(struct mosquitto *mosq)
 {
+	if(mosq->id) free(mosq->id);
+
 	free(mosq);
 }
 
