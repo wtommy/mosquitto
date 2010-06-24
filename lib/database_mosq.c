@@ -33,6 +33,20 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sqlite3.h>
 
 /* Internal function.
+ * Finalise all sqlite statements bound to fdb. This must be done before
+ * closing the db.
+ * See also _mosquitto_db_statement_prepare(db).
+ */
+void _mosquitto_db_statements_finalize(sqlite3 *db)
+{
+	sqlite3_stmt *stmt;
+
+	while((stmt = sqlite3_next_stmt(db, NULL))){
+		sqlite3_finalize(stmt);
+	}
+}
+
+/* Internal function.
  * Prepare a sqlite query.
  * All of the regularly used sqlite queries are prepared as parameterised
  * queries so they only need to be parsed once and to increase security by

@@ -124,7 +124,6 @@ static int _mqtt3_db_cleanup(void);
 static int _mqtt3_db_regex_create(const char *topic, char **regex);
 static int _mqtt3_db_retain_regex_create(const char *sub, char **regex);
 #endif
-static void _mqtt3_db_statements_finalize(sqlite3 *fdb);
 static int _mqtt3_db_version_check(void);
 #if defined(WITH_BROKER) && defined(WITH_DB_UPGRADE)
 static int _mqtt3_db_upgrade(void);
@@ -234,7 +233,7 @@ int mqtt3_db_open(mqtt3_config *config)
 
 int mqtt3_db_close(void)
 {
-	_mqtt3_db_statements_finalize(db);
+	_mosquitto_db_statements_finalize(db);
 
 	sqlite3_close(db);
 	db = NULL;
@@ -607,27 +606,13 @@ static int _mqtt3_db_upgrade_1_2(void)
 	sqlite3_finalize(new_stmt);
 	sqlite3_finalize(old_stmt);
 
-	_mqtt3_db_statements_finalize(old_db);
+	_mosquitto_db_statements_finalize(old_db);
 	sqlite3_close(old_db);
 	mqtt3_db_backup(false);
 
 	return rc;
 }
 #endif
-
-/* Internal function.
- * Finalise all sqlite statements bound to fdb. This must be done before
- * closing the db.
- * See also _mosquitto_db_statement_prepare(db).
- */
-static void _mqtt3_db_statements_finalize(sqlite3 *fdb)
-{
-	sqlite3_stmt *stmt;
-
-	while((stmt = sqlite3_next_stmt(fdb, NULL))){
-		sqlite3_finalize(stmt);
-	}
-}
 
 /* Adds a new client to the database.
  * This should be called when a new connection has successfully sent a CONNECT command.
