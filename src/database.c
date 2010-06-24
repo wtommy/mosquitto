@@ -108,7 +108,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 
 #include <config.h>
-#include <mosq_database.h>
+#include <database_mosq.h>
 #include <mqtt3.h>
 
 static sqlite3 *db = NULL;
