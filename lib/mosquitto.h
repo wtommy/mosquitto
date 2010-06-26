@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef _MOSQUITTO_H_
 #define _MOSQUITTO_H_
+#include <sqlite3.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -36,6 +37,7 @@ POSSIBILITY OF SUCH DAMAGE.
 struct mosquitto {
 	void *obj;
 	int sock;
+	sqlite3 *db;
 	char *id;
 	int keepalive;
 	bool will;

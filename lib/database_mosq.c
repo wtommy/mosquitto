@@ -32,6 +32,17 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <sqlite3.h>
 
+int _mosquitto_db_close(sqlite3 *db)
+{
+	if(!db) return 1;
+	_mosquitto_db_statements_finalize(db);
+
+	sqlite3_close(db);
+	db = NULL;
+
+	return 0;
+}
+
 /* Internal function.
  * Finalise all sqlite statements bound to fdb. This must be done before
  * closing the db.

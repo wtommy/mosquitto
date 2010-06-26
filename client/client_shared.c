@@ -46,11 +46,6 @@ int client_init(void)
 	return mqtt3_db_open(&config);
 }
 
-void client_cleanup(void)
-{
-	mqtt3_db_close();
-}
-
 int client_connect(mqtt3_context **context, const char *host, int port, const char *id, int keepalive, bool clean_session)
 {
 	int sock;
