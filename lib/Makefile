@@ -13,7 +13,7 @@ clean :
 	make -C cpp clean
 
 libmosquitto.so.0 : mosquitto.o database_mosq.o
-	$(CC) -shared -Wl,-soname,libmosquitto.so.0 $^ -o $@
+	$(CC) -shared -Wl,-soname,libmosquitto.so.0 $^ -o $@ -lsqlite3
 	ln -sf libmosquitto.so.0 libmosquitto.so
 
 mosquitto.o : mosquitto.c mosquitto.h
