@@ -11,3 +11,6 @@ man/mosquitto.conf.5
 src/mosquitto
 test/test_client
 
+lib/cpp/libmosquittopp.so*
+lib/libmosquitto.so*
+
