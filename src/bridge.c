@@ -81,7 +81,7 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 	context->last_msg_in = time(NULL);
 	context->last_msg_out = time(NULL);
 	context->keepalive = 60; /* Default to 60s */
-	context->clean_session = true;
+	context->clean_session = false;
 	context->in_packet.payload = NULL;
 	mqtt3_bridge_packet_cleanup(context);
 
