@@ -245,6 +245,19 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>cleansession</option> [ true | false ]</term>
+				<listitem>
+					<para>Set the clean session option for this bridge. Setting
+					to false (the default), means that all subscriptions on the
+					remote broker are kept in case of the network connection
+					dropping. If set to true, all subscriptions and messages on
+					the remote broker will be cleaned up if the connection
+					drops. Note that setting to true may cause a large amount
+					of retained messages to be sent each time the bridge
+					reconnects.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>connection</option> <replaceable>name</replaceable></term>
 				<listitem>
 					<para>This variable marks the start of a new bridge

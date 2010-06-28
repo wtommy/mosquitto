@@ -182,6 +182,12 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty ext_sqlite_regex value in config.");
 						return 1;
 					}
+				}else if(!strcmp(token, "cleansession")){
+					if(!cur_bridge){
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid bridge configuration.");
+						return 1;
+					}
+					if(_mqtt3_conf_parse_bool(&token, "cleansession", &cur_bridge->clean_session)) return 1;
 				}else if(!strcmp(token, "connection")){
 					token = strtok(NULL, " ");
 					if(token){
@@ -194,6 +200,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						cur_bridge = &(config->bridges[config->bridge_count-1]);
 						cur_bridge->name = mqtt3_strdup(token);
 						cur_bridge->address = NULL;
+						cur_bridge->clean_session = false;
 						cur_bridge->port = 0;
 						cur_bridge->topics = NULL;
 						cur_bridge->topic_count = 0;
@@ -407,7 +414,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						|| !strcmp(token, "retained_persistence")
 						|| !strcmp(token, "trace_level")
 						|| !strcmp(token, "addresses")
-						|| !strcmp(token, "cleansession")
 						|| !strcmp(token, "idle_timeout")
 						|| !strcmp(token, "keepalive_interval")
 						|| !strcmp(token, "notifications")
