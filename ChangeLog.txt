@@ -10,6 +10,7 @@
 - Bridge clean_session setting is now false, to give more sensible behaviour
   and be more compatible with rsmb.
 - Add cleansession variable for configuring bridges.
+- Add keepalive_interval variable for bridges.
 
 0.7 - 20100615
 ==============

@@ -116,6 +116,7 @@ struct _mqtt3_bridge{
 	char *name;
 	char *address;
 	uint16_t port;
+	int keepalive;
 	bool clean_session;
 	struct _mqtt3_bridge_topic *topics;
 	int topic_count;

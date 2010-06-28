@@ -200,6 +200,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						cur_bridge = &(config->bridges[config->bridge_count-1]);
 						cur_bridge->name = mqtt3_strdup(token);
 						cur_bridge->address = NULL;
+						cur_bridge->keepalive = 60;
 						cur_bridge->clean_session = false;
 						cur_bridge->port = 0;
 						cur_bridge->topics = NULL;
@@ -236,6 +237,16 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty interface value in configuration.");
 						return 1;
+					}
+				}else if(!strcmp(token, "keepalive_interval")){
+					if(!cur_bridge){
+						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid bridge configuration.");
+						return 1;
+					}
+					if(_mqtt3_conf_parse_int(&token, "keepalive_interval", &cur_bridge->keepalive)) return 1;
+					if(cur_bridge->keepalive < 5){
+						mqtt3_log_printf(MQTT3_LOG_NOTICE, "keepalive interval too low, using 5 seconds.");
+						cur_bridge->keepalive = 5;
 					}
 				}else if(!strcmp(token, "log_dest")){
 					token = strtok(NULL, " ");
@@ -415,7 +426,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						|| !strcmp(token, "trace_level")
 						|| !strcmp(token, "addresses")
 						|| !strcmp(token, "idle_timeout")
-						|| !strcmp(token, "keepalive_interval")
 						|| !strcmp(token, "notifications")
 						|| !strcmp(token, "notification_topic")
 						|| !strcmp(token, "round_robin")

@@ -267,6 +267,15 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>keepalive_interval</option> <replaceable>seconds</replaceable></term>
+				<listitem>
+					<para>Set the number of seconds after which the bridge
+					should send a ping if no other traffic has occurred.
+					Deefaults to 660. A minimum value of 5 seconds
+					isallowed.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>topic</option> <replaceable>pattern</replaceable> [ out | in | both ]</term>
 				<listitem>
 					<para>Define a topic pattern to be shared between the two

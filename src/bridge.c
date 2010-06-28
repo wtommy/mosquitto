@@ -80,7 +80,7 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 	context->sock = -1;
 	context->last_msg_in = time(NULL);
 	context->last_msg_out = time(NULL);
-	context->keepalive = 60; /* Default to 60s */
+	context->keepalive = context->bridge->keepalive;
 	context->clean_session = context->bridge->clean_session;
 	context->in_packet.payload = NULL;
 	mqtt3_bridge_packet_cleanup(context);
@@ -100,7 +100,7 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 	mqtt3_db_client_update(context, 0, 0, 0, NULL, NULL);
 	if(mqtt3_raw_connect(context, context->id,
 			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
-			60/*keepalive*/, /*cleanstart*/true)){
+			context->keepalive, /*cleanstart*/true)){
 
 		return 1;
 	}
