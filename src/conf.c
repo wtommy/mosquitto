@@ -141,7 +141,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 			}
 			token = strtok(buf, " ");
 			if(token){
-				if(!strcmp(token, "address")){
+				if(!strcmp(token, "address") || !strcmp(token, "addresses")){
 					if(!cur_bridge || cur_bridge->address){
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid bridge configuration.");
 						return 1;

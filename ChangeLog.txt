@@ -5,6 +5,8 @@
   a /. For example, /topic/path is different to topic/path. This matches the
   behaviour of rsmb.
 - Correctly calculate the will QoS on a new client connection (bug #597451).
+- Add "addresses" configuration file variable as an alias of "address", for
+  better rsmb compatibility.
 
 0.7 - 20100615
 ==============
