@@ -11,6 +11,8 @@
   and be more compatible with rsmb.
 - Add cleansession variable for configuring bridges.
 - Add keepalive_interval variable for bridges.
+- Remove default topic subscription for mosquitto_sub because the old
+  behaviour was too confusing.
 
 0.7 - 20100615
 ==============
