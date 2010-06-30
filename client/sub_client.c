@@ -61,12 +61,8 @@ void my_connect_callback(void *obj, int result)
 {
 	int i;
 	if(!result){
-		if(topics){
-			for(i=0; i<topic_count; i++){
-				mosquitto_subscribe(mosq, topics[i], topic_qos);
-			}
-		}else{
-			mosquitto_subscribe(mosq, "#", topic_qos);
+		for(i=0; i<topic_count; i++){
+			mosquitto_subscribe(mosq, topics[i], topic_qos);
 		}
 	}else{
 		fprintf(stderr, "Connect failed\n");
@@ -76,7 +72,7 @@ void my_connect_callback(void *obj, int result)
 void print_usage(void)
 {
 	printf("mosquitto_sub is a simple mqtt client that will subscribe to a single topic and print all messages it receives.\n\n");
-	printf("Usage: mosquitto_sub [-c] [-i id] [-k keepalive] [-p port] [-q qos] [-t topic] [-v]\n\n");
+	printf("Usage: mosquitto_sub [-c] [-i id] [-k keepalive] [-p port] [-q qos] [-v] -t topic ...\n\n");
 	printf(" -c : disable 'clean session' (store subscription and pending messages when client disconnects).\n");
 	printf(" -d : enable debug messages.\n");
 	printf(" -h : mqtt host to connect to. Defaults to localhost.\n");
@@ -84,7 +80,7 @@ void print_usage(void)
 	printf(" -k : keep alive in seconds for this client. Defaults to 60.\n");
 	printf(" -p : network port to connect to. Defaults to 1883.\n");
 	printf(" -q : quality of service level to use for the subscription. Defaults to 0.\n");
-	printf(" -t : mqtt topic to subscribe to. Defaults to #.\n");
+	printf(" -t : mqtt topic to subscribe to. May be repeated multiple times.\n");
 	printf(" -v : print published messages verbosely.\n");
 }
 
@@ -184,6 +180,11 @@ int main(int argc, char *argv[])
 			print_usage();
 			return 1;
 		}
+	}
+	if(topic_count == 0){
+		fprintf(stderr, "Error: You must specify a topic to subscribe to.\n");
+		print_usage();
+		return 1;
 	}
 	#if 0
 	if(debug){

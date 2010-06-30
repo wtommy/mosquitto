@@ -79,7 +79,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	if(mqtt3_read_byte(context, &connect_flags)) return 1;
 	clean_session = connect_flags & 0x02;
 	will = connect_flags & 0x04;
-	will_qos = (connect_flags & 0x18) >> 2;
+	will_qos = (connect_flags & 0x18) >> 3;
 	will_retain = connect_flags & 0x20;
 
 	if(mqtt3_read_uint16(context, &(context->keepalive))) return 1;

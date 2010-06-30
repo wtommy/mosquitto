@@ -37,11 +37,11 @@
 			<group choice='opt'>
 				<arg><option>-q</option> <replaceable>message QoS</replaceable></arg>
 			</group>
-			<group choice='opt' rep="repeat">
-				<arg><option>-t</option> <replaceable>message topic</replaceable></arg>
-			</group>
 			<group choice='opt'>
 				<arg><option>-v</option></arg>
+			</group>
+			<group choice='plain' rep="repeat">
+				<arg><option>-t</option> <replaceable>message topic</replaceable></arg>
 			</group>
 		</cmdsynopsis>
 	</refsynopsisdiv>
@@ -124,17 +124,17 @@
 				<term><option>-t</option></term>
 				<term><option>--topic</option></term>
 				<listitem>
-					<para>The mqtt topic on which to publish the message. See
+					<para>The mqtt topic to subscribe to. See
 					<citerefentry><refentrytitle>mqtt</refentrytitle><manvolnum>7</manvolnum></citerefentry>
 					for more information on mqtt topics.</para>
-					<para>This option may be repeated.</para>
+					<para>This option may be repeated to subscribe to multiple topics.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>-v</option></term>
 				<term><option>--verbose</option></term>
 				<listitem>
-					<para>Print published messages verbosely. With this
+					<para>Print received messages verbosely. With this
 					argument, messages will be printed as "topic payload". When
 					this argument is not given, the messages are printed as
 					"payload".</para>

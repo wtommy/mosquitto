@@ -71,7 +71,7 @@ const char *mqtt3_command_to_string(uint8_t command)
 
 void mqtt3_check_keepalive(mqtt3_context *context)
 {
-	if(time(NULL) - context->last_msg_out >= context->keepalive){
+	if(context && context->sock != -1 && time(NULL) - context->last_msg_out >= context->keepalive){
 		if(context->connected){
 			mqtt3_raw_pingreq(context);
 		}else{
@@ -95,6 +95,9 @@ int mqtt3_fix_sub_topic(char **subtopic)
 	fixed = mqtt3_calloc(strlen(*subtopic)+2, 1);
 	if(!fixed) return 1;
 
+	if((*subtopic)[0] == '/'){
+		fixed[0] = '/';
+	}
 	token = strtok(*subtopic, "/");
 	while(token){
 		strcat(fixed, token);

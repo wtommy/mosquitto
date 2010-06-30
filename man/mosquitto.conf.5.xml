@@ -218,6 +218,9 @@
 					specified must have read/write access to the persistence
 					database if it is to be written. If run as a non-root user,
 					this setting has no effect. Defaults to mosquitto.</para>
+					<para>This setting has no effect on Windows and so you
+					should run mosquitto as the user you wish it to run
+					as.</para>
 				</listitem>
 			</varlistentry>
 		</variablelist>
@@ -230,6 +233,7 @@
 		<variablelist>
 			<varlistentry>
 				<term><option>address</option> <replaceable>address[:port]</replaceable></term>
+				<term><option>addresses</option> <replaceable>address[:port]</replaceable></term>
 				<listitem>
 					<para>Specify the address and optionally the port of the
 					bridge to connect to. This must be given for each bridge
@@ -237,7 +241,20 @@
 					1883 is used.</para>
 					<para>Unlike rsmb, it is not currently possible to specify
 					multiple addresses for a single bridge connection
-					here.</para>
+					here. This is true even if the name "addresses" is used.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>cleansession</option> [ true | false ]</term>
+				<listitem>
+					<para>Set the clean session option for this bridge. Setting
+					to false (the default), means that all subscriptions on the
+					remote broker are kept in case of the network connection
+					dropping. If set to true, all subscriptions and messages on
+					the remote broker will be cleaned up if the connection
+					drops. Note that setting to true may cause a large amount
+					of retained messages to be sent each time the bridge
+					reconnects.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -247,6 +264,15 @@
 					connection. It is also used to give the bridge a
 					name which is used as the client id on the remote
 					broker.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>keepalive_interval</option> <replaceable>seconds</replaceable></term>
+				<listitem>
+					<para>Set the number of seconds after which the bridge
+					should send a ping if no other traffic has occurred.
+					Deefaults to 660. A minimum value of 5 seconds
+					isallowed.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

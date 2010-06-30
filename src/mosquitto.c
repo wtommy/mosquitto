@@ -76,6 +76,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds);
  */
 int drop_privileges(mqtt3_config *config)
 {
+#ifndef __CYGWIN__
 	struct passwd *pwd;
 
 	if(geteuid() == 0){
@@ -98,6 +99,7 @@ int drop_privileges(mqtt3_config *config)
 			mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Mosquitto should not be run as root/administrator.");
 		}
 	}
+#endif
 	return 0;
 }
 
@@ -161,8 +163,8 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 				if(contexts[i]->sock != -1){
 					if(contexts[i]->bridge){
 						mqtt3_check_keepalive(contexts[i]);
-					 }
-					 if(!(contexts[i]->keepalive) || now - contexts[i]->last_msg_in < contexts[i]->keepalive*3/2){
+					}
+					if(!(contexts[i]->keepalive) || now - contexts[i]->last_msg_in < contexts[i]->keepalive*3/2){
 						if(mqtt3_db_message_write(contexts[i])){
 							// FIXME - do something here.
 						}
@@ -176,23 +178,28 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", contexts[i]->id);
 						/* Client has exceeded keepalive*1.5 */
 						mqtt3_db_client_will_queue(contexts[i]);
-						mqtt3_context_cleanup(contexts[i]);
-						contexts[i] = NULL;
-					}
-				}else if(contexts[i]->bridge){
-					/* Want to try to restart the bridge connection */
-					if(!contexts[i]->bridge->restart_t){
-						contexts[i]->bridge->restart_t = time(NULL)+30;
-					}else{
-						if(time(NULL) > contexts[i]->bridge->restart_t){
-							mqtt3_log_printf(MQTT3_LOG_INFO, "Attempting to reconnect to bridge %s.", contexts[i]->id);
-							contexts[i]->bridge->restart_t = 0;
-							mqtt3_bridge_connect(contexts[i]);
+						if(contexts[i]->bridge){
+							mqtt3_socket_close(contexts[i]);
+						}else{
+							mqtt3_context_cleanup(contexts[i]);
+							contexts[i] = NULL;
 						}
 					}
 				}else{
-					mqtt3_context_cleanup(contexts[i]);
-					contexts[i] = NULL;
+					if(contexts[i]->bridge){
+						/* Want to try to restart the bridge connection */
+						if(!contexts[i]->bridge->restart_t){
+							contexts[i]->bridge->restart_t = time(NULL)+30;
+						}else{
+							if(time(NULL) > contexts[i]->bridge->restart_t){
+								contexts[i]->bridge->restart_t = 0;
+								mqtt3_bridge_connect(contexts[i]);
+							}
+						}
+					}else{
+						mqtt3_context_cleanup(contexts[i]);
+						contexts[i] = NULL;
+					}
 				}
 			}
 		}
@@ -227,7 +234,7 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 		}
 	}
 
-	mqtt3_free(pollfds);
+	if(pollfds) mqtt3_free(pollfds);
 	return 0;
 }
 
@@ -248,9 +255,12 @@ static void loop_handle_errors(void)
 				}else{
 					mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
 				}
-				contexts[i]->sock = -1;
-				mqtt3_context_cleanup(contexts[i]);
-				contexts[i] = NULL;
+				if(contexts[i]->bridge){
+					mqtt3_socket_close(contexts[i]);
+				}else{
+					mqtt3_context_cleanup(contexts[i]);
+					contexts[i] = NULL;
+				}
 			}
 		}
 	}
