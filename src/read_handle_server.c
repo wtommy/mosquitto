@@ -52,7 +52,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	/* Don't accept multiple CONNECT commands. */
 	if(context->connected) return 1;
 
-	if(mqtt3_read_string(context, &protocol_name)) return 1;
+	if(_mosquitto_read_string(&context->in_packet, &protocol_name)) return 1;
 	if(!protocol_name){
 		mqtt3_socket_close(context);
 		return 3;
@@ -64,7 +64,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 		mqtt3_socket_close(context);
 		return 1;
 	}
-	if(mqtt3_read_byte(context, &protocol_version)) return 1;
+	if(_mosquitto_read_byte(&context->in_packet, &protocol_version)) return 1;
 	if(protocol_version != PROTOCOL_VERSION){
 		mqtt3_log_printf(MQTT3_LOG_INFO, "Invalid protocol version %d in CONNECT from %s.",
 				protocol_version, context->address);
@@ -76,18 +76,18 @@ int mqtt3_handle_connect(mqtt3_context *context)
 
 	mqtt3_free(protocol_name);
 
-	if(mqtt3_read_byte(context, &connect_flags)) return 1;
+	if(_mosquitto_read_byte(&context->in_packet, &connect_flags)) return 1;
 	clean_session = connect_flags & 0x02;
 	will = connect_flags & 0x04;
 	will_qos = (connect_flags & 0x18) >> 3;
 	will_retain = connect_flags & 0x20;
 
-	if(mqtt3_read_uint16(context, &(context->keepalive))) return 1;
+	if(_mosquitto_read_uint16(&context->in_packet, &(context->keepalive))) return 1;
 
-	if(mqtt3_read_string(context, &client_id)) return 1;
+	if(_mosquitto_read_string(&context->in_packet, &client_id)) return 1;
 	if(connect_flags & 0x04){
-		if(mqtt3_read_string(context, &will_topic)) return 1;
-		if(mqtt3_read_string(context, &will_message)) return 1;
+		if(_mosquitto_read_string(&context->in_packet, &will_topic)) return 1;
+		if(_mosquitto_read_string(&context->in_packet, &will_message)) return 1;
 	}
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
@@ -127,18 +127,18 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received SUBSCRIBE from %s", context->id);
 	/* FIXME - plenty of potential for memory leaks here */
 
-	if(mqtt3_read_uint16(context, &mid)) return 1;
+	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
 
 	while(context->in_packet.pos < context->in_packet.remaining_length){
 		sub = NULL;
-		if(mqtt3_read_string(context, &sub)){
+		if(_mosquitto_read_string(&context->in_packet, &sub)){
 			if(sub) mqtt3_free(sub);
 			if(payload) mqtt3_free(payload);
 			return 1;
 		}
 
 		if(sub){
-			if(mqtt3_read_byte(context, &qos)){
+			if(_mosquitto_read_byte(&context->in_packet, &qos)){
 				mqtt3_free(sub);
 				if(payload) mqtt3_free(payload);
 				return 1;
@@ -181,11 +181,11 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 	if(!context) return 1;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received UNSUBSCRIBE from %s", context->id);
 
-	if(mqtt3_read_uint16(context, &mid)) return 1;
+	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
 
 	while(context->in_packet.pos < context->in_packet.remaining_length){
 		sub = NULL;
-		if(mqtt3_read_string(context, &sub)){
+		if(_mosquitto_read_string(&context->in_packet, &sub)){
 			if(sub) mqtt3_free(sub);
 			return 1;
 		}

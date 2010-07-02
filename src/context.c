@@ -82,7 +82,7 @@ mqtt3_context *mqtt3_context_init(int sock)
  */
 void mqtt3_context_cleanup(mqtt3_context *context)
 {
-	struct _mqtt3_packet *packet;
+	struct _mosquitto_packet *packet;
 	if(!context) return;
 
 	if(context->sock != -1){
@@ -105,7 +105,7 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 	mqtt3_free(context);
 }
 
-void mqtt3_context_packet_cleanup(struct _mqtt3_packet *packet)
+void mqtt3_context_packet_cleanup(struct _mosquitto_packet *packet)
 {
 	if(!packet) return;
 

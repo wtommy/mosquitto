@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <net_mosq.h>
 
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 {
@@ -41,7 +42,7 @@ int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 
 int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload)
 {
-	struct _mqtt3_packet *packet = NULL;
+	struct _mosquitto_packet *packet = NULL;
 	int packetlen;
 
 	if(!context || context->sock == -1 || !topic) return 1;
@@ -50,7 +51,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 
 	packetlen = 2+strlen(topic) + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
-	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
+	packet = mqtt3_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet){
 		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed allocating packet memory.");
 		return 1;
@@ -65,13 +66,13 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 		return 1;
 	}
 	/* Variable header (topic string) */
-	if(mqtt3_write_string(packet, topic, strlen(topic))){
+	if(_mosquitto_write_string(packet, topic, strlen(topic))){
 		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed writing topic.");
 		mqtt3_free(packet);
 	  	return 1;
 	}
 	if(qos > 0){
-		if(mqtt3_write_uint16(packet, mid)){
+		if(_mosquitto_write_uint16(packet, mid)){
 			mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed writing mid.");
 			mqtt3_free(packet);
 			return 1;
@@ -79,7 +80,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 	}
 
 	/* Payload */
-	if(payloadlen && mqtt3_write_bytes(packet, payload, payloadlen)){
+	if(payloadlen && _mosquitto_write_bytes(packet, payload, payloadlen)){
 		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed writing payload.");
 		mqtt3_free(packet);
 		return 1;
@@ -115,9 +116,9 @@ int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid)
 /* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
 int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid)
 {
-	struct _mqtt3_packet *packet = NULL;
+	struct _mosquitto_packet *packet = NULL;
 
-	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
+	packet = mqtt3_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
 
 	packet->command = command;
@@ -127,8 +128,8 @@ int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_
 		mqtt3_free(packet);
 		return 1;
 	}
-	packet->payload[0] = MQTT_MSB(mid);
-	packet->payload[1] = MQTT_LSB(mid);
+	packet->payload[0] = MOSQ_MSB(mid);
+	packet->payload[1] = MOSQ_LSB(mid);
 
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
 
@@ -138,9 +139,9 @@ int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_
 /* For DISCONNECT, PINGREQ and PINGRESP */
 int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command)
 {
-	struct _mqtt3_packet *packet = NULL;
+	struct _mosquitto_packet *packet = NULL;
 
-	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
+	packet = mqtt3_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
 
 	packet->command = command;

@@ -34,11 +34,11 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 {
-	struct _mqtt3_packet *packet = NULL;
+	struct _mosquitto_packet *packet = NULL;
 
 	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending CONNACK to %s (%d)", context->id, result);
 
-	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
+	packet = mqtt3_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
 
 	packet->command = CONNACK;
@@ -57,11 +57,11 @@ int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 
 int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload)
 {
-	struct _mqtt3_packet *packet = NULL;
+	struct _mosquitto_packet *packet = NULL;
 
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending SUBACK to %s", context->id);
 
-	packet = mqtt3_calloc(1, sizeof(struct _mqtt3_packet));
+	packet = mqtt3_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
 
 	packet->command = SUBACK;
@@ -71,8 +71,8 @@ int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, 
 		mqtt3_free(packet);
 		return 1;
 	}
-	if(mqtt3_write_uint16(packet, mid)) return 1;
-	if(payloadlen && mqtt3_write_bytes(packet, payload, payloadlen)) return 1;
+	if(_mosquitto_write_uint16(packet, mid)) return 1;
+	if(payloadlen && _mosquitto_write_bytes(packet, payload, payloadlen)) return 1;
 
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
 

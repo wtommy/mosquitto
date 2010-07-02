@@ -117,7 +117,7 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 
 void mqtt3_bridge_packet_cleanup(mqtt3_context *context)
 {
-	struct _mqtt3_packet *packet;
+	struct _mosquitto_packet *packet;
 	if(!context) return;
 
     while(context->out_packet){

@@ -97,7 +97,7 @@ int mqtt3_handle_puback(mqtt3_context *context)
 	if(!context || context->in_packet.remaining_length != 2){
 		return 1;
 	}
-	if(mqtt3_read_uint16(context, &mid)) return 1;
+	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBACK from %s (Mid: %d)", context->id, mid);
 
 #ifdef WITH_CLIENT
@@ -137,7 +137,7 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 	if(!context || context->in_packet.remaining_length != 2){
 		return 1;
 	}
-	if(mqtt3_read_uint16(context, &mid)) return 1;
+	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBCOMP from %s (Mid: %d)", context->id, mid);
 
 #ifdef WITH_CLIENT
@@ -168,14 +168,14 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	qos = (header & 0x06)>>1;
 	retain = (header & 0x01);
 
-	if(mqtt3_read_string(context, &topic)) return 1;
+	if(_mosquitto_read_string(&context->in_packet, &topic)) return 1;
 	if(mqtt3_fix_sub_topic(&topic)) return 1;
 	if(!strlen(topic)){
 		return 1;
 	}
 
 	if(qos > 0){
-		if(mqtt3_read_uint16(context, &mid)){
+		if(_mosquitto_read_uint16(&context->in_packet, &mid)){
 			mqtt3_free(topic);
 			return 1;
 		}
@@ -184,7 +184,7 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	payloadlen = context->in_packet.remaining_length - context->in_packet.pos;
 	if(payloadlen){
 		payload = mqtt3_calloc(payloadlen+1, sizeof(uint8_t));
-		if(mqtt3_read_bytes(context, payload, payloadlen)){
+		if(_mosquitto_read_bytes(&context->in_packet, payload, payloadlen)){
 			mqtt3_free(topic);
 			return 1;
 		}
@@ -227,7 +227,7 @@ int mqtt3_handle_pubrec(mqtt3_context *context)
 	if(!context || context->in_packet.remaining_length != 2){
 		return 1;
 	}
-	if(mqtt3_read_uint16(context, &mid)) return 1;
+	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREC from %s (Mid: %d)", context->id, mid);
 
 	if(mqtt3_db_message_update(context->id, mid, md_out, ms_wait_pubcomp)) return 1;
@@ -243,7 +243,7 @@ int mqtt3_handle_pubrel(mqtt3_context *context)
 	if(!context || context->in_packet.remaining_length != 2){
 		return 1;
 	}
-	if(mqtt3_read_uint16(context, &mid)) return 1;
+	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREL from %s (Mid: %d)", context->id, mid);
 
 	if(mqtt3_db_message_release(context->id, mid, md_in)) return 1;
