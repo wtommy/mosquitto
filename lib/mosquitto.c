@@ -30,9 +30,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mosquitto.h>
 #include <database_mosq.h>
 
+#include <errno.h>
 #include <sqlite3.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -113,6 +115,51 @@ int mosquitto_unsubscribe(struct mosquitto *mosq, const char *sub)
 
 int mosquitto_loop(struct mosquitto *mosq)
 {
+	struct timespec timeout;
+	fd_set readfds, writefds;
+	int fdcount;
+
+	if(!mosq || mosq->sock < 0) return 1;
+
+	FD_ZERO(&readfds);
+	FD_SET(mosq->sock, &readfds);
+	FD_ZERO(&writefds);
+	/* FIXME
+	if(mosq->out_packet){
+	*/
+		FD_SET(mosq->sock, &writefds);
+	/* FIXME
+	}
+	*/
+	timeout.tv_sec = 1;
+	timeout.tv_nsec = 0;
+
+	fdcount = pselect(mosq->sock+1, &readfds, &writefds, NULL, &timeout, NULL);
+	if(fdcount == -1){
+		fprintf(stderr, "Error in pselect: %s\n", strerror(errno));
+		return 1;
+	}else{
+		if(FD_ISSET(mosq->sock, &readfds)){
+			if(mosquitto_read(mosq)){
+				/* FIXME
+				mosquitto_socket_close(mosq);
+				*/
+				return 1;
+			}
+		}
+		if(FD_ISSET(mosq->sock, &writefds)){
+			if(mosquitto_write(mosq)){
+				/* FIXME
+				mosquitto_socket_close(mosq);
+				*/
+				return 1;
+			}
+		}
+	}
+	/* FIXME
+	mosquitto_check_keepalive(mosq);
+	*/
+
 	return 0;
 }
 
