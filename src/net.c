@@ -143,54 +143,6 @@ int mqtt3_socket_close(mqtt3_context *context)
 	return rc;
 }
 
-/* Create a socket and connect it to 'ip' on port 'port'.
- * Returns -1 on failure (ip is NULL, socket creation/connection error)
- * Returns sock number on success.
- */
-int mqtt3_socket_connect(const char *host, uint16_t port)
-{
-	int sock;
-	int opt;
-	struct addrinfo hints;
-	struct addrinfo *ainfo, *rp;
-	int s;
-
-	if(!host || !port) return -1;
-
-	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_INET; /* IPv4 only at the moment. */
-	hints.ai_socktype = SOCK_STREAM;
-
-	s = getaddrinfo(host, NULL, &hints, &ainfo);
-	if(s) return -1;
-
-	for(rp = ainfo; rp != NULL; rp = rp->ai_next){
-		sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-		if(sock == -1) continue;
-		
-		((struct sockaddr_in *)rp->ai_addr)->sin_port = htons(port);
-		if(connect(sock, rp->ai_addr, rp->ai_addrlen) != -1){
-			break;
-		}
-
-		return -1;
-	}
-	if(!rp){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", strerror(errno));
-		return -1;
-	}
-	freeaddrinfo(ainfo);
-
-	/* Set non-blocking */
-	opt = fcntl(sock, F_GETFL, 0);
-	if(opt == -1 || fcntl(sock, F_SETFL, opt | O_NONBLOCK) == -1){
-		close(sock);
-		return -1;
-	}
-
-	return sock;
-}
-
 /* Internal function.
  * Create a socket and set it to listen based on the sockaddr details in addr.
  * Returns -1 on failure (addr is NULL, socket creation/listening error)
