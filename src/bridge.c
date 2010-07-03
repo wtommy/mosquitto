@@ -121,11 +121,11 @@ void mqtt3_bridge_packet_cleanup(mqtt3_context *context)
 	if(!context) return;
 
     while(context->out_packet){
-		mqtt3_context_packet_cleanup(context->out_packet);
+		_mosquitto_packet_cleanup(context->out_packet);
 		packet = context->out_packet;
 		context->out_packet = context->out_packet->next;
 		mqtt3_free(packet);
 	}
 
-	mqtt3_context_packet_cleanup(&(context->in_packet));
+	_mosquitto_packet_cleanup(&(context->in_packet));
 }

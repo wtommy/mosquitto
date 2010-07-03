@@ -20,6 +20,7 @@ struct _mosquitto_packet{
 	struct _mosquitto_packet *next;
 };
 
+void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet);
 int _mosquitto_socket_connect(const char *host, uint16_t port);
 
 int _mosquitto_read_byte(struct _mosquitto_packet *packet, uint8_t *byte);

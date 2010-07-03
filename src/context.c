@@ -55,7 +55,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context->id = NULL;
 
 	context->in_packet.payload = NULL;
-	mqtt3_context_packet_cleanup(&context->in_packet);
+	_mosquitto_packet_cleanup(&context->in_packet);
 	context->out_packet = NULL;
 
 	addrlen = sizeof(addr);
@@ -95,29 +95,13 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 	}
 	if(context->address) mqtt3_free(context->address);
 	if(context->id) mqtt3_free(context->id);
-	mqtt3_context_packet_cleanup(&(context->in_packet));
+	_mosquitto_packet_cleanup(&(context->in_packet));
 	while(context->out_packet){
-		mqtt3_context_packet_cleanup(context->out_packet);
+		_mosquitto_packet_cleanup(context->out_packet);
 		packet = context->out_packet;
 		context->out_packet = context->out_packet->next;
 		mqtt3_free(packet);
 	}
 	mqtt3_free(context);
-}
-
-void mqtt3_context_packet_cleanup(struct _mosquitto_packet *packet)
-{
-	if(!packet) return;
-
-	/* Free data and reset values */
-	packet->command = 0;
-	packet->have_remaining = 0;
-	packet->remaining_count = 0;
-	packet->remaining_mult = 1;
-	packet->remaining_length = 0;
-	if(packet->payload) mqtt3_free(packet->payload);
-	packet->payload = NULL;
-	packet->to_process = 0;
-	packet->pos = 0;
 }
 

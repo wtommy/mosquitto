@@ -33,9 +33,26 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <fcntl.h>
 #include <netdb.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
+void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet)
+{
+	if(!packet) return;
+
+	/* Free data and reset values */
+	packet->command = 0;
+	packet->have_remaining = 0;
+	packet->remaining_count = 0;
+	packet->remaining_mult = 1;
+	packet->remaining_length = 0;
+	if(packet->payload) free(packet->payload);
+	packet->payload = NULL;
+	packet->to_process = 0;
+	packet->pos = 0;
+}
 
 /* Create a socket and connect it to 'ip' on port 'port'.
  * Returns -1 on failure (ip is NULL, socket creation/connection error)

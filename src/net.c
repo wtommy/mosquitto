@@ -345,7 +345,7 @@ int mqtt3_net_read(mqtt3_context *context)
 	rc = mqtt3_packet_handle(context);
 
 	/* Free data and reset values */
-	mqtt3_context_packet_cleanup(&context->in_packet);
+	_mosquitto_packet_cleanup(&context->in_packet);
 
 	context->last_msg_in = time(NULL);
 	return rc;
@@ -437,7 +437,7 @@ int mqtt3_net_write(mqtt3_context *context)
 #endif
 		/* Free data and reset values */
 		context->out_packet = packet->next;
-		mqtt3_context_packet_cleanup(packet);
+		_mosquitto_packet_cleanup(packet);
 		mqtt3_free(packet);
 
 		context->last_msg_out = time(NULL);
