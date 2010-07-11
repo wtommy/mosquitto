@@ -65,12 +65,12 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 		mosq->db = NULL;
 		mosq->keepalive = 60;
 		mosq->id = strdup(id);
-		mosq->will = 0;
+		mosq->will = false;
 		mosq->will_topic = NULL;
 		mosq->will_payloadlen = 0;
 		mosq->will_payload = NULL;
 		mosq->will_qos = 0;
-		mosq->will_retain = 0;
+		mosq->will_retain = false;
 		mosq->on_connect = NULL;
 		mosq->on_publish = NULL;
 		mosq->on_message = NULL;
@@ -78,6 +78,32 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 		mosq->on_unsubscribe = NULL;
 	}
 	return mosq;
+}
+
+int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
+{
+	if(!mosq) return 1;
+
+	if(mosq->will_topic) free(mosq->will_topic);
+	if(mosq->will_payload){
+		free(mosq->will_payload);
+		mosq->will_payload = NULL;
+	}
+
+	mosq->will = will;
+	mosq->will_topic = strdup(topic);
+	mosq->will_payloadlen = payloadlen;
+	if(mosq->will_payloadlen > 0){
+		if(!payload) return 1;
+		mosq->will_payload = malloc(sizeof(uint8_t)*mosq->will_payloadlen);
+		if(!mosq->will_payload) return 1;
+
+		memcpy(mosq->will_payload, payload, payloadlen);
+	}
+	mosq->will_qos = qos;
+	mosq->will_retain = retain;
+
+	return 0;
 }
 
 void mosquitto_destroy(struct mosquitto *mosq)

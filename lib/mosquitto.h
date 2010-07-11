@@ -58,6 +58,7 @@ int mosquitto_lib_init(void);
 void mosquitto_lib_cleanup(void);
 
 struct mosquitto *mosquitto_new(void *obj, const char *id);
+int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
 void mosquitto_destroy(struct mosquitto *mosq);
 int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session);
 int mosquitto_disconnect(struct mosquitto *mosq);

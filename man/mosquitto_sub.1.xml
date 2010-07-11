@@ -40,6 +40,22 @@
 			<group choice='opt'>
 				<arg><option>-v</option></arg>
 			</group>
+			<group choice='opt'>
+				<arg>
+					<group choice='plain'>
+						<arg><option>--will-topic</option> <replaceable>topic</replaceable></arg>
+					</group>
+					<group choice='opt'>
+						<arg><option>--will-payload</option> <replaceable>payload</replaceable></arg>
+					</group>
+					<group choice='opt'>
+						<arg><option>--will-qos</option> <replaceable>qos</replaceable></arg>
+					</group>
+					<group choice='opt'>
+						<arg><option>--will-retain</option></arg>
+					</group>
+				</arg>
+			</group>
 			<group choice='plain' rep="repeat">
 				<arg><option>-t</option> <replaceable>message topic</replaceable></arg>
 			</group>
@@ -140,7 +156,50 @@
 					"payload".</para>
 				</listitem>
 			</varlistentry>
+			<varlistentry>
+				<term><option>--will-payload</option></term>
+				<listitem>
+					<para>Specify a message that will be stored by the broker
+					and sent out if this client disconnects unexpectedly. This
+					must be used in conjunction with --will-topic.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--will-qos</option></term>
+				<listitem>
+					<para>The QoS to use for the Will. Defaults to 0. This must
+					be used in conjunction with --will-topic.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--will-retain</option></term>
+				<listitem>
+					<para>If given, if the client disconnects unexpectedly the
+					message sent out will be treated as a retained message.
+					This must be used in conjunction with --will-topic.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--will-topic</option></term>
+				<listitem>
+					<para>The topic on which to send a Will, in the event that
+					the client disconnects unexpectedly.</para>
+				</listitem>
+			</varlistentry>
 		</variablelist>
+	</refsect1>
+
+	<refsect1>
+		<title>Wills</title>
+		<para>mosquitto_sub can register a message with the broker that will be
+		sent out if it disconnects unexpectedly. See
+		<citerefentry><refentrytitle>mqtt</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+		for more information.</para>
+		<para>The minimum requirement for this is to use --will-topic to
+		specify which topic the will should be sent out on. This will result in
+		a non-retained, zero length message with QoS 0.</para>
+		<para>Use the --will-retain, -will-payload and --will-qos arguments to
+		modify the other will parameters.</para>
 	</refsect1>
 
 	<refsect1>
