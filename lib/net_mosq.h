@@ -3,22 +3,11 @@
 
 #include <stdint.h>
 
+#include <mosquitto.h>
+
 /* Macros for accessing the MSB and LSB of a uint16_t */
 #define MOSQ_MSB(A) (uint8_t)((A & 0xFF00) >> 8)
 #define MOSQ_LSB(A) (uint8_t)(A & 0x00FF)
-
-struct _mosquitto_packet{
-	uint8_t command;
-	uint8_t command_saved;
-	uint8_t have_remaining;
-	uint8_t remaining_count;
-	uint32_t remaining_mult;
-	uint32_t remaining_length;
-	uint32_t to_process;
-	uint32_t pos;
-	uint8_t *payload;
-	struct _mosquitto_packet *next;
-};
 
 void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet);
 int _mosquitto_socket_connect(const char *host, uint16_t port);

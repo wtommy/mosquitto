@@ -34,6 +34,19 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include <stdlib.h>
 
+struct _mosquitto_packet{
+	uint8_t command;
+	uint8_t command_saved;
+	uint8_t have_remaining;
+	uint8_t remaining_count;
+	uint32_t remaining_mult;
+	uint32_t remaining_length;
+	uint32_t to_process;
+	uint32_t pos;
+	uint8_t *payload;
+	struct _mosquitto_packet *next;
+};
+
 struct mosquitto {
 	void *obj;
 	int sock;
@@ -46,6 +59,7 @@ struct mosquitto {
 	uint8_t *will_payload;
 	int will_qos;
 	bool will_retain;
+	struct _mosquitto_packet in_packet;
 	void (*on_connect)(void *obj, int rc);
 	void (*on_publish)(void *obj, int mid);
 	void (*on_message)(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);

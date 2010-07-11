@@ -12,7 +12,7 @@ clean :
 	-rm -f *.o libmosquitto.so.0 libmosquitto.so
 	make -C cpp clean
 
-libmosquitto.so.0 : mosquitto.o database_mosq.o net_mosq.o
+libmosquitto.so.0 : mosquitto.o database_mosq.o net_mosq.o read_handle_client.o
 	$(CC) -shared -Wl,-soname,libmosquitto.so.0 $^ -o $@ -lsqlite3
 	ln -sf libmosquitto.so.0 libmosquitto.so
 
@@ -23,5 +23,8 @@ database_mosq.o : database_mosq.c database_mosq.h
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
 net_mosq.o : net_mosq.c net_mosq.h
+	$(CC) $(CFLAGS) -fPIC -c $< -o $@
+
+read_handle_client.o : read_handle_client.c read_handle.h
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
