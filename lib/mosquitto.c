@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mosquitto.h>
 #include <database_mosq.h>
+#include <net_mosq.h>
 
 #include <errno.h>
 #include <sqlite3.h>
@@ -116,6 +117,20 @@ void mosquitto_destroy(struct mosquitto *mosq)
 
 int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session)
 {
+	if(!mosq || !host || !port) return 1;
+
+	mosq->sock = _mosquitto_socket_connect(host, port);
+/* FIXME
+	*context = mqtt3_context_init(sock);
+	if((*context)->sock == -1){
+		return 1;
+	}
+
+	(*context)->id = mqtt3_strdup(id);
+	mqtt3_raw_connect(*context, id,
+			mosq->will_topic, mosq->will_payload, mosq->will_qos, mosq->will_retain
+			keepalive, clean_session);
+*/
 	return 0;
 }
 

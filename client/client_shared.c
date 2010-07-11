@@ -46,22 +46,3 @@ int client_init(void)
 	return mqtt3_db_open(&config);
 }
 
-int client_connect(mqtt3_context **context, const char *host, int port, const char *id, int keepalive, bool clean_session)
-{
-	int sock;
-
-	if(!context || !host || !id) return 1;
-
-	sock = mqtt3_socket_connect(host, port);
-	*context = mqtt3_context_init(sock);
-	if((*context)->sock == -1){
-		return 1;
-	}
-
-	(*context)->id = mqtt3_strdup(id);
-	mqtt3_raw_connect(*context, id,
-			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
-			keepalive, clean_session);
-	return 0;
-}
-
