@@ -351,6 +351,12 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
+	if(!topic || mode == MSGMODE_NONE){
+		fprintf(stderr, "Error: Both topic and message must be supplied.\n");
+		print_usage();
+		return 1;
+	}
+
 	if(will_payload && !will_topic){
 		fprintf(stderr, "Error: Will payload given, but no will topic given.\n");
 		print_usage();
@@ -377,12 +383,6 @@ int main(int argc, char *argv[])
 				| MQTT3_LOG_NOTICE | MQTT3_LOG_INFO, MQTT3_LOG_STDERR);
 	}
 	#endif
-
-	if(!topic || mode == MSGMODE_NONE){
-		fprintf(stderr, "Error: Both topic and message must be supplied.\n");
-		print_usage();
-		return 1;
-	}
 
 	mosq->on_connect = my_connect_callback;
 	mosq->on_publish = my_publish_callback;
