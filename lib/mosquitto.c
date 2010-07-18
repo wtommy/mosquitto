@@ -84,6 +84,7 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
 	if(!mosq) return 1;
+	if(will && !topic) return 1;
 
 	if(mosq->will_topic) free(mosq->will_topic);
 	if(mosq->will_payload){
