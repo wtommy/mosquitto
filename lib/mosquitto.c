@@ -303,11 +303,94 @@ int mosquitto_read(struct mosquitto *mosq)
 
 	mosq->last_msg_in = time(NULL);
 	return rc;
-	return 0;
 }
 
 int mosquitto_write(struct mosquitto *mosq)
 {
+	uint8_t byte;
+	ssize_t write_length;
+	struct _mosquitto_packet *packet;
+
+	if(!mosq || mosq->sock == -1) return 1;
+
+	while(mosq->out_packet){
+		packet = mosq->out_packet;
+
+		if(packet->command){
+			/* Assign to_proces here before remaining_length changes. */
+			packet->to_process = packet->remaining_length;
+			packet->pos = 0;
+
+			write_length = write(mosq->sock, &packet->command, 1);
+			if(write_length == 1){
+				packet->command_saved = packet->command;
+				packet->command = 0;
+			}else{
+				if(write_length == 0) return 1; /* EOF */
+				if(errno == EAGAIN || errno == EWOULDBLOCK){
+					return 0;
+				}else{
+					return 1;
+				}
+			}
+		}
+		if(!packet->have_remaining){
+			/* Write remaining
+			 * Algorithm for encoding taken from pseudo code at
+			 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
+			 */
+			do{
+				byte = packet->remaining_length % 128;
+				packet->remaining_length = packet->remaining_length / 128;
+				/* If there are more digits to encode, set the top bit of this digit */
+				if(packet->remaining_length>0){
+					byte = byte | 0x80;
+				}
+				write_length = write(mosq->sock, &byte, 1);
+				if(write_length == 1){
+					packet->remaining_count++;
+					/* Max 4 bytes length for remaining length as defined by protocol. */
+					if(packet->remaining_count > 4) return 1;
+	
+				}else{
+					if(write_length == 0) return 1; /* EOF */
+					if(errno == EAGAIN || errno == EWOULDBLOCK){
+						return 0;
+					}else{
+						return 1;
+					}
+				}
+			}while(packet->remaining_length > 0);
+			packet->have_remaining = 1;
+		}
+		while(packet->to_process > 0){
+			write_length = write(mosq->sock, &(packet->payload[packet->pos]), packet->to_process);
+			if(write_length > 0){
+				packet->to_process -= write_length;
+				packet->pos += write_length;
+			}else{
+				if(errno == EAGAIN || errno == EWOULDBLOCK){
+					return 0;
+				}else{
+					return 1;
+				}
+			}
+		}
+
+#ifdef WITH_CLIENT
+		// FIXME - replace with PUBLISH callback for QoS==0.
+		if(client_net_write_callback){
+			client_net_write_callback(packet->command_saved&0xF0);
+		}
+#endif
+		/* Free data and reset values */
+		mosq->out_packet = packet->next;
+		_mosquitto_packet_cleanup(packet);
+		free(packet);
+
+		mosq->last_msg_out = time(NULL);
+	}
+	return 0;
 	return 0;
 }
 
