@@ -61,6 +61,8 @@ struct mosquitto {
 	bool will_retain;
 	struct _mosquitto_packet in_packet;
 	struct _mosquitto_packet *out_packet;
+	time_t last_msg_in;
+	time_t last_msg_out;
 	void (*on_connect)(void *obj, int rc);
 	void (*on_publish)(void *obj, int mid);
 	void (*on_message)(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);

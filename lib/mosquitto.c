@@ -38,6 +38,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
 
 int mosquitto_lib_init(void)
 {
@@ -67,6 +69,8 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 		mosq->keepalive = 60;
 		mosq->id = strdup(id);
 		mosq->out_packet = NULL;
+		mosq->last_msg_in = time(NULL);
+		mosq->last_msg_out = time(NULL);
 		mosq->will = false;
 		mosq->will_topic = NULL;
 		mosq->will_payloadlen = 0;
@@ -208,6 +212,97 @@ int mosquitto_loop(struct mosquitto *mosq)
 
 int mosquitto_read(struct mosquitto *mosq)
 {
+	uint8_t byte;
+	ssize_t read_length;
+	int rc = 0;
+
+	if(!mosq || mosq->sock == -1) return 1;
+	/* This gets called if pselect() indicates that there is network data
+	 * available - ie. at least one byte.  What we do depends on what data we
+	 * already have.
+	 * If we've not got a command, attempt to read one and save it. This should
+	 * always work because it's only a single byte.
+	 * Then try to read the remaining length. This may fail because it is may
+	 * be more than one byte - will need to save data pending next read if it
+	 * does fail.
+	 * Then try to read the remaining payload, where 'payload' here means the
+	 * combined variable header and actual payload. This is the most likely to
+	 * fail due to longer length, so save current data and current position.
+	 * After all data is read, send to _mosquitto_handle_packet() to deal with.
+	 * Finally, free the memory and reset everything to starting conditions.
+	 */
+	if(!mosq->in_packet.command){
+		/* FIXME - check command and fill in expected length if we know it.
+		 * This means we can check the client is sending valid data some times.
+		 */
+		read_length = read(mosq->sock, &byte, 1);
+		if(read_length == 1){
+			mosq->in_packet.command = byte;
+		}else{
+			if(read_length == 0) return 1; /* EOF */
+			if(errno == EAGAIN || errno == EWOULDBLOCK){
+				return 0;
+			}else{
+				return 1;
+			}
+		}
+	}
+	if(!mosq->in_packet.have_remaining){
+		/* Read remaining
+		 * Algorithm for decoding taken from pseudo code at
+		 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
+		 */
+		do{
+			read_length = read(mosq->sock, &byte, 1);
+			if(read_length == 1){
+				mosq->in_packet.remaining_count++;
+				/* Max 4 bytes length for remaining length as defined by protocol.
+				 * Anything more likely means a broken/malicious client.
+				 */
+				if(mosq->in_packet.remaining_count > 4) return 1;
+
+				mosq->in_packet.remaining_length += (byte & 127) * mosq->in_packet.remaining_mult;
+				mosq->in_packet.remaining_mult *= 128;
+			}else{
+				if(read_length == 0) return 1; /* EOF */
+				if(errno == EAGAIN || errno == EWOULDBLOCK){
+					return 0;
+				}else{
+					return 1;
+				}
+			}
+		}while((byte & 128) != 0);
+
+		if(mosq->in_packet.remaining_length > 0){
+			mosq->in_packet.payload = malloc(mosq->in_packet.remaining_length*sizeof(uint8_t));
+			if(!mosq->in_packet.payload) return 1;
+			mosq->in_packet.to_process = mosq->in_packet.remaining_length;
+		}
+		mosq->in_packet.have_remaining = 1;
+	}
+	while(mosq->in_packet.to_process>0){
+		read_length = read(mosq->sock, &(mosq->in_packet.payload[mosq->in_packet.pos]), mosq->in_packet.to_process);
+		if(read_length > 0){
+			mosq->in_packet.to_process -= read_length;
+			mosq->in_packet.pos += read_length;
+		}else{
+			if(errno == EAGAIN || errno == EWOULDBLOCK){
+				return 0;
+			}else{
+				return 1;
+			}
+		}
+	}
+
+	/* All data for this packet is read. */
+	mosq->in_packet.pos = 0;
+	rc = _mosquitto_packet_handle(mosq);
+
+	/* Free data and reset values */
+	_mosquitto_packet_cleanup(&mosq->in_packet);
+
+	mosq->last_msg_in = time(NULL);
+	return rc;
 	return 0;
 }
 
