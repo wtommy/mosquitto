@@ -30,6 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mosquitto.h>
 #include <database_mosq.h>
 #include <net_mosq.h>
+#include <read_handle.h>
 
 #include <errno.h>
 #include <sqlite3.h>
