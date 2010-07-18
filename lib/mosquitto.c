@@ -66,6 +66,7 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 		mosq->db = NULL;
 		mosq->keepalive = 60;
 		mosq->id = strdup(id);
+		mosq->out_packet = NULL;
 		mosq->will = false;
 		mosq->will_topic = NULL;
 		mosq->will_payloadlen = 0;

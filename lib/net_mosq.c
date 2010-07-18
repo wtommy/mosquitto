@@ -54,6 +54,25 @@ void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet)
 	packet->pos = 0;
 }
 
+int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *packet)
+{
+	struct _mosquitto_packet *tail;
+
+	if(!mosq || !packet) return 1;
+
+	packet->next = NULL;
+	if(mosq->out_packet){
+		tail = mosq->out_packet;
+		while(tail->next){
+			tail = tail->next;
+		}
+		tail->next = packet;
+	}else{
+		mosq->out_packet = packet;
+	}
+	return 0;
+}
+
 /* Create a socket and connect it to 'ip' on port 'port'.
  * Returns -1 on failure (ip is NULL, socket creation/connection error)
  * Returns sock number on success.

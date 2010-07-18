@@ -10,6 +10,7 @@
 #define MOSQ_LSB(A) (uint8_t)(A & 0x00FF)
 
 void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet);
+int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *packet);
 int _mosquitto_socket_connect(const char *host, uint16_t port);
 
 int _mosquitto_read_byte(struct _mosquitto_packet *packet, uint8_t *byte);
