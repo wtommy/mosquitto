@@ -152,12 +152,16 @@ int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloa
 
 int mosquitto_subscribe(struct mosquitto *mosq, const char *sub, int qos)
 {
-	return 0;
+	if(!mosq || mosq->sock < 0) return 1;
+
+	return _mosquitto_send_subscribe(mosq, false, sub, qos);
 }
 
 int mosquitto_unsubscribe(struct mosquitto *mosq, const char *sub)
 {
-	return 0;
+	if(!mosq || mosq->sock < 0) return 1;
+
+	return _mosquitto_send_unsubscribe(mosq, false, sub);
 }
 
 int mosquitto_loop(struct mosquitto *mosq)
