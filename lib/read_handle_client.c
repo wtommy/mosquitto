@@ -45,15 +45,21 @@ int _mosquitto_handle_connack(struct mosquitto *mosq)
 	uint8_t byte;
 	uint8_t rc;
 
+	printf("connack\n");
+	printf("rl: %d\n", mosq->in_packet.remaining_length);
 	if(!mosq || mosq->in_packet.remaining_length != 2){
 		return 1;
 	}
+	printf("a");
 	// FIXME mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received CONNACK");
 	if(_mosquitto_read_byte(&mosq->in_packet, &byte)) return 1; // Reserved byte, not used
+	printf("b");
 	if(_mosquitto_read_byte(&mosq->in_packet, &rc)) return 1;
+	printf("c");
 	if(mosq->on_connect){
 		mosq->on_connect(mosq->obj, rc);
 	}
+	printf("rc: %d\n", rc);
 	switch(rc){
 		case 0:
 			mosq->connected = true;
@@ -76,6 +82,7 @@ int _mosquitto_handle_suback(struct mosquitto *mosq)
 	uint16_t mid;
 	uint8_t granted_qos;
 
+	printf("suback\n");
 	// FIXME mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received SUBACK");
 	if(_mosquitto_read_uint16(&mosq->in_packet, &mid)) return 1;
 
