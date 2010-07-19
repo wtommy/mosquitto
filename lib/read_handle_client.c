@@ -56,6 +56,7 @@ int _mosquitto_handle_connack(struct mosquitto *mosq)
 	}
 	switch(rc){
 		case 0:
+			mosq->connected = true;
 			return 0;
 		case 1:
 			// FIXME mqtt3_log_printf(MQTT3_LOG_ERR, "Connection Refused: unacceptable protocol version");

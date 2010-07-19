@@ -53,6 +53,7 @@ struct mosquitto {
 	sqlite3 *db;
 	char *id;
 	int keepalive;
+	bool connected;
 	bool will;
 	char *will_topic;
 	uint32_t will_payloadlen;

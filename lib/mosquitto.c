@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <database_mosq.h>
 #include <net_mosq.h>
 #include <read_handle.h>
+#include <util_mosq.h>
 
 #include <errno.h>
 #include <sqlite3.h>
@@ -72,6 +73,7 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 		mosq->out_packet = NULL;
 		mosq->last_msg_in = time(NULL);
 		mosq->last_msg_out = time(NULL);
+		mosq->connected = false;
 		mosq->will = false;
 		mosq->will_topic = NULL;
 		mosq->will_payloadlen = 0;
@@ -196,9 +198,7 @@ int mosquitto_loop(struct mosquitto *mosq)
 			}
 		}
 	}
-	/* FIXME
-	mosquitto_check_keepalive(mosq);
-	*/
+	_mosquitto_check_keepalive(mosq);
 
 	return 0;
 }
