@@ -53,13 +53,13 @@ int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 	return 0;
 }
 
-int _mosquitto_raw_pingreq(struct mosquitto *mosq)
+int _mosquitto_send_pingreq(struct mosquitto *mosq)
 {
 	// FIXME if(mosq) _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Sending PINGREQ to %s", mosq->id);
 	return _mosquitto_send_simple_command(mosq, PINGREQ);
 }
 
-int _mosquitto_raw_pingresp(struct mosquitto *mosq)
+int _mosquitto_send_pingresp(struct mosquitto *mosq)
 {
 	// FIXME if(mosq) _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Sending PINGRESP to %s", mosq->id);
 	return _mosquitto_send_simple_command(mosq, PINGRESP);
