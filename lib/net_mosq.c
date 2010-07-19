@@ -73,6 +73,28 @@ int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *pa
 	return 0;
 }
 
+/* Close a socket associated with a context and set it to -1.
+ * Returns 1 on failure (context is NULL)
+ * Returns 0 on success.
+ */
+int _mosquitto_socket_close(struct mosquitto *mosq)
+{
+	int rc = 0;
+
+	if(!mosq) return 1;
+	if(mosq->sock != -1){
+		/* FIXME
+		if(mosq->id){
+			mqtt3_db_client_invalidate_socket(context->id, context->sock);
+		}
+		*/
+		rc = close(mosq->sock);
+		mosq->sock = -1;
+	}
+
+	return rc;
+}
+
 /* Create a socket and connect it to 'ip' on port 'port'.
  * Returns -1 on failure (ip is NULL, socket creation/connection error)
  * Returns sock number on success.

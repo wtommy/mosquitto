@@ -185,17 +185,13 @@ int mosquitto_loop(struct mosquitto *mosq)
 	}else{
 		if(FD_ISSET(mosq->sock, &readfds)){
 			if(mosquitto_read(mosq)){
-				/* FIXME
-				mosquitto_socket_close(mosq);
-				*/
+				_mosquitto_socket_close(mosq);
 				return 1;
 			}
 		}
 		if(FD_ISSET(mosq->sock, &writefds)){
 			if(mosquitto_write(mosq)){
-				/* FIXME
-				mosquitto_socket_close(mosq);
-				*/
+				_mosquitto_socket_close(mosq);
 				return 1;
 			}
 		}

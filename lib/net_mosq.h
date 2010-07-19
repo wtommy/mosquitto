@@ -12,6 +12,7 @@
 void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet);
 int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *packet);
 int _mosquitto_socket_connect(const char *host, uint16_t port);
+int _mosquitto_socket_close(struct mosquitto *mosq);
 
 int _mosquitto_read_byte(struct _mosquitto_packet *packet, uint8_t *byte);
 int _mosquitto_read_bytes(struct _mosquitto_packet *packet, uint8_t *bytes, uint32_t count);
