@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <database_mosq.h>
 #include <net_mosq.h>
 #include <read_handle.h>
+#include <send_mosq.h>
 #include <util_mosq.h>
 
 #include <errno.h>
@@ -129,17 +130,13 @@ int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int ke
 	if(!mosq || !host || !port) return 1;
 
 	mosq->sock = _mosquitto_socket_connect(host, port);
-/* FIXME
-	*context = mqtt3_context_init(sock);
-	if((*context)->sock == -1){
+
+	if(mosq->sock == -1){
 		return 1;
 	}
 
-	(*context)->id = mqtt3_strdup(id);
-	mqtt3_raw_connect(*context, id,
-			mosq->will_topic, mosq->will_payload, mosq->will_qos, mosq->will_retain
-			keepalive, clean_session);
-*/
+	_mosquitto_send_connect(mosq, keepalive, clean_session);
+
 	return 0;
 }
 

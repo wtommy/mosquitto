@@ -134,3 +134,8 @@ int _mosquitto_db_transaction_rollback(sqlite3 *db)
 	return rc;
 }
 
+uint16_t _mosquitto_db_mid_generate(sqlite3 *db, const char *client_id)
+{
+	// FIXME
+	return 1;
+}
