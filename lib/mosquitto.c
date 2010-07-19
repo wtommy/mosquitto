@@ -172,13 +172,9 @@ int mosquitto_loop(struct mosquitto *mosq)
 	FD_ZERO(&readfds);
 	FD_SET(mosq->sock, &readfds);
 	FD_ZERO(&writefds);
-	/* FIXME
 	if(mosq->out_packet){
-	*/
 		FD_SET(mosq->sock, &writefds);
-	/* FIXME
 	}
-	*/
 	timeout.tv_sec = 1;
 	timeout.tv_nsec = 0;
 
