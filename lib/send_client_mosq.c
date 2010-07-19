@@ -57,11 +57,13 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	if(!packet) return 1;
 
 	payloadlen = 2+strlen(mosq->id);
-	if(mosq->will && mosq->will_topic){
+	if(mosq->will){
+		if(mosq->will_topic){
 		payloadlen += 2+strlen(mosq->will_topic) + 2+mosq->will_payloadlen;
-	}else{
-		//FIXME - error
-		return 1;
+		}else{
+			//FIXME - error
+			return 1;
+		}
 	}
 
 	packet->command = CONNECT;
