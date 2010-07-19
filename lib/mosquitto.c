@@ -71,6 +71,8 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 		mosq->db = NULL;
 		mosq->keepalive = 60;
 		mosq->id = strdup(id);
+		mosq->in_packet.payload = NULL;
+		_mosquitto_packet_cleanup(&mosq->in_packet);
 		mosq->out_packet = NULL;
 		mosq->last_msg_in = time(NULL);
 		mosq->last_msg_out = time(NULL);
@@ -188,12 +190,14 @@ int mosquitto_loop(struct mosquitto *mosq)
 	}else{
 		if(FD_ISSET(mosq->sock, &readfds)){
 			if(mosquitto_read(mosq)){
+				fprintf(stderr, "Error in network read.\n");
 				_mosquitto_socket_close(mosq);
 				return 1;
 			}
 		}
 		if(FD_ISSET(mosq->sock, &writefds)){
 			if(mosquitto_write(mosq)){
+				fprintf(stderr, "Error in network write.\n");
 				_mosquitto_socket_close(mosq);
 				return 1;
 			}
