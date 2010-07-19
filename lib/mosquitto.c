@@ -135,9 +135,7 @@ int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int ke
 		return 1;
 	}
 
-	_mosquitto_send_connect(mosq, keepalive, clean_session);
-
-	return 0;
+	return _mosquitto_send_connect(mosq, keepalive, clean_session);
 }
 
 int mosquitto_disconnect(struct mosquitto *mosq)
