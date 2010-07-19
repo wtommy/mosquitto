@@ -392,6 +392,5 @@ int mosquitto_write(struct mosquitto *mosq)
 		mosq->last_msg_out = time(NULL);
 	}
 	return 0;
-	return 0;
 }
 
