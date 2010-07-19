@@ -142,7 +142,9 @@ int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int ke
 
 int mosquitto_disconnect(struct mosquitto *mosq)
 {
-	return 0;
+	if(!mosq || mosq->sock < 0) return 1;
+
+	return _mosquitto_send_disconnect(mosq);
 }
 
 int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
