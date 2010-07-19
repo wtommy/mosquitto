@@ -38,17 +38,19 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 
 #include <mosquitto.h>
+#include <mqtt3_protocol.h>
 #include <read_handle.h>
+#include <send_mosq.h>
 
 int _mosquitto_packet_handle(struct mosquitto *mosq)
 {
 	if(!mosq) return 1;
 
 	switch((mosq->in_packet.command)&0xF0){
-		// FIXME case PINGREQ:
-			// FIXME return mqtt3_handle_pingreq(context);
-		// FIXME case PINGRESP:
-			// FIXME return mqtt3_handle_pingresp(context);
+		case PINGREQ:
+			return _mosquitto_handle_pingreq(mosq);
+		case PINGRESP:
+			return _mosquitto_handle_pingresp(mosq);
 		// FIXME case PUBACK:
 			// FIXME return mqtt3_handle_puback(context);
 		// FIXME case PUBCOMP:
@@ -60,14 +62,32 @@ int _mosquitto_packet_handle(struct mosquitto *mosq)
 		// FIXME case PUBREL:
 			// FIXME return mqtt3_handle_pubrel(context);
 		case CONNACK:
-			return _mosquitto_handle_connack(context);
+			return _mosquitto_handle_connack(mosq);
 		case SUBACK:
-			return _mosquitto_handle_suback(context);
+			return _mosquitto_handle_suback(mosq);
 		case UNSUBACK:
-			return _mosquitto_handle_unsuback(context);
+			return _mosquitto_handle_unsuback(mosq);
 		default:
 			/* If we don't recognise the command, return an error straight away. */
 			return 1;
 	}
+}
+
+int _mosquitto_handle_pingreq(struct mosquitto *mosq)
+{
+	if(!mosq || mosq->in_packet.remaining_length != 0){
+		return 1;
+	}
+	//FIXME _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Received PINGREQ from %s", mosq->id);
+	return _mosquitto_send_pingresp(mosq);
+}
+
+int _mosquitto_handle_pingresp(struct mosquitto *mosq)
+{
+	if(!mosq || mosq->in_packet.remaining_length != 0){
+		return 1;
+	}
+	//FIXME mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGRESP from %s", mosq->id);
+	return 0;
 }
 
