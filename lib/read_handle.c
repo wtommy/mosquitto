@@ -40,7 +40,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mosquitto.h>
 #include <mqtt3_protocol.h>
 #include <read_handle.h>
+#include <net_mosq.h>
 #include <send_mosq.h>
+#include <util_mosq.h>
 
 int _mosquitto_packet_handle(struct mosquitto *mosq)
 {
@@ -55,8 +57,8 @@ int _mosquitto_packet_handle(struct mosquitto *mosq)
 			// FIXME return mqtt3_handle_puback(context);
 		// FIXME case PUBCOMP:
 			// FIXME return mqtt3_handle_pubcomp(context);
-		// FIXME case PUBLISH:
-			// FIXME return mqtt3_handle_publish(context);
+		case PUBLISH:
+			return _mosquitto_handle_publish(mosq);
 		// FIXME case PUBREC:
 			// FIXME return mqtt3_handle_pubrec(context);
 		// FIXME case PUBREL:
@@ -89,6 +91,69 @@ int _mosquitto_handle_pingresp(struct mosquitto *mosq)
 		return 1;
 	}
 	//FIXME mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGRESP from %s", mosq->id);
+	return 0;
+}
+
+int _mosquitto_handle_publish(struct mosquitto *mosq)
+{
+	uint8_t header;
+	struct mosquitto_message *message;
+
+	if(!mosq) return 1;
+
+	message = calloc(1, sizeof(struct mosquitto_message));
+	if(!message) return 1;
+
+	header = mosq->in_packet.command;
+
+	//FIXME _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Received PUBLISH from %s", mosq->id);
+	message->dup = (header & 0x08)>>3;
+	message->qos = (header & 0x06)>>1;
+	message->retain = (header & 0x01);
+
+	if(_mosquitto_read_string(&mosq->in_packet, &message->topic)) return 1;
+	if(_mosquitto_fix_sub_topic(&message->topic)) return 1;
+	if(!strlen(message->topic)){
+		mosquitto_message_cleanup(&message);
+		return 1;
+	}
+
+	if(message->qos > 0){
+		if(_mosquitto_read_uint16(&mosq->in_packet, &message->mid)){
+			mosquitto_message_cleanup(&message);
+			return 1;
+		}
+	}
+
+	message->payloadlen = mosq->in_packet.remaining_length - mosq->in_packet.pos;
+	if(message->payloadlen){
+		message->payload = calloc(message->payloadlen+1, sizeof(uint8_t));
+		if(_mosquitto_read_bytes(&mosq->in_packet, message->payload, message->payloadlen)){
+			mosquitto_message_cleanup(&message);
+			return 1;
+		}
+	}
+
+	switch(message->qos){
+		case 0:
+			if(mosq->on_message){
+				mosq->on_message(mosq->obj, message);
+			}else{
+				mosquitto_message_cleanup(&message);
+			}
+			break;
+		case 1:
+			mosquitto_message_cleanup(&message); // FIXME - temporary!
+			//FIXME if(mqtt3_db_messages_queue(mosq->id, topic, qos, retain, store_id)) rc = 1;
+			//FIXME if(mqtt3_raw_puback(mosq, mid)) rc = 1;
+			break;
+		case 2:
+			mosquitto_message_cleanup(&message); // FIXME - temporary!
+			//FIXME if(mqtt3_db_message_insert(mosq->id, mid, md_in, ms_wait_pubrec, qos, store_id)) rc = 1;
+			//FIXME if(mqtt3_raw_pubrec(mosq, mid)) rc = 1;
+			break;
+	}
+
 	return 0;
 }
 

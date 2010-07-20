@@ -40,18 +40,18 @@ static int topic_qos = 0;
 int verbose = 0;
 static struct mosquitto *mosq = NULL;
 
-void my_message_callback(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
+void my_message_callback(void *obj, struct mosquitto_message *message)
 {
 	if(verbose){
-		if(payloadlen){
-			printf("%s %s\n", topic, payload);
+		if(message->payloadlen){
+			printf("%s %s\n", message->topic, message->payload);
 		}else{
-			printf("%s (null)\n", topic);
+			printf("%s (null)\n", message->topic);
 		}
 		fflush(stdout);
 	}else{
-		if(payloadlen){
-			printf("%s\n", payload);
+		if(message->payloadlen){
+			printf("%s\n", message->payload);
 			fflush(stdout);
 		}
 	}

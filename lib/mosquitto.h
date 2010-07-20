@@ -73,7 +73,7 @@ struct mosquitto {
 	time_t last_msg_out;
 	void (*on_connect)(void *obj, int rc);
 	void (*on_publish)(void *obj, int mid);
-	void (*on_message)(void *obj, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
+	void (*on_message)(void *obj, struct mosquitto_message *message);
 	void (*on_subscribe)(void *obj, int mid);
 	void (*on_unsubscribe)(void *obj, int mid);
 	//void (*on_error)();

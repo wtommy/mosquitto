@@ -60,6 +60,10 @@ int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *pa
 
 	if(!mosq || !packet) return 1;
 
+	if(mosq->out_packet){
+		printf("op: %p %d\n", mosq->out_packet, mosq->out_packet->command);
+	}
+	printf("p: %p %d\n", packet, packet->command);
 	packet->next = NULL;
 	if(mosq->out_packet){
 		tail = mosq->out_packet;
