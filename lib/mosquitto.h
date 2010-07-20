@@ -65,12 +65,7 @@ struct mosquitto {
 	int keepalive;
 	bool connected;
 	struct _mosquitto_message *messages;
-	bool will;
-	char *will_topic;
-	uint32_t will_payloadlen;
-	uint8_t *will_payload;
-	int will_qos;
-	bool will_retain;
+	struct _mosquitto_message *will;
 	struct _mosquitto_packet in_packet;
 	struct _mosquitto_packet *out_packet;
 	time_t last_msg_in;

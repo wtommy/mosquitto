@@ -50,6 +50,7 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 {
 	struct _mosquitto_packet *packet = NULL;
 	int payloadlen;
+	uint8_t will = 0;
 
 	if(!mosq || !mosq->id) return 1;
 
@@ -58,8 +59,9 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 
 	payloadlen = 2+strlen(mosq->id);
 	if(mosq->will){
-		if(mosq->will_topic){
-		payloadlen += 2+strlen(mosq->will_topic) + 2+mosq->will_payloadlen;
+		will = 1;
+		if(mosq->will->topic){
+			payloadlen += 2+strlen(mosq->will->topic) + 2+mosq->will->payloadlen;
 		}else{
 			//FIXME - error
 			return 1;
@@ -77,14 +79,18 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	/* Variable header */
 	if(_mosquitto_write_string(packet, PROTOCOL_NAME, strlen(PROTOCOL_NAME))) return 1;
 	if(_mosquitto_write_byte(packet, PROTOCOL_VERSION)) return 1;
-	if(_mosquitto_write_byte(packet, ((mosq->will_retain&0x1)<<5) | ((mosq->will_qos&0x3)<<3) | ((mosq->will&0x1)<<2) | ((clean_session&0x1)<<1))) return 1;
+	if(will){
+		if(_mosquitto_write_byte(packet, ((mosq->will->retain&0x1)<<5) | ((mosq->will->qos&0x3)<<3) | ((will&0x1)<<2) | ((clean_session&0x1)<<1))) return 1;
+	}else{
+		if(_mosquitto_write_byte(packet, clean_session&0x1)<<1) return 1;
+	}
 	if(_mosquitto_write_uint16(packet, keepalive)) return 1;
 
 	/* Payload */
 	if(_mosquitto_write_string(packet, mosq->id, strlen(mosq->id))) return 1;
-	if(mosq->will){
-		if(_mosquitto_write_string(packet, mosq->will_topic, strlen(mosq->will_topic))) return 1;
-		if(_mosquitto_write_string(packet, (const char *)mosq->will_payload, mosq->will_payloadlen)) return 1;
+	if(will){
+		if(_mosquitto_write_string(packet, mosq->will->topic, strlen(mosq->will->topic))) return 1;
+		if(_mosquitto_write_string(packet, (const char *)mosq->will->payload, mosq->will->payloadlen)) return 1;
 	}
 
 	mosq->keepalive = keepalive;

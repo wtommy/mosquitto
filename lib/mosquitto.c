@@ -78,12 +78,7 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 		mosq->last_msg_out = time(NULL);
 		mosq->connected = false;
 		mosq->messages = NULL;
-		mosq->will = false;
-		mosq->will_topic = NULL;
-		mosq->will_payloadlen = 0;
-		mosq->will_payload = NULL;
-		mosq->will_qos = 0;
-		mosq->will_retain = false;
+		mosq->will = NULL;
 		mosq->on_connect = NULL;
 		mosq->on_publish = NULL;
 		mosq->on_message = NULL;
@@ -98,24 +93,32 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 	if(!mosq) return 1;
 	if(will && !topic) return 1;
 
-	if(mosq->will_topic) free(mosq->will_topic);
-	if(mosq->will_payload){
-		free(mosq->will_payload);
-		mosq->will_payload = NULL;
+	if(mosq->will){
+		if(mosq->will->topic) free(mosq->will->topic);
+		if(mosq->will->payload){
+			free(mosq->will->payload);
+			mosq->will->payload = NULL;
+		}
+		free(mosq->will);
+		mosq->will = NULL;
 	}
 
-	mosq->will = will;
-	mosq->will_topic = strdup(topic);
-	mosq->will_payloadlen = payloadlen;
-	if(mosq->will_payloadlen > 0){
-		if(!payload) return 1;
-		mosq->will_payload = malloc(sizeof(uint8_t)*mosq->will_payloadlen);
-		if(!mosq->will_payload) return 1;
+	if(will){
+		mosq->will = calloc(1, sizeof(struct _mosquitto_message));
+		if(!mosq->will) return 1;
+		mosq->will->topic = strdup(topic);
+		if(!mosq->will->topic) return 1;
+		mosq->will->payloadlen = payloadlen;
+		if(mosq->will->payloadlen > 0){
+			if(!payload) return 1;
+			mosq->will->payload = malloc(sizeof(uint8_t)*mosq->will->payloadlen);
+			if(!mosq->will->payload) return 1;
 
-		memcpy(mosq->will_payload, payload, payloadlen);
+			memcpy(mosq->will->payload, payload, payloadlen);
+		}
+		mosq->will->qos = qos;
+		mosq->will->retain = retain;
 	}
-	mosq->will_qos = qos;
-	mosq->will_retain = retain;
 
 	return 0;
 }
