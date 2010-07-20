@@ -34,6 +34,16 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include <stdlib.h>
 
+struct _mosquitto_message{
+	struct _mosquitto_message *next;
+	uint16_t mid;
+	char *topic;
+	uint8_t *payload;
+	uint32_t payloadlen;
+	int qos;
+	bool retain;
+};
+
 struct _mosquitto_packet{
 	uint8_t command;
 	uint8_t command_saved;
@@ -54,6 +64,7 @@ struct mosquitto {
 	char *id;
 	int keepalive;
 	bool connected;
+	struct _mosquitto_message *messages;
 	bool will;
 	char *will_topic;
 	uint32_t will_payloadlen;

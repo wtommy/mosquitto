@@ -77,6 +77,7 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 		mosq->last_msg_in = time(NULL);
 		mosq->last_msg_out = time(NULL);
 		mosq->connected = false;
+		mosq->messages = NULL;
 		mosq->will = false;
 		mosq->will_topic = NULL;
 		mosq->will_payloadlen = 0;
