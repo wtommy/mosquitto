@@ -68,6 +68,7 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 		mosq->out_packet = NULL;
 		mosq->last_msg_in = time(NULL);
 		mosq->last_msg_out = time(NULL);
+		mosq->last_mid = 0;
 		mosq->connected = false;
 		mosq->messages = NULL;
 		mosq->will = NULL;

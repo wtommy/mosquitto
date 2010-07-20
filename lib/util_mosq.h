@@ -33,5 +33,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 void _mosquitto_check_keepalive(struct mosquitto *mosq);
 int _mosquitto_fix_sub_topic(char **subtopic);
+uint16_t _mosquitto_mid_generate(struct mosquitto *mosq);
 
 #endif

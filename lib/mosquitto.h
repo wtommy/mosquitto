@@ -63,6 +63,7 @@ struct mosquitto {
 	char *id;
 	int keepalive;
 	bool connected;
+	uint16_t last_mid;
 	struct mosquitto_message *messages;
 	struct mosquitto_message *will;
 	struct _mosquitto_packet in_packet;

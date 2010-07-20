@@ -76,3 +76,12 @@ int _mosquitto_fix_sub_topic(char **subtopic)
 	return 0;
 }
 
+uint16_t _mosquitto_mid_generate(struct mosquitto *mosq)
+{
+	if(!mosq) return 1;
+
+	mosq->last_mid++;
+	if(mosq->last_mid == 0) mosq->last_mid++;
+	
+	return mosq->last_mid;
+}
