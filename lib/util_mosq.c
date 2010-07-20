@@ -44,3 +44,34 @@ void _mosquitto_check_keepalive(struct mosquitto *mosq)
 	}
 }
 
+/* Convert ////some////over/slashed///topic/etc/etc//
+ * into some/over/slashed/topic/etc/etc
+ */
+int _mosquitto_fix_sub_topic(char **subtopic)
+{
+	char *fixed = NULL;
+	char *token;
+
+	if(!subtopic || !(*subtopic)) return 1;
+
+	/* size of fixed here is +1 for the terminating 0 and +1 for the spurious /
+	 * that gets appended. */
+	fixed = calloc(strlen(*subtopic)+2, 1);
+	if(!fixed) return 1;
+
+	if((*subtopic)[0] == '/'){
+		fixed[0] = '/';
+	}
+	token = strtok(*subtopic, "/");
+	while(token){
+		strcat(fixed, token);
+		strcat(fixed, "/");
+		token = strtok(NULL, "/");
+	}
+
+	fixed[strlen(fixed)-1] = '\0';
+	free(*subtopic);
+	*subtopic = fixed;
+	return 0;
+}
+

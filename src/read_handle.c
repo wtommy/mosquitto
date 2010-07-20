@@ -39,6 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <util_mosq.h>
 
 #ifdef WITH_CLIENT
 /* Client callback for puback events - this WILL change. */
@@ -169,7 +170,7 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	retain = (header & 0x01);
 
 	if(_mosquitto_read_string(&context->in_packet, &topic)) return 1;
-	if(mqtt3_fix_sub_topic(&topic)) return 1;
+	if(_mosquitto_fix_sub_topic(&topic)) return 1;
 	if(!strlen(topic)){
 		return 1;
 	}

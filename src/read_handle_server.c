@@ -39,6 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <util_mosq.h>
 
 int mqtt3_handle_connect(mqtt3_context *context)
 {
@@ -143,7 +144,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 				if(payload) mqtt3_free(payload);
 				return 1;
 			}
-			if(mqtt3_fix_sub_topic(&sub)){
+			if(_mosquitto_fix_sub_topic(&sub)){
 				mqtt3_free(sub);
 				if(payload) mqtt3_free(payload);
 				return 1;
