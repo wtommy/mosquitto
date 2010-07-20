@@ -37,6 +37,7 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 int _mosquitto_send_disconnect(struct mosquitto *mosq);
 int _mosquitto_send_pingreq(struct mosquitto *mosq);
 int _mosquitto_send_pingresp(struct mosquitto *mosq);
+int _mosquitto_send_puback(struct mosquitto *mosq, uint16_t mid);
 int _mosquitto_send_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
 int _mosquitto_send_subscribe(struct mosquitto *mosq, bool dup, const char *topic, uint8_t topic_qos);
 int _mosquitto_send_unsubscribe(struct mosquitto *mosq, bool dup, const char *topic);

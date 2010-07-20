@@ -34,6 +34,29 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3_protocol.h>
 #include <net_mosq.h>
 
+/* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
+int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid)
+{
+	struct _mosquitto_packet *packet = NULL;
+
+	packet = calloc(1, sizeof(struct _mosquitto_packet));
+	if(!packet) return 1;
+
+	packet->command = command;
+	packet->remaining_length = 2;
+	packet->payload = malloc(sizeof(uint8_t)*2);
+	if(!packet->payload){
+		free(packet);
+		return 1;
+	}
+	packet->payload[0] = MOSQ_MSB(mid);
+	packet->payload[1] = MOSQ_LSB(mid);
+
+	if(_mosquitto_packet_queue(mosq, packet)) return 1;
+
+	return 0;
+}
+
 /* For DISCONNECT, PINGREQ and PINGRESP */
 int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 {
@@ -63,6 +86,12 @@ int _mosquitto_send_pingresp(struct mosquitto *mosq)
 {
 	// FIXME if(mosq) _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Sending PINGRESP to %s", mosq->id);
 	return _mosquitto_send_simple_command(mosq, PINGRESP);
+}
+
+int _mosquitto_send_puback(struct mosquitto *mosq, uint16_t mid)
+{
+	// FIXME if(mosq) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBACK to %s (Mid: %d)", mosq->id, mid);
+	return _mosquitto_send_command_with_mid(mosq, PUBACK, mid);
 }
 
 int _mosquitto_send_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
