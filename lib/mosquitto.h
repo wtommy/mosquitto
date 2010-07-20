@@ -42,6 +42,7 @@ struct _mosquitto_message{
 	uint32_t payloadlen;
 	int qos;
 	bool retain;
+	bool dup;
 };
 
 struct _mosquitto_packet{
