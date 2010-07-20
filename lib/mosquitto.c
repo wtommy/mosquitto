@@ -28,7 +28,6 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <mosquitto.h>
-#include <database_mosq.h>
 #include <net_mosq.h>
 #include <read_handle.h>
 #include <send_mosq.h>
@@ -43,8 +42,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <time.h>
 #include <unistd.h>
 
-void mosquitto_lib_init(void)
+int mosquitto_lib_init(void)
 {
+	return 0;
 }
 
 void mosquitto_lib_cleanup(void)

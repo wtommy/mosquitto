@@ -42,7 +42,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mosquitto.h>
 #include <mqtt3_protocol.h>
-#include <database_mosq.h>
 #include <net_mosq.h>
 #include <send_mosq.h>
 
@@ -126,7 +125,7 @@ int _mosquitto_send_subscribe(struct mosquitto *mosq, bool dup, const char *topi
 	}
 
 	/* Variable header */
-	mid = _mosquitto_db_mid_generate(mosq->db, mosq->id);
+	// FIXME mid = _mosquitto_db_mid_generate(mosq->db, mosq->id);
 	if(_mosquitto_write_uint16(packet, mid)) return 1;
 
 	/* Payload */
@@ -161,7 +160,7 @@ int _mosquitto_send_unsubscribe(struct mosquitto *mosq, bool dup, const char *to
 	}
 
 	/* Variable header */
-	mid = _mosquitto_db_mid_generate(mosq->db, mosq->id);
+	// FIXME mid = _mosquitto_db_mid_generate(mosq->db, mosq->id);
 	if(_mosquitto_write_uint16(packet, mid)) return 1;
 
 	/* Payload */
