@@ -29,24 +29,17 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mosquitto.h>
 
-#include <sqlite3.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-int mosquitto_lib_init(void)
+void mosquitto_lib_init(void)
 {
-	if(sqlite3_initialize() != SQLITE_OK){
-		return 1;
-	}
-
-	return 0;
 }
 
 void mosquitto_lib_cleanup(void)
 {
-	sqlite3_shutdown();
 }
 
 struct mosquitto *mosquitto_new(void *obj, const char *id)
