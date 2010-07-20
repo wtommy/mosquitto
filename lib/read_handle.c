@@ -53,8 +53,8 @@ int _mosquitto_packet_handle(struct mosquitto *mosq)
 			return _mosquitto_handle_pingreq(mosq);
 		case PINGRESP:
 			return _mosquitto_handle_pingresp(mosq);
-		// FIXME case PUBACK:
-			// FIXME return mqtt3_handle_puback(context);
+		case PUBACK:
+			return _mosquitto_handle_puback(mosq);
 		// FIXME case PUBCOMP:
 			// FIXME return mqtt3_handle_pubcomp(context);
 		case PUBLISH:
@@ -91,6 +91,28 @@ int _mosquitto_handle_pingresp(struct mosquitto *mosq)
 		return 1;
 	}
 	//FIXME mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGRESP from %s", mosq->id);
+	return 0;
+}
+
+int _mosquitto_handle_puback(struct mosquitto *mosq)
+{
+	uint16_t mid;
+
+	if(!mosq || mosq->in_packet.remaining_length != 2){
+		return 1;
+	}
+	if(_mosquitto_read_uint16(&mosq->in_packet, &mid)) return 1;
+	// FIXME _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Received PUBACK from %s (Mid: %d)", mosq->id, mid);
+
+	if(mosq->on_publish){
+		mosq->on_publish(mosq->obj, mid);
+	}
+
+	/* FIXME
+	if(mid){
+		if(mqtt3_db_message_delete(mosq->id, mid, md_out)) return 1;
+	}
+	*/
 	return 0;
 }
 
