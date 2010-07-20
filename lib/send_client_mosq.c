@@ -82,7 +82,7 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	if(will){
 		if(_mosquitto_write_byte(packet, ((mosq->will->retain&0x1)<<5) | ((mosq->will->qos&0x3)<<3) | ((will&0x1)<<2) | ((clean_session&0x1)<<1))) return 1;
 	}else{
-		if(_mosquitto_write_byte(packet, clean_session&0x1)<<1) return 1;
+		if(_mosquitto_write_byte(packet, (clean_session&0x1)<<1)) return 1;
 	}
 	if(_mosquitto_write_uint16(packet, keepalive)) return 1;
 
