@@ -120,6 +120,7 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 {
 	uint8_t header;
 	struct mosquitto_message *message;
+	int rc = 0;
 
 	if(!mosq) return 1;
 
@@ -165,9 +166,12 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 			}
 			break;
 		case 1:
-			mosquitto_message_cleanup(&message); // FIXME - temporary!
-			//FIXME if(mqtt3_db_messages_queue(mosq->id, topic, qos, retain, store_id)) rc = 1;
-			//FIXME if(mqtt3_raw_puback(mosq, mid)) rc = 1;
+			if(_mosquitto_send_puback(mosq, message->mid)) rc = 1;
+			if(mosq->on_message){
+				mosq->on_message(mosq->obj, message);
+			}else{
+				mosquitto_message_cleanup(&message);
+			}
 			break;
 		case 2:
 			mosquitto_message_cleanup(&message); // FIXME - temporary!
@@ -176,6 +180,6 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 			break;
 	}
 
-	return 0;
+	return rc;
 }
 
