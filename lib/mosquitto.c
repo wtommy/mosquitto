@@ -68,7 +68,6 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 	if(mosq){
 		mosq->obj = obj;
 		mosq->sock = -1;
-		mosq->db = NULL;
 		mosq->keepalive = 60;
 		mosq->id = strdup(id);
 		mosq->in_packet.payload = NULL;
@@ -126,7 +125,6 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 void mosquitto_destroy(struct mosquitto *mosq)
 {
 	if(mosq->id) free(mosq->id);
-	if(mosq->db) _mosquitto_db_close(mosq->db);
 
 	free(mosq);
 }
