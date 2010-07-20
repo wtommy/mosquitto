@@ -233,7 +233,9 @@ int mqtt3_db_open(mqtt3_config *config)
 
 int mqtt3_db_close(void)
 {
-	_mosquitto_db_close(db);
+	_mosquitto_db_statements_finalize(db);
+
+	sqlite3_close(db);
 	db = NULL;
 
 	sqlite3_shutdown();
