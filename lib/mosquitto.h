@@ -94,4 +94,6 @@ int mosquitto_loop(struct mosquitto *mosq);
 int mosquitto_read(struct mosquitto *mosq);
 int mosquitto_write(struct mosquitto *mosq);
 
+void mosquitto_message_cleanup(struct _mosquitto_message **message);
+
 #endif
