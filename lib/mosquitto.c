@@ -104,7 +104,7 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 	}
 
 	if(will){
-		mosq->will = calloc(1, sizeof(struct _mosquitto_message));
+		mosq->will = calloc(1, sizeof(struct mosquitto_message));
 		if(!mosq->will) return 1;
 		mosq->will->topic = strdup(topic);
 		if(!mosq->will->topic) return 1;
@@ -394,4 +394,17 @@ int mosquitto_write(struct mosquitto *mosq)
 	}
 	return 0;
 }
+
+void mosquitto_message_cleanup(struct mosquitto_message **message)
+{
+	struct mosquitto_message *msg;
+
+	if(!message || !*message) return;
+
+	msg = *message;
+
+	if(msg->topic) free(msg->topic);
+	if(msg->payload) free(msg->payload);
+	free(msg);
+};
 
