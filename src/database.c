@@ -422,7 +422,7 @@ static int _mqtt3_db_upgrade(void)
 {
 	int rc = 0;
 	sqlite3_stmt *stmt = NULL;
-	int version;
+	int version = 0;
 
 	if(!db) return 1;
 
