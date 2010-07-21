@@ -155,27 +155,9 @@ class MosquittoMessage(Structure):
 				("state", c_int),
 				("mid", c_uint16),
 				("topic", c_char_p),
-				("payload", POINTER(c_uint8)),
+				("payload", c_char_p),
 				("payloadlen", c_uint32),
 				("qos", c_int),
 				("retain", c_bool),
 				("dup", c_bool)]
-
-
-def py_on_connect(obj, rc):
-	print "rc: ", rc
-
-
-def py_on_message(obj, message):
-	print message.contents.topic
-
-
-bob = Mosquitto("bob")
-bob.connect_callback(py_on_connect)
-bob.message_callback(py_on_message)
-bob.connect("127.0.0.1", 1883, 60, True)
-bob.subscribe("$SYS/#", 2)
-
-while 1:
-	bob.loop(None)
 
