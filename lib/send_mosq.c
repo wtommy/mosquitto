@@ -94,13 +94,13 @@ int _mosquitto_send_pingresp(struct mosquitto *mosq)
 
 int _mosquitto_send_puback(struct mosquitto *mosq, uint16_t mid)
 {
-	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBACK to %s (Mid: %d)", mosq->id, mid);
+	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBACK (Mid: %d)", mid);
 	return _mosquitto_send_command_with_mid(mosq, PUBACK, mid);
 }
 
 int _mosquitto_send_pubcomp(struct mosquitto *mosq, uint16_t mid)
 {
-	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBCOMP to %s (Mid: %d)", mosq->id, mid);
+	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBCOMP (Mid: %d)", mid);
 	return _mosquitto_send_command_with_mid(mosq, PUBCOMP, mid);
 }
 
@@ -111,7 +111,7 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 
 	if(!mosq || mosq->sock == -1 || !topic) return 1;
 
-	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBLISH to %s (%d, %d, %d, %d, '%s', ... (%ld bytes))", mosq->id, dup, qos, retain, mid, topic, (long)payloadlen);
+	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBLISH (%d, %d, %d, %d, '%s', ... (%ld bytes))", dup, qos, retain, mid, topic, (long)payloadlen);
 
 	packetlen = 2+strlen(topic) + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
@@ -163,13 +163,13 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 
 int _mosquitto_send_pubrec(struct mosquitto *mosq, uint16_t mid)
 {
-	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBREC to %s (Mid: %d)", mosq->id, mid);
+	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBREC (Mid: %d)", mid);
 	return _mosquitto_send_command_with_mid(mosq, PUBREC, mid);
 }
 
 int _mosquitto_send_pubrel(struct mosquitto *mosq, uint16_t mid)
 {
-	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBREL to %s (Mid: %d)", mosq->id, mid);
+	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBREL (Mid: %d)", mid);
 	return _mosquitto_send_command_with_mid(mosq, PUBREL, mid);
 }
 
