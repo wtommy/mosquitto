@@ -44,6 +44,19 @@ void mosquitto_message_cleanup(struct mosquitto_message **message)
 	free(msg);
 };
 
+void _mosquitto_message_cleanup_all(struct mosquitto *mosq)
+{
+	struct mosquitto_message *tmp;
+
+	if(!mosq) return;
+
+	while(mosq->messages){
+		tmp = mosq->messages->next;
+		mosquitto_message_cleanup(&mosq->messages);
+		mosq->messages = tmp;
+	}
+};
+
 int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message *message)
 {
 	struct mosquitto_message *tail;

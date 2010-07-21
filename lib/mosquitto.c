@@ -119,7 +119,7 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 void mosquitto_destroy(struct mosquitto *mosq)
 {
 	if(mosq->id) free(mosq->id);
-
+	_mosquitto_messages_cleanup_all(mosq);
 	free(mosq);
 }
 

@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mosquitto.h>
 
+void _mosquitto_message_cleanup_all(struct mosquitto *mosq);
 int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message *message);
 
 #endif
