@@ -107,7 +107,11 @@ int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquit
 	cur = mosq->messages;
 	while(cur){
 		if(cur->mid == mid && cur->direction == dir){
-			prev->next = cur->next;
+			if(prev){
+				prev->next = cur->next;
+			}else{
+				mosq->messages = cur->next;
+			}
 			*message = cur;
 			return 0;
 		}
