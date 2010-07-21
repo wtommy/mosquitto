@@ -149,11 +149,14 @@ int mosquitto_disconnect(struct mosquitto *mosq)
 int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
 	struct mosquitto_message *message;
+	uint16_t mid;
 
 	if(!mosq || !topic || qos<0 || qos>2) return 1;
 
+	mid = _mosquitto_mid_generate(mosq);
+
 	if(qos == 0){
-		return _mosquitto_send_publish(mosq, topic, payloadlen, payload, qos, retain, false);
+		return _mosquitto_send_publish(mosq, mid, topic, payloadlen, payload, qos, retain, false);
 	}else{
 		message = calloc(1, sizeof(struct mosquitto_message));
 		if(!message) return 1;
@@ -166,7 +169,7 @@ int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloa
 		}else if(qos == 2){
 			message->state = mosq_ms_wait_pubrec;
 		}
-		message->mid = _mosquitto_mid_generate(mosq);
+		message->mid = mid;
 		message->topic = strdup(topic);
 		if(!message->topic){
 			mosquitto_message_cleanup(&message);
@@ -191,7 +194,7 @@ int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloa
 			mosquitto_message_cleanup(&message);
 			return 1;
 		}
-		return _mosquitto_send_publish(mosq, message->topic, message->payloadlen, message->payload, message->qos, message->retain, message->dup);
+		return _mosquitto_send_publish(mosq, message->mid, message->topic, message->payloadlen, message->payload, message->qos, message->retain, message->dup);
 	}
 }
 
