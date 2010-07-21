@@ -148,6 +148,11 @@ void mosquitto_message_retry_check(struct mosquitto *mosq)
 	}
 }
 
+void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_retry)
+{
+	if(mosq) mosq->message_retry = message_retry;
+}
+
 int _mosquitto_message_update(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, enum mosquitto_msg_state state)
 {
 	struct mosquitto_message *message;
