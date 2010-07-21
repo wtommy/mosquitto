@@ -69,6 +69,18 @@ void my_connect_callback(void *obj, int result)
 	}
 }
 
+void my_subscribe_callback(void *obj, uint16_t mid, int qos_count, uint8_t *granted_qos)
+{
+	int i;
+
+	printf("Subscribed (mid: %d): %d", mid, granted_qos[0]);
+	for(i=1; i<qos_count; i++){
+		printf(", %d", granted_qos[i]);
+	}
+	printf("\n");
+	free(granted_qos);
+}
+
 void print_usage(void)
 {
 	printf("mosquitto_sub is a simple mqtt client that will subscribe to a single topic and print all messages it receives.\n\n");
@@ -262,6 +274,9 @@ int main(int argc, char *argv[])
 	}
 	mosq->on_connect = my_connect_callback;
 	mosq->on_message = my_message_callback;
+	if(debug){
+		mosq->on_subscribe = my_subscribe_callback;
+	}
 
 	if(mosquitto_connect(mosq, host, port, keepalive, clean_session)){
 		fprintf(stderr, "Unable to connect.\n");
