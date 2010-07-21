@@ -381,8 +381,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	mosq->on_connect = my_connect_callback;
-	mosq->on_publish = my_publish_callback;
+	mosquitto_connect_callback_set(mosq, my_connect_callback);
+	mosquitto_publish_callback_set(mosq, my_publish_callback);
 
 	if(mosquitto_connect(mosq, host, port, keepalive, true)){
 		fprintf(stderr, "Unable to connect.\n");

@@ -123,6 +123,12 @@ int mosquitto_loop(struct mosquitto *mosq, struct timespec *timeout);
 int mosquitto_read(struct mosquitto *mosq);
 int mosquitto_write(struct mosquitto *mosq);
 
+void mosquitto_connect_callback_set(struct mosquitto *mosq, void (*on_connect)(void *, int));
+void mosquitto_publish_callback_set(struct mosquitto *mosq, void (*on_publish)(void *, uint16_t));
+void mosquitto_message_callback_set(struct mosquitto *mosq, void (*on_message)(void *, struct mosquitto_message *));
+void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, uint8_t *));
+void mosquitto_unsubscribe_callback_set(struct mosquitto *mosq, void (*on_unsubscribe)(void *, uint16_t));
+
 void mosquitto_message_retry_check(struct mosquitto *mosq);
 void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_retry);
 void mosquitto_message_cleanup(struct mosquitto_message **message);

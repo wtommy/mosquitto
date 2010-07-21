@@ -269,8 +269,8 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Error: Problem setting will.\n");
 		return 1;
 	}
-	mosq->on_connect = my_connect_callback;
-	mosq->on_message = my_message_callback;
+	mosquitto_connect_callback_set(mosq, my_connect_callback);
+	mosquitto_message_callback_set(mosq, my_message_callback);
 	if(debug){
 		mosq->on_subscribe = my_subscribe_callback;
 	}

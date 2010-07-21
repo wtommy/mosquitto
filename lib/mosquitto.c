@@ -437,3 +437,28 @@ int mosquitto_write(struct mosquitto *mosq)
 	return 0;
 }
 
+void mosquitto_connect_callback_set(struct mosquitto *mosq, void (*on_connect)(void *, int))
+{
+	if(mosq) mosq->on_connect = on_connect;
+}
+
+void mosquitto_publish_callback_set(struct mosquitto *mosq, void (*on_publish)(void *, uint16_t))
+{
+	if(mosq) mosq->on_publish = on_publish;
+}
+
+void mosquitto_message_callback_set(struct mosquitto *mosq, void (*on_message)(void *, struct mosquitto_message *))
+{
+	if(mosq) mosq->on_message = on_message;
+}
+
+void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, uint8_t *))
+{
+	if(mosq) mosq->on_subscribe = on_subscribe;
+}
+
+void mosquitto_unsubscribe_callback_set(struct mosquitto *mosq, void (*on_unsubscribe)(void *, uint16_t))
+{
+	if(mosq) mosq->on_unsubscribe = on_unsubscribe;
+}
+
