@@ -94,6 +94,12 @@ int _mosquitto_send_puback(struct mosquitto *mosq, uint16_t mid)
 	return _mosquitto_send_command_with_mid(mosq, PUBACK, mid);
 }
 
+int _mosquitto_send_pubcomp(struct mosquitto *mosq, uint16_t mid)
+{
+	// FIXME if(mosq) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBCOMP to %s (Mid: %d)", mosq->id, mid);
+	return _mosquitto_send_command_with_mid(mosq, PUBCOMP, mid);
+}
+
 int _mosquitto_send_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain, bool dup)
 {
 	struct _mosquitto_packet *packet = NULL;
