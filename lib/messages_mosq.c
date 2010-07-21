@@ -98,6 +98,24 @@ int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message *m
 	return 0;
 }
 
+int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, struct mosquitto_message **message)
+{
+	struct mosquitto_message *cur, *prev = NULL;
+	if(!mosq || !message) return 1;
+
+	cur = mosq->messages;
+	while(cur){
+		if(cur->mid == mid && cur->direction == dir){
+			prev->next = cur->next;
+			*message = cur;
+			return 0;
+		}
+		prev = cur;
+		cur = cur->next;
+	}
+	return 1;
+}
+
 void mosquitto_message_retry_check(struct mosquitto *mosq)
 {
 	struct mosquitto_message *message;
