@@ -145,13 +145,13 @@ void mosquitto_message_retry_check(struct mosquitto *mosq)
 int _mosquitto_message_update(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, enum mosquitto_msg_state state)
 {
 	struct mosquitto_message *message;
-	time_t now = time(NULL);
 	if(!mosq) return 1;
 
 	message = mosq->messages;
 	while(message){
 		if(message->mid == mid && message->direction == dir){
 			message->state = state;
+			message->timestamp = time(NULL);
 			return 0;
 		}
 	}
