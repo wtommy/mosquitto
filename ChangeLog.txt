@@ -13,6 +13,9 @@
 - Add keepalive_interval variable for bridges.
 - Remove default topic subscription for mosquitto_sub because the old
   behaviour was too confusing.
+- Added a C client library, which the pub and sub clients now use.
+- Added a C++ client library (bound to the C library).
+- Added a Python client library (bound to the C library).
 
 0.7 - 20100615
 ==============
