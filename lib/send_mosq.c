@@ -82,13 +82,13 @@ int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 
 int _mosquitto_send_pingreq(struct mosquitto *mosq)
 {
-	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PINGREQ to %s", mosq->id);
+	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PINGREQ");
 	return _mosquitto_send_simple_command(mosq, PINGREQ);
 }
 
 int _mosquitto_send_pingresp(struct mosquitto *mosq)
 {
-	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PINGRESP to %s", mosq->id);
+	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PINGRESP");
 	return _mosquitto_send_simple_command(mosq, PINGRESP);
 }
 

@@ -82,7 +82,7 @@ int _mosquitto_handle_pingreq(struct mosquitto *mosq)
 	if(!mosq || mosq->in_packet.remaining_length != 0){
 		return 1;
 	}
-	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PINGREQ from %s", mosq->id);
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PINGREQ");
 	return _mosquitto_send_pingresp(mosq);
 }
 
@@ -91,7 +91,7 @@ int _mosquitto_handle_pingresp(struct mosquitto *mosq)
 	if(!mosq || mosq->in_packet.remaining_length != 0){
 		return 1;
 	}
-	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PINGRESP from %s", mosq->id);
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PINGRESP");
 	return 0;
 }
 
