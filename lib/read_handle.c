@@ -55,9 +55,8 @@ int _mosquitto_packet_handle(struct mosquitto *mosq)
 		case PINGRESP:
 			return _mosquitto_handle_pingresp(mosq);
 		case PUBACK:
-			return _mosquitto_handle_puback(mosq);
-		// FIXME case PUBCOMP:
-			// FIXME return mqtt3_handle_pubcomp(context);
+		case PUBCOMP:
+			return _mosquitto_handle_pubackcomp(mosq);
 		case PUBLISH:
 			return _mosquitto_handle_publish(mosq);
 		case PUBREC:
@@ -95,7 +94,7 @@ int _mosquitto_handle_pingresp(struct mosquitto *mosq)
 	return 0;
 }
 
-int _mosquitto_handle_puback(struct mosquitto *mosq)
+int _mosquitto_handle_pubackcomp(struct mosquitto *mosq)
 {
 	uint16_t mid;
 
