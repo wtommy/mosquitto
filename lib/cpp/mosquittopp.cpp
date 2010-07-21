@@ -50,10 +50,10 @@ static void on_message_wrapper(void *obj, struct mosquitto_message *message)
 	m->on_message(message);
 }
 
-static void on_subscribe_wrapper(void *obj, int mid)
+static void on_subscribe_wrapper(void *obj, int mid, int qos_count, uint8_t *granted_qos)
 {
 	class mosquittopp *m = (class mosquittopp *)obj;
-	m->on_subscribe(mid);
+	m->on_subscribe(mid, qos_count, granted_qos);
 }
 
 static void on_unsubscribe_wrapper(void *obj, int mid)
