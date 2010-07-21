@@ -80,6 +80,8 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 		mosq->on_message = NULL;
 		mosq->on_subscribe = NULL;
 		mosq->on_unsubscribe = NULL;
+		mosq->log_destinations = MOSQ_LOG_NONE;
+		mosq->log_priorities = MOSQ_LOG_ERR | MOSQ_LOG_WARNING | MOSQ_LOG_NOTICE | MOSQ_LOG_INFO;
 	}
 	return mosq;
 }

@@ -34,6 +34,18 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <time.h>
 
+/* Log destinations */
+#define MOSQ_LOG_NONE 0x00
+#define MOSQ_LOG_STDOUT 0x04
+#define MOSQ_LOG_STDERR 0x08
+
+/* Log types */
+#define MOSQ_LOG_INFO 0x01
+#define MOSQ_LOG_NOTICE 0x02
+#define MOSQ_LOG_WARNING 0x04
+#define MOSQ_LOG_ERR 0x08
+#define MOSQ_LOG_DEBUG 0x10
+
 enum mosquitto_msg_direction {
 	mosq_md_in = 0,
 	mosq_md_out = 1
@@ -89,6 +101,8 @@ struct mosquitto {
 	struct _mosquitto_packet *out_packet;
 	time_t last_msg_in;
 	time_t last_msg_out;
+	int log_priorities;
+	int log_destinations;
 	void (*on_connect)(void *obj, int rc);
 	void (*on_publish)(void *obj, uint16_t mid);
 	void (*on_message)(void *obj, struct mosquitto_message *message);
@@ -115,5 +129,7 @@ int mosquitto_write(struct mosquitto *mosq);
 void mosquitto_message_retry_check(struct mosquitto *mosq);
 void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_retry);
 void mosquitto_message_cleanup(struct mosquitto_message **message);
+
+int mosquitto_log_init(struct mosquitto *mosq, int priorities, int destinations);
 
 #endif

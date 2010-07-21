@@ -87,6 +87,11 @@ int mosquittopp::disconnect()
 	return mosquitto_disconnect(mosq);
 }
 
+int mosquittopp::log_init(int priorities, int destinations)
+{
+	return mosquitto_log_init(mosq, priorities, destinations);
+}
+
 int mosquittopp::will_set(bool will, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
 	return mosquitto_will_set(mosq, will, topic, payloadlen, payload, qos, retain);

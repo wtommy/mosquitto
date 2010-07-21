@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2010, Roger Light <roger@atchoo.org>
+Copyright (c) 2009,2010, Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,41 +26,44 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
-#ifndef _MOSQUITTOPP_H_
-#define _MOSQUITTOPP_H_
-
-#include <stdint.h>
-#include <cstdlib>
-#include <time.h>
 #include <mosquitto.h>
 
-class mosquittopp {
-	private:
-		struct mosquitto *mosq;
-	public:
-		mosquittopp(const char *id);
-		~mosquittopp();
+int mosquitto_log_init(struct mosquitto *mosq, int priorities, int destinations)
+{
+	if(!mosq) return 1;
 
-		int log_init(int priorities, int destinations);
-		int will_set(bool will, const char *topic, uint32_t payloadlen=0, const uint8_t *payload=NULL, int qos=0, bool retain=false);
-		int connect(const char *host, int port=1883, int keepalive=60, bool clean_session=true);
-		int disconnect();
-		int publish(uint16_t *mid, const char *topic, uint32_t payloadlen=0, const uint8_t *payload=NULL, int qos=0, bool retain=false);
-		int subscribe(const char *sub, int qos=0);
-		int unsubscribe(const char *sub);
-		void message_retry_set(unsigned int message_retry);
+	mosq->log_priorities = priorities;
+	mosq->log_destinations = destinations;
 
-		int loop(struct timespec *timeout=NULL);
-		int read();
-		int write();
-		
-		virtual void on_connect(int rc) {return;};
-		virtual void on_publish(uint16_t mid) {return;};
-		virtual void on_message(struct mosquitto_message *message) {return;};
-		virtual void on_subscribe(uint16_t mid, int qos_count, uint8_t *granted_qos) {return;};
-		virtual void on_unsubscribe(uint16_t mid) {return;};
-		virtual void on_error() {return;};
-};
+	return 0;
+}
 
-#endif
+int _mosquitto_log_printf(struct mosquitto *mosq, int priority, const char *fmt, ...)
+{
+	va_list va;
+	char s[500];
+
+	if(!mosq) return 1;
+
+	if((mosq->log_priorities & priority) && mosq->log_destinations != MOSQ_LOG_NONE){
+		va_start(va, fmt);
+		vsnprintf(s, 500, fmt, va);
+		va_end(va);
+
+		if(mosq->log_destinations & MOSQ_LOG_STDOUT){
+			fprintf(stdout, "%s\n", s);
+			fflush(stdout);
+		}
+		if(mosq->log_destinations & MOSQ_LOG_STDERR){
+			fprintf(stderr, "%s\n", s);
+			fflush(stderr);
+		}
+	}
+
+	return 0;
+}
+

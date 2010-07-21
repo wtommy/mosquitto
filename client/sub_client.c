@@ -256,17 +256,15 @@ int main(int argc, char *argv[])
 		print_usage();
 		return 1;
 	}
-	#if 0
-	if(debug){
-		mqtt3_log_init(MQTT3_LOG_DEBUG | MQTT3_LOG_ERR | MQTT3_LOG_WARNING
-				| MQTT3_LOG_NOTICE | MQTT3_LOG_INFO, MQTT3_LOG_STDERR);
-	}
-	#endif
 	mosquitto_lib_init();
 	mosq = mosquitto_new(NULL, id);
 	if(!mosq){
 		fprintf(stderr, "Error: Out of memory.\n");
 		return 1;
+	}
+	if(debug){
+		mosquitto_log_init(mosq, MOSQ_LOG_DEBUG | MOSQ_LOG_ERR | MOSQ_LOG_WARNING
+				| MOSQ_LOG_NOTICE | MOSQ_LOG_INFO, MOSQ_LOG_STDERR);
 	}
 	if(will_topic && mosquitto_will_set(mosq, true, will_topic, will_payloadlen, will_payload, will_qos, will_retain)){
 		fprintf(stderr, "Error: Problem setting will.\n");

@@ -38,6 +38,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 
 #include <mosquitto.h>
+#include <logging_mosq.h>
 #include <messages_mosq.h>
 #include <mqtt3_protocol.h>
 #include <net_mosq.h>
@@ -81,7 +82,7 @@ int _mosquitto_handle_pingreq(struct mosquitto *mosq)
 	if(!mosq || mosq->in_packet.remaining_length != 0){
 		return 1;
 	}
-	//FIXME _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Received PINGREQ from %s", mosq->id);
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PINGREQ from %s", mosq->id);
 	return _mosquitto_send_pingresp(mosq);
 }
 
@@ -90,7 +91,7 @@ int _mosquitto_handle_pingresp(struct mosquitto *mosq)
 	if(!mosq || mosq->in_packet.remaining_length != 0){
 		return 1;
 	}
-	//FIXME mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGRESP from %s", mosq->id);
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PINGRESP from %s", mosq->id);
 	return 0;
 }
 
@@ -102,7 +103,7 @@ int _mosquitto_handle_pubackcomp(struct mosquitto *mosq)
 		return 1;
 	}
 	if(_mosquitto_read_uint16(&mosq->in_packet, &mid)) return 1;
-	// FIXME _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Received PUBACK from %s (Mid: %d)", mosq->id, mid);
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBACK from %s (Mid: %d)", mosq->id, mid);
 
 	if(!_mosquitto_message_delete(mosq, mid, mosq_md_out)){
 		/* Only inform the client the message has been sent once. */
@@ -127,7 +128,7 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 
 	header = mosq->in_packet.command;
 
-	//FIXME _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Received PUBLISH from %s", mosq->id);
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBLISH from %s", mosq->id);
 	message->direction = mosq_md_in;
 	message->dup = (header & 0x08)>>3;
 	message->qos = (header & 0x06)>>1;
@@ -191,7 +192,7 @@ int _mosquitto_handle_pubrec(struct mosquitto *mosq)
 		return 1;
 	}
 	if(_mosquitto_read_uint16(&mosq->in_packet, &mid)) return 1;
-	// FIXME _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Received PUBREC from %s (Mid: %d)", context->id, mid);
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBREC from %s (Mid: %d)", mosq->id, mid);
 
 	if(_mosquitto_message_update(mosq, mid, mosq_md_out, mosq_ms_wait_pubcomp)) return 1;
 	if(_mosquitto_send_pubrel(mosq, mid)) return 1;
@@ -208,7 +209,7 @@ int _mosquitto_handle_pubrel(struct mosquitto *mosq)
 		return 1;
 	}
 	if(_mosquitto_read_uint16(&mosq->in_packet, &mid)) return 1;
-	// FIXME _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Received PUBREL from %s (Mid: %d)", mosq->id, mid);
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBREL from %s (Mid: %d)", mosq->id, mid);
 
 	if(!_mosquitto_message_remove(mosq, mid, mosq_md_in, &message)){
 		/* Only pass the message on if we have removed it from the queue - this
