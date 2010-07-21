@@ -53,7 +53,7 @@ static int retain = 0;
 static int mode = MSGMODE_NONE;
 static int status = STATUS_CONNECTING;
 static struct mosquitto *mosq = NULL;
-static int mid_sent = 0;
+static uint16_t mid_sent = 0;
 
 void my_connect_callback(void *obj, int result)
 {
@@ -76,7 +76,7 @@ void my_connect_callback(void *obj, int result)
 	}
 }
 
-void my_publish_callback(void *obj, int mid)
+void my_publish_callback(void *obj, uint16_t mid)
 {
 	if(mode != MSGMODE_STDIN_LINE){
 		mosquitto_disconnect(mosq);

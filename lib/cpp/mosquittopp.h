@@ -55,10 +55,10 @@ class mosquittopp {
 		int write();
 		
 		virtual void on_connect(int rc) {return;};
-		virtual void on_publish(int mid) {return;};
+		virtual void on_publish(uint16_t mid) {return;};
 		virtual void on_message(struct mosquitto_message *message) {return;};
-		virtual void on_subscribe(int mid, int qos_count, uint8_t *granted_qos) {return;};
-		virtual void on_unsubscribe(int mid) {return;};
+		virtual void on_subscribe(uint16_t mid, int qos_count, uint8_t *granted_qos) {return;};
+		virtual void on_unsubscribe(uint16_t mid) {return;};
 		virtual void on_error() {return;};
 };
 

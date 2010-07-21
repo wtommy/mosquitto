@@ -90,10 +90,10 @@ struct mosquitto {
 	time_t last_msg_in;
 	time_t last_msg_out;
 	void (*on_connect)(void *obj, int rc);
-	void (*on_publish)(void *obj, int mid);
+	void (*on_publish)(void *obj, uint16_t mid);
 	void (*on_message)(void *obj, struct mosquitto_message *message);
-	void (*on_subscribe)(void *obj, int mid, int qos_count, uint8_t *granted_qos);
-	void (*on_unsubscribe)(void *obj, int mid);
+	void (*on_subscribe)(void *obj, uint16_t mid, int qos_count, uint8_t *granted_qos);
+	void (*on_unsubscribe)(void *obj, uint16_t mid);
 	//void (*on_error)();
 };
 
