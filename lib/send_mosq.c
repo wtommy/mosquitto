@@ -35,8 +35,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <net_mosq.h>
 #include <send_mosq.h>
 
+static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid);
+
 /* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
-int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid)
+static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid)
 {
 	struct _mosquitto_packet *packet = NULL;
 
