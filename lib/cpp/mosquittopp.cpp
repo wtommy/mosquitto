@@ -97,6 +97,11 @@ int mosquittopp::publish(const char *topic, uint32_t payloadlen, const uint8_t *
 	return mosquitto_publish(mosq, topic, payloadlen, payload, qos, retain);
 }
 
+void mosquittopp::message_retry_set(unsigned int message_retry)
+{
+	mosquitto_message_retry_set(mosq, message_retry);
+}
+
 int mosquittopp::subscribe(const char *sub, int qos)
 {
 	return mosquitto_subscribe(mosq, sub, qos);

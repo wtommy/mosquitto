@@ -47,6 +47,7 @@ class mosquittopp {
 		int publish(const char *topic, uint32_t payloadlen=0, const uint8_t *payload=NULL, int qos=0, bool retain=false);
 		int subscribe(const char *sub, int qos=0);
 		int unsubscribe(const char *sub);
+		void message_retry_set(unsigned int message_retry);
 
 		int loop();
 		int read();
