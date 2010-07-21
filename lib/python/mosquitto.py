@@ -28,6 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from ctypes import *
+from ctypes.util import find_library
 
 class Mosquitto:
 	"""MQTT version 3 client class"""
@@ -36,7 +37,7 @@ class Mosquitto:
 		#==================================================
 		# Library loading
 		#==================================================
-		self._libmosq = cdll.LoadLibrary("./libmosquitto.so.0")
+		self._libmosq = cdll.LoadLibrary(find_library("mosquitto"))
 		self._mosquitto_new = self._libmosq.mosquitto_new
 		self._mosquitto_new.argtypes = [c_void_p, c_char_p]
 		self._mosquitto_new.restype = c_void_p
