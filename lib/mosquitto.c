@@ -387,16 +387,3 @@ int mosquitto_write(struct mosquitto *mosq)
 	return 0;
 }
 
-void mosquitto_message_cleanup(struct mosquitto_message **message)
-{
-	struct mosquitto_message *msg;
-
-	if(!message || !*message) return;
-
-	msg = *message;
-
-	if(msg->topic) free(msg->topic);
-	if(msg->payload) free(msg->payload);
-	free(msg);
-};
-
