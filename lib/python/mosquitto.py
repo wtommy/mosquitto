@@ -36,56 +36,56 @@ class Mosquitto:
 		#==================================================
 		# Library loading
 		#==================================================
-		self.libmosq = cdll.LoadLibrary("./libmosq.so.0")
-		self.mosquitto_new = libmosq.mosquitto_new
+		self.libmosq = cdll.LoadLibrary("./libmosquitto.so.0")
+		self.mosquitto_new = self.libmosq.mosquitto_new
 		self.mosquitto_new.argtypes = [c_void_p, c_char_p]
 		self.mosquitto_new.restype = c_void_p
 
-		self.mosquitto_destroy = libmosq.mosquitto_destroy
+		self.mosquitto_destroy = self.libmosq.mosquitto_destroy
 		self.mosquitto_destroy.argtypes = [c_void_p]
 		self.mosquitto_destroy.restype = None
 
-		self.mosquitto_connect = libmosq.mosquitto_connect
+		self.mosquitto_connect = self.libmosq.mosquitto_connect
 		self.mosquitto_connect.argtypes = [c_void_p, c_char_p, c_int, c_int, c_bool]
 		self.mosquitto_connect.restype = c_int
 
-		self.mosquitto_disconnect = libmosq.mosquitto_disconnect
+		self.mosquitto_disconnect = self.libmosq.mosquitto_disconnect
 		self.mosquitto_disconnect.argtypes = [c_void_p]
 		self.mosquitto_disconnect.restype = c_int
 
-		self.mosquitto_publish = libmosq.mosquitto_publish
+		self.mosquitto_publish = self.libmosq.mosquitto_publish
 		self.mosquitto_publish.argtypes = [c_void_p, POINTER(c_uint16), c_char_p, c_uint32, POINTER(c_uint8), c_int, c_bool]
 		self.mosquitto_publish.restype = c_int
 
-		self.mosquitto_subscribe = libmosq.mosquitto_subscribe
+		self.mosquitto_subscribe = self.libmosq.mosquitto_subscribe
 		self.mosquitto_subscribe.argtypes = [c_void_p, c_char_p, c_int]
 		self.mosquitto_subscribe.restype = c_int
 
-		self.mosquitto_unsubscribe = libmosq.mosquitto_unsubscribe
+		self.mosquitto_unsubscribe = self.libmosq.mosquitto_unsubscribe
 		self.mosquitto_unsubscribe.argtypes = [c_void_p, c_char_p]
 		self.mosquitto_unsubscribe.restype = c_int
 
-		self.mosquitto_loop = libmosq.mosquitto_loop
+		self.mosquitto_loop = self.libmosq.mosquitto_loop
 		self.mosquitto_loop.argtypes = [c_void_p, c_void_p]
 		self.mosquitto_loop.restype = c_int
 
-		self.mosquitto_message_cleanup = libmosq.mosquitto_message_cleanup
+		self.mosquitto_message_cleanup = self.libmosq.mosquitto_message_cleanup
 		self.mosquitto_message_cleanup.argtypes = [POINTER(c_void_p)]
 		self.mosquitto_message_cleanup.restype = c_int
 
-		self.mosquitto_will_set = libmosq.mosquitto_will_set
+		self.mosquitto_will_set = self.libmosq.mosquitto_will_set
 		self.mosquitto_will_set.argtypes = [c_void_p, c_bool, c_char_p, c_uint32, POINTER(c_uint8), c_int, c_bool]
 		self.mosquitto_will_set.restype = c_int
 
-		self.mosquitto_log_init = libmosq.mosquitto_log_init
+		self.mosquitto_log_init = self.libmosq.mosquitto_log_init
 		self.mosquitto_log_init.argtypes = [c_void_p, c_int, c_int]
 		self.mosquitto_log_init.restype = c_int
 
-		self.mosquitto_connect_callback_set = libmosq.mosquitto_connect_callback_set
+		self.mosquitto_connect_callback_set = self.libmosq.mosquitto_connect_callback_set
 		#self.mosquitto_connect_callback_set.argtypes = [c_void_p, c_void_p]
 		self.mosquitto_connect_callback_set.restype = None
 
-		self.mosquitto_message_callback_set = libmosq.mosquitto_message_callback_set
+		self.mosquitto_message_callback_set = self.libmosq.mosquitto_message_callback_set
 		#self.mosquitto_message_callback_set.argtypes = [c_void_p, c_void_p]
 		self.mosquitto_message_callback_set.restype = None
 
@@ -97,7 +97,7 @@ class Mosquitto:
 		#==================================================
 		# End library loading
 		#==================================================
-		self.mosq = self.mosquitto_new(id)
+		self.mosq = self.mosquitto_new(0, id)
 
 	def __del__(self):
 		if self.mosq:
@@ -127,13 +127,26 @@ class Mosquitto:
 	def will_set(self, will, topic, payloadlen, payload, qos, retain):
 		return self.mosquitto_will_set(self.mosq, will, topic, payloadlen, payload, qos, retain)
 
+	def connect_callback(self, callback):
+		self.on_connect = self.MOSQ_CONNECT_FUNC(callback)
+		return self.mosquitto_connect_callback_set(self.mosq, self.on_connect)
 	
-#void mosquitto_connect_callback_set(struct mosquitto *mosq, void (*on_connect)(void *, int));
-#void mosquitto_publish_callback_set(struct mosquitto *mosq, void (*on_publish)(void *, uint16_t));
-#void mosquitto_message_callback_set(struct mosquitto *mosq, void (*on_message)(void *, struct mosquitto_message *));
-#void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, uint8_t *));
-#void mosquitto_unsubscribe_callback_set(struct mosquitto *mosq, void (*on_unsubscribe)(void *, uint16_t));
-
+	def publish_callback(self, callback):
+		self.on_publish = self.MOSQ_PUBLISH_FUNC(callback)
+		return self.mosquitto_publish_callback_set(self.mosq, self.on_publish)
+	
+	def message_callback(self, callback):
+		self.on_message = self.MOSQ_MESSAGE_FUNC(callback)
+		return self.mosquitto_message_callback_set(self.mosq, self.on_message)
+	
+	def subscribe_callback(self, callback):
+		self.on_subscribe = self.MOSQ_SUBSCRIBE_FUNC(callback)
+		return self.mosquitto_subscribe_callback_set(self.mosq, self.on_subscribe)
+	
+	def unsubscribe_callback(self, callback):
+		self.on_unsubscribe = self.MOSQ_UNSUBSCRIBE_FUNC(callback)
+		return self.mosquitto_unsubscribe_callback_set(self.mosq, self.on_unsubscribe)
+	
 class mosquitto_message(Structure):
 	_fields_ = [("next", c_void_p),
                 ("timestamp", c_int),
@@ -149,22 +162,17 @@ class mosquitto_message(Structure):
 
 def py_on_connect(obj, rc):
 	print "rc: ", rc
-on_connect = MOSQ_CONNECT_FUNC(py_on_connect)
 
+import pprint
 def py_on_message(obj, message):
 	print message.contents.topic
-	#print message.next,message.timestamp,message.direction,message.state,message.mid,message.topic,message.qos
-on_message = MOSQ_MESSAGE_FUNC(py_on_message)
 
 bob = Mosquitto("bob")
-#------------------------------------
-mosq = mosquitto_new(0, "python")
-mosquitto_connect_callback_set(mosq, on_connect)
-mosquitto_message_callback_set(mosq, on_message)
-#mosquitto_log_init(mosq, 0xFF, 0xFF)
-mosquitto_connect(mosq, "127.0.0.1", 1883, 6, True)
-mosquitto_subscribe(mosq, "$SYS/#", 2)
+bob.connect_callback(py_on_connect)
+bob.message_callback(py_on_message)
+bob.connect("127.0.0.1", 1883, 60, True)
+bob.subscribe("$SYS/#", 2)
+
 while 1:
-	mosquitto_loop(mosq, 0)
-mosquitto_destroy(mosq)
+	bob.loop(None)
 
