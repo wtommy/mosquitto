@@ -73,4 +73,5 @@ int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message *m
 	}else{
 		mosq->messages = message;
 	}
+	return 0;
 }
