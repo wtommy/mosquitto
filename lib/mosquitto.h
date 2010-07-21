@@ -70,6 +70,7 @@ struct mosquitto {
 	int sock;
 	char *id;
 	int keepalive;
+	int message_retry;
 	bool connected;
 	uint16_t last_mid;
 	struct mosquitto_message *messages;
@@ -101,6 +102,7 @@ int mosquitto_loop(struct mosquitto *mosq);
 int mosquitto_read(struct mosquitto *mosq);
 int mosquitto_write(struct mosquitto *mosq);
 
+void mosquitto_message_retry_check(struct mosquitto *mosq);
 void mosquitto_message_cleanup(struct mosquitto_message **message);
 
 #endif

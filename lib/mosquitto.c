@@ -63,6 +63,7 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 		mosq->obj = obj;
 		mosq->sock = -1;
 		mosq->keepalive = 60;
+		mosq->message_retry = 20;
 		mosq->id = strdup(id);
 		mosq->in_packet.payload = NULL;
 		_mosquitto_packet_cleanup(&mosq->in_packet);

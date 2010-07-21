@@ -157,6 +157,7 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 		}
 	}
 
+	message->timestamp = time(NULL);
 	switch(message->qos){
 		case 0:
 			if(mosq->on_message){
