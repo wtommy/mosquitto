@@ -100,11 +100,10 @@ int _mosquitto_send_pubcomp(struct mosquitto *mosq, uint16_t mid)
 	return _mosquitto_send_command_with_mid(mosq, PUBCOMP, mid);
 }
 
-int _mosquitto_send_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain, bool dup)
+int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain, bool dup)
 {
 	struct _mosquitto_packet *packet = NULL;
 	int packetlen;
-	uint16_t mid = 1; //FIXME
 
 	if(!mosq || mosq->sock == -1 || !topic) return 1;
 
@@ -118,7 +117,9 @@ int _mosquitto_send_publish(struct mosquitto *mosq, const char *topic, uint32_t 
 		return 1;
 	}
 
+	packet->mid = mid;
 	packet->command = PUBLISH | ((dup&0x1)<<3) | (qos<<1) | retain;
+	packet->command_saved = PUBLISH | (qos<<1);
 	packet->remaining_length = packetlen;
 	packet->payload = malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){

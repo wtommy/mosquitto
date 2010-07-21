@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mosquitto.h>
 #include <messages_mosq.h>
+#include <mqtt3_protocol.h>
 #include <net_mosq.h>
 #include <read_handle.h>
 #include <send_mosq.h>
@@ -363,7 +364,6 @@ int mosquitto_write(struct mosquitto *mosq)
 
 			write_length = write(mosq->sock, &packet->command, 1);
 			if(write_length == 1){
-				packet->command_saved = packet->command;
 				packet->command = 0;
 			}else{
 				if(write_length == 0) return 1; /* EOF */
@@ -417,12 +417,11 @@ int mosquitto_write(struct mosquitto *mosq)
 			}
 		}
 
-#ifdef WITH_CLIENT
-		// FIXME - replace with PUBLISH callback for QoS==0.
-		if(client_net_write_callback){
-			client_net_write_callback(packet->command_saved&0xF0);
+		if(((packet->command_saved)&0xF6) == PUBLISH && mosq->on_publish){
+			/* This is a QoS=0 message */
+			mosq->on_publish(mosq->obj, packet->mid);
 		}
-#endif
+
 		/* Free data and reset values */
 		mosq->out_packet = packet->next;
 		_mosquitto_packet_cleanup(packet);
