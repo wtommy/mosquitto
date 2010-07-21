@@ -28,6 +28,7 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <mosquitto.h>
+#include <messages_mosq.h>
 #include <net_mosq.h>
 #include <read_handle.h>
 #include <send_mosq.h>
@@ -119,7 +120,7 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 void mosquitto_destroy(struct mosquitto *mosq)
 {
 	if(mosq->id) free(mosq->id);
-	_mosquitto_messages_cleanup_all(mosq);
+	_mosquitto_message_cleanup_all(mosq);
 	free(mosq);
 }
 
@@ -145,7 +146,46 @@ int mosquitto_disconnect(struct mosquitto *mosq)
 
 int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
-	return _mosquitto_send_publish(mosq, topic, payloadlen, payload, qos, retain);
+	struct mosquitto_message *message;
+
+	if(!mosq || !topic) return 1;
+
+	if(qos == 0){
+		return _mosquitto_send_publish(mosq, topic, payloadlen, payload, qos, retain, false);
+	}else{
+		message = calloc(1, sizeof(struct mosquitto_message));
+		if(!message) return 1;
+
+		message->next = NULL;
+		message->timestamp = time(NULL);
+		message->direction = mosq_md_out;
+		message->mid = _mosquitto_mid_generate(mosq);
+		message->topic = strdup(topic);
+		if(!message->topic){
+			mosquitto_message_cleanup(&message);
+			return 1;
+		}
+		if(payloadlen){
+			message->payloadlen = payloadlen;
+			message->payload = malloc(payloadlen*sizeof(uint8_t));
+			if(!message){
+				mosquitto_message_cleanup(&message);
+				return 1;
+			}
+		}else{
+			message->payloadlen = 0;
+			message->payload = NULL;
+		}
+		message->qos = qos;
+		message->retain = retain;
+		message->dup = false;
+
+		if(_mosquitto_message_queue(mosq, message)){
+			mosquitto_message_cleanup(&message);
+			return 1;
+		}
+		return _mosquitto_send_publish(mosq, message->topic, message->payloadlen, message->payload, message->qos, message->retain, message->dup);
+	}
 }
 
 int mosquitto_subscribe(struct mosquitto *mosq, const char *sub, int qos)

@@ -94,12 +94,11 @@ int _mosquitto_send_puback(struct mosquitto *mosq, uint16_t mid)
 	return _mosquitto_send_command_with_mid(mosq, PUBACK, mid);
 }
 
-int _mosquitto_send_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
+int _mosquitto_send_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain, bool dup)
 {
 	struct _mosquitto_packet *packet = NULL;
 	int packetlen;
 	uint16_t mid = 1; //FIXME
-	uint8_t dup = 0;
 
 	if(!mosq || mosq->sock == -1 || !topic) return 1;
 
