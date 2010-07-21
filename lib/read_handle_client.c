@@ -75,15 +75,28 @@ int _mosquitto_handle_connack(struct mosquitto *mosq)
 int _mosquitto_handle_suback(struct mosquitto *mosq)
 {
 	uint16_t mid;
-	uint8_t granted_qos;
+	uint8_t *granted_qos;
+	int qos_count;
+	int i = 0;
 
+	if(!mosq) return 1;
 	// FIXME mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received SUBACK");
 	if(_mosquitto_read_uint16(&mosq->in_packet, &mid)) return 1;
 
+	qos_count = mosq->in_packet.remaining_length - mosq->in_packet.pos;
+	granted_qos = malloc(qos_count*sizeof(uint8_t));
+	if(!granted_qos) return 1;
 	while(mosq->in_packet.pos < mosq->in_packet.remaining_length){
-		/* FIXME - Need to do something with this */
-		// FIXME - Need callback
-		if(_mosquitto_read_byte(&mosq->in_packet, &granted_qos)) return 1;
+		if(_mosquitto_read_byte(&mosq->in_packet, &(granted_qos[i]))){
+			free(granted_qos);
+			return 1;
+		}
+		i++;
+	}
+	if(mosq->on_subscribe){
+		mosq->on_subscribe(mosq->obj, mid, qos_count, granted_qos);
+	}else{
+		free(granted_qos);
 	}
 
 	return 0;
