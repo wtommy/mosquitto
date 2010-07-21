@@ -91,7 +91,7 @@ class Mosquitto:
 
 		self.MOSQ_CONNECT_FUNC = CFUNCTYPE(None, c_void_p, c_int)
 		self.MOSQ_PUBLISH_FUNC = CFUNCTYPE(None, c_void_p, c_uint16)
-		self.MOSQ_MESSAGE_FUNC = CFUNCTYPE(None, c_void_p, POINTER(mosquitto_message))
+		self.MOSQ_MESSAGE_FUNC = CFUNCTYPE(None, c_void_p, POINTER(MosquittoMessage))
 		self.MOSQ_SUBSCRIBE_FUNC = CFUNCTYPE(None, c_void_p, c_uint16, c_int, POINTER(c_uint8))
 		self.MOSQ_UNSUBSCRIBE_FUNC = CFUNCTYPE(None, c_void_p, c_uint16)
 		#==================================================
@@ -147,7 +147,8 @@ class Mosquitto:
 		self.on_unsubscribe = self.MOSQ_UNSUBSCRIBE_FUNC(callback)
 		return self.mosquitto_unsubscribe_callback_set(self.mosq, self.on_unsubscribe)
 	
-class mosquitto_message(Structure):
+
+class MosquittoMessage(Structure):
 	_fields_ = [("next", c_void_p),
                 ("timestamp", c_int),
 				("direction", c_int),
@@ -160,12 +161,14 @@ class mosquitto_message(Structure):
 				("retain", c_bool),
 				("dup", c_bool)]
 
+
 def py_on_connect(obj, rc):
 	print "rc: ", rc
 
-import pprint
+
 def py_on_message(obj, message):
 	print message.contents.topic
+
 
 bob = Mosquitto("bob")
 bob.connect_callback(py_on_connect)
