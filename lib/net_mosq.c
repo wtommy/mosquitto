@@ -83,11 +83,6 @@ int _mosquitto_socket_close(struct mosquitto *mosq)
 
 	if(!mosq) return 1;
 	if(mosq->sock != -1){
-		/* FIXME
-		if(mosq->id){
-			mqtt3_db_client_invalidate_socket(context->id, context->sock);
-		}
-		*/
 		rc = close(mosq->sock);
 		mosq->sock = -1;
 	}
