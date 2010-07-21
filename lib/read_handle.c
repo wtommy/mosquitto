@@ -38,9 +38,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 
 #include <mosquitto.h>
+#include <messages_mosq.h>
 #include <mqtt3_protocol.h>
-#include <read_handle.h>
 #include <net_mosq.h>
+#include <read_handle.h>
 #include <send_mosq.h>
 #include <util_mosq.h>
 
@@ -104,15 +105,13 @@ int _mosquitto_handle_puback(struct mosquitto *mosq)
 	if(_mosquitto_read_uint16(&mosq->in_packet, &mid)) return 1;
 	// FIXME _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Received PUBACK from %s (Mid: %d)", mosq->id, mid);
 
-	if(mosq->on_publish){
-		mosq->on_publish(mosq->obj, mid);
+	if(!_mosquitto_message_delete(mosq, mid, mosq_md_out)){
+		/* Only inform the client the message has been sent once. */
+		if(mosq->on_publish){
+			mosq->on_publish(mosq->obj, mid);
+		}
 	}
 
-	/* FIXME
-	if(mid){
-		if(mqtt3_db_message_delete(mosq->id, mid, md_out)) return 1;
-	}
-	*/
 	return 0;
 }
 
