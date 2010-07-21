@@ -103,7 +103,7 @@ class Mosquitto:
 		if self._mosq:
 			self._mosquitto_destroy(pointer(self._mosq))
 
-	def connect(self, hostname, port, keepalive, clean_session):
+	def connect(self, hostname="127.0.0.1", port=1883, keepalive=60, clean_session=True):
 		return self._mosquitto_connect(self._mosq, hostname, port, keepalive, clean_session)
 
 	def disconnect(self):
@@ -112,7 +112,7 @@ class Mosquitto:
 	def log_init(self, priorities, destinations):
 		return self._mosquitto_log_init(self._mosq, priorities, destinations)
 
-	def loop(self, timeout):
+	def loop(self, timeout=None):
 		return self._mosquitto_loop(self._mosq, 0)
 
 	def subscribe(self, sub, qos):
@@ -121,10 +121,10 @@ class Mosquitto:
 	def unsubscribe(self, sub):
 		return self._mosquitto_unsubscribe(self._mosq, sub)
 
-	def publish(self, topic, payloadlen, payload, qos, retain):
+	def publish(self, topic, payloadlen, payload, qos=0, retain=False):
 		return self._mosquitto_publish(self._mosq, byref(mid), topic, payloadlen, payload, qos, retain)
 
-	def will_set(self, will, topic, payloadlen, payload, qos, retain):
+	def will_set(self, will, topic, payloadlen, payload, qos=0, retain=False):
 		return self._mosquitto_will_set(self._mosq, will, topic, payloadlen, payload, qos, retain)
 
 	def connect_callback(self, callback):
