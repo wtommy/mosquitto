@@ -105,7 +105,7 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 void mosquitto_destroy(struct mosquitto *mosq);
 int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session);
 int mosquitto_disconnect(struct mosquitto *mosq);
-int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
+int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
 int mosquitto_subscribe(struct mosquitto *mosq, const char *sub, int qos);
 int mosquitto_unsubscribe(struct mosquitto *mosq, const char *sub);
 int mosquitto_loop(struct mosquitto *mosq, struct timespec *timeout);

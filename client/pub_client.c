@@ -62,10 +62,10 @@ void my_connect_callback(void *obj, int result)
 			case MSGMODE_CMD:
 			case MSGMODE_FILE:
 			case MSGMODE_STDIN_FILE:
-				mid_sent = mosquitto_publish(mosq, topic, msglen, (uint8_t *)message, qos, retain);
+				mosquitto_publish(mosq, &mid_sent, topic, msglen, (uint8_t *)message, qos, retain);
 				break;
 			case MSGMODE_NULL:
-				mid_sent = mosquitto_publish(mosq, topic, 0, NULL, qos, retain);
+				mosquitto_publish(mosq, &mid_sent, topic, 0, NULL, qos, retain);
 				break;
 			case MSGMODE_STDIN_LINE:
 				status = STATUS_CONNACK_RECVD;
@@ -396,7 +396,7 @@ int main(int argc, char *argv[])
 		if(mode == MSGMODE_STDIN_LINE && status == STATUS_CONNACK_RECVD){
 			if(fgets(buf, 1024, stdin)){
 				buf[strlen(buf)-1] = '\0';
-				mid_sent = mosquitto_publish(mosq, topic, strlen(buf), (uint8_t *)buf, qos, retain);
+				mosquitto_publish(mosq, &mid_sent, topic, strlen(buf), (uint8_t *)buf, qos, retain);
 			}else if(feof(stdin)){
 				mosquitto_disconnect(mosq);
 			}

@@ -92,9 +92,9 @@ int mosquittopp::will_set(bool will, const char *topic, uint32_t payloadlen, con
 	return mosquitto_will_set(mosq, will, topic, payloadlen, payload, qos, retain);
 }
 
-int mosquittopp::publish(const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
+int mosquittopp::publish(uint16_t *mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
-	return mosquitto_publish(mosq, topic, payloadlen, payload, qos, retain);
+	return mosquitto_publish(mosq, mid, topic, payloadlen, payload, qos, retain);
 }
 
 void mosquittopp::message_retry_set(unsigned int message_retry)
