@@ -108,7 +108,7 @@ int mosquitto_disconnect(struct mosquitto *mosq);
 int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
 int mosquitto_subscribe(struct mosquitto *mosq, const char *sub, int qos);
 int mosquitto_unsubscribe(struct mosquitto *mosq, const char *sub);
-int mosquitto_loop(struct mosquitto *mosq);
+int mosquitto_loop(struct mosquitto *mosq, struct timespec *timeout);
 int mosquitto_read(struct mosquitto *mosq);
 int mosquitto_write(struct mosquitto *mosq);
 

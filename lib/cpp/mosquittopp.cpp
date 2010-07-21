@@ -112,9 +112,9 @@ int mosquittopp::unsubscribe(const char *sub)
 	return mosquitto_unsubscribe(mosq, sub);
 }
 
-int mosquittopp::loop()
+int mosquittopp::loop(struct timespec *timeout)
 {
-	return mosquitto_loop(mosq);
+	return mosquitto_loop(mosq, timeout);
 }
 
 int mosquittopp::read()

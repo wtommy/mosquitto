@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdint.h>
 #include <cstdlib>
+#include <time.h>
 #include <mosquitto.h>
 
 class mosquittopp {
@@ -49,7 +50,7 @@ class mosquittopp {
 		int unsubscribe(const char *sub);
 		void message_retry_set(unsigned int message_retry);
 
-		int loop();
+		int loop(struct timespec *timeout=NULL);
 		int read();
 		int write();
 		
