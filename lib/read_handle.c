@@ -60,8 +60,8 @@ int _mosquitto_packet_handle(struct mosquitto *mosq)
 			// FIXME return mqtt3_handle_pubcomp(context);
 		case PUBLISH:
 			return _mosquitto_handle_publish(mosq);
-		// FIXME case PUBREC:
-			// FIXME return mqtt3_handle_pubrec(context);
+		case PUBREC:
+			return _mosquitto_handle_pubrec(mosq);
 		// FIXME case PUBREL:
 			// FIXME return mqtt3_handle_pubrel(context);
 		case CONNACK:
@@ -182,5 +182,21 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 	}
 
 	return rc;
+}
+
+int _mosquitto_handle_pubrec(struct mosquitto *mosq)
+{
+	uint16_t mid;
+
+	if(!mosq || mosq->in_packet.remaining_length != 2){
+		return 1;
+	}
+	if(_mosquitto_read_uint16(&mosq->in_packet, &mid)) return 1;
+	// FIXME _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Received PUBREC from %s (Mid: %d)", context->id, mid);
+
+	if(_mosquitto_message_update(mosq, mid, mosq_md_out, mosq_ms_wait_pubcomp)) return 1;
+	if(_mosquitto_send_pubrel(mosq, mid)) return 1;
+
+	return 0;
 }
 

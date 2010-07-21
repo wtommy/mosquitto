@@ -42,7 +42,8 @@ enum mosquitto_msg_direction {
 enum mosquitto_msg_state {
 	mosq_ms_invaid = 0,
 	mosq_ms_wait_puback = 1,
-	mosq_ms_wait_pubrec = 2
+	mosq_ms_wait_pubrec = 2,
+	mosq_ms_wait_pubcomp = 3
 };
 
 struct mosquitto_message{
