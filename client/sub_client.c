@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	while(!mosquitto_loop(mosq)){
+	while(!mosquitto_loop(mosq, NULL)){
 	}
 	mosquitto_destroy(mosq);
 	mosquitto_lib_cleanup();

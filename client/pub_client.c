@@ -392,7 +392,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	while(!mosquitto_loop(mosq)){
+	while(!mosquitto_loop(mosq, NULL)){
 		if(mode == MSGMODE_STDIN_LINE && status == STATUS_CONNACK_RECVD){
 			if(fgets(buf, 1024, stdin)){
 				buf[strlen(buf)-1] = '\0';
