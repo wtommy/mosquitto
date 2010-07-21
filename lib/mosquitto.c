@@ -149,7 +149,7 @@ int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloa
 {
 	struct mosquitto_message *message;
 
-	if(!mosq || !topic) return 1;
+	if(!mosq || !topic || qos<0 || qos>2) return 1;
 
 	if(qos == 0){
 		return _mosquitto_send_publish(mosq, topic, payloadlen, payload, qos, retain, false);
@@ -160,6 +160,11 @@ int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloa
 		message->next = NULL;
 		message->timestamp = time(NULL);
 		message->direction = mosq_md_out;
+		if(qos == 1){
+			message->state = mosq_ms_wait_puback;
+		}else if(qos == 2)
+			message->state = mosq_ms_wait_pubrec;
+		}
 		message->mid = _mosquitto_mid_generate(mosq);
 		message->topic = strdup(topic);
 		if(!message->topic){
