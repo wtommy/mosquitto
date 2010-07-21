@@ -150,6 +150,12 @@ int _mosquitto_send_publish(struct mosquitto *mosq, const char *topic, uint32_t 
 	return 0;
 }
 
+int _mosquitto_send_pubrec(struct mosquitto *mosq, uint16_t mid)
+{
+	// FIXME if(mosq) _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Sending PUBREC to %s (Mid: %d)", mosq->id, mid);
+	return _mosquitto_send_command_with_mid(mosq, PUBREC, mid);
+}
+
 int _mosquitto_send_pubrel(struct mosquitto *mosq, uint16_t mid)
 {
 	// FIXME if(mosq) _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Sending PUBREL to %s (Mid: %d)", mosq->id, mid);
