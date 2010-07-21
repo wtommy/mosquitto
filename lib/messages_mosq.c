@@ -57,6 +57,27 @@ void _mosquitto_message_cleanup_all(struct mosquitto *mosq)
 	}
 };
 
+int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir)
+{
+	struct mosquitto_message *message, *prev = NULL;
+	if(!mosq) return 1;
+
+	message = mosq->messages;
+	while(message){
+		if(message->mid == mid && message->direction == dir){
+			if(prev){
+				prev->next = message->next;
+			}else{
+				mosq->messages = message->next;
+			}
+			mosquitto_message_cleanup(&message);
+		}
+		prev = message;
+		message = message->next;
+	}
+	return 1;
+}
+
 int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message *message)
 {
 	struct mosquitto_message *tail;
