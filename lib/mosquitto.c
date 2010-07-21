@@ -162,7 +162,7 @@ int mosquitto_publish(struct mosquitto *mosq, const char *topic, uint32_t payloa
 		message->direction = mosq_md_out;
 		if(qos == 1){
 			message->state = mosq_ms_wait_puback;
-		}else if(qos == 2)
+		}else if(qos == 2){
 			message->state = mosq_ms_wait_pubrec;
 		}
 		message->mid = _mosquitto_mid_generate(mosq);
