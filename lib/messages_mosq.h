@@ -34,5 +34,6 @@ POSSIBILITY OF SUCH DAMAGE.
 void _mosquitto_message_cleanup_all(struct mosquitto *mosq);
 int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir);
 int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message *message);
+int _mosquitto_message_update(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, enum mosquitto_msg_state state);
 
 #endif

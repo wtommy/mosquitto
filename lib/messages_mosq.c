@@ -28,6 +28,7 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <mosquitto.h>
+#include <send_mosq.h>
 
 #include <stdlib.h>
 
@@ -101,7 +102,7 @@ void mosquitto_message_retry_check(struct mosquitto *mosq)
 {
 	struct mosquitto_message *message;
 	time_t now = time(NULL);
-	if(!mosq) return 1;
+	if(!mosq) return;
 
 	message = mosq->messages;
 	while(message){
@@ -117,3 +118,20 @@ void mosquitto_message_retry_check(struct mosquitto *mosq)
 		message = message->next;
 	}
 }
+
+int _mosquitto_message_update(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, enum mosquitto_msg_state state)
+{
+	struct mosquitto_message *message;
+	time_t now = time(NULL);
+	if(!mosq) return 1;
+
+	message = mosq->messages;
+	while(message){
+		if(message->mid == mid && message->direction == dir){
+			message->state = state;
+			return 0;
+		}
+	}
+	return 1;
+}
+
