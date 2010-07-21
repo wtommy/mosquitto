@@ -30,6 +30,18 @@
 from ctypes import *
 from ctypes.util import find_library
 
+# Log destinations
+MOSQ_LOG_NONE=0x00
+MOSQ_LOG_STDOUT=0x04
+MOSQ_LOG_STDERR=0x08
+
+# Log types
+MOSQ_LOG_INFO=0x01
+MOSQ_LOG_NOTICE=0x02
+MOSQ_LOG_WARNING=0x04
+MOSQ_LOG_ERR=0x08
+MOSQ_LOG_DEBUG=0x10
+
 class Mosquitto:
 	"""MQTT version 3 client class"""
 
