@@ -33,6 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mosquitto.h>
 #include <mqtt3_protocol.h>
 #include <net_mosq.h>
+#include <send_mosq.h>
 
 /* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
 int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid)

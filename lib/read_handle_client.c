@@ -39,6 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mosquitto.h>
 #include <net_mosq.h>
+#include <read_handle.h>
 
 int _mosquitto_handle_connack(struct mosquitto *mosq)
 {

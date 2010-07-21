@@ -28,6 +28,7 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <mosquitto.h>
+#include <messages_mosq.h>
 #include <send_mosq.h>
 
 #include <stdlib.h>

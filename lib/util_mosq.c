@@ -33,6 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mosquitto.h>
 #include <net_mosq.h>
 #include <send_mosq.h>
+#include <util_mosq.h>
 
 void _mosquitto_check_keepalive(struct mosquitto *mosq)
 {
