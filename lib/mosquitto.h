@@ -32,9 +32,17 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <time.h>
+
+enum mosquitto_msg_direction {
+	mosq_md_in = 0,
+	mosq_md_out = 1
+};
 
 struct mosquitto_message{
 	struct mosquitto_message *next;
+	time_t timestamp;
+	enum mosquitto_msg_direction direction;
 	uint16_t mid;
 	char *topic;
 	uint8_t *payload;

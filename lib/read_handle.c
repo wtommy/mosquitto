@@ -130,6 +130,7 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 	header = mosq->in_packet.command;
 
 	//FIXME _mosquitto_log_printf(MQTT3_LOG_DEBUG, "Received PUBLISH from %s", mosq->id);
+	message->direction = mosq_md_in;
 	message->dup = (header & 0x08)>>3;
 	message->qos = (header & 0x06)>>1;
 	message->retain = (header & 0x01);

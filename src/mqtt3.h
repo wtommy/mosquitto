@@ -134,11 +134,6 @@ enum mqtt3_msg_status {
 	ms_wait_pubcomp = 9
 };
 
-enum mqtt3_msg_direction {
-	md_in = 0,
-	md_out = 1
-};
-
 struct mqtt3_iface {
 	char *iface;
 	int port;
@@ -285,11 +280,11 @@ int mqtt3_db_client_will_queue(mqtt3_context *context);
 void mqtt3_db_limits_set(int inflight, int queued);
 /* Return the number of in-flight messages in count. */
 int mqtt3_db_message_count(int *count);
-int mqtt3_db_message_delete(const char *client_id, uint16_t mid, enum mqtt3_msg_direction dir);
+int mqtt3_db_message_delete(const char *client_id, uint16_t mid, enum mosquitto_msg_direction dir);
 int mqtt3_db_message_delete_by_oid(int64_t oid);
-int mqtt3_db_message_insert(const char *client_id, uint16_t mid, enum mqtt3_msg_direction dir, enum mqtt3_msg_status status, int qos, int64_t store_id);
-int mqtt3_db_message_release(const char *client_id, uint16_t mid, enum mqtt3_msg_direction dir);
-int mqtt3_db_message_update(const char *client_id, uint16_t mid, enum mqtt3_msg_direction dir, enum mqtt3_msg_status status);
+int mqtt3_db_message_insert(const char *client_id, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_status status, int qos, int64_t store_id);
+int mqtt3_db_message_release(const char *client_id, uint16_t mid, enum mosquitto_msg_direction dir);
+int mqtt3_db_message_update(const char *client_id, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_status status);
 int mqtt3_db_message_write(mqtt3_context *context);
 int mqtt3_db_messages_delete(const char *client_id);
 int mqtt3_db_messages_easy_queue(const char *client_id, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain);
