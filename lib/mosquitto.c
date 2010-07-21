@@ -235,7 +235,7 @@ int mosquitto_loop(struct mosquitto *mosq, struct timespec *timeout)
 		actual_timeout = &local_timeout;
 	}
 
-	fdcount = pselect(mosq->sock+1, &readfds, &writefds, NULL, &local_timeout, NULL);
+	fdcount = pselect(mosq->sock+1, &readfds, &writefds, NULL, actual_timeout, NULL);
 	if(fdcount == -1){
 		fprintf(stderr, "Error in pselect: %s\n", strerror(errno));
 		return 1;
