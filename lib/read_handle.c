@@ -174,9 +174,9 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 			}
 			break;
 		case 2:
-			mosquitto_message_cleanup(&message); // FIXME - temporary!
-			//FIXME if(mqtt3_db_message_insert(mosq->id, mid, md_in, ms_wait_pubrec, qos, store_id)) rc = 1;
-			//FIXME if(mqtt3_raw_pubrec(mosq, mid)) rc = 1;
+			if(_mosquitto_send_pubrec(mosq, message->mid)) rc = 1;
+			message->state = mosq_ms_wait_pubrel;
+			_mosquitto_message_queue(mosq, message);
 			break;
 	}
 
