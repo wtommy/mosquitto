@@ -53,10 +53,6 @@ static unsigned long msgs_received = 0;
 static unsigned long msgs_sent = 0;
 static int max_connections = -1;
 
-#ifdef WITH_CLIENT
-void (*client_net_write_callback)(int) = NULL;
-#endif
-
 static int _mqtt3_socket_listen(struct sockaddr *addr);
 
 void mqtt3_net_set_max_connections(int max)
@@ -370,9 +366,6 @@ int mqtt3_net_write(mqtt3_context *context)
 			write_length = write(context->sock, &packet->command, 1);
 			if(write_length == 1){
 				bytes_sent++;
-#ifdef WITH_CLIENT
-				packet->command_saved = packet->command;
-#endif
 				packet->command = 0;
 			}else{
 				if(write_length == 0) return 1; /* EOF */
@@ -430,11 +423,6 @@ int mqtt3_net_write(mqtt3_context *context)
 
 		msgs_sent++;
 
-#ifdef WITH_CLIENT
-		if(client_net_write_callback){
-			client_net_write_callback(packet->command_saved&0xF0);
-		}
-#endif
 		/* Free data and reset values */
 		context->out_packet = packet->next;
 		_mosquitto_packet_cleanup(packet);

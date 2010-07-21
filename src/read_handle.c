@@ -41,13 +41,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <util_mosq.h>
 
-#ifdef WITH_CLIENT
-/* Client callback for puback events - this WILL change. */
-void (*client_puback_callback)(int) = NULL;
-/* Client callback for pubcomp events - this WILL change. */
-void (*client_pubcomp_callback)(int) = NULL;
-#endif
-
 int mqtt3_packet_handle(mqtt3_context *context)
 {
 	if(!context) return 1;
@@ -77,7 +70,7 @@ int mqtt3_packet_handle(mqtt3_context *context)
 		case UNSUBSCRIBE:
 			return mqtt3_handle_unsubscribe(context);
 #endif
-#if defined(WITH_CLIENT) || defined(WITH_BRIDGE)
+#ifdef WITH_BRIDGE
 		case CONNACK:
 			return mqtt3_handle_connack(context);
 		case SUBACK:
@@ -100,12 +93,6 @@ int mqtt3_handle_puback(mqtt3_context *context)
 	}
 	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBACK from %s (Mid: %d)", context->id, mid);
-
-#ifdef WITH_CLIENT
-	if(client_puback_callback){
-		client_puback_callback(mid);
-	}
-#endif
 
 	if(mid){
 		if(mqtt3_db_message_delete(context->id, mid, mosq_md_out)) return 1;
@@ -140,12 +127,6 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 	}
 	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBCOMP from %s (Mid: %d)", context->id, mid);
-
-#ifdef WITH_CLIENT
-	if(client_pubcomp_callback){
-		client_pubcomp_callback(mid);
-	}
-#endif
 
 	if(mid){
 		if(mqtt3_db_message_delete(context->id, mid, mosq_md_out)) return 1;

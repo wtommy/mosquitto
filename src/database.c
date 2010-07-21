@@ -136,11 +136,6 @@ static int _mqtt3_db_upgrade_1_2(void);
 static int _mqtt3_db_transaction_rollback(void);
 #endif
 
-#ifdef WITH_CLIENT
-/* Client callback for publish events - this WILL change. */
-int (*client_publish_callback)(const char *, int, uint32_t, const uint8_t *, int) = NULL;
-#endif
-
 int mqtt3_db_open(mqtt3_config *config)
 {
 #ifdef WITH_REGEX
@@ -1184,36 +1179,10 @@ int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, i
 	uint8_t client_qos;
 	uint8_t msg_qos;
 	uint16_t mid;
-#ifdef WITH_CLIENT
-	static sqlite3_stmt *stmt = NULL;
-	uint32_t payloadlen;
-	const uint8_t *payload = NULL;
-#endif
 
 	/* Find all clients that subscribe to topic and put messages into the db for them. */
 	if(!source_id || !topic || !store_id) return 1;
 
-#ifdef WITH_CLIENT
-	if(client_publish_callback){
-		if(!stmt){
-			stmt = _mqtt3_db_statement_prepare("SELECT payloadlen,payload FROM message_store WHERE id=?");
-			if(!stmt){
-				return 1;
-			}
-		}
-		if(sqlite3_bind_int64(stmt, 1, store_id) != SQLITE_OK) rc = 1;
-		if(!rc && sqlite3_step(stmt) == SQLITE_ROW){
-			payloadlen = sqlite3_column_int(stmt, 0);
-			if(payloadlen){
-				payload = sqlite3_column_blob(stmt, 1);
-			}
-
-			client_publish_callback(topic, qos, payloadlen, payload, retain);
-		}
-		sqlite3_reset(stmt);
-		sqlite3_clear_bindings(stmt);
-	}
-#endif
 	if(retain){
 		if(mqtt3_db_retain_insert(topic, store_id)) rc = 1;
 	}

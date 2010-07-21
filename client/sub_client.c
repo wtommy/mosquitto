@@ -106,6 +106,7 @@ int main(int argc, char *argv[])
 	int will_qos = 0;
 	bool will_retain = false;
 	char *will_topic = NULL;
+	struct timespec timeout;
 
 	sprintf(id, "mosquitto_sub_%d", getpid());
 
@@ -267,7 +268,9 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	while(!mosquitto_loop(mosq, NULL)){
+	timeout.tv_sec = 0;
+	timeout.tv_nsec = 50000000;
+	while(!mosquitto_loop(mosq, &timeout)){
 	}
 	mosquitto_destroy(mosq);
 	mosquitto_lib_cleanup();
