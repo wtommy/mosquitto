@@ -106,6 +106,13 @@ void mosquitto_message_retry_check(struct mosquitto *mosq)
 	message = mosq->messages;
 	while(message){
 		if(message->timestamp + mosq->message_retry > now){
+			switch(message->state){
+				case mosq_ms_wait_puback:
+					message->timestamp = now;
+					message->dup = true;
+					_mosquitto_send_publish(mosq, message->topic, message->payloadlen, message->payload, message->qos, message->retain, message->dup);
+					break;
+			}
 		}
 		message = message->next;
 	}
