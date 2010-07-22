@@ -52,11 +52,12 @@ static int qos = 0;
 static int retain = 0;
 static int mode = MSGMODE_NONE;
 static int status = STATUS_CONNECTING;
-static struct mosquitto *mosq = NULL;
 static uint16_t mid_sent = 0;
 
 void my_connect_callback(void *obj, int result)
 {
+	struct mosquitto *mosq = obj;
+
 	if(!result){
 		switch(mode){
 			case MSGMODE_CMD:
@@ -78,6 +79,8 @@ void my_connect_callback(void *obj, int result)
 
 void my_publish_callback(void *obj, uint16_t mid)
 {
+	struct mosquitto *mosq = obj;
+
 	if(mode != MSGMODE_STDIN_LINE){
 		mosquitto_disconnect(mosq);
 	}
@@ -184,6 +187,7 @@ int main(int argc, char *argv[])
 	int opt;
 	char buf[1024];
 	bool debug = false;
+	struct mosquitto *mosq = NULL;
 
 	uint8_t *will_payload = NULL;
 	long will_payloadlen = 0;

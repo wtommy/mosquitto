@@ -38,7 +38,6 @@ static char **topics = NULL;
 static int topic_count = 0;
 static int topic_qos = 0;
 int verbose = 0;
-static struct mosquitto *mosq = NULL;
 
 void my_message_callback(void *obj, struct mosquitto_message *message)
 {
@@ -59,6 +58,8 @@ void my_message_callback(void *obj, struct mosquitto_message *message)
 
 void my_connect_callback(void *obj, int result)
 {
+	struct mosquitto *mosq = obj;
+
 	int i;
 	if(!result){
 		for(i=0; i<topic_count; i++){
@@ -112,6 +113,7 @@ int main(int argc, char *argv[])
 	int keepalive = 60;
 	bool clean_session = true;
 	bool debug = false;
+	struct mosquitto *mosq = NULL;
 	
 	uint8_t *will_payload = NULL;
 	long will_payloadlen = 0;
