@@ -52,7 +52,11 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 
 	mosq = (struct mosquitto *)calloc(1, sizeof(struct mosquitto));
 	if(mosq){
-		mosq->obj = obj;
+		if(obj){
+			mosq->obj = obj;
+		}else{
+			mosq->obj = mosq;
+		}
 		mosq->sock = -1;
 		mosq->keepalive = 60;
 		mosq->message_retry = 20;
