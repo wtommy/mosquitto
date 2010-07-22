@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<?xml-stylesheet type="text/xsl" href="http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN" "/usr/share/sgml/docbook/xml-dtd-4.4/docbookx.dtd">
+
+<refentry xml:id="libmosquitto">
+	<refmeta>
+		<refentrytitle>libmosquitto</refentrytitle>
+		<manvolnum>3</manvolnum>
+	</refmeta>
+
+	<refnamediv>
+		<refname>libmosquitto</refname>
+		<refpurpose>MQTT version 3 client library</refpurpose>
+	</refnamediv>
+
+	<refsect1>
+		<title>Description</title>
+		<para>This is an overview of how to use libmosquitto to create MQTT
+		aware client programs. There (will be) separate man pages on each of
+		the functions described here. There are also bindings for libmosquitto
+		for C++ and Python. They are not documented here.</para>
+	</refsect1>
+
+	<refsect1>
+		<title>libmosquitto symbol names</title>
+		<para>All public functions in libmosquitto have the prefix
+		"mosquitto_". Any other functions defined in the source code are to be
+		treated as private functions and may change between any release. Do not
+		use these functions!</para>
+	</refsect1>
+
+	<refsect1>
+		<title>See Also</title>
+		<para>
+			<citerefentry>
+				<refentrytitle>mosquitto</refentrytitle>
+				<manvolnum>8</manvolnum>
+			</citerefentry>
+			<citerefentry>
+				<refentrytitle>mqtt</refentrytitle>
+				<manvolnum>7</manvolnum>
+			</citerefentry>
+		</para>
+	</refsect1>
+
+	<refsect1>
+		<title>Author</title>
+		<para>Roger Light <email>roger@atchoo.org</email></para>
+	</refsect1>
+</refentry>
