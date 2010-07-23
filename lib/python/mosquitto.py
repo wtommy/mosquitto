@@ -159,7 +159,9 @@ class Mosquitto:
 	def unsubscribe_callback(self, callback):
 		self._on_unsubscribe = self._MOSQ_UNSUBSCRIBE_FUNC(callback)
 		return self._mosquitto_unsubscribe_callback_set(self._mosq, self._on_unsubscribe)
-	
+
+	def message_cleanup(self, message):
+		self._mosquitto_message_cleanup(self._mosq, pointer(message))
 
 class MosquittoMessage(Structure):
 	_fields_ = [("next", c_void_p),

@@ -31,7 +31,7 @@ dist : reallyclean
 	mkdir -p dist/mosquitto-${VERSION}
 	cp -r client lib logo man misc security service src ChangeLog.txt COPYING Makefile compiling.txt config.h config.mk readme.txt mosquitto.conf dist/mosquitto-${VERSION}/
 	cd dist; tar -zcf mosquitto-${VERSION}.tar.gz mosquitto-${VERSION}/
-	for m in mosquitto.8 mosquitto.conf.5 mosquitto_pub.1 mosquitto_sub.1 mqtt.7; \
+	for m in libmosquitto.3 mosquitto.8 mosquitto.conf.5 mosquitto_pub.1 mosquitto_sub.1 mqtt.7; \
 		do \
 		hfile=$$(echo $${m} | sed -e 's/\./-/g'); \
 		man2html man/$${m} > dist/$${hfile}.html; \

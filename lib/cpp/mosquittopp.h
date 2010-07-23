@@ -51,7 +51,7 @@ class mosquittopp {
 		int unsubscribe(const char *sub);
 		void message_retry_set(unsigned int message_retry);
 
-		int loop(struct timespec *timeout=NULL);
+		int loop(int timeout=-1);
 		int read();
 		int write();
 		

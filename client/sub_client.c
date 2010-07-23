@@ -120,7 +120,6 @@ int main(int argc, char *argv[])
 	int will_qos = 0;
 	bool will_retain = false;
 	char *will_topic = NULL;
-	struct timespec timeout;
 
 	sprintf(id, "mosquitto_sub_%d", getpid());
 
@@ -282,9 +281,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	timeout.tv_sec = 0;
-	timeout.tv_nsec = 50000000;
-	while(!mosquitto_loop(mosq, &timeout)){
+	while(!mosquitto_loop(mosq, -1)){
 	}
 	mosquitto_destroy(mosq);
 	return 0;

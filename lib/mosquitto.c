@@ -212,10 +212,9 @@ int mosquitto_unsubscribe(struct mosquitto *mosq, const char *sub)
 	return _mosquitto_send_unsubscribe(mosq, false, sub);
 }
 
-int mosquitto_loop(struct mosquitto *mosq, struct timespec *timeout)
+int mosquitto_loop(struct mosquitto *mosq, int timeout)
 {
 	struct timespec local_timeout;
-	struct timespec *actual_timeout;
 	fd_set readfds, writefds;
 	int fdcount;
 
@@ -227,15 +226,15 @@ int mosquitto_loop(struct mosquitto *mosq, struct timespec *timeout)
 	if(mosq->out_packet){
 		FD_SET(mosq->sock, &writefds);
 	}
-	if(timeout){
-		actual_timeout = timeout;
+	if(timeout > 0){
+		local_timeout.tv_sec = timeout/1000;
+		local_timeout.tv_nsec = (timeout-local_timeout.tv_sec*1000)*1e6;
 	}else{
 		local_timeout.tv_sec = 1;
 		local_timeout.tv_nsec = 0;
-		actual_timeout = &local_timeout;
 	}
 
-	fdcount = pselect(mosq->sock+1, &readfds, &writefds, NULL, actual_timeout, NULL);
+	fdcount = pselect(mosq->sock+1, &readfds, &writefds, NULL, &local_timeout, NULL);
 	if(fdcount == -1){
 		fprintf(stderr, "Error in pselect: %s\n", strerror(errno));
 		return 1;
