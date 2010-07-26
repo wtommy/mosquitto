@@ -169,6 +169,7 @@ class MosquittoMessage(Structure):
 				("direction", c_int),
 				("state", c_int),
 				("mid", c_uint16),
+				("empty", c_char_p), # FIXME - Why is this needed for alignment?
 				("topic", c_char_p),
 				("payload", c_char_p),
 				("payloadlen", c_uint32),
