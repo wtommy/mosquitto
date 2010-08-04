@@ -36,12 +36,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <util_mosq.h>
 
 #include <errno.h>
-#include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
 
 struct mosquitto *mosquitto_new(void *obj, const char *id)
