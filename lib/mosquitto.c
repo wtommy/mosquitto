@@ -44,6 +44,16 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <time.h>
 #include <unistd.h>
 
+int mosquitto_lib_init(void)
+{
+	return 0;
+}
+
+int mosquitto_lib_cleanup(void)
+{
+	return 0;
+}
+
 struct mosquitto *mosquitto_new(void *obj, const char *id)
 {
 	struct mosquitto *mosq = NULL;
