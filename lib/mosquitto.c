@@ -42,15 +42,28 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#ifndef WIN32
 #include <unistd.h>
+#else
+#include <winsock2.h>
+#endif
 
 int mosquitto_lib_init(void)
 {
+#ifdef WIN32
+	WSADATA wsaData;
+	WSAStartup(MAKEWORD(2,2), &wsaData);
+#endif
+
 	return 0;
 }
 
 int mosquitto_lib_cleanup(void)
 {
+#ifdef WIN32
+	WSACleanup();
+#endif
+
 	return 0;
 }
 
