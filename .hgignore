@@ -14,3 +14,4 @@ test/test_client
 lib/cpp/libmosquittopp.so*
 lib/libmosquitto.so*
 
+build/
