@@ -29,6 +29,11 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef _MOSQUITTO_H_
 #define _MOSQUITTO_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -134,5 +139,9 @@ void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_re
 void mosquitto_message_cleanup(struct mosquitto_message **message);
 
 int mosquitto_log_init(struct mosquitto *mosq, int priorities, int destinations);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
