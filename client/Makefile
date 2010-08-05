@@ -1,6 +1,6 @@
 CC=cc
 CFLAGS=-I../lib -Wall -ggdb
-LDFLAGS=-L../lib -lmosquitto
+LDFLAGS=-L../lib ../lib/libmosquitto.so.0
 INSTALL=install
 prefix=/usr/local
 
