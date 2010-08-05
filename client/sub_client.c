@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 	bool will_retain = false;
 	char *will_topic = NULL;
 
-	sprintf(id, "mosquitto_sub_%d", getpid());
+	snprintf(id, 30, "mosquitto_sub_%d", getpid());
 
 	for(i=1; i<argc; i++){
 		if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
