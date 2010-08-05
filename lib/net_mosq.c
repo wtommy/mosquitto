@@ -33,7 +33,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 #ifndef WIN32
 #include <netdb.h>
