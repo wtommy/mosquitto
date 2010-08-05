@@ -29,17 +29,11 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 
-#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
 #include <netdb.h>
-#include <netinet/in.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
 #ifdef WITH_WRAP
 #include <tcpd.h>
 #endif

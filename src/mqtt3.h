@@ -36,7 +36,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include <syslog.h>
-#include <sys/select.h>
 #include <time.h>
 
 #ifndef __GNUC__

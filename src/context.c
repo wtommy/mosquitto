@@ -28,7 +28,6 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <arpa/inet.h>
-#include <stdlib.h>
 #include <sys/socket.h>
 
 #include <config.h>

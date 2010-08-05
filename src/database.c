@@ -105,7 +105,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sqlite3.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 
 #include <config.h>
 #include <mqtt3.h>

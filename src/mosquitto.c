@@ -30,18 +30,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 
 #include <errno.h>
-#include <netinet/in.h>
 #include <poll.h>
 #include <pwd.h>
 #include <signal.h>
-#include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/stat.h>
 #ifdef WITH_WRAP
 #include <tcpd.h>
