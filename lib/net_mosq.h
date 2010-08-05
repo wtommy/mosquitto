@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdint.h>
 
+#include <mosquitto_internal.h>
 #include <mosquitto.h>
 
 /* For when not using winsock libraries. */

@@ -27,6 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <mosquitto_internal.h>
 #include <mosquitto.h>
 #include <messages_mosq.h>
 #include <send_mosq.h>

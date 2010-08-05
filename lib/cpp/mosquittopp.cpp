@@ -65,11 +65,11 @@ static void on_unsubscribe_wrapper(void *obj, uint16_t mid)
 mosquittopp::mosquittopp(const char *id)
 {
 	mosq = mosquitto_new(this, id);
-	mosq->on_connect = on_connect_wrapper;
-	mosq->on_publish = on_publish_wrapper;
-	mosq->on_message = on_message_wrapper;
-	mosq->on_subscribe = on_subscribe_wrapper;
-	mosq->on_unsubscribe = on_unsubscribe_wrapper;
+	mosquitto_connect_callback_set(mosq, on_connect_wrapper);
+	mosquitto_publish_callback_set(mosq, on_publish_wrapper);
+	mosquitto_message_callback_set(mosq, on_message_wrapper);
+	mosquitto_subscribe_callback_set(mosq, on_subscribe_wrapper);
+	mosquitto_unsubscribe_callback_set(mosq, on_unsubscribe_wrapper);
 }
 
 mosquittopp::~mosquittopp()

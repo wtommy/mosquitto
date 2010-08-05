@@ -49,9 +49,6 @@ extern "C" {
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
-#ifdef WIN32
-#include <winsock2.h>
-#endif
 
 /* Log destinations */
 #define MOSQ_LOG_NONE 0x00
@@ -92,47 +89,7 @@ struct mosquitto_message{
 	bool dup;
 };
 
-struct _mosquitto_packet{
-	uint8_t command;
-	uint8_t command_saved;
-	uint8_t have_remaining;
-	uint8_t remaining_count;
-	uint16_t mid;
-	uint32_t remaining_mult;
-	uint32_t remaining_length;
-	uint32_t to_process;
-	uint32_t pos;
-	uint8_t *payload;
-	struct _mosquitto_packet *next;
-};
-
-struct mosquitto {
-	void *obj;
-#ifndef WIN32
-	int sock;
-#else
-	SOCKET sock;
-#endif
-	char *id;
-	int keepalive;
-	unsigned int message_retry;
-	bool connected;
-	uint16_t last_mid;
-	struct mosquitto_message *messages;
-	struct mosquitto_message *will;
-	struct _mosquitto_packet in_packet;
-	struct _mosquitto_packet *out_packet;
-	time_t last_msg_in;
-	time_t last_msg_out;
-	int log_priorities;
-	int log_destinations;
-	void (*on_connect)(void *obj, int rc);
-	void (*on_publish)(void *obj, uint16_t mid);
-	void (*on_message)(void *obj, struct mosquitto_message *message);
-	void (*on_subscribe)(void *obj, uint16_t mid, int qos_count, uint8_t *granted_qos);
-	void (*on_unsubscribe)(void *obj, uint16_t mid);
-	//void (*on_error)();
-};
+struct mosquitto;
 
 mosq_EXPORT int mosquitto_lib_init(void);
 mosq_EXPORT int mosquitto_lib_cleanup(void);
