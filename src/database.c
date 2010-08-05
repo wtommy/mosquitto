@@ -1729,7 +1729,7 @@ int mqtt3_db_retain_delete(const char *topic)
 int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 {
 	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;;
+	static sqlite3_stmt *stmt = NULL;
 #ifdef WITH_REGEX
 	char *regex = NULL;
 #endif
@@ -1788,7 +1788,7 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 
 int mqtt3_db_store_clean(void)
 {
-	static sqlite3_stmt *stmt = NULL;;
+	static sqlite3_stmt *stmt = NULL;
 	int rc = 0;
 
 	if(!stmt){
