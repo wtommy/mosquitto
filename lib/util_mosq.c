@@ -35,6 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <send_mosq.h>
 #include <util_mosq.h>
 
+#ifndef WITH_BROKER
 void _mosquitto_check_keepalive(struct mosquitto *mosq)
 {
 	if(mosq && mosq->sock != -1 && time(NULL) - mosq->last_msg_out >= mosq->keepalive){
@@ -45,6 +46,7 @@ void _mosquitto_check_keepalive(struct mosquitto *mosq)
 		}
 	}
 }
+#endif
 
 /* Convert ////some////over/slashed///topic/etc/etc//
  * into some/over/slashed/topic/etc/etc
