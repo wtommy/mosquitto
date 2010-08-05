@@ -27,11 +27,17 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#define snprintf sprintf_s
+
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#ifndef WIN32
 #include <unistd.h>
+#else
+#include <process.h>
+#endif
 
 #include <mosquitto.h>
 
@@ -253,11 +259,13 @@ int main(int argc, char *argv[])
 				return 1;
 			}else{
 				mode = MSGMODE_STDIN_LINE;
+#ifndef WIN32
 				opt = fcntl(fileno(stdin), F_GETFL, 0);
 				if(opt == -1 || fcntl(fileno(stdin), F_SETFL, opt | O_NONBLOCK) == -1){
 					fprintf(stderr, "Error: Unable to set stdin to non-blocking.\n");
 					return 1;
 				}
+#endif
 			}
 		}else if(!strcmp(argv[i], "-m") || !strcmp(argv[i], "--message")){
 			if(mode != MSGMODE_NONE){

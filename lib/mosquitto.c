@@ -46,6 +46,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 #else
 #include <winsock2.h>
+typedef int ssize_t;
 #endif
 
 int mosquitto_lib_init(void)
@@ -80,7 +81,7 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 		}else{
 			mosq->obj = mosq;
 		}
-		mosq->sock = -1;
+		mosq->sock = INVALID_SOCKET;
 		mosq->keepalive = 60;
 		mosq->message_retry = 20;
 		mosq->id = strdup(id);
@@ -152,7 +153,7 @@ int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int ke
 
 	mosq->sock = _mosquitto_socket_connect(host, port);
 
-	if(mosq->sock == -1){
+	if(mosq->sock == INVALID_SOCKET){
 		return 1;
 	}
 
@@ -161,7 +162,7 @@ int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int ke
 
 int mosquitto_disconnect(struct mosquitto *mosq)
 {
-	if(!mosq || mosq->sock < 0) return 1;
+	if(!mosq || mosq->sock == INVALID_SOCKET) return 1;
 
 	return _mosquitto_send_disconnect(mosq);
 }
@@ -223,25 +224,29 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 
 int mosquitto_subscribe(struct mosquitto *mosq, const char *sub, int qos)
 {
-	if(!mosq || mosq->sock < 0) return 1;
+	if(!mosq || mosq->sock == INVALID_SOCKET) return 1;
 
 	return _mosquitto_send_subscribe(mosq, false, sub, qos);
 }
 
 int mosquitto_unsubscribe(struct mosquitto *mosq, const char *sub)
 {
-	if(!mosq || mosq->sock < 0) return 1;
+	if(!mosq || mosq->sock == INVALID_SOCKET) return 1;
 
 	return _mosquitto_send_unsubscribe(mosq, false, sub);
 }
 
 int mosquitto_loop(struct mosquitto *mosq, int timeout)
 {
+#ifndef WIN32
 	struct timespec local_timeout;
+#else
+	struct timeval local_timeout;
+#endif
 	fd_set readfds, writefds;
 	int fdcount;
 
-	if(!mosq || mosq->sock < 0) return 1;
+	if(!mosq || mosq->sock == INVALID_SOCKET) return 1;
 
 	FD_ZERO(&readfds);
 	FD_SET(mosq->sock, &readfds);
@@ -251,13 +256,25 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	}
 	if(timeout > 0){
 		local_timeout.tv_sec = timeout/1000;
+#ifndef WIN32
 		local_timeout.tv_nsec = (timeout-local_timeout.tv_sec*1000)*1e6;
+#else
+		local_timeout.tv_usec = (timeout-local_timeout.tv_sec*1000)*1000;
+#endif
 	}else{
 		local_timeout.tv_sec = 1;
+#ifndef WIN32
 		local_timeout.tv_nsec = 0;
+#else
+		local_timeout.tv_usec = 0;
+#endif
 	}
 
+#ifndef WIN32
 	fdcount = pselect(mosq->sock+1, &readfds, &writefds, NULL, &local_timeout, NULL);
+#else
+	fdcount = select(mosq->sock+1, &readfds, &writefds, NULL, &local_timeout);
+#endif
 	if(fdcount == -1){
 		fprintf(stderr, "Error in pselect: %s\n", strerror(errno));
 		return 1;
@@ -288,7 +305,7 @@ int mosquitto_read(struct mosquitto *mosq)
 	ssize_t read_length;
 	int rc = 0;
 
-	if(!mosq || mosq->sock == -1) return 1;
+	if(!mosq || mosq->sock == INVALID_SOCKET) return 1;
 	/* This gets called if pselect() indicates that there is network data
 	 * available - ie. at least one byte.  What we do depends on what data we
 	 * already have.
@@ -307,12 +324,20 @@ int mosquitto_read(struct mosquitto *mosq)
 		/* FIXME - check command and fill in expected length if we know it.
 		 * This means we can check the client is sending valid data some times.
 		 */
+#ifndef WIN32
 		read_length = read(mosq->sock, &byte, 1);
+#else
+		read_length = recv(mosq->sock, &byte, 1, 0);
+#endif
 		if(read_length == 1){
 			mosq->in_packet.command = byte;
 		}else{
 			if(read_length == 0) return 1; /* EOF */
+#ifndef WIN32
 			if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+			if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
 				return 0;
 			}else{
 				return 1;
@@ -325,7 +350,11 @@ int mosquitto_read(struct mosquitto *mosq)
 		 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
 		 */
 		do{
+#ifndef WIN32
 			read_length = read(mosq->sock, &byte, 1);
+#else
+			read_length = recv(mosq->sock, &byte, 1, 0);
+#endif
 			if(read_length == 1){
 				mosq->in_packet.remaining_count++;
 				/* Max 4 bytes length for remaining length as defined by protocol.
@@ -337,7 +366,11 @@ int mosquitto_read(struct mosquitto *mosq)
 				mosq->in_packet.remaining_mult *= 128;
 			}else{
 				if(read_length == 0) return 1; /* EOF */
+#ifndef WIN32
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+				if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
 					return 0;
 				}else{
 					return 1;
@@ -353,12 +386,20 @@ int mosquitto_read(struct mosquitto *mosq)
 		mosq->in_packet.have_remaining = 1;
 	}
 	while(mosq->in_packet.to_process>0){
+#ifndef WIN32
 		read_length = read(mosq->sock, &(mosq->in_packet.payload[mosq->in_packet.pos]), mosq->in_packet.to_process);
+#else
+		read_length = recv(mosq->sock, &(mosq->in_packet.payload[mosq->in_packet.pos]), mosq->in_packet.to_process, 0);
+#endif
 		if(read_length > 0){
 			mosq->in_packet.to_process -= read_length;
 			mosq->in_packet.pos += read_length;
 		}else{
+#ifndef WIN32
 			if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+			if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
 				return 0;
 			}else{
 				return 1;
@@ -383,7 +424,7 @@ int mosquitto_write(struct mosquitto *mosq)
 	ssize_t write_length;
 	struct _mosquitto_packet *packet;
 
-	if(!mosq || mosq->sock == -1) return 1;
+	if(!mosq || mosq->sock == INVALID_SOCKET) return 1;
 
 	while(mosq->out_packet){
 		packet = mosq->out_packet;
@@ -393,12 +434,20 @@ int mosquitto_write(struct mosquitto *mosq)
 			packet->to_process = packet->remaining_length;
 			packet->pos = 0;
 
+#ifndef WIN32
 			write_length = write(mosq->sock, &packet->command, 1);
+#else
+			write_length = send(mosq->sock, &packet->command, 1, 0);
+#endif
 			if(write_length == 1){
 				packet->command = 0;
 			}else{
 				if(write_length == 0) return 1; /* EOF */
+#ifndef WIN32
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+				if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
 					return 0;
 				}else{
 					return 1;
@@ -417,7 +466,11 @@ int mosquitto_write(struct mosquitto *mosq)
 				if(packet->remaining_length>0){
 					byte = byte | 0x80;
 				}
+#ifndef WIN32
 				write_length = write(mosq->sock, &byte, 1);
+#else
+				write_length = send(mosq->sock, &byte, 1, 0);
+#endif
 				if(write_length == 1){
 					packet->remaining_count++;
 					/* Max 4 bytes length for remaining length as defined by protocol. */
@@ -425,7 +478,11 @@ int mosquitto_write(struct mosquitto *mosq)
 	
 				}else{
 					if(write_length == 0) return 1; /* EOF */
+#ifndef WIN32
 					if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+					if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
 						return 0;
 					}else{
 						return 1;
@@ -435,12 +492,20 @@ int mosquitto_write(struct mosquitto *mosq)
 			packet->have_remaining = 1;
 		}
 		while(packet->to_process > 0){
+#ifndef WIN32
 			write_length = write(mosq->sock, &(packet->payload[packet->pos]), packet->to_process);
+#else
+			write_length = send(mosq->sock, &(packet->payload[packet->pos]), packet->to_process, 0);
+#endif
 			if(write_length > 0){
 				packet->to_process -= write_length;
 				packet->pos += write_length;
 			}else{
+#ifndef WIN32
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+				if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
 					return 0;
 				}else{
 					return 1;

@@ -31,12 +31,18 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <errno.h>
 #include <fcntl.h>
-#include <netdb.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef WIN32
+#include <netdb.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#else
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
 
 void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet)
 {
@@ -83,7 +89,11 @@ int _mosquitto_socket_close(struct mosquitto *mosq)
 
 	if(!mosq) return 1;
 	if(mosq->sock != -1){
+#ifndef WIN32
 		rc = close(mosq->sock);
+#else
+		rc = closesocket(mosq->sock);
+#endif
 		mosq->sock = -1;
 	}
 
@@ -101,39 +111,49 @@ int _mosquitto_socket_connect(const char *host, uint16_t port)
 	struct addrinfo hints;
 	struct addrinfo *ainfo, *rp;
 	int s;
+#ifdef WIN32
+	uint32_t val = 1;
+#endif
 
-	if(!host || !port) return -1;
+	if(!host || !port) return INVALID_SOCKET;
 
 	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = AF_INET; /* IPv4 only at the moment. */
 	hints.ai_socktype = SOCK_STREAM;
 
 	s = getaddrinfo(host, NULL, &hints, &ainfo);
-	if(s) return -1;
+	if(s) return INVALID_SOCKET;
 
 	for(rp = ainfo; rp != NULL; rp = rp->ai_next){
 		sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-		if(sock == -1) continue;
+		if(sock == INVALID_SOCKET) continue;
 		
 		((struct sockaddr_in *)rp->ai_addr)->sin_port = htons(port);
 		if(connect(sock, rp->ai_addr, rp->ai_addrlen) != -1){
 			break;
 		}
 
-		return -1;
+		return INVALID_SOCKET;
 	}
 	if(!rp){
 		fprintf(stderr, "Error: %s", strerror(errno));
-		return -1;
+		return INVALID_SOCKET;
 	}
 	freeaddrinfo(ainfo);
 
 	/* Set non-blocking */
+#ifndef WIN32
 	opt = fcntl(sock, F_GETFL, 0);
 	if(opt == -1 || fcntl(sock, F_SETFL, opt | O_NONBLOCK) == -1){
 		close(sock);
-		return -1;
+		return INVALID_SOCKET;
 	}
+#else
+	if(ioctlsocket(sock, FIONBIO, &val)){
+		closesocket(sock);
+		return INVALID_SOCKET;
+	}
+#endif
 
 	return sock;
 }

@@ -34,10 +34,24 @@ POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #endif
 
+#ifdef _WIN32
+#ifdef mosquitto_EXPORTS
+#define mosq_EXPORT  __declspec(dllexport)
+#else
+#define mosq_EXPORT  __declspec(dllimport)
+#endif
+#else
+#define mosq_EXPORT
+#endif
+
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
+#ifdef WIN32
+#include <winsock2.h>
+#endif
 
 /* Log destinations */
 #define MOSQ_LOG_NONE 0x00
@@ -94,7 +108,11 @@ struct _mosquitto_packet{
 
 struct mosquitto {
 	void *obj;
+#ifndef WIN32
 	int sock;
+#else
+	SOCKET sock;
+#endif
 	char *id;
 	int keepalive;
 	unsigned int message_retry;
@@ -116,32 +134,32 @@ struct mosquitto {
 	//void (*on_error)();
 };
 
-int mosquitto_lib_init(void);
-int mosquitto_lib_cleanup(void);
+mosq_EXPORT int mosquitto_lib_init(void);
+mosq_EXPORT int mosquitto_lib_cleanup(void);
 
-struct mosquitto *mosquitto_new(void *obj, const char *id);
-int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
-void mosquitto_destroy(struct mosquitto *mosq);
-int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session);
-int mosquitto_disconnect(struct mosquitto *mosq);
-int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
-int mosquitto_subscribe(struct mosquitto *mosq, const char *sub, int qos);
-int mosquitto_unsubscribe(struct mosquitto *mosq, const char *sub);
-int mosquitto_loop(struct mosquitto *mosq, int timeout);
-int mosquitto_read(struct mosquitto *mosq);
-int mosquitto_write(struct mosquitto *mosq);
+mosq_EXPORT struct mosquitto *mosquitto_new(void *obj, const char *id);
+mosq_EXPORT int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
+mosq_EXPORT void mosquitto_destroy(struct mosquitto *mosq);
+mosq_EXPORT int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session);
+mosq_EXPORT int mosquitto_disconnect(struct mosquitto *mosq);
+mosq_EXPORT int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
+mosq_EXPORT int mosquitto_subscribe(struct mosquitto *mosq, const char *sub, int qos);
+mosq_EXPORT int mosquitto_unsubscribe(struct mosquitto *mosq, const char *sub);
+mosq_EXPORT int mosquitto_loop(struct mosquitto *mosq, int timeout);
+mosq_EXPORT int mosquitto_read(struct mosquitto *mosq);
+mosq_EXPORT int mosquitto_write(struct mosquitto *mosq);
 
-void mosquitto_connect_callback_set(struct mosquitto *mosq, void (*on_connect)(void *, int));
-void mosquitto_publish_callback_set(struct mosquitto *mosq, void (*on_publish)(void *, uint16_t));
-void mosquitto_message_callback_set(struct mosquitto *mosq, void (*on_message)(void *, struct mosquitto_message *));
-void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, uint8_t *));
-void mosquitto_unsubscribe_callback_set(struct mosquitto *mosq, void (*on_unsubscribe)(void *, uint16_t));
+mosq_EXPORT void mosquitto_connect_callback_set(struct mosquitto *mosq, void (*on_connect)(void *, int));
+mosq_EXPORT void mosquitto_publish_callback_set(struct mosquitto *mosq, void (*on_publish)(void *, uint16_t));
+mosq_EXPORT void mosquitto_message_callback_set(struct mosquitto *mosq, void (*on_message)(void *, struct mosquitto_message *));
+mosq_EXPORT void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, uint8_t *));
+mosq_EXPORT void mosquitto_unsubscribe_callback_set(struct mosquitto *mosq, void (*on_unsubscribe)(void *, uint16_t));
 
-void mosquitto_message_retry_check(struct mosquitto *mosq);
-void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_retry);
-void mosquitto_message_cleanup(struct mosquitto_message **message);
+mosq_EXPORT void mosquitto_message_retry_check(struct mosquitto *mosq);
+mosq_EXPORT void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_retry);
+mosq_EXPORT void mosquitto_message_cleanup(struct mosquitto_message **message);
 
-int mosquitto_log_init(struct mosquitto *mosq, int priorities, int destinations);
+mosq_EXPORT int mosquitto_log_init(struct mosquitto *mosq, int priorities, int destinations);
 
 #ifdef __cplusplus
 }

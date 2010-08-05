@@ -34,8 +34,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/select.h>
-#include <unistd.h>
 
 #include <mosquitto.h>
 #include <logging_mosq.h>
