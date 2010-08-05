@@ -137,7 +137,6 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	uint8_t header = context->in_packet.command;
 	int64_t store_id = 0;
 
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBLISH from %s", context->id);
 	dup = (header & 0x08)>>3;
 	qos = (header & 0x06)>>1;
 	retain = (header & 0x01);
@@ -156,6 +155,7 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	}
 
 	payloadlen = context->in_packet.remaining_length - context->in_packet.pos;
+	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBLISH from %s (%d, %d, %d, %d, '%s', ... (%ld bytes))", context->id, dup, qos, retain, mid, topic, (long)payloadlen);
 	if(payloadlen){
 		payload = mqtt3_calloc(payloadlen+1, sizeof(uint8_t));
 		if(_mosquitto_read_bytes(&context->in_packet, payload, payloadlen)){
