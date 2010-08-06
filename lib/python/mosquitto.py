@@ -165,7 +165,7 @@ class Mosquitto:
 
 class MosquittoMessage(Structure):
 	_fields_ = [("next", c_void_p),
-                ("timestamp", c_long),
+				("timestamp", c_long),
 				("direction", c_int),
 				("state", c_int),
 				("mid", c_uint16),
