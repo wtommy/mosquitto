@@ -28,6 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import mosquitto
+from ctypes import *
 
 def py_on_connect(obj, rc):
 	print "rc: ", rc
@@ -36,12 +37,18 @@ def py_on_connect(obj, rc):
 def py_on_message(obj, message):
 	print message.contents.topic,message.contents.payload
 
+def py_on_publish(obj, mid):
+	print "mid:", mid
+
 
 mqttc = mosquitto.Mosquitto("python_sub")
 mqttc.connect_callback(py_on_connect)
 mqttc.message_callback(py_on_message)
+mqttc.publish_callback(py_on_publish)
 mqttc.connect("127.0.0.1", 1883, 60, True)
 mqttc.subscribe("$SYS/#", 2)
+mqttc.subscribe("#", 2)
+mqttc.publish("bob", 8, cast("0000000", POINTER(c_uint8)))
 
 while 1:
 	mqttc.loop()
