@@ -45,7 +45,7 @@ MOSQ_LOG_DEBUG=0x10
 class Mosquitto:
 	"""MQTT version 3 client class"""
 
-	def __init__(self, obj, id):
+	def __init__(self, id, obj=None):
 		#==================================================
 		# Library loading
 		#==================================================
