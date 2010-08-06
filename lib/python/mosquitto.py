@@ -98,9 +98,21 @@ class Mosquitto:
 		#self._mosquitto_connect_callback_set.argtypes = [c_void_p, c_void_p]
 		self._mosquitto_connect_callback_set.restype = None
 
+		self._mosquitto_publish_callback_set = self._libmosq.mosquitto_publish_callback_set
+		#self._mosquitto_publish_callback_set.argtypes = [c_void_p, c_void_p]
+		self._mosquitto_publish_callback_set.restype = None
+
 		self._mosquitto_message_callback_set = self._libmosq.mosquitto_message_callback_set
 		#self._mosquitto_message_callback_set.argtypes = [c_void_p, c_void_p]
 		self._mosquitto_message_callback_set.restype = None
+
+		self._mosquitto_subscribe_callback_set = self._libmosq.mosquitto_subscribe_callback_set
+		#self._mosquitto_subscribe_callback_set.argtypes = [c_void_p, c_void_p]
+		self._mosquitto_subscribe_callback_set.restype = None
+
+		self._mosquitto_unsubscribe_callback_set = self._libmosq.mosquitto_unsubscribe_callback_set
+		#self._mosquitto_unsubscribe_callback_set.argtypes = [c_void_p, c_void_p]
+		self._mosquitto_unsubscribe_callback_set.restype = None
 
 		self._MOSQ_CONNECT_FUNC = CFUNCTYPE(None, c_void_p, c_int)
 		self._MOSQ_PUBLISH_FUNC = CFUNCTYPE(None, c_void_p, c_uint16)
@@ -135,7 +147,7 @@ class Mosquitto:
 		return self._mosquitto_unsubscribe(self._mosq, sub)
 
 	def publish(self, topic, payloadlen, payload, qos=0, retain=False):
-		return self._mosquitto_publish(self._mosq, byref(mid), topic, payloadlen, payload, qos, retain)
+		return self._mosquitto_publish(self._mosq, None, topic, payloadlen, payload, qos, retain)
 
 	def will_set(self, will, topic, payloadlen, payload, qos=0, retain=False):
 		return self._mosquitto_will_set(self._mosq, will, topic, payloadlen, payload, qos, retain)
