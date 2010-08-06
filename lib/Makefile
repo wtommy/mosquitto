@@ -11,7 +11,7 @@ install : all
 	$(INSTALL) -s libmosquitto.so.0 ${DESTDIR}${prefix}/lib/libmosquitto.so.0
 	ln -sf libmosquitto.so.0 ${DESTDIR}${prefix}/lib/libmosquitto.so
 	$(INSTALL) -d ${DESTDIR}${prefix}/include/
-	$(INSTALL) -d mosquitto.h ${DESTDIR}${prefix}/include/mosquitto.h
+	$(INSTALL) mosquitto.h ${DESTDIR}${prefix}/include/mosquitto.h
 
 clean :
 	-rm -f *.o libmosquitto.so.0 libmosquitto.so
