@@ -16,6 +16,8 @@
 - Added a C client library, which the pub and sub clients now use.
 - Added a C++ client library (bound to the C library).
 - Added a Python client library (bound to the C library).
+- Added CMake build scripts to allow the library and clients (not the broker)
+  to be compiled natively on Windows.
 
 0.7 - 20100615
 ==============
