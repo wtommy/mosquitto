@@ -1,3 +1,8 @@
+# This is a cmake script.
+# It is only intended for building libmosquitto and the clients and can be
+# used to generate Visual Studio projects, allowing them to be compiled
+# natively on Windows.
+
 project(mosquitto)
 
 cmake_minimum_required(VERSION 2.4)
@@ -15,3 +20,4 @@ endif (WIN32)
 
 add_subdirectory(lib)
 add_subdirectory(client)
+
