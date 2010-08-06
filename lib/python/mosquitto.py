@@ -165,11 +165,10 @@ class Mosquitto:
 
 class MosquittoMessage(Structure):
 	_fields_ = [("next", c_void_p),
-                ("timestamp", c_int),
+                ("timestamp", c_long),
 				("direction", c_int),
 				("state", c_int),
 				("mid", c_uint16),
-				("empty", c_char_p), # FIXME - Why is this needed for alignment?
 				("topic", c_char_p),
 				("payload", c_char_p),
 				("payloadlen", c_uint32),
