@@ -44,5 +44,5 @@ mqttc.connect("127.0.0.1", 1883, 60, True)
 mqttc.subscribe("$SYS/#", 2)
 
 while 1:
-	mqttc.loop(None)
+	mqttc.loop()
 
