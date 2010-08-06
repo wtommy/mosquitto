@@ -37,7 +37,7 @@ def py_on_message(obj, message):
 	print message.contents.topic,message.contents.payload
 
 
-mqttc = mosquitto.Mosquitto("python_sub")
+mqttc = mosquitto.Mosquitto(None, "python_sub")
 mqttc.connect_callback(py_on_connect)
 mqttc.message_callback(py_on_message)
 mqttc.connect("127.0.0.1", 1883, 60, True)
