@@ -80,6 +80,7 @@ struct mosquitto *mosquitto_new(void *obj, const char *id)
 		mosq->sock = INVALID_SOCKET;
 		mosq->keepalive = 60;
 		mosq->message_retry = 20;
+		mosq->last_retry_check = 0;
 		mosq->id = strdup(id);
 		mosq->in_packet.payload = NULL;
 		_mosquitto_packet_cleanup(&mosq->in_packet);
@@ -291,6 +292,10 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 		}
 	}
 	_mosquitto_check_keepalive(mosq);
+	if(mosq->last_retry_check+1 < time(NULL)){
+		mosquitto_message_retry_check(mosq);
+		mosq->last_retry_check = time(NULL);
+	}
 
 	return 0;
 }

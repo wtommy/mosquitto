@@ -62,6 +62,7 @@ struct mosquitto {
 	char *id;
 	int keepalive;
 	unsigned int message_retry;
+	time_t last_retry_check;
 	bool connected;
 	uint16_t last_mid;
 	struct mosquitto_message *messages;
