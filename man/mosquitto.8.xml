@@ -291,6 +291,10 @@
 				<refentrytitle>mosquitto_sub</refentrytitle>
 				<manvolnum>1</manvolnum>
 			</citerefentry>
+			<citerefentry>
+				<refentrytitle>libmosquitto</refentrytitle>
+				<manvolnum>3</manvolnum>
+			</citerefentry>
 		</para>
 	</refsect1>
 

@@ -19,6 +19,8 @@
 		aware client programs. There may be separate man pages on each of the
 		functions described here in the future. There are also bindings for
 		libmosquitto for C++ and Python. They are not documented here.</para>
+		<para>This is fairly incomplete, please see mosquitto.h for a better
+		description of the functions.</para>
 	</refsect1>
 
 	<refsect1>
@@ -151,12 +153,14 @@
 			<para>
 			<funcsynopsis><funcprototype><funcdef>int <function>mosquitto_subscribe</function></funcdef>
 			<paramdef><parameter>struct mosquitto *mosq</parameter></paramdef>
+			<paramdef><parameter>uint16_t *mid</parameter></paramdef>
 			<paramdef><parameter>const char *sub</parameter></paramdef>
 			<paramdef><parameter>int qos</parameter></paramdef>
 			</funcprototype></funcsynopsis>
 
 			<funcsynopsis><funcprototype><funcdef>int <function>mosquitto_unsubscribe</function></funcdef>
 			<paramdef><parameter>struct mosquitto *mosq</parameter></paramdef>
+			<paramdef><parameter>uint16_t *mid</parameter></paramdef>
 			<paramdef><parameter>const char *sub</parameter></paramdef>
 			</funcprototype></funcsynopsis>
 			</para>
@@ -171,11 +175,19 @@
 			<paramdef><parameter>int timeout</parameter></paramdef>
 			</funcprototype></funcsynopsis>
 
-			<funcsynopsis><funcprototype><funcdef>int <function>mosquitto_read</function></funcdef>
+			<funcsynopsis><funcprototype><funcdef>int <function>mosquitto_loop_read</function></funcdef>
 			<paramdef><parameter>struct mosquitto *mosq</parameter></paramdef>
 			</funcprototype></funcsynopsis>
 
-			<funcsynopsis><funcprototype><funcdef>int <function>mosquitto_write</function></funcdef>
+			<funcsynopsis><funcprototype><funcdef>int <function>mosquitto_loop_write</function></funcdef>
+			<paramdef><parameter>struct mosquitto *mosq</parameter></paramdef>
+			</funcprototype></funcsynopsis>
+
+			<funcsynopsis><funcprototype><funcdef>int <function>mosquitto_loop_misc</function></funcdef>
+			<paramdef><parameter>struct mosquitto *mosq</parameter></paramdef>
+			</funcprototype></funcsynopsis>
+
+			<funcsynopsis><funcprototype><funcdef>int <function>mosquitto_socket</function></funcdef>
 			<paramdef><parameter>struct mosquitto *mosq</parameter></paramdef>
 			</funcprototype></funcsynopsis>
 			</para>
@@ -183,6 +195,7 @@
 
 		<refsect2>
 			<title>Callbacks</title>
+			<para>See mosquitto.h</para>
 		</refsect2>
 
 <!--
@@ -243,7 +256,7 @@ void my_connect_callback(void *obj, int result)
 	}
 }
 
-void my_subscribe_callback(void *obj, uint16_t mid, int qos_count, uint8_t *granted_qos)
+void my_subscribe_callback(void *obj, uint16_t mid, int qos_count, const uint8_t *granted_qos)
 {
 	int i;
 
@@ -252,7 +265,6 @@ void my_subscribe_callback(void *obj, uint16_t mid, int qos_count, uint8_t *gran
 		printf(", %d", granted_qos[i]);
 	}
 	printf("\n");
-	free(granted_qos);
 }
 
 int main(int argc, char *argv[])
@@ -265,7 +277,7 @@ int main(int argc, char *argv[])
 	bool clean_session = true;
 	struct mosquitto *mosq = NULL;
 
-	mosq = mosquitto_new(NULL, id);
+	mosq = mosquitto_new(id, NULL);
 	if(!mosq){
 		fprintf(stderr, "Error: Out of memory.\n");
 		return 1;
@@ -275,14 +287,14 @@ int main(int argc, char *argv[])
 
 	mosquitto_connect_callback_set(mosq, my_connect_callback);
 	mosquitto_message_callback_set(mosq, my_message_callback);
-	mosq->on_subscribe = my_subscribe_callback;
+	mosquitto_subscribe_callback_set(mosq, my_subscribe_callback);
 
 	if(mosquitto_connect(mosq, host, port, keepalive, clean_session)){
 		fprintf(stderr, "Unable to connect.\n");
 		return 1;
 	}
 
-	while(!mosquitto_loop(mosq, NULL)){
+	while(!mosquitto_loop(mosq, -1)){
 	}
 	mosquitto_destroy(mosq);
 	return 0;

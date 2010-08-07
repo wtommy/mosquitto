@@ -250,6 +250,10 @@
 				<refentrytitle>mosquitto</refentrytitle>
 				<manvolnum>8</manvolnum>
 			</citerefentry>
+			<citerefentry>
+				<refentrytitle>libmosquitto</refentrytitle>
+				<manvolnum>3</manvolnum>
+			</citerefentry>
 		</para>
 	</refsect1>
 
