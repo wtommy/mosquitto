@@ -1,4 +1,4 @@
-0.8 - 2010xxxx
+0.8 - 20100807
 ==============
 
 - Topics starting with a / are treated as distinct to those not starting with

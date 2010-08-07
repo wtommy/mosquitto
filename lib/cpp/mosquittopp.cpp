@@ -68,6 +68,13 @@ static void on_unsubscribe_wrapper(void *obj, uint16_t mid)
 	m->on_unsubscribe(mid);
 }
 
+void mosquittopp::lib_version(int *major, int *minor, int *revision)
+{
+	if(major) *major = LIBMOSQUITTO_MAJOR;
+	if(minor) *minor = LIBMOSQUITTO_MINOR;
+	if(revision) *revision = LIBMOSQUITTO_REVISION;
+}
+
 mosquittopp::mosquittopp(const char *id)
 {
 	mosq = mosquitto_new(id, this);

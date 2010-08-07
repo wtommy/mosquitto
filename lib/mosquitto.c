@@ -45,6 +45,13 @@ POSSIBILITY OF SUCH DAMAGE.
 typedef int ssize_t;
 #endif
 
+void mosquitto_lib_version(int *major, int *minor, int *revision)
+{
+	if(major) *major = LIBMOSQUITTO_MAJOR;
+	if(minor) *minor = LIBMOSQUITTO_MINOR;
+	if(revision) *revision = LIBMOSQUITTO_REVISION;
+}
+
 int mosquitto_lib_init(void)
 {
 #ifdef WIN32

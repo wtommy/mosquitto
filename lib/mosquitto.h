@@ -44,6 +44,9 @@ extern "C" {
 #define mosq_EXPORT
 #endif
 
+#define LIBMOSQUITTO_MAJOR 0
+#define LIBMOSQUITTO_MINOR 8
+#define LIBMOSQUITTO_REVISION 0
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -89,6 +92,8 @@ struct mosquitto;
  * mosquitto_publish()
  ***************************************************/
 
+mosq_EXPORT void mosquitto_lib_version(int *major, int *minor, int *revision);
+/* Return the version of the compiled library. */
 
 mosq_EXPORT int mosquitto_lib_init(void);
 /* Must be called before any other mosquitto functions.
