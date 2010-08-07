@@ -22,6 +22,12 @@
 	</refsect1>
 
 	<refsect1>
+		<title>Status</title>
+		<para>The libmosquitto api is currently regarded as experimental and
+		unstable and may change in future releases.</para>
+	</refsect1>
+
+	<refsect1>
 		<title>libmosquitto symbol names</title>
 		<para>All public functions in libmosquitto have the prefix
 		"mosquitto_". Any other functions defined in the source code are to be
