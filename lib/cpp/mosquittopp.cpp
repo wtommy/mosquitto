@@ -75,6 +75,16 @@ void mosquittopp::lib_version(int *major, int *minor, int *revision)
 	if(revision) *revision = LIBMOSQUITTO_REVISION;
 }
 
+int mosquittopp::lib_init()
+{
+	return mosquitto_lib_init();
+}
+
+int mosquittopp::lib_cleanup()
+{
+	return mosquitto_lib_cleanup();
+}
+
 mosquittopp::mosquittopp(const char *id)
 {
 	mosq = mosquitto_new(id, this);

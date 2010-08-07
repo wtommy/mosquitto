@@ -43,6 +43,8 @@ class mosquittopp {
 		~mosquittopp();
 
 		static void lib_version(int *major, int *minor, int *revision);
+		static int lib_init();
+		static int lib_cleanup();
 		int socket();
 		int log_init(int priorities, int destinations);
 		int will_set(bool will, const char *topic, uint32_t payloadlen=0, const uint8_t *payload=NULL, int qos=0, bool retain=false);
