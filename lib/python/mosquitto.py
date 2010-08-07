@@ -71,11 +71,11 @@ class Mosquitto:
 		self._mosquitto_publish.restype = c_int
 
 		self._mosquitto_subscribe = self._libmosq.mosquitto_subscribe
-		self._mosquitto_subscribe.argtypes = [c_void_p, c_uint16_p, c_char_p, c_int]
+		self._mosquitto_subscribe.argtypes = [c_void_p, POINTER(c_uint16), c_char_p, c_int]
 		self._mosquitto_subscribe.restype = c_int
 
 		self._mosquitto_unsubscribe = self._libmosq.mosquitto_unsubscribe
-		self._mosquitto_unsubscribe.argtypes = [c_void_p, c_uint16_p, c_char_p]
+		self._mosquitto_unsubscribe.argtypes = [c_void_p, POINTER(c_uint16), c_char_p]
 		self._mosquitto_unsubscribe.restype = c_int
 
 		self._mosquitto_loop = self._libmosq.mosquitto_loop
