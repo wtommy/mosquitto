@@ -126,7 +126,7 @@ class Mosquitto:
 
 	def __del__(self):
 		if self._mosq:
-			self._mosquitto_destroy(pointer(self._mosq))
+			self._mosquitto_destroy(self._mosq)
 
 	def connect(self, hostname="127.0.0.1", port=1883, keepalive=60, clean_session=True):
 		return self._mosquitto_connect(self._mosq, hostname, port, keepalive, clean_session)
@@ -173,7 +173,7 @@ class Mosquitto:
 		return self._mosquitto_unsubscribe_callback_set(self._mosq, self._on_unsubscribe)
 
 	def message_cleanup(self, message):
-		self._mosquitto_message_cleanup(self._mosq, pointer(message))
+		self._mosquitto_message_cleanup(self._mosq, byref(message))
 
 class MosquittoMessage(Structure):
 	_fields_ = [("next", c_void_p),
