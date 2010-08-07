@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #ifndef WIN32
 #include <unistd.h>

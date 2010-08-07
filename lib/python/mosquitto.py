@@ -71,11 +71,11 @@ class Mosquitto:
 		self._mosquitto_publish.restype = c_int
 
 		self._mosquitto_subscribe = self._libmosq.mosquitto_subscribe
-		self._mosquitto_subscribe.argtypes = [c_void_p, c_char_p, c_int]
+		self._mosquitto_subscribe.argtypes = [c_void_p, c_uint16_p, c_char_p, c_int]
 		self._mosquitto_subscribe.restype = c_int
 
 		self._mosquitto_unsubscribe = self._libmosq.mosquitto_unsubscribe
-		self._mosquitto_unsubscribe.argtypes = [c_void_p, c_char_p]
+		self._mosquitto_unsubscribe.argtypes = [c_void_p, c_uint16_p, c_char_p]
 		self._mosquitto_unsubscribe.restype = c_int
 
 		self._mosquitto_loop = self._libmosq.mosquitto_loop
@@ -137,10 +137,10 @@ class Mosquitto:
 		return self._mosquitto_loop(self._mosq, timeout)
 
 	def subscribe(self, sub, qos):
-		return self._mosquitto_subscribe(self._mosq, sub, qos)
+		return self._mosquitto_subscribe(self._mosq, None, sub, qos)
 
 	def unsubscribe(self, sub):
-		return self._mosquitto_unsubscribe(self._mosq, sub)
+		return self._mosquitto_unsubscribe(self._mosq, None, sub)
 
 	def publish(self, topic, payloadlen, payload, qos=0, retain=False):
 		return self._mosquitto_publish(self._mosq, None, topic, payloadlen, payload, qos, retain)

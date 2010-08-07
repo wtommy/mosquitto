@@ -112,14 +112,14 @@ void mosquittopp::message_retry_set(unsigned int message_retry)
 	mosquitto_message_retry_set(mosq, message_retry);
 }
 
-int mosquittopp::subscribe(const char *sub, int qos)
+int mosquittopp::subscribe(uint16_t *mid, const char *sub, int qos)
 {
-	return mosquitto_subscribe(mosq, sub, qos);
+	return mosquitto_subscribe(mosq, mid, sub, qos);
 }
 
-int mosquittopp::unsubscribe(const char *sub)
+int mosquittopp::unsubscribe(uint16_t *mid, const char *sub)
 {
-	return mosquitto_unsubscribe(mosq, sub);
+	return mosquitto_unsubscribe(mosq, mid, sub);
 }
 
 int mosquittopp::loop(int timeout)

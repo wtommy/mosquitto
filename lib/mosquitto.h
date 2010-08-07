@@ -190,20 +190,28 @@ mosq_EXPORT int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const c
  * Returns 0 on success, 1 on failure.
  */
 
-mosq_EXPORT int mosquitto_subscribe(struct mosquitto *mosq, const char *sub, int qos);
+mosq_EXPORT int mosquitto_subscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub, int qos);
 /* Subscribe to a topic
  * 
  * mosq : a valid mosquitto instance
+ * mid :        pointer to a uint16_t. If not NULL, the function will set this
+ *              to the message id of this particular message. This can be then
+ *              used with the subscribe callback to determine when the message
+ *              has been sent.
  * sub :  the subscription pattern
  * qos :  the requested Quality of Service for this subscription
  *
  * Returns 0 on success, 1 on failure.
  */
 
-mosq_EXPORT int mosquitto_unsubscribe(struct mosquitto *mosq, const char *sub);
+mosq_EXPORT int mosquitto_unsubscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub);
 /* Unsubscribe from a topic
  * 
  * mosq : a valid mosquitto instance
+ * mid :        pointer to a uint16_t. If not NULL, the function will set this
+ *              to the message id of this particular message. This can be then
+ *              used with the unsubscribe callback to determine when the message
+ *              has been sent.
  * sub :  the unsubscription pattern
  *
  * Returns 0 on success, 1 on failure.

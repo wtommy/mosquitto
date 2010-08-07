@@ -226,18 +226,18 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 	}
 }
 
-int mosquitto_subscribe(struct mosquitto *mosq, const char *sub, int qos)
+int mosquitto_subscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub, int qos)
 {
 	if(!mosq || mosq->sock == INVALID_SOCKET) return 1;
 
-	return _mosquitto_send_subscribe(mosq, false, sub, qos);
+	return _mosquitto_send_subscribe(mosq, mid, false, sub, qos);
 }
 
-int mosquitto_unsubscribe(struct mosquitto *mosq, const char *sub)
+int mosquitto_unsubscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub)
 {
 	if(!mosq || mosq->sock == INVALID_SOCKET) return 1;
 
-	return _mosquitto_send_unsubscribe(mosq, false, sub);
+	return _mosquitto_send_unsubscribe(mosq, mid, false, sub);
 }
 
 int mosquitto_loop(struct mosquitto *mosq, int timeout)

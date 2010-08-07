@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #ifndef WIN32
 #include <unistd.h>
@@ -68,7 +69,7 @@ void my_connect_callback(void *obj, int result)
 	int i;
 	if(!result){
 		for(i=0; i<topic_count; i++){
-			mosquitto_subscribe(mosq, topics[i], topic_qos);
+			mosquitto_subscribe(mosq, NULL, topics[i], topic_qos);
 		}
 	}else{
 		fprintf(stderr, "Connect failed\n");
