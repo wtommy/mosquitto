@@ -47,8 +47,6 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <time.h>
 
 /* Log destinations */
 #define MOSQ_LOG_NONE 0x00
