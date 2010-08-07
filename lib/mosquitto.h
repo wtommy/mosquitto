@@ -195,6 +195,9 @@ mosq_EXPORT int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const c
  *              to the message id of this particular message. This can be then
  *              used with the publish callback to determine when the message
  *              has been sent.
+ *              Note that although the MQTT protocol doesn't use message ids
+ *              for messages with QoS=0, libmosquitto assigns them message ids
+ *              so they can be tracked with this parameter.
  * topic :      the topic to publish the message on
  * payloadlen : the size of the payload (bytes). Valid values are between 0 and
  *              268,435,455, although the upper limit isn't currently enforced.
@@ -287,10 +290,80 @@ mosq_EXPORT int mosquitto_loop_misc(struct mosquitto *mosq);
 
 
 mosq_EXPORT void mosquitto_connect_callback_set(struct mosquitto *mosq, void (*on_connect)(void *, int));
+/* Set the connect callback. This is called when the broker sends a CONNACK
+ * message in response to a connection.
+ * The callback function should be in the following form:
+ * 
+ * void callback(void *obj, int rc)
+ *
+ * obj : the user data provided to mosquitto_new().
+ * rc :  the return code.
+ *       0 : success
+ *       1 : connection refused (unacceptable protocol version)
+ *       2 : connection refused (identifier rejected)
+ *       3 : connection refused (broker unavailable)
+ *       4-255 : reserved for future use
+ */
+ 
 mosq_EXPORT void mosquitto_publish_callback_set(struct mosquitto *mosq, void (*on_publish)(void *, uint16_t));
+/* Set the publish callback. This is called when a message initiated with
+ * mosquitto_publish() has been sent to the broker successfully.
+ * The callback function should be in the following form:
+ * 
+ * void callback(void *obj, uint16_t mid)
+ *
+ * obj : the user data provided to mosquitto_new().
+ * mid : the message id of the sent message.
+ */
+
 mosq_EXPORT void mosquitto_message_callback_set(struct mosquitto *mosq, void (*on_message)(void *, struct mosquitto_message *));
+/* Set the message callback. This is called when a message is received from the
+ * broker.
+ * The callback function should be in the following form:
+ * 
+ * void callback(void *obj, struct mosquitto_message *message)
+ *
+ * obj :     the user data provided to mosquitto_new().
+ * message : the message data - see above for struct details.
+ *
+ * The message struct members of interest are:
+ *
+ * uint16_t mid;
+ * char *topic;
+ * uint8_t *payload;
+ * uint32_t payloadlen;
+ * int qos;
+ * bool retain;
+ *
+ * It is the responsibility of the callback to free the message data. This can
+ * be done with mosquitto_message_cleanup().
+ */
+
 mosq_EXPORT void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, uint8_t *));
+/* Set the subscribe callback. This is called when the broker responds to a
+ * subscription request.
+ * The callback function should be in the following form:
+ * 
+ * void callback(void *obj, uint16_t mid, int qos_count, uint8_t *granted_qos)
+ *
+ * obj :         the user data provided to mosquitto_new().
+ * mid :         the message id of the subscribe message.
+ * qos_count :   the number of granted subscriptions (size of granted_qos)
+ * granted_qos : an array of integers indicating the granted QoS for each of
+ *               the subscriptions.
+ */
+
 mosq_EXPORT void mosquitto_unsubscribe_callback_set(struct mosquitto *mosq, void (*on_unsubscribe)(void *, uint16_t));
+/* Set the unsubscribe callback. This is called when the broker responds to an
+ * unsubscription request.
+ * The callback function should be in the following form:
+ * 
+ * void callback(void *obj, uint16_t mid)
+ *
+ * obj : the user data provided to mosquitto_new().
+ * mid : the message id of the unsubscribe message.
+ */
+
 
 mosq_EXPORT void mosquitto_message_cleanup(struct mosquitto_message **message);
 /* Free all memory associated with a mosquitto_message passed through the message callback.
