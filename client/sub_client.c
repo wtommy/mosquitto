@@ -44,7 +44,7 @@ static int topic_count = 0;
 static int topic_qos = 0;
 int verbose = 0;
 
-void my_message_callback(void *obj, struct mosquitto_message *message)
+void my_message_callback(void *obj, const struct mosquitto_message *message)
 {
 	if(verbose){
 		if(message->payloadlen){
@@ -75,7 +75,7 @@ void my_connect_callback(void *obj, int result)
 	}
 }
 
-void my_subscribe_callback(void *obj, uint16_t mid, int qos_count, uint8_t *granted_qos)
+void my_subscribe_callback(void *obj, uint16_t mid, int qos_count, const uint8_t *granted_qos)
 {
 	int i;
 
@@ -84,7 +84,6 @@ void my_subscribe_callback(void *obj, uint16_t mid, int qos_count, uint8_t *gran
 		printf(", %d", granted_qos[i]);
 	}
 	printf("\n");
-	free(granted_qos);
 }
 
 void print_usage(void)

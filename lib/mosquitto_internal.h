@@ -99,8 +99,8 @@ struct mosquitto {
 	int log_destinations;
 	void (*on_connect)(void *obj, int rc);
 	void (*on_publish)(void *obj, uint16_t mid);
-	void (*on_message)(void *obj, struct mosquitto_message *message);
-	void (*on_subscribe)(void *obj, uint16_t mid, int qos_count, uint8_t *granted_qos);
+	void (*on_message)(void *obj, const struct mosquitto_message *message);
+	void (*on_subscribe)(void *obj, uint16_t mid, int qos_count, const uint8_t *granted_qos);
 	void (*on_unsubscribe)(void *obj, uint16_t mid);
 	//void (*on_error)();
 };

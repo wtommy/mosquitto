@@ -554,12 +554,12 @@ void mosquitto_publish_callback_set(struct mosquitto *mosq, void (*on_publish)(v
 	if(mosq) mosq->on_publish = on_publish;
 }
 
-void mosquitto_message_callback_set(struct mosquitto *mosq, void (*on_message)(void *, struct mosquitto_message *))
+void mosquitto_message_callback_set(struct mosquitto *mosq, void (*on_message)(void *, const struct mosquitto_message *))
 {
 	if(mosq) mosq->on_message = on_message;
 }
 
-void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, uint8_t *))
+void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, const uint8_t *))
 {
 	if(mosq) mosq->on_subscribe = on_subscribe;
 }

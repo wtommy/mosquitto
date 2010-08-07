@@ -298,12 +298,12 @@ mosq_EXPORT void mosquitto_publish_callback_set(struct mosquitto *mosq, void (*o
  * mid : the message id of the sent message.
  */
 
-mosq_EXPORT void mosquitto_message_callback_set(struct mosquitto *mosq, void (*on_message)(void *, struct mosquitto_message *));
+mosq_EXPORT void mosquitto_message_callback_set(struct mosquitto *mosq, void (*on_message)(void *, const struct mosquitto_message *));
 /* Set the message callback. This is called when a message is received from the
  * broker.
  * The callback function should be in the following form:
  * 
- * void callback(void *obj, struct mosquitto_message *message)
+ * void callback(void *obj, const struct mosquitto_message *message)
  *
  * obj :     the user data provided to mosquitto_new().
  * message : the message data - see above for struct details.
@@ -313,12 +313,12 @@ mosq_EXPORT void mosquitto_message_callback_set(struct mosquitto *mosq, void (*o
  * it requires. 
  */
 
-mosq_EXPORT void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, uint8_t *));
+mosq_EXPORT void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, const uint8_t *));
 /* Set the subscribe callback. This is called when the broker responds to a
  * subscription request.
  * The callback function should be in the following form:
  * 
- * void callback(void *obj, uint16_t mid, int qos_count, uint8_t *granted_qos)
+ * void callback(void *obj, uint16_t mid, int qos_count, const uint8_t *granted_qos)
  *
  * obj :         the user data provided to mosquitto_new().
  * mid :         the message id of the subscribe message.
