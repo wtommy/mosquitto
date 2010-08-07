@@ -251,7 +251,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	if(mosq->out_packet){
 		FD_SET(mosq->sock, &writefds);
 	}
-	if(timeout > 0){
+	if(timeout >= 0){
 		local_timeout.tv_sec = timeout/1000;
 #ifndef WIN32
 		local_timeout.tv_nsec = (timeout-local_timeout.tv_sec*1000)*1e6;
