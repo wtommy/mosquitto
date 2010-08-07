@@ -82,10 +82,6 @@ class Mosquitto:
 		self._mosquitto_loop.argtypes = [c_void_p, c_int]
 		self._mosquitto_loop.restype = c_int
 
-		self._mosquitto_message_cleanup = self._libmosq.mosquitto_message_cleanup
-		self._mosquitto_message_cleanup.argtypes = [POINTER(c_void_p)]
-		self._mosquitto_message_cleanup.restype = c_int
-
 		self._mosquitto_will_set = self._libmosq.mosquitto_will_set
 		self._mosquitto_will_set.argtypes = [c_void_p, c_bool, c_char_p, c_uint32, POINTER(c_uint8), c_int, c_bool]
 		self._mosquitto_will_set.restype = c_int
@@ -171,9 +167,6 @@ class Mosquitto:
 	def unsubscribe_callback(self, callback):
 		self._on_unsubscribe = self._MOSQ_UNSUBSCRIBE_FUNC(callback)
 		return self._mosquitto_unsubscribe_callback_set(self._mosq, self._on_unsubscribe)
-
-	def message_cleanup(self, message):
-		self._mosquitto_message_cleanup(self._mosq, byref(message))
 
 class MosquittoMessage(Structure):
 	_fields_ = [("next", c_void_p),

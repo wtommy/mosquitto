@@ -130,13 +130,13 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 	if(_mosquitto_read_string(&mosq->in_packet, &message->topic)) return 1;
 	if(_mosquitto_fix_sub_topic(&message->topic)) return 1;
 	if(!strlen(message->topic)){
-		mosquitto_message_cleanup(&message);
+		_mosquitto_message_cleanup(&message);
 		return 1;
 	}
 
 	if(message->qos > 0){
 		if(_mosquitto_read_uint16(&mosq->in_packet, &message->mid)){
-			mosquitto_message_cleanup(&message);
+			_mosquitto_message_cleanup(&message);
 			return 1;
 		}
 	}
@@ -145,7 +145,7 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 	if(message->payloadlen){
 		message->payload = calloc(message->payloadlen+1, sizeof(uint8_t));
 		if(_mosquitto_read_bytes(&mosq->in_packet, message->payload, message->payloadlen)){
-			mosquitto_message_cleanup(&message);
+			_mosquitto_message_cleanup(&message);
 			return 1;
 		}
 	}
@@ -155,17 +155,15 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 		case 0:
 			if(mosq->on_message){
 				mosq->on_message(mosq->obj, message);
-			}else{
-				mosquitto_message_cleanup(&message);
 			}
+			_mosquitto_message_cleanup(&message);
 			break;
 		case 1:
 			if(_mosquitto_send_puback(mosq, message->mid)) rc = 1;
 			if(mosq->on_message){
 				mosq->on_message(mosq->obj, message);
-			}else{
-				mosquitto_message_cleanup(&message);
 			}
+			_mosquitto_message_cleanup(&message);
 			break;
 		case 2:
 			if(_mosquitto_send_pubrec(mosq, message->mid)) rc = 1;
@@ -210,7 +208,7 @@ int _mosquitto_handle_pubrel(struct mosquitto *mosq)
 		if(mosq->on_message){
 			mosq->on_message(mosq->obj, message);
 		}else{
-			mosquitto_message_cleanup(&message);
+			_mosquitto_message_cleanup(&message);
 		}
 	}
 	if(_mosquitto_send_pubcomp(mosq, mid)) return 1;

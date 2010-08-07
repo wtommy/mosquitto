@@ -335,8 +335,7 @@ mosq_EXPORT void mosquitto_message_callback_set(struct mosquitto *mosq, void (*o
  * int qos;
  * bool retain;
  *
- * It is the responsibility of the callback to free the message data. This can
- * be done with mosquitto_message_cleanup().
+ * The message variable and associated memory will be free'd by the library after the callback has run. The client should make copies of any of the data it requires. 
  */
 
 mosq_EXPORT void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, uint8_t *));
@@ -364,12 +363,6 @@ mosq_EXPORT void mosquitto_unsubscribe_callback_set(struct mosquitto *mosq, void
  * mid : the message id of the unsubscribe message.
  */
 
-
-mosq_EXPORT void mosquitto_message_cleanup(struct mosquitto_message **message);
-/* Free all memory associated with a mosquitto_message passed through the message callback.
- *
- * message : pointer to a mosquitto_message struct pointer.
- */
 
 mosq_EXPORT void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_retry);
 /* Set the number of seconds to wait before retrying messages. This applies to

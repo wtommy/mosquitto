@@ -200,14 +200,14 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 		message->mid = local_mid;
 		message->topic = strdup(topic);
 		if(!message->topic){
-			mosquitto_message_cleanup(&message);
+			_mosquitto_message_cleanup(&message);
 			return 1;
 		}
 		if(payloadlen){
 			message->payloadlen = payloadlen;
 			message->payload = malloc(payloadlen*sizeof(uint8_t));
 			if(!message){
-				mosquitto_message_cleanup(&message);
+				_mosquitto_message_cleanup(&message);
 				return 1;
 			}
 		}else{
@@ -219,7 +219,7 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 		message->dup = false;
 
 		if(_mosquitto_message_queue(mosq, message)){
-			mosquitto_message_cleanup(&message);
+			_mosquitto_message_cleanup(&message);
 			return 1;
 		}
 		return _mosquitto_send_publish(mosq, message->mid, message->topic, message->payloadlen, message->payload, message->qos, message->retain, message->dup);

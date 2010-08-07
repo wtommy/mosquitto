@@ -34,7 +34,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
 
-void mosquitto_message_cleanup(struct mosquitto_message **message)
+void _mosquitto_message_cleanup(struct mosquitto_message **message)
 {
 	struct mosquitto_message *msg;
 
@@ -55,7 +55,7 @@ void _mosquitto_message_cleanup_all(struct mosquitto *mosq)
 
 	while(mosq->messages){
 		tmp = mosq->messages->next;
-		mosquitto_message_cleanup(&mosq->messages);
+		_mosquitto_message_cleanup(&mosq->messages);
 		mosq->messages = tmp;
 	}
 };
@@ -73,7 +73,7 @@ int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquit
 			}else{
 				mosq->messages = message->next;
 			}
-			mosquitto_message_cleanup(&message);
+			_mosquitto_message_cleanup(&message);
 		}
 		prev = message;
 		message = message->next;
