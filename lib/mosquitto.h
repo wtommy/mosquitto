@@ -293,6 +293,17 @@ mosq_EXPORT void mosquitto_connect_callback_set(struct mosquitto *mosq, void (*o
  *       4-255 : reserved for future use
  */
  
+mosq_EXPORT void mosquitto_disconnect_callback_set(struct mosquitto *mosq, void (*on_disconnect)(void *));
+/* Set the disconnect callback. This is called when the broker has received the
+ * DISCONNECT command and has disconnected.
+ *
+ * The callback function should be in the following form:
+ * 
+ * void callback(void *obj)
+ *
+ * obj : the user data provided to mosquitto_new().
+ */
+ 
 mosq_EXPORT void mosquitto_publish_callback_set(struct mosquitto *mosq, void (*on_publish)(void *, uint16_t));
 /* Set the publish callback. This is called when a message initiated with
  * mosquitto_publish() has been sent to the broker successfully.

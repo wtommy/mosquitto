@@ -168,6 +168,8 @@ int mosquitto_disconnect(struct mosquitto *mosq)
 {
 	if(!mosq || mosq->sock == INVALID_SOCKET) return 1;
 
+	mosq->state = mosq_cs_disconnecting;
+
 	return _mosquitto_send_disconnect(mosq);
 }
 
@@ -285,16 +287,30 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	}else{
 		if(FD_ISSET(mosq->sock, &readfds)){
 			if(mosquitto_loop_read(mosq)){
-				fprintf(stderr, "Error in network read.\n");
 				_mosquitto_socket_close(mosq);
-				return 1;
+				if(mosq->state == mosq_cs_disconnecting){
+					if(mosq->on_disconnect){
+						mosq->on_disconnect(mosq->obj);
+					}
+					return 0;
+				}else{
+					fprintf(stderr, "Error in network read.\n");
+					return 1;
+				}
 			}
 		}
 		if(FD_ISSET(mosq->sock, &writefds)){
 			if(mosquitto_loop_write(mosq)){
-				fprintf(stderr, "Error in network write.\n");
 				_mosquitto_socket_close(mosq);
-				return 1;
+				if(mosq->state == mosq_cs_disconnecting){
+					if(mosq->on_disconnect){
+						mosq->on_disconnect(mosq->obj);
+					}
+					return 0;
+				}else{
+					fprintf(stderr, "Error in network write.\n");
+					return 1;
+				}
 			}
 		}
 	}
@@ -547,6 +563,11 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 void mosquitto_connect_callback_set(struct mosquitto *mosq, void (*on_connect)(void *, int))
 {
 	if(mosq) mosq->on_connect = on_connect;
+}
+
+void mosquitto_disconnect_callback_set(struct mosquitto *mosq, void (*on_disconnect)(void *))
+{
+	if(mosq) mosq->on_disconnect = on_disconnect;
 }
 
 void mosquitto_publish_callback_set(struct mosquitto *mosq, void (*on_publish)(void *, uint16_t))

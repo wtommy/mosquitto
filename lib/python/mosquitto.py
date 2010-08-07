@@ -94,6 +94,10 @@ class Mosquitto:
 		#self._mosquitto_connect_callback_set.argtypes = [c_void_p, c_void_p]
 		self._mosquitto_connect_callback_set.restype = None
 
+		self._mosquitto_disconnect_callback_set = self._libmosq.mosquitto_disconnect_callback_set
+		#self._mosquitto_disconnect_callback_set.argtypes = [c_void_p, c_void_p]
+		self._mosquitto_disconnect_callback_set.restype = None
+
 		self._mosquitto_publish_callback_set = self._libmosq.mosquitto_publish_callback_set
 		#self._mosquitto_publish_callback_set.argtypes = [c_void_p, c_void_p]
 		self._mosquitto_publish_callback_set.restype = None
@@ -111,6 +115,7 @@ class Mosquitto:
 		self._mosquitto_unsubscribe_callback_set.restype = None
 
 		self._MOSQ_CONNECT_FUNC = CFUNCTYPE(None, c_void_p, c_int)
+		self._MOSQ_DISCONNECT_FUNC = CFUNCTYPE(None, c_void_p)
 		self._MOSQ_PUBLISH_FUNC = CFUNCTYPE(None, c_void_p, c_uint16)
 		self._MOSQ_MESSAGE_FUNC = CFUNCTYPE(None, c_void_p, POINTER(MosquittoMessage))
 		self._MOSQ_SUBSCRIBE_FUNC = CFUNCTYPE(None, c_void_p, c_uint16, c_int, POINTER(c_uint8))
@@ -151,6 +156,10 @@ class Mosquitto:
 	def connect_callback(self, callback):
 		self._on_connect = self._MOSQ_CONNECT_FUNC(callback)
 		return self._mosquitto_connect_callback_set(self._mosq, self._on_connect)
+	
+	def disconnect_callback(self, callback):
+		self._on_disconnect = self._MOSQ_DISCONNECT_FUNC(callback)
+		return self._mosquitto_disconnect_callback_set(self._mosq, self._on_disconnect)
 	
 	def publish_callback(self, callback):
 		self._on_publish = self._MOSQ_PUBLISH_FUNC(callback)

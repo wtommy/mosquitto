@@ -60,6 +60,7 @@ static int retain = 0;
 static int mode = MSGMODE_NONE;
 static int status = STATUS_CONNECTING;
 static uint16_t mid_sent = 0;
+static bool connected = true;
 
 void my_connect_callback(void *obj, int result)
 {
@@ -82,6 +83,11 @@ void my_connect_callback(void *obj, int result)
 	}else{
 		fprintf(stderr, "Connect failed\n");
 	}
+}
+
+void my_disconnect_callback(void *obj)
+{
+	connected = false;
 }
 
 void my_publish_callback(void *obj, uint16_t mid)
@@ -396,6 +402,7 @@ int main(int argc, char *argv[])
 	}
 
 	mosquitto_connect_callback_set(mosq, my_connect_callback);
+	mosquitto_disconnect_callback_set(mosq, my_disconnect_callback);
 	mosquitto_publish_callback_set(mosq, my_publish_callback);
 
 	if(mosquitto_connect(mosq, host, port, keepalive, true)){
@@ -403,7 +410,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	while(!mosquitto_loop(mosq, -1)){
+	while(!mosquitto_loop(mosq, -1) && connected){
 		if(mode == MSGMODE_STDIN_LINE && status == STATUS_CONNACK_RECVD){
 			if(fgets(buf, 1024, stdin)){
 				buf[strlen(buf)-1] = '\0';

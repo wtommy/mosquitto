@@ -38,6 +38,12 @@ static void on_connect_wrapper(void *obj, int rc)
 	m->on_connect(rc);
 }
 
+static void on_disconnect_wrapper(void *obj)
+{
+	class mosquittopp *m = (class mosquittopp *)obj;
+	m->on_disconnect();
+}
+
 static void on_publish_wrapper(void *obj, uint16_t mid)
 {
 	class mosquittopp *m = (class mosquittopp *)obj;
@@ -66,6 +72,7 @@ mosquittopp::mosquittopp(const char *id)
 {
 	mosq = mosquitto_new(id, this);
 	mosquitto_connect_callback_set(mosq, on_connect_wrapper);
+	mosquitto_disconnect_callback_set(mosq, on_disconnect_wrapper);
 	mosquitto_publish_callback_set(mosq, on_publish_wrapper);
 	mosquitto_message_callback_set(mosq, on_message_wrapper);
 	mosquitto_subscribe_callback_set(mosq, on_subscribe_wrapper);
