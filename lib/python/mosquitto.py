@@ -79,7 +79,7 @@ class Mosquitto:
 		self._mosquitto_unsubscribe.restype = c_int
 
 		self._mosquitto_loop = self._libmosq.mosquitto_loop
-		self._mosquitto_loop.argtypes = [c_void_p, c_void_p]
+		self._mosquitto_loop.argtypes = [c_void_p, c_int]
 		self._mosquitto_loop.restype = c_int
 
 		self._mosquitto_message_cleanup = self._libmosq.mosquitto_message_cleanup
@@ -137,8 +137,8 @@ class Mosquitto:
 	def log_init(self, priorities, destinations):
 		return self._mosquitto_log_init(self._mosq, priorities, destinations)
 
-	def loop(self, timeout=None):
-		return self._mosquitto_loop(self._mosq, 0)
+	def loop(self, timeout=0):
+		return self._mosquitto_loop(self._mosq, timeout)
 
 	def subscribe(self, sub, qos):
 		return self._mosquitto_subscribe(self._mosq, sub, qos)
