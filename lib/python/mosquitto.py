@@ -51,7 +51,7 @@ class Mosquitto:
 		#==================================================
 		self._libmosq = cdll.LoadLibrary(find_library("mosquitto"))
 		self._mosquitto_new = self._libmosq.mosquitto_new
-		self._mosquitto_new.argtypes = [c_void_p, c_char_p]
+		self._mosquitto_new.argtypes = [c_char_p, c_void_p]
 		self._mosquitto_new.restype = c_void_p
 
 		self._mosquitto_destroy = self._libmosq.mosquitto_destroy
@@ -122,7 +122,7 @@ class Mosquitto:
 		#==================================================
 		# End library loading
 		#==================================================
-		self._mosq = self._mosquitto_new(0, id)
+		self._mosq = self._mosquitto_new(id, obj)
 
 	def __del__(self):
 		if self._mosq:

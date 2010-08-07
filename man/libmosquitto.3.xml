@@ -49,8 +49,8 @@
 
 			<para>
 			<funcsynopsis><funcprototype><funcdef>struct mosquitto *<function>mosquitto_new</function></funcdef>
-			<paramdef><parameter>void *obj</parameter></paramdef>
 			<paramdef><parameter>const char *id</parameter></paramdef>
+			<paramdef><parameter>void *obj</parameter></paramdef>
 			</funcprototype></funcsynopsis>
 
 			<funcsynopsis><funcprototype><funcdef>void <function>mosquitto_destroy</function></funcdef>

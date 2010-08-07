@@ -64,7 +64,7 @@ int mosquitto_lib_cleanup(void)
 	return 0;
 }
 
-struct mosquitto *mosquitto_new(void *obj, const char *id)
+struct mosquitto *mosquitto_new(const char *id, void *obj)
 {
 	struct mosquitto *mosq = NULL;
 

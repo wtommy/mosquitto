@@ -380,7 +380,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	mosquitto_lib_init();
-	mosq = mosquitto_new(NULL, id);
+	mosq = mosquitto_new(id, NULL);
 	if(!mosq){
 		fprintf(stderr, "Error: Out of memory.\n");
 		return 1;
