@@ -38,6 +38,21 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <winsock2.h>
 #endif
 
+#include <mosquitto.h>
+
+enum mosquitto_msg_direction {
+	mosq_md_in = 0,
+	mosq_md_out = 1
+};
+
+enum mosquitto_msg_state {
+	mosq_ms_invalid = 0,
+	mosq_ms_wait_puback = 1,
+	mosq_ms_wait_pubrec = 2,
+	mosq_ms_wait_pubrel = 3,
+	mosq_ms_wait_pubcomp = 4
+};
+
 struct _mosquitto_packet{
 	uint8_t command;
 	uint8_t command_saved;
@@ -50,6 +65,15 @@ struct _mosquitto_packet{
 	uint32_t pos;
 	uint8_t *payload;
 	struct _mosquitto_packet *next;
+};
+
+struct mosquitto_message_all{
+	struct mosquitto_message_all *next;
+	time_t timestamp;
+	enum mosquitto_msg_direction direction;
+	enum mosquitto_msg_state state;
+	bool dup;
+	struct mosquitto_message msg;
 };
 
 struct mosquitto {
@@ -65,7 +89,7 @@ struct mosquitto {
 	time_t last_retry_check;
 	bool connected;
 	uint16_t last_mid;
-	struct mosquitto_message *messages;
+	struct mosquitto_message_all *messages;
 	struct mosquitto_message *will;
 	struct _mosquitto_packet in_packet;
 	struct _mosquitto_packet *out_packet;

@@ -173,7 +173,7 @@ int mosquitto_disconnect(struct mosquitto *mosq)
 
 int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
-	struct mosquitto_message *message;
+	struct mosquitto_message_all *message;
 	uint16_t local_mid;
 
 	if(!mosq || !topic || qos<0 || qos>2) return 1;
@@ -186,7 +186,7 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 	if(qos == 0){
 		return _mosquitto_send_publish(mosq, local_mid, topic, payloadlen, payload, qos, retain, false);
 	}else{
-		message = calloc(1, sizeof(struct mosquitto_message));
+		message = calloc(1, sizeof(struct mosquitto_message_all));
 		if(!message) return 1;
 
 		message->next = NULL;
@@ -197,32 +197,32 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 		}else if(qos == 2){
 			message->state = mosq_ms_wait_pubrec;
 		}
-		message->mid = local_mid;
-		message->topic = strdup(topic);
-		if(!message->topic){
+		message->msg.mid = local_mid;
+		message->msg.topic = strdup(topic);
+		if(!message->msg.topic){
 			_mosquitto_message_cleanup(&message);
 			return 1;
 		}
 		if(payloadlen){
-			message->payloadlen = payloadlen;
-			message->payload = malloc(payloadlen*sizeof(uint8_t));
+			message->msg.payloadlen = payloadlen;
+			message->msg.payload = malloc(payloadlen*sizeof(uint8_t));
 			if(!message){
 				_mosquitto_message_cleanup(&message);
 				return 1;
 			}
 		}else{
-			message->payloadlen = 0;
-			message->payload = NULL;
+			message->msg.payloadlen = 0;
+			message->msg.payload = NULL;
 		}
-		message->qos = qos;
-		message->retain = retain;
+		message->msg.qos = qos;
+		message->msg.retain = retain;
 		message->dup = false;
 
 		if(_mosquitto_message_queue(mosq, message)){
 			_mosquitto_message_cleanup(&message);
 			return 1;
 		}
-		return _mosquitto_send_publish(mosq, message->mid, message->topic, message->payloadlen, message->payload, message->qos, message->retain, message->dup);
+		return _mosquitto_send_publish(mosq, message->msg.mid, message->msg.topic, message->msg.payloadlen, message->msg.payload, message->msg.qos, message->msg.retain, message->dup);
 	}
 }
 

@@ -169,15 +169,10 @@ class Mosquitto:
 		return self._mosquitto_unsubscribe_callback_set(self._mosq, self._on_unsubscribe)
 
 class MosquittoMessage(Structure):
-	_fields_ = [("next", c_void_p),
-				("timestamp", c_long),
-				("direction", c_int),
-				("state", c_int),
-				("mid", c_uint16),
+	_fields_ = [("mid", c_uint16),
 				("topic", c_char_p),
 				("payload", c_char_p),
 				("payloadlen", c_uint32),
 				("qos", c_int),
-				("retain", c_bool),
-				("dup", c_bool)]
+				("retain", c_bool)]
 

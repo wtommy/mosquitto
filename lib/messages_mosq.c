@@ -34,22 +34,22 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
 
-void _mosquitto_message_cleanup(struct mosquitto_message **message)
+void _mosquitto_message_cleanup(struct mosquitto_message_all **message)
 {
-	struct mosquitto_message *msg;
+	struct mosquitto_message_all *msg;
 
 	if(!message || !*message) return;
 
 	msg = *message;
 
-	if(msg->topic) free(msg->topic);
-	if(msg->payload) free(msg->payload);
+	if(msg->msg.topic) free(msg->msg.topic);
+	if(msg->msg.payload) free(msg->msg.payload);
 	free(msg);
 };
 
 void _mosquitto_message_cleanup_all(struct mosquitto *mosq)
 {
-	struct mosquitto_message *tmp;
+	struct mosquitto_message_all *tmp;
 
 	if(!mosq) return;
 
@@ -62,12 +62,12 @@ void _mosquitto_message_cleanup_all(struct mosquitto *mosq)
 
 int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir)
 {
-	struct mosquitto_message *message, *prev = NULL;
+	struct mosquitto_message_all *message, *prev = NULL;
 	if(!mosq) return 1;
 
 	message = mosq->messages;
 	while(message){
-		if(message->mid == mid && message->direction == dir){
+		if(message->msg.mid == mid && message->direction == dir){
 			if(prev){
 				prev->next = message->next;
 			}else{
@@ -81,9 +81,9 @@ int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquit
 	return 1;
 }
 
-int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message *message)
+int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message_all *message)
 {
-	struct mosquitto_message *tail;
+	struct mosquitto_message_all *tail;
 
 	if(!mosq || !message) return 1;
 
@@ -100,14 +100,14 @@ int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message *m
 	return 0;
 }
 
-int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, struct mosquitto_message **message)
+int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, struct mosquitto_message_all **message)
 {
-	struct mosquitto_message *cur, *prev = NULL;
+	struct mosquitto_message_all *cur, *prev = NULL;
 	if(!mosq || !message) return 1;
 
 	cur = mosq->messages;
 	while(cur){
-		if(cur->mid == mid && cur->direction == dir){
+		if(cur->msg.mid == mid && cur->direction == dir){
 			if(prev){
 				prev->next = cur->next;
 			}else{
@@ -124,7 +124,7 @@ int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquit
 
 void _mosquitto_message_retry_check(struct mosquitto *mosq)
 {
-	struct mosquitto_message *message;
+	struct mosquitto_message_all *message;
 	time_t now = time(NULL);
 	if(!mosq) return;
 
@@ -136,15 +136,15 @@ void _mosquitto_message_retry_check(struct mosquitto *mosq)
 				case mosq_ms_wait_pubrec:
 					message->timestamp = now;
 					message->dup = true;
-					_mosquitto_send_publish(mosq, message->mid, message->topic, message->payloadlen, message->payload, message->qos, message->retain, message->dup);
+					_mosquitto_send_publish(mosq, message->msg.mid, message->msg.topic, message->msg.payloadlen, message->msg.payload, message->msg.qos, message->msg.retain, message->dup);
 					break;
 				case mosq_ms_wait_pubrel:
 					message->timestamp = now;
-					_mosquitto_send_pubrec(mosq, message->mid);
+					_mosquitto_send_pubrec(mosq, message->msg.mid);
 					break;
 				case mosq_ms_wait_pubcomp:
 					message->timestamp = now;
-					_mosquitto_send_pubrel(mosq, message->mid);
+					_mosquitto_send_pubrel(mosq, message->msg.mid);
 					break;
 				default:
 					break;
@@ -161,12 +161,12 @@ void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_re
 
 int _mosquitto_message_update(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, enum mosquitto_msg_state state)
 {
-	struct mosquitto_message *message;
+	struct mosquitto_message_all *message;
 	if(!mosq) return 1;
 
 	message = mosq->messages;
 	while(message){
-		if(message->mid == mid && message->direction == dir){
+		if(message->msg.mid == mid && message->direction == dir){
 			message->state = state;
 			message->timestamp = time(NULL);
 			return 0;

@@ -62,31 +62,13 @@ extern "C" {
 #define MOSQ_LOG_ERR 0x08
 #define MOSQ_LOG_DEBUG 0x10
 
-enum mosquitto_msg_direction {
-	mosq_md_in = 0,
-	mosq_md_out = 1
-};
-
-enum mosquitto_msg_state {
-	mosq_ms_invalid = 0,
-	mosq_ms_wait_puback = 1,
-	mosq_ms_wait_pubrec = 2,
-	mosq_ms_wait_pubrel = 3,
-	mosq_ms_wait_pubcomp = 4
-};
-
 struct mosquitto_message{
-	struct mosquitto_message *next;
-	time_t timestamp;
-	enum mosquitto_msg_direction direction;
-	enum mosquitto_msg_state state;
 	uint16_t mid;
 	char *topic;
 	uint8_t *payload;
 	uint32_t payloadlen;
 	int qos;
 	bool retain;
-	bool dup;
 };
 
 struct mosquitto;
@@ -326,16 +308,9 @@ mosq_EXPORT void mosquitto_message_callback_set(struct mosquitto *mosq, void (*o
  * obj :     the user data provided to mosquitto_new().
  * message : the message data - see above for struct details.
  *
- * The message struct members of interest are:
- *
- * uint16_t mid;
- * char *topic;
- * uint8_t *payload;
- * uint32_t payloadlen;
- * int qos;
- * bool retain;
- *
- * The message variable and associated memory will be free'd by the library after the callback has run. The client should make copies of any of the data it requires. 
+ * The message variable and associated memory will be free'd by the library
+ * after the callback has run. The client should make copies of any of the data
+ * it requires. 
  */
 
 mosq_EXPORT void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, uint8_t *));

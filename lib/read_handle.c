@@ -111,12 +111,12 @@ int _mosquitto_handle_pubackcomp(struct mosquitto *mosq)
 int _mosquitto_handle_publish(struct mosquitto *mosq)
 {
 	uint8_t header;
-	struct mosquitto_message *message;
+	struct mosquitto_message_all *message;
 	int rc = 0;
 
 	if(!mosq) return 1;
 
-	message = calloc(1, sizeof(struct mosquitto_message));
+	message = calloc(1, sizeof(struct mosquitto_message_all));
 	if(!message) return 1;
 
 	header = mosq->in_packet.command;
@@ -124,49 +124,49 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBLISH");
 	message->direction = mosq_md_in;
 	message->dup = (header & 0x08)>>3;
-	message->qos = (header & 0x06)>>1;
-	message->retain = (header & 0x01);
+	message->msg.qos = (header & 0x06)>>1;
+	message->msg.retain = (header & 0x01);
 
-	if(_mosquitto_read_string(&mosq->in_packet, &message->topic)) return 1;
-	if(_mosquitto_fix_sub_topic(&message->topic)) return 1;
-	if(!strlen(message->topic)){
+	if(_mosquitto_read_string(&mosq->in_packet, &message->msg.topic)) return 1;
+	if(_mosquitto_fix_sub_topic(&message->msg.topic)) return 1;
+	if(!strlen(message->msg.topic)){
 		_mosquitto_message_cleanup(&message);
 		return 1;
 	}
 
-	if(message->qos > 0){
-		if(_mosquitto_read_uint16(&mosq->in_packet, &message->mid)){
+	if(message->msg.qos > 0){
+		if(_mosquitto_read_uint16(&mosq->in_packet, &message->msg.mid)){
 			_mosquitto_message_cleanup(&message);
 			return 1;
 		}
 	}
 
-	message->payloadlen = mosq->in_packet.remaining_length - mosq->in_packet.pos;
-	if(message->payloadlen){
-		message->payload = calloc(message->payloadlen+1, sizeof(uint8_t));
-		if(_mosquitto_read_bytes(&mosq->in_packet, message->payload, message->payloadlen)){
+	message->msg.payloadlen = mosq->in_packet.remaining_length - mosq->in_packet.pos;
+	if(message->msg.payloadlen){
+		message->msg.payload = calloc(message->msg.payloadlen+1, sizeof(uint8_t));
+		if(_mosquitto_read_bytes(&mosq->in_packet, message->msg.payload, message->msg.payloadlen)){
 			_mosquitto_message_cleanup(&message);
 			return 1;
 		}
 	}
 
 	message->timestamp = time(NULL);
-	switch(message->qos){
+	switch(message->msg.qos){
 		case 0:
 			if(mosq->on_message){
-				mosq->on_message(mosq->obj, message);
+				mosq->on_message(mosq->obj, &message->msg);
 			}
 			_mosquitto_message_cleanup(&message);
 			break;
 		case 1:
-			if(_mosquitto_send_puback(mosq, message->mid)) rc = 1;
+			if(_mosquitto_send_puback(mosq, message->msg.mid)) rc = 1;
 			if(mosq->on_message){
-				mosq->on_message(mosq->obj, message);
+				mosq->on_message(mosq->obj, &message->msg);
 			}
 			_mosquitto_message_cleanup(&message);
 			break;
 		case 2:
-			if(_mosquitto_send_pubrec(mosq, message->mid)) rc = 1;
+			if(_mosquitto_send_pubrec(mosq, message->msg.mid)) rc = 1;
 			message->state = mosq_ms_wait_pubrel;
 			_mosquitto_message_queue(mosq, message);
 			break;
@@ -194,7 +194,7 @@ int _mosquitto_handle_pubrec(struct mosquitto *mosq)
 int _mosquitto_handle_pubrel(struct mosquitto *mosq)
 {
 	uint16_t mid;
-	struct mosquitto_message *message = NULL;
+	struct mosquitto_message_all *message = NULL;
 
 	if(!mosq || mosq->in_packet.remaining_length != 2){
 		return 1;
@@ -206,7 +206,7 @@ int _mosquitto_handle_pubrel(struct mosquitto *mosq)
 		/* Only pass the message on if we have removed it from the queue - this
 		 * prevents multiple callbacks for the same message. */
 		if(mosq->on_message){
-			mosq->on_message(mosq->obj, message);
+			mosq->on_message(mosq->obj, &message->msg);
 		}else{
 			_mosquitto_message_cleanup(&message);
 		}
