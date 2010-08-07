@@ -144,6 +144,13 @@ void mosquitto_destroy(struct mosquitto *mosq)
 	free(mosq);
 }
 
+int mosquitto_socket(struct mosquitto *mosq)
+{
+	if(!mosq) return INVALID_SOCKET;
+
+	return mosq->sock;
+}
+
 int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session)
 {
 	if(!mosq || !host || !port) return 1;

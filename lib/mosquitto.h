@@ -244,6 +244,15 @@ mosq_EXPORT int mosquitto_loop(struct mosquitto *mosq, int timeout);
  * Returns 0 on success, 1 on failure.
  */
 
+mosq_EXPORT int mosquitto_socket(struct mosquitto *mosq);
+/* Return the socket handle for a mosquitto instance. Useful if you want to
+ * include a mosquitto client in your own select() calls.
+ *
+ * mosq : a valid mosquitto instance.
+ *
+ * Returns a socket handle on success, -1 on failure.
+ */
+
 mosq_EXPORT int mosquitto_loop_read(struct mosquitto *mosq);
 /* Carry out network read operations.
  * This should only be used if you are not using mosquitto_loop() and are

@@ -87,6 +87,11 @@ int mosquittopp::disconnect()
 	return mosquitto_disconnect(mosq);
 }
 
+int mosquittopp::socket()
+{
+	return mosquitto_socket(mosq);
+}
+
 int mosquittopp::log_init(int priorities, int destinations)
 {
 	return mosquitto_log_init(mosq, priorities, destinations);
