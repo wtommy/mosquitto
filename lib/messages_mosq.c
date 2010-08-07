@@ -122,7 +122,7 @@ int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquit
 	return 1;
 }
 
-void mosquitto_message_retry_check(struct mosquitto *mosq)
+void _mosquitto_message_retry_check(struct mosquitto *mosq)
 {
 	struct mosquitto_message *message;
 	time_t now = time(NULL);

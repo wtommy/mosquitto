@@ -52,8 +52,9 @@ class mosquittopp {
 		void message_retry_set(unsigned int message_retry);
 
 		int loop(int timeout=-1);
-		int read();
-		int write();
+		int loop_misc();
+		int loop_read();
+		int loop_write();
 		
 		virtual void on_connect(int rc) {return;};
 		virtual void on_publish(uint16_t mid) {return;};

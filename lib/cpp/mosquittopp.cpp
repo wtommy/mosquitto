@@ -122,13 +122,18 @@ int mosquittopp::loop(int timeout)
 	return mosquitto_loop(mosq, timeout);
 }
 
-int mosquittopp::read()
+int mosquittopp::loop_misc()
 {
-	return mosquitto_read(mosq);
+	return mosquitto_loop_misc(mosq);
 }
 
-int mosquittopp::write()
+int mosquittopp::loop_read()
 {
-	return mosquitto_write(mosq);
+	return mosquitto_loop_read(mosq);
+}
+
+int mosquittopp::loop_write()
+{
+	return mosquitto_loop_write(mosq);
 }
 

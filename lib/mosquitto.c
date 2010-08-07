@@ -277,30 +277,38 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 		return 1;
 	}else{
 		if(FD_ISSET(mosq->sock, &readfds)){
-			if(mosquitto_read(mosq)){
+			if(mosquitto_loop_read(mosq)){
 				fprintf(stderr, "Error in network read.\n");
 				_mosquitto_socket_close(mosq);
 				return 1;
 			}
 		}
 		if(FD_ISSET(mosq->sock, &writefds)){
-			if(mosquitto_write(mosq)){
+			if(mosquitto_loop_write(mosq)){
 				fprintf(stderr, "Error in network write.\n");
 				_mosquitto_socket_close(mosq);
 				return 1;
 			}
 		}
 	}
-	_mosquitto_check_keepalive(mosq);
-	if(mosq->last_retry_check+1 < time(NULL)){
-		mosquitto_message_retry_check(mosq);
-		mosq->last_retry_check = time(NULL);
-	}
+	mosquitto_loop_misc(mosq);
 
 	return 0;
 }
 
-int mosquitto_read(struct mosquitto *mosq)
+int mosquitto_loop_misc(struct mosquitto *mosq)
+{
+	if(!mosq) return 1;
+
+	_mosquitto_check_keepalive(mosq);
+	if(mosq->last_retry_check+1 < time(NULL)){
+		_mosquitto_message_retry_check(mosq);
+		mosq->last_retry_check = time(NULL);
+	}
+	return 0;
+}
+
+int mosquitto_loop_read(struct mosquitto *mosq)
 {
 	uint8_t byte;
 	ssize_t read_length;
@@ -419,7 +427,7 @@ int mosquitto_read(struct mosquitto *mosq)
 	return rc;
 }
 
-int mosquitto_write(struct mosquitto *mosq)
+int mosquitto_loop_write(struct mosquitto *mosq)
 {
 	uint8_t byte;
 	ssize_t write_length;

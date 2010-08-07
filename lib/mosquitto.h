@@ -233,8 +233,8 @@ mosq_EXPORT int mosquitto_loop(struct mosquitto *mosq, int timeout);
  *
  * This calls select() to monitor the client network socket. If you want to
  * integrate mosquitto client operation with your own select() call, use
- * mosquitto_socket(), mosquitto_read(), mosquitto_write() and
- * mosquitto_retry_check().
+ * mosquitto_socket(), mosquitto_loop_read(), mosquitto_loop_write() and
+ * mosquitto_loop_misc().
  *
  * mosq :    a valid mosquitto instance
  * timeout : Maximum number of milliseconds to wait for network activity in the
@@ -242,8 +242,9 @@ mosq_EXPORT int mosquitto_loop(struct mosquitto *mosq, int timeout);
  *           to use the default of 1000ms.
  */
 
-mosq_EXPORT int mosquitto_read(struct mosquitto *mosq);
-mosq_EXPORT int mosquitto_write(struct mosquitto *mosq);
+mosq_EXPORT int mosquitto_loop_read(struct mosquitto *mosq);
+mosq_EXPORT int mosquitto_loop_write(struct mosquitto *mosq);
+mosq_EXPORT int mosquitto_loop_misc(struct mosquitto *mosq);
 
 
 mosq_EXPORT void mosquitto_connect_callback_set(struct mosquitto *mosq, void (*on_connect)(void *, int));
@@ -252,7 +253,6 @@ mosq_EXPORT void mosquitto_message_callback_set(struct mosquitto *mosq, void (*o
 mosq_EXPORT void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, uint8_t *));
 mosq_EXPORT void mosquitto_unsubscribe_callback_set(struct mosquitto *mosq, void (*on_unsubscribe)(void *, uint16_t));
 
-mosq_EXPORT void mosquitto_message_retry_check(struct mosquitto *mosq);
 mosq_EXPORT void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_retry);
 mosq_EXPORT void mosquitto_message_cleanup(struct mosquitto_message **message);
 
