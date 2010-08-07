@@ -240,11 +240,41 @@ mosq_EXPORT int mosquitto_loop(struct mosquitto *mosq, int timeout);
  * timeout : Maximum number of milliseconds to wait for network activity in the
  *           select() call before timing out. Set to 0 for instant return. Set negative
  *           to use the default of 1000ms.
+ *
+ * Returns 0 on success, 1 on failure.
  */
 
 mosq_EXPORT int mosquitto_loop_read(struct mosquitto *mosq);
+/* Carry out network read operations.
+ * This should only be used if you are not using mosquitto_loop() and are
+ * monitoring the client network socket for activity yourself.
+ *
+ * mosq : a valid mosquitto instance
+ *
+ * Returns 0 on success, 1 on failure.
+ */
+
 mosq_EXPORT int mosquitto_loop_write(struct mosquitto *mosq);
+/* Carry out network write operations.
+ * This should only be used if you are not using mosquitto_loop() and are
+ * monitoring the client network socket for activity yourself.
+ *
+ * mosq : a valid mosquitto instance
+ *
+ * Returns 0 on success, 1 on failure.
+ */
+
 mosq_EXPORT int mosquitto_loop_misc(struct mosquitto *mosq);
+/* Carry out miscellaneous operations required as part of the network loop.
+ * This should only be used if you are not using mosquitto_loop() and are
+ * monitoring the client network socket for activity yourself.
+ *
+ * This function deals with handling PINGs and checking whether messages need
+ * to be retried, so should be called fairly frequently.
+ *
+ * mosq : a valid mosquitto instance
+ */
+
 
 
 mosq_EXPORT void mosquitto_connect_callback_set(struct mosquitto *mosq, void (*on_connect)(void *, int));
@@ -253,8 +283,20 @@ mosq_EXPORT void mosquitto_message_callback_set(struct mosquitto *mosq, void (*o
 mosq_EXPORT void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, uint8_t *));
 mosq_EXPORT void mosquitto_unsubscribe_callback_set(struct mosquitto *mosq, void (*on_unsubscribe)(void *, uint16_t));
 
-mosq_EXPORT void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_retry);
 mosq_EXPORT void mosquitto_message_cleanup(struct mosquitto_message **message);
+/* Free all memory associated with a mosquitto_message passed through the message callback.
+ *
+ * message : pointer to a mosquitto_message struct pointer.
+ */
+
+mosq_EXPORT void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_retry);
+/* Set the number of seconds to wait before retrying messages. This applies to
+ * publish messages with QoS>0. May be called at any time.
+ *
+ * mosq :          a valid mosquitto instance
+ * message_retry : the number of seconds to wait for a response before
+ *                 retrying. Defaults to 60.
+ */
 
 #ifdef __cplusplus
 }
