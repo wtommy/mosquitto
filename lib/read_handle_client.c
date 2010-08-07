@@ -86,9 +86,8 @@ int _mosquitto_handle_suback(struct mosquitto *mosq)
 	}
 	if(mosq->on_subscribe){
 		mosq->on_subscribe(mosq->obj, mid, qos_count, granted_qos);
-	}else{
-		free(granted_qos);
 	}
+	free(granted_qos);
 
 	return 0;
 }
