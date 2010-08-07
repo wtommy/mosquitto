@@ -39,7 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 void _mosquitto_check_keepalive(struct mosquitto *mosq)
 {
 	if(mosq && mosq->sock != -1 && time(NULL) - mosq->last_msg_out >= mosq->keepalive){
-		if(mosq->connected){
+		if(mosq->state == mosq_cs_connected){
 			_mosquitto_send_pingreq(mosq);
 		}else{
 			_mosquitto_socket_close(mosq);

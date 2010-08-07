@@ -53,6 +53,12 @@ enum mosquitto_msg_state {
 	mosq_ms_wait_pubcomp = 4
 };
 
+enum mosquitto_client_state {
+	mosq_cs_new = 0,
+	mosq_cs_connected = 1,
+	mosq_cs_disconnecting = 2
+};
+
 struct _mosquitto_packet{
 	uint8_t command;
 	uint8_t command_saved;
@@ -87,7 +93,7 @@ struct mosquitto {
 	int keepalive;
 	unsigned int message_retry;
 	time_t last_retry_check;
-	bool connected;
+	enum mosquitto_client_state state;
 	uint16_t last_mid;
 	struct mosquitto_message_all *messages;
 	struct mosquitto_message *will;

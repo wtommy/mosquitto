@@ -88,7 +88,7 @@ struct mosquitto *mosquitto_new(const char *id, void *obj)
 		mosq->last_msg_in = time(NULL);
 		mosq->last_msg_out = time(NULL);
 		mosq->last_mid = 0;
-		mosq->connected = false;
+		mosq->state = mosq_cs_new;
 		mosq->messages = NULL;
 		mosq->will = NULL;
 		mosq->on_connect = NULL;

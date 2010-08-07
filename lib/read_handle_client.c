@@ -48,7 +48,7 @@ int _mosquitto_handle_connack(struct mosquitto *mosq)
 	}
 	switch(rc){
 		case 0:
-			mosq->connected = true;
+			mosq->state = mosq_cs_connected;
 			return 0;
 		case 1:
 			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Connection Refused: unacceptable protocol version");
