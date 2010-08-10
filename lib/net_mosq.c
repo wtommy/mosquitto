@@ -27,6 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <memory_mosq.h>
 #include <net_mosq.h>
 
 #include <errno.h>
@@ -53,7 +54,7 @@ void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet)
 	packet->remaining_count = 0;
 	packet->remaining_mult = 1;
 	packet->remaining_length = 0;
-	if(packet->payload) free(packet->payload);
+	if(packet->payload) _mosquitto_free(packet->payload);
 	packet->payload = NULL;
 	packet->to_process = 0;
 	packet->pos = 0;
@@ -208,7 +209,7 @@ int _mosquitto_read_string(struct _mosquitto_packet *packet, char **str)
 	if(packet->pos+len > packet->remaining_length)
 		return 1;
 
-	*str = calloc(len+1, sizeof(char));
+	*str = _mosquitto_calloc(len+1, sizeof(char));
 	if(*str){
 		memcpy(*str, &(packet->payload[packet->pos]), len);
 		packet->pos += len;

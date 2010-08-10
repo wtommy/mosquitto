@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <memory_mosq.h>
 #include <util_mosq.h>
 
 int mqtt3_packet_handle(mqtt3_context *context)
@@ -149,7 +150,7 @@ int mqtt3_handle_publish(mqtt3_context *context)
 
 	if(qos > 0){
 		if(_mosquitto_read_uint16(&context->in_packet, &mid)){
-			mqtt3_free(topic);
+			_mosquitto_free(topic);
 			return 1;
 		}
 	}
@@ -157,9 +158,9 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	payloadlen = context->in_packet.remaining_length - context->in_packet.pos;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBLISH from %s (%d, %d, %d, %d, '%s', ... (%ld bytes))", context->id, dup, qos, retain, mid, topic, (long)payloadlen);
 	if(payloadlen){
-		payload = mqtt3_calloc(payloadlen+1, sizeof(uint8_t));
+		payload = _mosquitto_calloc(payloadlen+1, sizeof(uint8_t));
 		if(_mosquitto_read_bytes(&context->in_packet, payload, payloadlen)){
-			mqtt3_free(topic);
+			_mosquitto_free(topic);
 			return 1;
 		}
 	}else{
@@ -171,8 +172,8 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	}
 
 	if(mqtt3_db_message_store(context->id, topic, qos, payloadlen, payload, retain, &store_id)){
-		mqtt3_free(topic);
-		if(payload) mqtt3_free(payload);
+		_mosquitto_free(topic);
+		if(payload) _mosquitto_free(payload);
 		return 1;
 	}
 	switch(qos){
@@ -188,8 +189,8 @@ int mqtt3_handle_publish(mqtt3_context *context)
 			if(mqtt3_raw_pubrec(context, mid)) rc = 1;
 			break;
 	}
-	mqtt3_free(topic);
-	if(payload) mqtt3_free(payload);
+	_mosquitto_free(topic);
+	if(payload) _mosquitto_free(payload);
 
 	return rc;
 }

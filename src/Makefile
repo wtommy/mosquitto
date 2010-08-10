@@ -6,7 +6,7 @@ CFLAGS_FINAL=${CFLAGS} -DVERSION="\"${VERSION}\"" -DTIMESTAMP="\"${TIMESTAMP}\""
 
 all : mosquitto
 
-mosquitto : mosquitto.o bridge.o conf.o context.o database.o logging.o memory.o net.o net_mosq.o raw_send.o raw_send_client.o raw_send_server.o read_handle.o read_handle_client.o read_handle_server.o util.o util_mosq.o
+mosquitto : mosquitto.o bridge.o conf.o context.o database.o logging.o memory_mosq.o net.o net_mosq.o raw_send.o raw_send_client.o raw_send_server.o read_handle.o read_handle_client.o read_handle_server.o util.o util_mosq.o
 	${CC} $^ -o $@ ${LDFLAGS}
 
 mosquitto.o : mosquitto.c mqtt3.h
@@ -27,7 +27,7 @@ database.o : database.c mqtt3.h
 logging.o : logging.c mqtt3.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
-memory.o : memory.c mqtt3.h
+memory_mosq.o : ../lib/memory_mosq.c ../lib/memory_mosq.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 net.o : net.c mqtt3.h

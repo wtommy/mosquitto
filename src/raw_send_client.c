@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <memory_mosq.h>
 
 int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, const char *will_msg, uint16_t keepalive, bool clean_session)
 {
@@ -39,7 +40,7 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 
 	if(!context || !client_id) return 1;
 
-	packet = mqtt3_calloc(1, sizeof(struct _mosquitto_packet));
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
 
 	payloadlen = 2+strlen(client_id);
@@ -51,9 +52,9 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 
 	packet->command = CONNECT;
 	packet->remaining_length = 12+payloadlen;
-	packet->payload = mqtt3_malloc(sizeof(uint8_t)*(12+payloadlen));
+	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*(12+payloadlen));
 	if(!packet->payload){
-		mqtt3_free(packet);
+		_mosquitto_free(packet);
 		return 1;
 	}
 
@@ -89,16 +90,16 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 
 	if(!context || !topic) return 1;
 
-	packet = mqtt3_calloc(1, sizeof(struct _mosquitto_packet));
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
 
 	packetlen = 2 + 2+strlen(topic) + 1;
 
 	packet->command = SUBSCRIBE | (dup<<3) | (1<<1);
 	packet->remaining_length = packetlen;
-	packet->payload = mqtt3_malloc(sizeof(uint8_t)*packetlen);
+	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){
-		mqtt3_free(packet);
+		_mosquitto_free(packet);
 		return 1;
 	}
 
@@ -124,16 +125,16 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic)
 
 	if(!context || !topic) return 1;
 
-	packet = mqtt3_calloc(1, sizeof(struct _mosquitto_packet));
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
 
 	packetlen = 2 + 2+strlen(topic);
 
 	packet->command = SUBSCRIBE | (dup<<3) | (1<<1);
 	packet->remaining_length = packetlen;
-	packet->payload = mqtt3_malloc(sizeof(uint8_t)*packetlen);
+	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){
-		mqtt3_free(packet);
+		_mosquitto_free(packet);
 		return 1;
 	}
 

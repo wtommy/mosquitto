@@ -40,6 +40,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 
 #include <mqtt3.h>
+#include <memory_mosq.h>
 
 static uint64_t bytes_received = 0;
 static uint64_t bytes_sent = 0;
@@ -101,7 +102,7 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 		}
 		if(i==(*context_count)){
 			(*context_count)++;
-			tmp_contexts = mqtt3_realloc(*contexts, sizeof(mqtt3_context*)*(*context_count));
+			tmp_contexts = _mosquitto_realloc(*contexts, sizeof(mqtt3_context*)*(*context_count));
 			if(tmp_contexts){
 				*contexts = tmp_contexts;
 				(*contexts)[(*context_count)-1] = new_context;
@@ -308,7 +309,7 @@ int mqtt3_net_read(mqtt3_context *context)
 		}while((byte & 128) != 0);
 
 		if(context->in_packet.remaining_length > 0){
-			context->in_packet.payload = mqtt3_malloc(context->in_packet.remaining_length*sizeof(uint8_t));
+			context->in_packet.payload = _mosquitto_malloc(context->in_packet.remaining_length*sizeof(uint8_t));
 			if(!context->in_packet.payload) return 1;
 			context->in_packet.to_process = context->in_packet.remaining_length;
 		}
@@ -420,7 +421,7 @@ int mqtt3_net_write(mqtt3_context *context)
 		/* Free data and reset values */
 		context->out_packet = packet->next;
 		_mosquitto_packet_cleanup(packet);
-		mqtt3_free(packet);
+		_mosquitto_free(packet);
 
 		context->last_msg_out = time(NULL);
 	}

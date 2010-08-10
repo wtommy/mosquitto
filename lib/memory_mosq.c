@@ -27,65 +27,83 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <config.h>
+
+#include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#ifdef WITH_MEMORY_TRACKING
+#include <malloc.h>
+#endif
 
-#include <mosquitto.h>
 #include <memory_mosq.h>
-#include <net_mosq.h>
-#include <send_mosq.h>
-#include <util_mosq.h>
 
-#ifndef WITH_BROKER
-void _mosquitto_check_keepalive(struct mosquitto *mosq)
+#ifdef WITH_MEMORY_TRACKING
+static unsigned long memcount;
+#endif
+
+void *_mosquitto_calloc(size_t nmemb, size_t size)
 {
-	if(mosq && mosq->sock != -1 && time(NULL) - mosq->last_msg_out >= mosq->keepalive){
-		if(mosq->state == mosq_cs_connected){
-			_mosquitto_send_pingreq(mosq);
-		}else{
-			_mosquitto_socket_close(mosq);
-		}
-	}
+	void *mem = calloc(nmemb, size);
+
+#ifdef WITH_MEMORY_TRACKING
+	memcount += malloc_usable_size(mem);
+#endif
+
+	return mem;
+}
+
+void _mosquitto_free(void *mem)
+{
+#ifdef WITH_MEMORY_TRACKING
+	memcount -= malloc_usable_size(mem);
+#endif
+	free(mem);
+}
+
+void *_mosquitto_malloc(size_t size)
+{
+	void *mem = malloc(size);
+
+#ifdef WITH_MEMORY_TRACKING
+	memcount += malloc_usable_size(mem);
+#endif
+
+	return mem;
+}
+
+#ifdef WITH_MEMORY_TRACKING
+unsigned long _mosquitto_memory_used(void)
+{
+	return memcount;
 }
 #endif
 
-/* Convert ////some////over/slashed///topic/etc/etc//
- * into some/over/slashed/topic/etc/etc
- */
-int _mosquitto_fix_sub_topic(char **subtopic)
+void *_mosquitto_realloc(void *ptr, size_t size)
 {
-	char *fixed = NULL;
-	char *token;
-
-	if(!subtopic || !(*subtopic)) return 1;
-
-	/* size of fixed here is +1 for the terminating 0 and +1 for the spurious /
-	 * that gets appended. */
-	fixed = _mosquitto_calloc(strlen(*subtopic)+2, 1);
-	if(!fixed) return 1;
-
-	if((*subtopic)[0] == '/'){
-		fixed[0] = '/';
+	void *mem;
+#ifdef WITH_MEMORY_TRACKING
+	if(ptr){
+		memcount -= malloc_usable_size(ptr);
 	}
-	token = strtok(*subtopic, "/");
-	while(token){
-		strcat(fixed, token);
-		strcat(fixed, "/");
-		token = strtok(NULL, "/");
-	}
+#endif
+	mem = realloc(ptr, size);
 
-	fixed[strlen(fixed)-1] = '\0';
-	_mosquitto_free(*subtopic);
-	*subtopic = fixed;
-	return 0;
+#ifdef WITH_MEMORY_TRACKING
+	memcount += malloc_usable_size(mem);
+#endif
+
+	return mem;
 }
 
-uint16_t _mosquitto_mid_generate(struct mosquitto *mosq)
+char *_mosquitto_strdup(const char *s)
 {
-	if(!mosq) return 1;
+	char *str = strdup(s);
 
-	mosq->last_mid++;
-	if(mosq->last_mid == 0) mosq->last_mid++;
-	
-	return mosq->last_mid;
+#ifdef WITH_MEMORY_TRACKING
+	memcount += malloc_usable_size(str);
+#endif
+
+	return str;
 }
+

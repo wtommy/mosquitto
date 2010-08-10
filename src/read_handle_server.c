@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <memory_mosq.h>
 #include <util_mosq.h>
 
 int mqtt3_handle_connect(mqtt3_context *context)
@@ -53,7 +54,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	if(strcmp(protocol_name, PROTOCOL_NAME)){
 		mqtt3_log_printf(MQTT3_LOG_INFO, "Invalid protocol \"%s\" in CONNECT from %s.",
 				protocol_name, context->address);
-		mqtt3_free(protocol_name);
+		_mosquitto_free(protocol_name);
 		mqtt3_socket_close(context);
 		return 1;
 	}
@@ -61,13 +62,13 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	if(protocol_version != PROTOCOL_VERSION){
 		mqtt3_log_printf(MQTT3_LOG_INFO, "Invalid protocol version %d in CONNECT from %s.",
 				protocol_version, context->address);
-		mqtt3_free(protocol_name);
+		_mosquitto_free(protocol_name);
 		mqtt3_raw_connack(context, 1);
 		mqtt3_socket_close(context);
 		return 1;
 	}
 
-	mqtt3_free(protocol_name);
+	_mosquitto_free(protocol_name);
 
 	if(_mosquitto_read_byte(&context->in_packet, &connect_flags)) return 1;
 	clean_session = connect_flags & 0x02;
@@ -89,8 +90,8 @@ int mqtt3_handle_connect(mqtt3_context *context)
 
 	mqtt3_db_client_insert(context, will, will_retain, will_qos, will_topic, will_message);
 
-	if(will_topic) mqtt3_free(will_topic);
-	if(will_message) mqtt3_free(will_message);
+	if(will_topic) _mosquitto_free(will_topic);
+	if(will_message) _mosquitto_free(will_message);
 
 	context->connected = true;
 	return mqtt3_raw_connack(context, 0);
@@ -125,43 +126,43 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 	while(context->in_packet.pos < context->in_packet.remaining_length){
 		sub = NULL;
 		if(_mosquitto_read_string(&context->in_packet, &sub)){
-			if(sub) mqtt3_free(sub);
-			if(payload) mqtt3_free(payload);
+			if(sub) _mosquitto_free(sub);
+			if(payload) _mosquitto_free(payload);
 			return 1;
 		}
 
 		if(sub){
 			if(_mosquitto_read_byte(&context->in_packet, &qos)){
-				mqtt3_free(sub);
-				if(payload) mqtt3_free(payload);
+				_mosquitto_free(sub);
+				if(payload) _mosquitto_free(payload);
 				return 1;
 			}
 			if(_mosquitto_fix_sub_topic(&sub)){
-				mqtt3_free(sub);
-				if(payload) mqtt3_free(payload);
+				_mosquitto_free(sub);
+				if(payload) _mosquitto_free(payload);
 				return 1;
 			}
 			if(!strlen(sub)){
 				mqtt3_log_printf(MQTT3_LOG_INFO, "Empty subscription string from %s, disconnecting.",
 					context->address);
-				mqtt3_free(sub);
-				if(payload) mqtt3_free(payload);
+				_mosquitto_free(sub);
+				if(payload) _mosquitto_free(payload);
 				return 1;
 			}
 			mqtt3_log_printf(MQTT3_LOG_DEBUG, "\t%s (QoS %d)", sub, qos);
 			mqtt3_db_sub_insert(context->id, sub, qos);
 	
 			if(mqtt3_db_retain_queue(context, sub, qos)) rc = 1;
-			mqtt3_free(sub);
+			_mosquitto_free(sub);
 		}
 
-		payload = mqtt3_realloc(payload, payloadlen + 1);
+		payload = _mosquitto_realloc(payload, payloadlen + 1);
 		payload[payloadlen] = qos;
 		payloadlen++;
 	}
 
 	if(mqtt3_raw_suback(context, mid, payloadlen, payload)) rc = 1;
-	mqtt3_free(payload);
+	_mosquitto_free(payload);
 	
 	return rc;
 }
@@ -179,14 +180,14 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 	while(context->in_packet.pos < context->in_packet.remaining_length){
 		sub = NULL;
 		if(_mosquitto_read_string(&context->in_packet, &sub)){
-			if(sub) mqtt3_free(sub);
+			if(sub) _mosquitto_free(sub);
 			return 1;
 		}
 
 		if(sub){
 			mqtt3_log_printf(MQTT3_LOG_DEBUG, "\t%s", sub);
 			mqtt3_db_sub_delete(context->id, sub);
-			mqtt3_free(sub);
+			_mosquitto_free(sub);
 		}
 	}
 

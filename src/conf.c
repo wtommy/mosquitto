@@ -4,6 +4,7 @@
 
 #include <config.h>
 #include <mqtt3.h>
+#include <memory_mosq.h>
 
 static int _mqtt3_conf_parse_bool(char **token, const char *name, bool *value);
 static int _mqtt3_conf_parse_int(char **token, const char *name, int *value);
@@ -61,12 +62,12 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 				str = strtok(argv[i], ":");
 				if(str){
 					config->iface_count++;
-					config->iface = mqtt3_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
+					config->iface = _mosquitto_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
 					if(!config->iface){
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
 						return 1;
 					}
-					config->iface[config->iface_count-1].iface = mqtt3_strdup(str);
+					config->iface[config->iface_count-1].iface = _mosquitto_strdup(str);
 					str = strtok(NULL, ":");
 					if(str){
 						port_tmp = atoi(str);
@@ -91,7 +92,7 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 					return 1;
 				}else{
 					config->iface_count++;
-					config->iface = mqtt3_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
+					config->iface = _mosquitto_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
 					if(!config->iface){
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
 						return 1;
@@ -107,7 +108,7 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 	}
 
 	if(!config->iface){
-		config->iface = mqtt3_malloc(sizeof(struct mqtt3_iface));
+		config->iface = _mosquitto_malloc(sizeof(struct mqtt3_iface));
 		config->iface->iface = NULL;
 		config->iface->port = 1883;
 		config->iface_count = 1;
@@ -150,7 +151,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					if(token){
 						token = strtok(token, ":");
 						if(token){
-							cur_bridge->address = mqtt3_strdup(token);
+							cur_bridge->address = _mosquitto_strdup(token);
 							if(!cur_bridge->address){
 								mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
 								return 1;
@@ -177,7 +178,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "ext_sqlite_regex")){
 					token = strtok(NULL, " ");
 					if(token){
-						config->ext_sqlite_regex = mqtt3_strdup(token);
+						config->ext_sqlite_regex = _mosquitto_strdup(token);
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty ext_sqlite_regex value in config.");
 						return 1;
@@ -192,13 +193,13 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					token = strtok(NULL, " ");
 					if(token){
 						config->bridge_count++;
-						config->bridges = mqtt3_realloc(config->bridges, config->bridge_count*sizeof(struct _mqtt3_bridge));
+						config->bridges = _mosquitto_realloc(config->bridges, config->bridge_count*sizeof(struct _mqtt3_bridge));
 						if(!config->bridges){
 							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
 							return 1;
 						}
 						cur_bridge = &(config->bridges[config->bridge_count-1]);
-						cur_bridge->name = mqtt3_strdup(token);
+						cur_bridge->name = _mosquitto_strdup(token);
 						cur_bridge->address = NULL;
 						cur_bridge->keepalive = 60;
 						cur_bridge->clean_session = false;
@@ -216,12 +217,12 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						token = strtok(token, ":");
 						if(token){
 							config->iface_count++;
-							config->iface = mqtt3_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
+							config->iface = _mosquitto_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
 							if(!config->iface){
 								mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
 								return 1;
 							}
-							config->iface[config->iface_count-1].iface = mqtt3_strdup(token);
+							config->iface[config->iface_count-1].iface = _mosquitto_strdup(token);
 							token = strtok(NULL, ":");
 							if(token){
 								port_tmp = atoi(token);
@@ -322,7 +323,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "persistence_file")){
 					token = strtok(NULL, " ");
 					if(token){
-						config->persistence_file = mqtt3_strdup(token);
+						config->persistence_file = _mosquitto_strdup(token);
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Empty persistence_file value in configuration.");
 						return 1;
@@ -330,7 +331,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "persistence_location")){
 					token = strtok(NULL, " ");
 					if(token){
-						config->persistence_location = mqtt3_strdup(token);
+						config->persistence_location = _mosquitto_strdup(token);
 						if(token[strlen(token)-1] != '/'){
 							mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: persistence_location should normally end with a '/'.");
 						}
@@ -338,7 +339,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "pid_file")){
 					token = strtok(NULL, " ");
 					if(token){
-						config->pid_file = mqtt3_strdup(token);
+						config->pid_file = _mosquitto_strdup(token);
 					}
 				}else if(!strcmp(token, "port")){
 					if(_mqtt3_conf_parse_int(&token, "port", &port_tmp)) return 1;
@@ -347,7 +348,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						return 1;
 					}
 					config->iface_count++;
-					config->iface = mqtt3_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
+					config->iface = _mosquitto_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
 					if(!config->iface){
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
 						return 1;
@@ -380,13 +381,13 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					token = strtok(NULL, " ");
 					if(token){
 						cur_bridge->topic_count++;
-						cur_bridge->topics = mqtt3_realloc(cur_bridge->topics, 
+						cur_bridge->topics = _mosquitto_realloc(cur_bridge->topics, 
 								sizeof(struct _mqtt3_bridge_topic)*cur_bridge->topic_count);
 						if(!cur_bridge->topics){
 							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory");
 							return 1;
 						}
-						cur_bridge->topics[cur_bridge->topic_count-1].topic = mqtt3_strdup(token);
+						cur_bridge->topics[cur_bridge->topic_count-1].topic = _mosquitto_strdup(token);
 						if(!cur_bridge->topics[cur_bridge->topic_count-1].topic){
 							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory");
 							return 1;
@@ -412,7 +413,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "user")){
 					token = strtok(NULL, " ");
 					if(token){
-						config->user = mqtt3_strdup(token);
+						config->user = _mosquitto_strdup(token);
 					}else{
 						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid user value.");
 						return 1;
