@@ -255,18 +255,18 @@ int _mosquitto_write_uint16(struct _mosquitto_packet *packet, uint16_t word)
 ssize_t _mosquitto_net_read(int fd, void *buf, size_t count)
 {
 #ifndef WIN32
-	return read(fd, &buf, count);
+	return read(fd, buf, count);
 #else
-	return recv(fd, &buf, count, 0);
+	return recv(fd, buf, count, 0);
 #endif
 }
 
 ssize_t _mosquitto_net_write(int fd, void *buf, size_t count)
 {
 #ifndef WIN32
-	return write(fd, &buf, count);
+	return write(fd, buf, count);
 #else
-	return send(fd, &buf, count, 0);
+	return send(fd, buf, count, 0);
 #endif
 }
 
