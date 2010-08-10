@@ -1,3 +1,9 @@
+0.9 - 20100xxx
+==============
+
+- Memory tracking is now significantly more efficient, but may tend to
+  over estimate the amount of memory used.
+
 0.8 - 20100807
 ==============
 
