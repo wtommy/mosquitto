@@ -33,18 +33,21 @@ from ctypes import *
 def on_connect(rc):
 	print "rc: ", rc
 
-
 def on_message(topic, payload, qos, retain):
 	print topic,qos,payload
 
-def py_on_publish(obj, mid):
+def on_publish(mid):
 	print "mid:", mid
 
+def on_subscribe(mid, granted_qos):
+	print "Subscribed:",mid,granted_qos
+	
 
 mqttc = mosquitto.Mosquitto("python_sub")
 mqttc.on_message = on_message
 mqttc.on_connect = on_connect
-mqttc.publish_callback(py_on_publish)
+mqttc.on_publish = on_publish
+mqttc.on_subscribe = on_subscribe
 mqttc.connect("127.0.0.1", 1883, 60, True)
 mqttc.subscribe("$SYS/#", 2)
 mqttc.subscribe("#", 2)

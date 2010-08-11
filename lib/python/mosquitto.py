@@ -129,14 +129,29 @@ class Mosquitto:
 		#==================================================
 		# Configure callbacks
 		#==================================================
-	def connect_callback(self, callback):
 		self._internal_on_connect_cast = self._MOSQ_CONNECT_FUNC(self._internal_on_connect)
 		self._mosquitto_connect_callback_set(self._mosq, self._internal_on_connect_cast)
 		self._on_connect = None
 	
+		self._internal_on_disconnect_cast = self._MOSQ_DISCONNECT_FUNC(self._internal_on_disconnect)
+		self._mosquitto_disconnect_callback_set(self._mosq, self._internal_on_disconnect_cast)
+		self._on_disconnect = None
+	
 		self._internal_on_message_cast = self._MOSQ_MESSAGE_FUNC(self._internal_on_message)
 		self._mosquitto_message_callback_set(self._mosq, self._internal_on_message_cast)
 		self.on_message = None
+
+		self._internal_on_publish_cast = self._MOSQ_PUBLISH_FUNC(self._internal_on_publish)
+		self._mosquitto_publish_callback_set(self._mosq, self._internal_on_publish_cast)
+		self.on_publish = None
+	
+		self._internal_on_subscribe_cast = self._MOSQ_SUBSCRIBE_FUNC(self._internal_on_subscribe)
+		self._mosquitto_subscribe_callback_set(self._mosq, self._internal_on_subscribe_cast)
+		self.on_subscribe = None
+	
+		self._internal_on_unsubscribe_cast = self._MOSQ_UNSUBSCRIBE_FUNC(self._internal_on_unsubscribe)
+		self._mosquitto_unsubscribe_callback_set(self._mosq, self._internal_on_unsubscribe_cast)
+		self.on_unsubscribe = None
 		#==================================================
 		# End configure callbacks
 		#==================================================
@@ -173,6 +188,10 @@ class Mosquitto:
 		if self.on_connect:
 			self.on_connect(rc)
 
+	def _internal_on_disconnect(self):
+		if self.on_disconnect:
+			self.on_disconnect()
+
 	def _internal_on_message(self, obj, message):
 		if self.on_message:
 			topic = message.contents.topic
@@ -181,21 +200,20 @@ class Mosquitto:
 			retain = message.contents.retain
 			self.on_message(topic, payload, qos, retain)
 
-	def disconnect_callback(self, callback):
-		self._on_disconnect = self._MOSQ_DISCONNECT_FUNC(callback)
-		return self._mosquitto_disconnect_callback_set(self._mosq, self._on_disconnect)
-	
-	def publish_callback(self, callback):
-		self._on_publish = self._MOSQ_PUBLISH_FUNC(callback)
-		return self._mosquitto_publish_callback_set(self._mosq, self._on_publish)
-	
-	def subscribe_callback(self, callback):
-		self._on_subscribe = self._MOSQ_SUBSCRIBE_FUNC(callback)
-		return self._mosquitto_subscribe_callback_set(self._mosq, self._on_subscribe)
-	
-	def unsubscribe_callback(self, callback):
-		self._on_unsubscribe = self._MOSQ_UNSUBSCRIBE_FUNC(callback)
-		return self._mosquitto_unsubscribe_callback_set(self._mosq, self._on_unsubscribe)
+	def _internal_on_publish(self, obj, mid):
+		if self.on_publish:
+			self.on_publish(mid)
+
+	def _internal_on_subscribe(self, obj, mid, qos_count, granted_qos):
+		if self.on_subscribe:
+			qos_list = []
+			for i in range(qos_count):
+				qos_list.append(granted_qos[i])
+			self.on_subscribe(mid, qos_list)
+
+	def _internal_on_unsubscribe(self, obj, mid):
+		if self.on_unsubscribe:
+			self.on_unsubscribe(mid)
 
 class MosquittoMessage(Structure):
 	_fields_ = [("mid", c_uint16),
