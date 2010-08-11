@@ -7,9 +7,9 @@ all : libmosquitto.so.0
 	make -C python
 
 install : all
-	$(INSTALL) -d ${DESTDIR}$(prefix)/lib/
-	$(INSTALL) -s libmosquitto.so.0 ${DESTDIR}${prefix}/lib/libmosquitto.so.0
-	ln -sf libmosquitto.so.0 ${DESTDIR}${prefix}/lib/libmosquitto.so
+	$(INSTALL) -d ${DESTDIR}$(prefix)/lib${LIB_SUFFIX}/
+	$(INSTALL) -s libmosquitto.so.0 ${DESTDIR}${prefix}/lib${LIB_SUFFIX}/libmosquitto.so.0
+	ln -sf libmosquitto.so.0 ${DESTDIR}${prefix}/lib${LIB_SUFFIX}/libmosquitto.so
 	$(INSTALL) -d ${DESTDIR}${prefix}/include/
 	$(INSTALL) mosquitto.h ${DESTDIR}${prefix}/include/mosquitto.h
 	make -C cpp install
