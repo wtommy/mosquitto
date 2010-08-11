@@ -33,8 +33,8 @@ from ctypes import *
 def on_connect(rc):
 	print "rc: ", rc
 
-def on_message(topic, payload, qos, retain):
-	print topic,qos,payload
+def on_message(msg):
+	print msg.topic,msg.qos,msg.payload
 
 def on_publish(mid):
 	print "mid:", mid
