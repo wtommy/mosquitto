@@ -110,6 +110,8 @@ mosq_EXPORT struct mosquitto *mosquitto_new(const char *id, void *obj);
  * id :  String to use as the client id. Must not be NULL or zero length.
  * obj : A user pointer that will be passed as an argument to any callbacks
  *       that are specified.
+ *       If set to NULL, the callbacks will return a pointer to the mosquitto
+ *       structure created by this call.
  *
  * Returns a memory pointer on success, NULL on failure.
  */
