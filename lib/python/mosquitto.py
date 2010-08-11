@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 # Copyright (c) 2010, Roger Light <roger@atchoo.org>
 # All rights reserved.
 # 
