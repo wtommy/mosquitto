@@ -30,7 +30,7 @@
 import mosquitto
 from ctypes import *
 
-def py_on_connect(obj, rc):
+def on_connect(rc):
 	print "rc: ", rc
 
 
@@ -43,7 +43,7 @@ def py_on_publish(obj, mid):
 
 mqttc = mosquitto.Mosquitto("python_sub")
 mqttc.on_message = on_message
-mqttc.connect_callback(py_on_connect)
+mqttc.on_connect = on_connect
 mqttc.publish_callback(py_on_publish)
 mqttc.connect("127.0.0.1", 1883, 60, True)
 mqttc.subscribe("$SYS/#", 2)
