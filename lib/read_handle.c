@@ -96,7 +96,7 @@ int _mosquitto_handle_pubackcomp(struct mosquitto *mosq)
 		return 1;
 	}
 	if(_mosquitto_read_uint16(&mosq->in_packet, &mid)) return 1;
-	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBACK (Mid: %d)", mid);
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBACK/PUBCOMP (Mid: %d)", mid);
 
 	if(!_mosquitto_message_delete(mosq, mid, mosq_md_out)){
 		/* Only inform the client the message has been sent once. */
