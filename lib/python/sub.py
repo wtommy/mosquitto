@@ -34,16 +34,16 @@ def py_on_connect(obj, rc):
 	print "rc: ", rc
 
 
-def py_on_message(obj, message):
-	print message.contents.topic,message.contents.payload
+def on_message(topic, payload, qos, retain):
+	print topic,qos,payload
 
 def py_on_publish(obj, mid):
 	print "mid:", mid
 
 
 mqttc = mosquitto.Mosquitto("python_sub")
+mqttc.on_message = on_message
 mqttc.connect_callback(py_on_connect)
-mqttc.message_callback(py_on_message)
 mqttc.publish_callback(py_on_publish)
 mqttc.connect("127.0.0.1", 1883, 60, True)
 mqttc.subscribe("$SYS/#", 2)
