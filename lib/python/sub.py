@@ -51,7 +51,7 @@ mqttc.on_subscribe = on_subscribe
 mqttc.connect("127.0.0.1", 1883, 60, True)
 mqttc.subscribe("$SYS/#", 2)
 mqttc.subscribe("#", 2)
-mqttc.publish("bob", 8, cast("0000000", POINTER(c_uint8)))
+mqttc.publish("bob", "0000000")
 
 while 1:
 	mqttc.loop()
