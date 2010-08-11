@@ -74,6 +74,7 @@ int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquit
 				mosq->messages = message->next;
 			}
 			_mosquitto_message_cleanup(&message);
+			return 0;
 		}
 		prev = message;
 		message = message->next;
