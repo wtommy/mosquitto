@@ -15,9 +15,9 @@ class CurrentCostMQTT(gnomeapplet.Applet):
 		self.mosq.loop(1)
 		return True
 
-	def on_message(self, obj, message):
+	def on_message(self, topic, payload, qos, retain):
 		# Message format is "timestamp power"
-		tup = message.contents.payload.split(" ")
+		tup = payload.split(" ")
 		self.label.set_text(tup[1]+"W")
 
 	def set_label(self, val):
@@ -48,7 +48,7 @@ class CurrentCostMQTT(gnomeapplet.Applet):
 		self.applet.set_background_widget(applet)
 		self.applet.show_all()
 		self.mosq = mosquitto.Mosquitto("ccpanel-"+platform.node()+"-"+str(os.getpid()))
-		self.mosq.message_callback(self.on_message)
+		self.mosq.on_message = self.on_message
 		self.mosq.connect("10.90.100.4", 1883, 60, True)
 		self.mosq.subscribe("sensors/cc128/ch1", 0)
 		self.applet.connect('change-background', self.on_change_background)

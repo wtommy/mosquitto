@@ -123,7 +123,18 @@ class Mosquitto:
 		#==================================================
 		# End library loading
 		#==================================================
+		
 		self._mosq = self._mosquitto_new(id, obj)
+
+		#==================================================
+		# Configure callbacks
+		#==================================================
+		self._internal_on_message_cast = self._MOSQ_MESSAGE_FUNC(self._internal_on_message)
+		self._mosquitto_message_callback_set(self._mosq, self._internal_on_message_cast)
+		self.on_message = None
+		#==================================================
+		# End configure callbacks
+		#==================================================
 
 	def __del__(self):
 		if self._mosq:
@@ -153,6 +164,14 @@ class Mosquitto:
 	def will_set(self, will, topic, payloadlen, payload, qos=0, retain=False):
 		return self._mosquitto_will_set(self._mosq, will, topic, payloadlen, payload, qos, retain)
 
+	def _internal_on_message(self, obj, message):
+		if self.on_message:
+			topic = message.contents.topic
+			payload = message.contents.payload
+			qos = message.contents.qos
+			retain = message.contents.retain
+			self.on_message(topic, payload, qos, retain)
+
 	def connect_callback(self, callback):
 		self._on_connect = self._MOSQ_CONNECT_FUNC(callback)
 		return self._mosquitto_connect_callback_set(self._mosq, self._on_connect)
@@ -164,10 +183,6 @@ class Mosquitto:
 	def publish_callback(self, callback):
 		self._on_publish = self._MOSQ_PUBLISH_FUNC(callback)
 		return self._mosquitto_publish_callback_set(self._mosq, self._on_publish)
-	
-	def message_callback(self, callback):
-		self._on_message = self._MOSQ_MESSAGE_FUNC(callback)
-		return self._mosquitto_message_callback_set(self._mosq, self._on_message)
 	
 	def subscribe_callback(self, callback):
 		self._on_subscribe = self._MOSQ_SUBSCRIBE_FUNC(callback)
