@@ -129,6 +129,11 @@ class Mosquitto:
 		#==================================================
 		# Configure callbacks
 		#==================================================
+	def connect_callback(self, callback):
+		self._internal_on_connect_cast = self._MOSQ_CONNECT_FUNC(self._internal_on_connect)
+		self._mosquitto_connect_callback_set(self._mosq, self._internal_on_connect_cast)
+		self._on_connect = None
+	
 		self._internal_on_message_cast = self._MOSQ_MESSAGE_FUNC(self._internal_on_message)
 		self._mosquitto_message_callback_set(self._mosq, self._internal_on_message_cast)
 		self.on_message = None
@@ -164,6 +169,10 @@ class Mosquitto:
 	def will_set(self, will, topic, payloadlen, payload, qos=0, retain=False):
 		return self._mosquitto_will_set(self._mosq, will, topic, payloadlen, payload, qos, retain)
 
+	def _internal_on_connect(self, obj, rc):
+		if self.on_connect:
+			self.on_connect(rc)
+
 	def _internal_on_message(self, obj, message):
 		if self.on_message:
 			topic = message.contents.topic
@@ -172,10 +181,6 @@ class Mosquitto:
 			retain = message.contents.retain
 			self.on_message(topic, payload, qos, retain)
 
-	def connect_callback(self, callback):
-		self._on_connect = self._MOSQ_CONNECT_FUNC(callback)
-		return self._mosquitto_connect_callback_set(self._mosq, self._on_connect)
-	
 	def disconnect_callback(self, callback):
 		self._on_disconnect = self._MOSQ_DISCONNECT_FUNC(callback)
 		return self._mosquitto_disconnect_callback_set(self._mosq, self._on_disconnect)
