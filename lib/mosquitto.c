@@ -219,6 +219,7 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 				_mosquitto_message_cleanup(&message);
 				return 1;
 			}
+			memcpy(message->msg.payload, payload, payloadlen*sizeof(uint8_t));
 		}else{
 			message->msg.payloadlen = 0;
 			message->msg.payload = NULL;
