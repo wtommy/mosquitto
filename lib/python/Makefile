@@ -5,7 +5,7 @@ include ../../config.mk
 all : mosquitto.pyc
 
 install : all
-	python ./setup.py install --prefix=${DESTDIR}${prefix}
+	python ./setup.py install --prefix=${prefix} --root=${DESTDIR}
 
 mosquitto.pyc : mosquitto.py
 	python ./setup.py build
