@@ -15,9 +15,9 @@ class CurrentCostMQTT(gnomeapplet.Applet):
 		self.mosq.loop(1)
 		return True
 
-	def on_message(self, topic, payload, qos, retain):
+	def on_message(self, msg):
 		# Message format is "timestamp power"
-		tup = payload.split(" ")
+		tup = msg.payload.split(" ")
 		self.label.set_text(tup[1]+"W")
 
 	def set_label(self, val):

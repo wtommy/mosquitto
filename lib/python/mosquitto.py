@@ -117,7 +117,7 @@ class Mosquitto:
 		self._MOSQ_CONNECT_FUNC = CFUNCTYPE(None, c_void_p, c_int)
 		self._MOSQ_DISCONNECT_FUNC = CFUNCTYPE(None, c_void_p)
 		self._MOSQ_PUBLISH_FUNC = CFUNCTYPE(None, c_void_p, c_uint16)
-		self._MOSQ_MESSAGE_FUNC = CFUNCTYPE(None, c_void_p, POINTER(MosquittoMessage))
+		self._MOSQ_MESSAGE_FUNC = CFUNCTYPE(None, c_void_p, POINTER(c_MosquittoMessage))
 		self._MOSQ_SUBSCRIBE_FUNC = CFUNCTYPE(None, c_void_p, c_uint16, c_int, POINTER(c_uint8))
 		self._MOSQ_UNSUBSCRIBE_FUNC = CFUNCTYPE(None, c_void_p, c_uint16)
 		#==================================================
@@ -198,7 +198,8 @@ class Mosquitto:
 			payload = message.contents.payload
 			qos = message.contents.qos
 			retain = message.contents.retain
-			self.on_message(topic, payload, qos, retain)
+			msg = MosquittoMessage(topic, payload, qos, retain)
+			self.on_message(msg)
 
 	def _internal_on_publish(self, obj, mid):
 		if self.on_publish:
@@ -215,11 +216,19 @@ class Mosquitto:
 		if self.on_unsubscribe:
 			self.on_unsubscribe(mid)
 
-class MosquittoMessage(Structure):
+class c_MosquittoMessage(Structure):
 	_fields_ = [("mid", c_uint16),
 				("topic", c_char_p),
 				("payload", c_char_p),
 				("payloadlen", c_uint32),
 				("qos", c_int),
 				("retain", c_bool)]
+
+class MosquittoMessage:
+	"""MQTT message class"""
+	def __init__(self, topic, payload, qos, retain):
+		self.topic = topic
+		self.payload = payload
+		self.qos = qos
+		self.retain = retain
 
