@@ -108,6 +108,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <memory_mosq.h>
 
 static sqlite3 *db = NULL;
 static char *db_filepath = NULL;
@@ -163,11 +164,11 @@ int mqtt3_db_open(mqtt3_config *config)
 		if(_mqtt3_db_tables_create()) return 1;
 	}else{
 		if(config->persistence_location && strlen(config->persistence_location)){
-			db_filepath = mqtt3_malloc(strlen(config->persistence_location) + strlen(config->persistence_file) + 1);
+			db_filepath = _mosquitto_malloc(strlen(config->persistence_location) + strlen(config->persistence_file) + 1);
 			if(!db_filepath) return 1;
 			sprintf(db_filepath, "%s%s", config->persistence_location, config->persistence_file);
 		}else{
-			db_filepath = mqtt3_strdup(config->persistence_file);
+			db_filepath = _mosquitto_strdup(config->persistence_file);
 		}
 		dbrc = sqlite3_open_v2(db_filepath, &restore_db, SQLITE_OPEN_READONLY, NULL);
 		if(dbrc == SQLITE_OK){
@@ -240,7 +241,7 @@ int mqtt3_db_close(void)
 
 	sqlite3_shutdown();
 
-	if(db_filepath) mqtt3_free(db_filepath);
+	if(db_filepath) _mosquitto_free(db_filepath);
 
 	return 0;
 }
@@ -1518,10 +1519,10 @@ static int _mqtt3_db_regex_create(const char *topic, char **regex)
 	}
 	hier = 0;
 	if(topic[0] == '/'){
-		local_topic = mqtt3_strdup(topic+1);
+		local_topic = _mosquitto_strdup(topic+1);
 		start_slash = "/";
 	}else{
-		local_topic = mqtt3_strdup(topic);
+		local_topic = _mosquitto_strdup(topic);
 		start_slash = "";
 	}
 	if(!local_topic) return 1;
@@ -1543,7 +1544,7 @@ static int _mqtt3_db_regex_create(const char *topic, char **regex)
 		new_len = strlen(local_topic) + 21;
 	}
 	if(regex_len < new_len){
-		local_regex = mqtt3_realloc(local_regex, new_len);
+		local_regex = _mosquitto_realloc(local_regex, new_len);
 		regex_len = new_len;
 		if(!local_regex) return 1;
 	}
@@ -1581,7 +1582,7 @@ static int _mqtt3_db_regex_create(const char *topic, char **regex)
 		}
 	}
 	*regex = local_regex;
-	mqtt3_free(local_topic);
+	_mosquitto_free(local_topic);
 	return 0;
 }
 
@@ -1602,14 +1603,14 @@ static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 	if(strncmp(sub, "$SYS", 4)){
 		if(sub[0] == '/'){
 			sys = "^/(?!\\$SYS)";
-			local_sub = mqtt3_strdup(sub+1);
+			local_sub = _mosquitto_strdup(sub+1);
 		}else{
 			sys = "^(?!\\$SYS)";
-			local_sub = mqtt3_strdup(sub);
+			local_sub = _mosquitto_strdup(sub);
 		}
 	}else{
 		sys = "^";
-		local_sub = mqtt3_strdup(sub);
+		local_sub = _mosquitto_strdup(sub);
 	}
 	if(!local_sub) return 1;
 	hier = 0;
@@ -1620,7 +1621,7 @@ static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 		hier++;
 	}
 	regex_len = strlen(sys) + strlen(local_sub) + 5*hier + 2;
-	local_regex = mqtt3_realloc(local_regex, regex_len);
+	local_regex = _mosquitto_realloc(local_regex, regex_len);
 	if(!local_regex) return 1;
 
 	if(hier > 1){
@@ -1668,7 +1669,7 @@ static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 		}
 	}
 	*regex = local_regex;
-	mqtt3_free(local_sub);
+	_mosquitto_free(local_sub);
 	return 0;
 }
 #endif
@@ -1753,7 +1754,7 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 #endif
 
 #ifdef WITH_REGEX
-	if(sqlite3_bind_text(stmt, 1, regex, strlen(regex), mqtt3_free) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, regex, strlen(regex), _mosquitto_free) != SQLITE_OK) rc = 1;
 #else
 	if(sqlite3_bind_text(stmt, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 #endif
@@ -1994,7 +1995,7 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 		}
 
 #ifdef WITH_MEMORY_TRACKING
-		snprintf(buf, 100, "%d", mqtt3_memory_used());
+		snprintf(buf, 100, "%lld", _mosquitto_memory_used()+sqlite3_memory_used());
 		mqtt3_db_messages_easy_queue("", "$SYS/broker/heap/current size", 2, strlen(buf), (uint8_t *)buf, 1);
 #endif
 

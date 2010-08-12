@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mosquitto_internal.h>
 #include <mosquitto.h>
+#include <memory_mosq.h>
 #include <messages_mosq.h>
 #include <send_mosq.h>
 
@@ -42,9 +43,9 @@ void _mosquitto_message_cleanup(struct mosquitto_message_all **message)
 
 	msg = *message;
 
-	if(msg->msg.topic) free(msg->msg.topic);
-	if(msg->msg.payload) free(msg->msg.payload);
-	free(msg);
+	if(msg->msg.topic) _mosquitto_free(msg->msg.topic);
+	if(msg->msg.payload) _mosquitto_free(msg->msg.payload);
+	_mosquitto_free(msg);
 };
 
 void _mosquitto_message_cleanup_all(struct mosquitto *mosq)
