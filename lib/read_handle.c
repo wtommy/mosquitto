@@ -65,7 +65,7 @@ int _mosquitto_packet_handle(struct mosquitto *mosq)
 			return _mosquitto_handle_unsuback(mosq);
 		default:
 			/* If we don't recognise the command, return an error straight away. */
-			fprintf(stderr, "Error: Unrecognised command %d\n", (mosq->in_packet.command)&0xF0);
+			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Error: Unrecognised command %d\n", (mosq->in_packet.command)&0xF0);
 			return 1;
 	}
 }
