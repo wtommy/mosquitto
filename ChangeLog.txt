@@ -4,6 +4,8 @@
 - Improve python interface
 - Fix incorrect return value from message delete function
 - Use logging function to print error messages in clients.
+- Fix python installation script DESTDIR.
+- Fix library destination path for 64-bit machines.
 
 0.8 - 20100807
 ==============
