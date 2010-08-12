@@ -46,7 +46,7 @@ extern "C" {
 
 #define LIBMOSQUITTO_MAJOR 0
 #define LIBMOSQUITTO_MINOR 8
-#define LIBMOSQUITTO_REVISION 0
+#define LIBMOSQUITTO_REVISION 1
 
 #include <stdbool.h>
 #include <stdint.h>
