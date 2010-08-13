@@ -10,7 +10,7 @@ OBJS=context.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o 
 all : qos
 
 qos : qos.o
-	${CC} $^ -o $@ ../lib/libmosquitto.so.0
+	${CC} $^ -o $@ ../lib/libmosquitto.so.0 -nopie
 
 qos.o : qos.c
 	${CC} $(CFLAGS) -c $< -o $@
