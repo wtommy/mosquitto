@@ -1,14 +1,19 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
 #include <mosquitto.h>
 
 struct msg_list{
 	struct msg_list *next;
 	struct mosquitto_message msg;
+	bool sent;
 };
 
 struct msg_list *messages_received = NULL;
+struct msg_list *messages_sent = NULL;
 
 void on_message(void *obj, const struct mosquitto_message *msg)
 {
@@ -38,6 +43,39 @@ void on_message(void *obj, const struct mosquitto_message *msg)
 
 void rand_publish(struct mosquitto *mosq, const char *topic, int qos)
 {
+	int fd = open("/dev/urandom", O_RDONLY);
+	uint8_t buf[100];
+	uint16_t mid;
+	struct msg_list *new_list, *tail;
+
+	if(fd >= 0){
+		if(read(fd, buf, 100) == 100){
+			if(!mosquitto_publish(mosq, &mid, topic, 100, buf, qos, false)){
+				new_list = malloc(sizeof(struct msg_list));
+				if(new_list){
+					new_list->msg.mid = mid;
+					new_list->msg.topic = strdup(topic);
+					new_list->msg.payloadlen = 100;
+					new_list->msg.payload = malloc(100);
+					memcpy(new_list->msg.payload, buf, 100);
+					new_list->msg.retain = false;
+					new_list->next = NULL;
+					new_list->sent = false;
+
+					if(messages_sent){
+						tail = messages_sent;
+						while(tail->next){
+							tail = tail->next;
+						}
+						tail->next = new_list;
+					}else{
+						messages_sent = new_list;
+					}
+				}
+			}
+		}
+		close(fd);
+	}
 }
 
 int main(int argc, char *argv[])
