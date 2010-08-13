@@ -231,6 +231,9 @@ mosq_EXPORT int mosquitto_message_copy(struct mosquitto_message *dst, const stru
  * Return 0 on success, 1 on failure.
  */
 
+mosq_EXPORT void mosquitto_message_free(struct mosquitto_message **message);
+/* Completely free a mosquitto message structure. */
+
 mosq_EXPORT int mosquitto_loop(struct mosquitto *mosq, int timeout);
 /* The main network loop for the client. You must call this frequently in order
  * to keep communications between the client and broker working.

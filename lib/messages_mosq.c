@@ -108,6 +108,19 @@ int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquit
 	return 1;
 }
 
+void mosquitto_message_free(struct mosquitto_message **message)
+{
+	struct mosquitto_message *msg;
+
+	if(!message || !*message) return;
+
+	msg = *message;
+
+	if(msg->topic) _mosquitto_free(msg->topic);
+	if(msg->payload) _mosquitto_free(msg->payload);
+	_mosquitto_free(msg);
+}
+
 int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message_all *message)
 {
 	struct mosquitto_message_all *tail;
