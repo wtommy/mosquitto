@@ -222,6 +222,14 @@ mosq_EXPORT int mosquitto_unsubscribe(struct mosquitto *mosq, uint16_t *mid, con
  * Returns 0 on success, 1 on failure.
  */
 
+mosq_EXPORT int mosquitto_message_copy(struct mosquitto_message *dst, const struct mosquitto_message *src);
+/* Copy the contents of a mosquitto message to another message.
+ * Useful for preserving a message received in the on_message() callback.
+ *
+ * Both dst and src must point to valid memory locations.
+ *
+ * Return 0 on success, 1 on failure.
+ */
 
 mosq_EXPORT int mosquitto_loop(struct mosquitto *mosq, int timeout);
 /* The main network loop for the client. You must call this frequently in order

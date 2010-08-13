@@ -34,6 +34,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <send_mosq.h>
 
 #include <stdlib.h>
+#include <string.h>
 
 void _mosquitto_message_cleanup(struct mosquitto_message_all **message)
 {
@@ -60,6 +61,30 @@ void _mosquitto_message_cleanup_all(struct mosquitto *mosq)
 		mosq->messages = tmp;
 	}
 };
+
+int mosquitto_message_copy(struct mosquitto_message *dst, const struct mosquitto_message *src)
+{
+	if(!dst || !src) return 1;
+
+	dst->mid = src->mid;
+	dst->topic = _mosquitto_strdup(src->topic);
+	if(!dst->topic) return 1;
+	dst->qos = src->qos;
+	dst->retain = src->retain;
+	if(src->payloadlen){
+		dst->payload = _mosquitto_malloc(src->payloadlen);
+		if(!dst->payload){
+			_mosquitto_free(dst->topic);
+			return 1;
+		}
+		memcpy(dst->payload, src->payload, src->payloadlen);
+		dst->payloadlen = src->payloadlen;
+	}else{
+		dst->payloadlen = 0;
+		dst->payload = NULL;
+	}
+	return 0;
+}
 
 int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir)
 {
