@@ -41,6 +41,21 @@ void on_message(void *obj, const struct mosquitto_message *msg)
 	}
 }
 
+void on_publish(void *obj, uint16_t mid)
+{
+	struct msg_list *tail = messages_sent;
+
+	while(tail){
+		if(tail->msg.mid == mid){
+			tail->sent = true;
+			return;
+		}
+		tail = tail->next;
+	}
+
+	fprintf(stderr, "ERROR: Invalid on_publish() callback for mid %d\n", mid);
+}
+
 void rand_publish(struct mosquitto *mosq, const char *topic, int qos)
 {
 	int fd = open("/dev/urandom", O_RDONLY);
@@ -87,6 +102,7 @@ int main(int argc, char *argv[])
 
 	mosq = mosquitto_new("qos-test", NULL);
 	mosquitto_message_callback_set(mosq, on_message);
+	mosquitto_publish_callback_set(mosq, on_publish);
 
 	mosquitto_connect(mosq, "127.0.0.1", 1883, 60, true);
 	mosquitto_subscribe(mosq, NULL, "qos-test/0", 0);
