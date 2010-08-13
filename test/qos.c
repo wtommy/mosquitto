@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <mosquitto.h>
@@ -97,6 +98,7 @@ int main(int argc, char *argv[])
 {
 	struct mosquitto *mosq;
 	int i;
+	time_t start;
 
 	mosquitto_lib_init();
 
@@ -120,7 +122,11 @@ int main(int argc, char *argv[])
 		rand_publish(mosq, "qos-test/2", 1);
 		rand_publish(mosq, "qos-test/2", 2);
 	}
+	start = time(NULL);
 	while(!mosquitto_loop(mosq, -1)){
+		if(time(NULL)-start > 60){
+			mosquitto_disconnect(mosq);
+		}
 	}
 
 	mosquitto_destroy(mosq);
