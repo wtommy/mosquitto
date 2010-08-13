@@ -13,6 +13,14 @@ struct msg_list{
 	bool sent;
 };
 
+struct sub{
+	uint16_t mid;
+	char *topic;
+	int qos;
+	bool complete;
+};
+
+struct sub subs[3];
 struct msg_list *messages_received = NULL;
 struct msg_list *messages_sent = NULL;
 
@@ -55,6 +63,21 @@ void on_publish(void *obj, uint16_t mid)
 	}
 
 	fprintf(stderr, "ERROR: Invalid on_publish() callback for mid %d\n", mid);
+}
+
+void on_subscribe(void *obj, uint16_t mid, int qos_count, const uint8_t *granted_qos)
+{
+	int i;
+	for(i=0; i<3; i++){
+		if(subs[i].mid == mid){
+			if(subs[i].complete){
+				fprintf(stderr, "WARNING: Duplicate on_subscribe() callback for mid %d\n", mid);
+			}
+			subs[i].complete = true;
+			return;
+		}
+	}
+	fprintf(stderr, "ERROR: Invalid on_subscribe() callback for mid %d\n", mid);
 }
 
 void rand_publish(struct mosquitto *mosq, const char *topic, int qos)
@@ -105,11 +128,21 @@ int main(int argc, char *argv[])
 	mosq = mosquitto_new("qos-test", NULL);
 	mosquitto_message_callback_set(mosq, on_message);
 	mosquitto_publish_callback_set(mosq, on_publish);
+	mosquitto_subscribe_callback_set(mosq, on_subscribe);
 
 	mosquitto_connect(mosq, "127.0.0.1", 1883, 60, true);
-	mosquitto_subscribe(mosq, NULL, "qos-test/0", 0);
-	mosquitto_subscribe(mosq, NULL, "qos-test/1", 1);
-	mosquitto_subscribe(mosq, NULL, "qos-test/2", 2);
+	subs[0].topic = "qos-test/0";
+	subs[0].qos = 0;
+	subs[0].complete = false;
+	subs[1].topic = "qos-test/1";
+	subs[1].qos = 1;
+	subs[1].complete = false;
+	subs[2].topic = "qos-test/2";
+	subs[2].qos = 2;
+	subs[2].complete = false;
+	mosquitto_subscribe(mosq, &subs[0].mid, subs[0].topic, subs[0].qos);
+	mosquitto_subscribe(mosq, &subs[1].mid, subs[1].topic, subs[1].qos);
+	mosquitto_subscribe(mosq, &subs[2].mid, subs[2].topic, subs[2].qos);
 
 	for(i=0; i<100; i++){
 		rand_publish(mosq, "qos-test/0", 0);
