@@ -80,6 +80,11 @@ void on_subscribe(void *obj, uint16_t mid, int qos_count, const uint8_t *granted
 	fprintf(stderr, "ERROR: Invalid on_subscribe() callback for mid %d\n", mid);
 }
 
+void on_disconnect(void *obj)
+{
+	printf("Disconnected cleanly.\n");
+}
+
 void rand_publish(struct mosquitto *mosq, const char *topic, int qos)
 {
 	int fd = open("/dev/urandom", O_RDONLY);
@@ -129,6 +134,7 @@ int main(int argc, char *argv[])
 	mosquitto_message_callback_set(mosq, on_message);
 	mosquitto_publish_callback_set(mosq, on_publish);
 	mosquitto_subscribe_callback_set(mosq, on_subscribe);
+	mosquitto_disconnect_callback_set(mosq, on_disconnect);
 
 	mosquitto_connect(mosq, "127.0.0.1", 1883, 60, true);
 	subs[0].topic = "qos-test/0";
