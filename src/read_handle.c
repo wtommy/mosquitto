@@ -132,10 +132,11 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	uint8_t *payload = NULL;
 	uint32_t payloadlen;
 	uint8_t dup, qos, retain;
-	uint16_t mid;
+	uint16_t mid = 0;
 	int rc = 0;
 	uint8_t header = context->in_packet.command;
 	int64_t store_id = 0;
+	int res;
 
 	dup = (header & 0x08)>>3;
 	qos = (header & 0x06)>>1;
@@ -184,8 +185,12 @@ int mqtt3_handle_publish(mqtt3_context *context)
 			if(mqtt3_raw_puback(context, mid)) rc = 1;
 			break;
 		case 2:
-			if(mqtt3_db_message_insert(context->id, mid, mosq_md_in, ms_wait_pubrec, qos, store_id)) rc = 1;
-			if(mqtt3_raw_pubrec(context, mid)) rc = 1;
+			res = mqtt3_db_message_insert(context->id, mid, mosq_md_in, ms_wait_pubrec, qos, store_id);
+			if(!res){
+				if(mqtt3_raw_pubrec(context, mid)) rc = 1;
+			}else if(res == 1){
+				rc = 1;
+			}
 			break;
 	}
 	mqtt3_free(topic);

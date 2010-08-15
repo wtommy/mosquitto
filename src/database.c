@@ -1084,7 +1084,7 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, enum mosquitto_
 		}
 		sqlite3_reset(select_stmt);
 		sqlite3_clear_bindings(select_stmt);
-		if(limited) return 0;
+		if(limited) return 2;
 	}
 
 	if(!stmt){
@@ -1201,13 +1201,13 @@ int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, i
 			}
 			switch(msg_qos){
 				case 0:
-					if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish, msg_qos, store_id)) rc = 1;
+					if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish, msg_qos, store_id) == 1) rc = 1;
 					break;
 				case 1:
-					if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish_puback, msg_qos, store_id)) rc = 1;
+					if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish_puback, msg_qos, store_id) == 1) rc = 1;
 					break;
 				case 2:
-					if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish_pubrec, msg_qos, store_id)) rc = 1;
+					if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish_pubrec, msg_qos, store_id) == 1) rc = 1;
 					break;
 			}
 		}
@@ -1771,13 +1771,13 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 		}
 		switch(qos){
 			case 0:
-				if(mqtt3_db_message_insert(context->id, mid, mosq_md_out, ms_publish, qos, store_id)) rc = 1;
+				if(mqtt3_db_message_insert(context->id, mid, mosq_md_out, ms_publish, qos, store_id) == 1) rc = 1;
 				break;
 			case 1:
-				if(mqtt3_db_message_insert(context->id, mid, mosq_md_out, ms_publish_puback, qos, store_id)) rc = 1;
+				if(mqtt3_db_message_insert(context->id, mid, mosq_md_out, ms_publish_puback, qos, store_id) == 1) rc = 1;
 				break;
 			case 2:
-				if(mqtt3_db_message_insert(context->id, mid, mosq_md_out, ms_publish_pubrec, qos, store_id)) rc = 1;
+				if(mqtt3_db_message_insert(context->id, mid, mosq_md_out, ms_publish_pubrec, qos, store_id) == 1) rc = 1;
 				break;
 		}
 	}
