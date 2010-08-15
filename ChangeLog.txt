@@ -1,4 +1,4 @@
-0.8.2 - 201008xx
+0.8.2 - 20100815
 ================
 
 - Fix default loop() timeout value in mosquitto.py. Previous value was 0,
