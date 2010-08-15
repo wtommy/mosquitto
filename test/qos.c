@@ -23,10 +23,14 @@ struct sub{
 struct sub subs[3];
 struct msg_list *messages_received = NULL;
 struct msg_list *messages_sent = NULL;
+int sent_count = 0;
+int received_count = 0;
 
 void on_message(void *obj, const struct mosquitto_message *msg)
 {
 	struct msg_list *tail, *new_list;
+
+	received_count++;
 
 	new_list = malloc(sizeof(struct msg_list));
 	if(!new_list){
@@ -53,6 +57,8 @@ void on_message(void *obj, const struct mosquitto_message *msg)
 void on_publish(void *obj, uint16_t mid)
 {
 	struct msg_list *tail = messages_sent;
+
+	sent_count++;
 
 	while(tail){
 		if(tail->msg.mid == mid){
@@ -172,6 +178,8 @@ int main(int argc, char *argv[])
 
 	mosquitto_lib_cleanup();
 
+	printf("Sent messages: %d\n", sent_count);
+	printf("Received messages: %d\n", received_count);
 	return 0;
 }
 
