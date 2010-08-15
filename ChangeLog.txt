@@ -1,3 +1,13 @@
+0.8.2 - 201008xx
+================
+
+- Fix default loop() timeout value in mosquitto.py. Previous value was 0,
+  causing high cpu load.
+- Fix message handling problem in client library when more than one message was
+  in the client queue.
+- Fix the logic used to determine whether a QoS>0 message needs to be retried.
+- Fix the Python sub.py example so that it quits on error.
+
 0.8.1 - 20100812
 ================
 
