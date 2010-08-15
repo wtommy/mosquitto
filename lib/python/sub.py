@@ -53,6 +53,6 @@ mqttc.subscribe("$SYS/#", 2)
 mqttc.subscribe("#", 2)
 mqttc.publish("bob", "0000000")
 
-while 1:
-	mqttc.loop()
+while mqttc.loop() == 0:
+	pass
 
