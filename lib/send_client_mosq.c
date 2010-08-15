@@ -30,6 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 #include <mosquitto.h>
+#include <memory_mosq.h>
 #include <mqtt3_protocol.h>
 #include <net_mosq.h>
 #include <send_mosq.h>
@@ -43,7 +44,7 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 
 	if(!mosq || !mosq->id) return 1;
 
-	packet = calloc(1, sizeof(struct _mosquitto_packet));
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
 
 	payloadlen = 2+strlen(mosq->id);
@@ -59,9 +60,9 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 
 	packet->command = CONNECT;
 	packet->remaining_length = 12+payloadlen;
-	packet->payload = malloc(sizeof(uint8_t)*(12+payloadlen));
+	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*(12+payloadlen));
 	if(!packet->payload){
-		free(packet);
+		_mosquitto_free(packet);
 		return 1;
 	}
 
@@ -101,16 +102,16 @@ int _mosquitto_send_subscribe(struct mosquitto *mosq, uint16_t *mid, bool dup, c
 
 	if(!mosq || !topic) return 1;
 
-	packet = calloc(1, sizeof(struct _mosquitto_packet));
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
 
 	packetlen = 2 + 2+strlen(topic) + 1;
 
 	packet->command = SUBSCRIBE | (dup<<3) | (1<<1);
 	packet->remaining_length = packetlen;
-	packet->payload = malloc(sizeof(uint8_t)*packetlen);
+	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){
-		free(packet);
+		_mosquitto_free(packet);
 		return 1;
 	}
 
@@ -137,16 +138,16 @@ int _mosquitto_send_unsubscribe(struct mosquitto *mosq, uint16_t *mid, bool dup,
 
 	if(!mosq || !topic) return 1;
 
-	packet = calloc(1, sizeof(struct _mosquitto_packet));
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
 
 	packetlen = 2 + 2+strlen(topic);
 
 	packet->command = SUBSCRIBE | (dup<<3) | (1<<1);
 	packet->remaining_length = packetlen;
-	packet->payload = malloc(sizeof(uint8_t)*packetlen);
+	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){
-		free(packet);
+		_mosquitto_free(packet);
 		return 1;
 	}
 

@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mosquitto.h>
 #include <logging_mosq.h>
+#include <memory_mosq.h>
 #include <messages_mosq.h>
 #include <mqtt3_protocol.h>
 #include <net_mosq.h>
@@ -116,7 +117,7 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 
 	if(!mosq) return 1;
 
-	message = calloc(1, sizeof(struct mosquitto_message_all));
+	message = _mosquitto_calloc(1, sizeof(struct mosquitto_message_all));
 	if(!message) return 1;
 
 	header = mosq->in_packet.command;
@@ -143,7 +144,7 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 
 	message->msg.payloadlen = mosq->in_packet.remaining_length - mosq->in_packet.pos;
 	if(message->msg.payloadlen){
-		message->msg.payload = calloc(message->msg.payloadlen+1, sizeof(uint8_t));
+		message->msg.payload = _mosquitto_calloc(message->msg.payloadlen+1, sizeof(uint8_t));
 		if(_mosquitto_read_bytes(&mosq->in_packet, message->msg.payload, message->msg.payloadlen)){
 			_mosquitto_message_cleanup(&message);
 			return 1;

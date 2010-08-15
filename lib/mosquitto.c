@@ -30,6 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mosquitto.h>
 #include <logging_mosq.h>
 #include <messages_mosq.h>
+#include <memory_mosq.h>
 #include <mqtt3_protocol.h>
 #include <net_mosq.h>
 #include <read_handle.h>
@@ -78,7 +79,7 @@ struct mosquitto *mosquitto_new(const char *id, void *obj)
 
 	if(!id) return NULL;
 
-	mosq = (struct mosquitto *)calloc(1, sizeof(struct mosquitto));
+	mosq = (struct mosquitto *)_mosquitto_calloc(1, sizeof(struct mosquitto));
 	if(mosq){
 		if(obj){
 			mosq->obj = obj;
@@ -89,7 +90,7 @@ struct mosquitto *mosquitto_new(const char *id, void *obj)
 		mosq->keepalive = 60;
 		mosq->message_retry = 20;
 		mosq->last_retry_check = 0;
-		mosq->id = strdup(id);
+		mosq->id = _mosquitto_strdup(id);
 		mosq->in_packet.payload = NULL;
 		_mosquitto_packet_cleanup(&mosq->in_packet);
 		mosq->out_packet = NULL;
@@ -116,24 +117,24 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 	if(will && !topic) return 1;
 
 	if(mosq->will){
-		if(mosq->will->topic) free(mosq->will->topic);
+		if(mosq->will->topic) _mosquitto_free(mosq->will->topic);
 		if(mosq->will->payload){
-			free(mosq->will->payload);
+			_mosquitto_free(mosq->will->payload);
 			mosq->will->payload = NULL;
 		}
-		free(mosq->will);
+		_mosquitto_free(mosq->will);
 		mosq->will = NULL;
 	}
 
 	if(will){
-		mosq->will = calloc(1, sizeof(struct mosquitto_message));
+		mosq->will = _mosquitto_calloc(1, sizeof(struct mosquitto_message));
 		if(!mosq->will) return 1;
-		mosq->will->topic = strdup(topic);
+		mosq->will->topic = _mosquitto_strdup(topic);
 		if(!mosq->will->topic) return 1;
 		mosq->will->payloadlen = payloadlen;
 		if(mosq->will->payloadlen > 0){
 			if(!payload) return 1;
-			mosq->will->payload = malloc(sizeof(uint8_t)*mosq->will->payloadlen);
+			mosq->will->payload = _mosquitto_malloc(sizeof(uint8_t)*mosq->will->payloadlen);
 			if(!mosq->will->payload) return 1;
 
 			memcpy(mosq->will->payload, payload, payloadlen);
@@ -147,9 +148,9 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 
 void mosquitto_destroy(struct mosquitto *mosq)
 {
-	if(mosq->id) free(mosq->id);
+	if(mosq->id) _mosquitto_free(mosq->id);
 	_mosquitto_message_cleanup_all(mosq);
-	free(mosq);
+	_mosquitto_free(mosq);
 }
 
 int mosquitto_socket(struct mosquitto *mosq)
@@ -196,7 +197,7 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 	if(qos == 0){
 		return _mosquitto_send_publish(mosq, local_mid, topic, payloadlen, payload, qos, retain, false);
 	}else{
-		message = calloc(1, sizeof(struct mosquitto_message_all));
+		message = _mosquitto_calloc(1, sizeof(struct mosquitto_message_all));
 		if(!message) return 1;
 
 		message->next = NULL;
@@ -208,14 +209,14 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 			message->state = mosq_ms_wait_pubrec;
 		}
 		message->msg.mid = local_mid;
-		message->msg.topic = strdup(topic);
+		message->msg.topic = _mosquitto_strdup(topic);
 		if(!message->msg.topic){
 			_mosquitto_message_cleanup(&message);
 			return 1;
 		}
 		if(payloadlen){
 			message->msg.payloadlen = payloadlen;
-			message->msg.payload = malloc(payloadlen*sizeof(uint8_t));
+			message->msg.payload = _mosquitto_malloc(payloadlen*sizeof(uint8_t));
 			if(!message){
 				_mosquitto_message_cleanup(&message);
 				return 1;
@@ -365,11 +366,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 		/* FIXME - check command and fill in expected length if we know it.
 		 * This means we can check the client is sending valid data some times.
 		 */
-#ifndef WIN32
-		read_length = read(mosq->sock, &byte, 1);
-#else
-		read_length = recv(mosq->sock, &byte, 1, 0);
-#endif
+		read_length = _mosquitto_net_read(mosq->sock, &byte, 1);
 		if(read_length == 1){
 			mosq->in_packet.command = byte;
 		}else{
@@ -391,11 +388,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 		 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
 		 */
 		do{
-#ifndef WIN32
-			read_length = read(mosq->sock, &byte, 1);
-#else
-			read_length = recv(mosq->sock, &byte, 1, 0);
-#endif
+			read_length = _mosquitto_net_read(mosq->sock, &byte, 1);
 			if(read_length == 1){
 				mosq->in_packet.remaining_count++;
 				/* Max 4 bytes length for remaining length as defined by protocol.
@@ -420,18 +413,14 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 		}while((byte & 128) != 0);
 
 		if(mosq->in_packet.remaining_length > 0){
-			mosq->in_packet.payload = malloc(mosq->in_packet.remaining_length*sizeof(uint8_t));
+			mosq->in_packet.payload = _mosquitto_malloc(mosq->in_packet.remaining_length*sizeof(uint8_t));
 			if(!mosq->in_packet.payload) return 1;
 			mosq->in_packet.to_process = mosq->in_packet.remaining_length;
 		}
 		mosq->in_packet.have_remaining = 1;
 	}
 	while(mosq->in_packet.to_process>0){
-#ifndef WIN32
-		read_length = read(mosq->sock, &(mosq->in_packet.payload[mosq->in_packet.pos]), mosq->in_packet.to_process);
-#else
-		read_length = recv(mosq->sock, &(mosq->in_packet.payload[mosq->in_packet.pos]), mosq->in_packet.to_process, 0);
-#endif
+		read_length = _mosquitto_net_read(mosq->sock, &(mosq->in_packet.payload[mosq->in_packet.pos]), mosq->in_packet.to_process);
 		if(read_length > 0){
 			mosq->in_packet.to_process -= read_length;
 			mosq->in_packet.pos += read_length;
@@ -475,11 +464,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 			packet->to_process = packet->remaining_length;
 			packet->pos = 0;
 
-#ifndef WIN32
-			write_length = write(mosq->sock, &packet->command, 1);
-#else
-			write_length = send(mosq->sock, &packet->command, 1, 0);
-#endif
+			write_length = _mosquitto_net_write(mosq->sock, &packet->command, 1);
 			if(write_length == 1){
 				packet->command = 0;
 			}else{
@@ -507,11 +492,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 				if(packet->remaining_length>0){
 					byte = byte | 0x80;
 				}
-#ifndef WIN32
-				write_length = write(mosq->sock, &byte, 1);
-#else
-				write_length = send(mosq->sock, &byte, 1, 0);
-#endif
+				write_length = _mosquitto_net_write(mosq->sock, &byte, 1);
 				if(write_length == 1){
 					packet->remaining_count++;
 					/* Max 4 bytes length for remaining length as defined by protocol. */
@@ -533,11 +514,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 			packet->have_remaining = 1;
 		}
 		while(packet->to_process > 0){
-#ifndef WIN32
-			write_length = write(mosq->sock, &(packet->payload[packet->pos]), packet->to_process);
-#else
-			write_length = send(mosq->sock, &(packet->payload[packet->pos]), packet->to_process, 0);
-#endif
+			write_length = _mosquitto_net_write(mosq->sock, &(packet->payload[packet->pos]), packet->to_process);
 			if(write_length > 0){
 				packet->to_process -= write_length;
 				packet->pos += write_length;
@@ -562,7 +539,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 		/* Free data and reset values */
 		mosq->out_packet = packet->next;
 		_mosquitto_packet_cleanup(packet);
-		free(packet);
+		_mosquitto_free(packet);
 
 		mosq->last_msg_out = time(NULL);
 	}

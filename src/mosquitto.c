@@ -42,6 +42,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 
 #include <mqtt3.h>
+#include <memory_mosq.h>
 
 static int run;
 #ifdef WITH_WRAP
@@ -135,7 +136,7 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 		}
 		if(sock_max+1 > pollfd_count){
 			pollfd_count = sock_max+1;
-			pollfds = mqtt3_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
+			pollfds = _mosquitto_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
 			if(!pollfds){
 				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
 				return 1;
@@ -227,7 +228,7 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 		}
 	}
 
-	if(pollfds) mqtt3_free(pollfds);
+	if(pollfds) _mosquitto_free(pollfds);
 	return 0;
 }
 
@@ -383,7 +384,7 @@ int main(int argc, char *argv[])
 	if(drop_privileges(&config)) return 1;
 
 	context_count = 1;
-	contexts = mqtt3_malloc(sizeof(mqtt3_context*)*context_count);
+	contexts = _mosquitto_malloc(sizeof(mqtt3_context*)*context_count);
 	if(!contexts) return 1;
 	contexts[0] = NULL;
 
@@ -405,7 +406,7 @@ int main(int argc, char *argv[])
 	mqtt3_db_messages_easy_queue("", "$SYS/broker/changeset", 2, strlen(buf), (uint8_t *)buf, 1);
 
 	listener_max = -1;
-	listensock = mqtt3_malloc(sizeof(int)*config.iface_count);
+	listensock = _mosquitto_malloc(sizeof(int)*config.iface_count);
 	for(i=0; i<config.iface_count; i++){
 		if(config.iface[i].iface){
 			listensock[i] = mqtt3_socket_listen_if(config.iface[i].iface, config.iface[i].port);
@@ -413,7 +414,7 @@ int main(int argc, char *argv[])
 			listensock[i] = mqtt3_socket_listen(config.iface[i].port);
 		}
 		if(listensock[i] == -1){
-			mqtt3_free(contexts);
+			_mosquitto_free(contexts);
 			mqtt3_db_close();
 			if(config.pid_file){
 				remove(config.pid_file);
@@ -448,7 +449,7 @@ int main(int argc, char *argv[])
 			mqtt3_context_cleanup(contexts[i]);
 		}
 	}
-	mqtt3_free(contexts);
+	_mosquitto_free(contexts);
 
 	if(listensock){
 		for(i=0; i<config.iface_count; i++){
@@ -456,7 +457,7 @@ int main(int argc, char *argv[])
 				close(listensock[i]);
 			}
 		}
-		mqtt3_free(listensock);
+		_mosquitto_free(listensock);
 	}
 
 	if(config.persistence && config.autosave_interval){

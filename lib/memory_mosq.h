@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2009,2010, Roger Light <roger@atchoo.org>
+Copyright (c) 2010, Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -27,65 +27,16 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <string.h>
-#include <time.h>
+#ifndef _MEMORY_MOSQ_H_
+#define _MEMORY_MOSQ_H_
 
-#include <mosquitto.h>
-#include <memory_mosq.h>
-#include <net_mosq.h>
-#include <send_mosq.h>
-#include <util_mosq.h>
+#include <sys/types.h>
 
-#ifndef WITH_BROKER
-void _mosquitto_check_keepalive(struct mosquitto *mosq)
-{
-	if(mosq && mosq->sock != -1 && time(NULL) - mosq->last_msg_out >= mosq->keepalive){
-		if(mosq->state == mosq_cs_connected){
-			_mosquitto_send_pingreq(mosq);
-		}else{
-			_mosquitto_socket_close(mosq);
-		}
-	}
-}
+void *_mosquitto_calloc(size_t nmemb, size_t size);
+void _mosquitto_free(void *mem);
+void *_mosquitto_malloc(size_t size);
+unsigned long _mosquitto_memory_used(void);
+void *_mosquitto_realloc(void *ptr, size_t size);
+char *_mosquitto_strdup(const char *s);
+
 #endif
-
-/* Convert ////some////over/slashed///topic/etc/etc//
- * into some/over/slashed/topic/etc/etc
- */
-int _mosquitto_fix_sub_topic(char **subtopic)
-{
-	char *fixed = NULL;
-	char *token;
-
-	if(!subtopic || !(*subtopic)) return 1;
-
-	/* size of fixed here is +1 for the terminating 0 and +1 for the spurious /
-	 * that gets appended. */
-	fixed = _mosquitto_calloc(strlen(*subtopic)+2, 1);
-	if(!fixed) return 1;
-
-	if((*subtopic)[0] == '/'){
-		fixed[0] = '/';
-	}
-	token = strtok(*subtopic, "/");
-	while(token){
-		strcat(fixed, token);
-		strcat(fixed, "/");
-		token = strtok(NULL, "/");
-	}
-
-	fixed[strlen(fixed)-1] = '\0';
-	_mosquitto_free(*subtopic);
-	*subtopic = fixed;
-	return 0;
-}
-
-uint16_t _mosquitto_mid_generate(struct mosquitto *mosq)
-{
-	if(!mosq) return 1;
-
-	mosq->last_mid++;
-	if(mosq->last_mid == 0) mosq->last_mid++;
-	
-	return mosq->last_mid;
-}

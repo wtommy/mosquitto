@@ -303,16 +303,6 @@ void mqtt3_context_cleanup(mqtt3_context *context);
 void mqtt3_context_close_duplicate(int sock);
 
 /* ============================================================
- * Memory functions
- * ============================================================ */
-void *mqtt3_calloc(size_t nmemb, size_t size);
-void mqtt3_free(void *mem);
-void *mqtt3_malloc(size_t size);
-uint32_t mqtt3_memory_used(void);
-void *mqtt3_realloc(void *ptr, size_t size);
-char *mqtt3_strdup(const char *s);
-
-/* ============================================================
  * Logging functions
  * ============================================================ */
 int mqtt3_log_init(int level, int destinations);

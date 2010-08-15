@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 #include <net_mosq.h>
 #include <mqtt3.h>
+#include <memory_mosq.h>
 
 int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3_bridge *bridge)
 {
@@ -54,14 +55,14 @@ int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3
 	}
 	if(i==(*context_count)){
 		(*context_count)++;
-		tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*(*context_count));
+		tmp_contexts = _mosquitto_realloc(contexts, sizeof(mqtt3_context*)*(*context_count));
 		if(tmp_contexts){
 			contexts = tmp_contexts;
 			contexts[(*context_count)-1] = new_context;
 		}
 	}
 
-	new_context->id = mqtt3_strdup(bridge->name);
+	new_context->id = _mosquitto_strdup(bridge->name);
 	if(!mqtt3_db_client_insert(new_context, 0, 0, 0, NULL, NULL)){
 		return mqtt3_bridge_connect(new_context);
 	}
@@ -124,7 +125,7 @@ void mqtt3_bridge_packet_cleanup(mqtt3_context *context)
 		_mosquitto_packet_cleanup(context->out_packet);
 		packet = context->out_packet;
 		context->out_packet = context->out_packet->next;
-		mqtt3_free(packet);
+		_mosquitto_free(packet);
 	}
 
 	_mosquitto_packet_cleanup(&(context->in_packet));

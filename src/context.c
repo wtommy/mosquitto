@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <memory_mosq.h>
 
 mqtt3_context *mqtt3_context_init(int sock)
 {
@@ -40,7 +41,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 	socklen_t addrlen;
 	char address[1024];
 
-	context = mqtt3_malloc(sizeof(mqtt3_context));
+	context = _mosquitto_malloc(sizeof(mqtt3_context));
 	if(!context) return NULL;
 	
 	context->connected = false;
@@ -61,7 +62,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context->address = NULL;
 	if(!getpeername(sock, &addr, &addrlen)){
 		if(inet_ntop(AF_INET, &((struct sockaddr_in *)&addr)->sin_addr.s_addr, address, 1024)){
-			context->address = mqtt3_strdup(address);
+			context->address = _mosquitto_strdup(address);
 		}
 	}
 	context->bridge = NULL;
@@ -92,15 +93,15 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 		mqtt3_db_messages_delete(context->id);
 		mqtt3_db_client_delete(context);
 	}
-	if(context->address) mqtt3_free(context->address);
-	if(context->id) mqtt3_free(context->id);
+	if(context->address) _mosquitto_free(context->address);
+	if(context->id) _mosquitto_free(context->id);
 	_mosquitto_packet_cleanup(&(context->in_packet));
 	while(context->out_packet){
 		_mosquitto_packet_cleanup(context->out_packet);
 		packet = context->out_packet;
 		context->out_packet = context->out_packet->next;
-		mqtt3_free(packet);
+		_mosquitto_free(packet);
 	}
-	mqtt3_free(context);
+	_mosquitto_free(context);
 }
 

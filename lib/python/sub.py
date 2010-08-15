@@ -28,7 +28,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import mosquitto
-from ctypes import *
 
 def on_connect(rc):
 	print "rc: ", rc

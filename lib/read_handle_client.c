@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mosquitto.h>
 #include <logging_mosq.h>
+#include <memory_mosq.h>
 #include <net_mosq.h>
 #include <read_handle.h>
 
@@ -75,11 +76,11 @@ int _mosquitto_handle_suback(struct mosquitto *mosq)
 	if(_mosquitto_read_uint16(&mosq->in_packet, &mid)) return 1;
 
 	qos_count = mosq->in_packet.remaining_length - mosq->in_packet.pos;
-	granted_qos = malloc(qos_count*sizeof(uint8_t));
+	granted_qos = _mosquitto_malloc(qos_count*sizeof(uint8_t));
 	if(!granted_qos) return 1;
 	while(mosq->in_packet.pos < mosq->in_packet.remaining_length){
 		if(_mosquitto_read_byte(&mosq->in_packet, &(granted_qos[i]))){
-			free(granted_qos);
+			_mosquitto_free(granted_qos);
 			return 1;
 		}
 		i++;
@@ -87,7 +88,7 @@ int _mosquitto_handle_suback(struct mosquitto *mosq)
 	if(mosq->on_subscribe){
 		mosq->on_subscribe(mosq->obj, mid, qos_count, granted_qos);
 	}
-	free(granted_qos);
+	_mosquitto_free(granted_qos);
 
 	return 0;
 }
