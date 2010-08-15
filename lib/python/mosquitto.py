@@ -167,7 +167,7 @@ class Mosquitto:
 	def log_init(self, priorities, destinations):
 		return self._mosquitto_log_init(self._mosq, priorities, destinations)
 
-	def loop(self, timeout=0):
+	def loop(self, timeout=-1):
 		return self._mosquitto_loop(self._mosq, timeout)
 
 	def subscribe(self, sub, qos):
