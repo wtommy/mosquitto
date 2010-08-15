@@ -131,7 +131,7 @@ void _mosquitto_message_retry_check(struct mosquitto *mosq)
 
 	message = mosq->messages;
 	while(message){
-		if(message->timestamp + mosq->message_retry > now){
+		if(message->timestamp + mosq->message_retry < now){
 			switch(message->state){
 				case mosq_ms_wait_puback:
 				case mosq_ms_wait_pubrec:
