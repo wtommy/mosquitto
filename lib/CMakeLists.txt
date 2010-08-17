@@ -16,7 +16,9 @@ add_library(mosquitto SHARED
 	send_mosq.c send_mosq.h
 	util_mosq.c util_mosq.h)
 
-target_link_libraries(mosquitto ws2_32)
+if (WIN32)
+	target_link_libraries(mosquitto ws2_32)
+endif (WIN32)
 
 install(TARGETS mosquitto RUNTIME DESTINATION ${BINDEST} LIBRARY DESTINATION ${LIBDEST})
 
