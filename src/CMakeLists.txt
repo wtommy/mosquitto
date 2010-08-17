@@ -19,6 +19,8 @@ add_executable(mosquitto
 
 add_definitions (-DWITH_BROKER)
 target_link_libraries(mosquitto sqlite3)
+set_target_properties(mosquitto PROPERTIES
+	VERSION ${VERSION})
 
 install(TARGETS mosquitto RUNTIME DESTINATION ${BINDEST} LIBRARY DESTINATION ${LIBDEST})
 

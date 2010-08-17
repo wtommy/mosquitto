@@ -22,6 +22,8 @@ endif (WIN32)
 
 set_target_properties(libmosquitto PROPERTIES
 	OUTPUT_NAME mosquitto
+	VERSION ${VERSION}
+	SOVERSION 0
 )
 
 install(TARGETS libmosquitto RUNTIME DESTINATION ${BINDEST} LIBRARY DESTINATION ${LIBDEST})

@@ -5,7 +5,10 @@ add_library(mosquittopp SHARED
 	mosquittopp.cpp mosquittopp.h)
 
 target_link_libraries(mosquittopp mosquitto)
-
+set_target_properties(mosquittopp PROPERTIES
+	VERSION ${VERSION}
+	SOVERSION 0
+)
 install(TARGETS mosquittopp RUNTIME DESTINATION ${BINDEST} LIBRARY DESTINATION ${LIBDEST})
 
 if (UNIX)
