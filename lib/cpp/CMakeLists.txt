@@ -1,5 +1,5 @@
 include_directories(${mosquitto_SOURCE_DIR}/lib ${mosquitto_SOURCE_DIR}/lib/cpp)
-link_directories(${mosquitto_SOURCE_DIR}/lib)
+link_directories(${mosquitto_BINARY_DIR}/lib)
 
 add_library(mosquittopp SHARED
 	mosquittopp.cpp mosquittopp.h)
