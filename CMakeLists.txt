@@ -8,6 +8,10 @@ project(mosquitto)
 cmake_minimum_required(VERSION 2.4)
 cmake_policy(SET CMP0003 NEW)
 
+set (VERSION 0.8.2)
+
+add_definitions (-DVERSION=\\\"${VERSION}\\\" -DTIMESTAMP=\\\"\\\")
+
 if (WIN32)
     set (BINDEST .)
     set (LIBDEST .)
@@ -21,3 +25,6 @@ endif (WIN32)
 add_subdirectory(lib)
 add_subdirectory(client)
 
+if (NOT WIN32)
+	add_subdirectory(src)
+endif (NOT WIN32)
