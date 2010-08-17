@@ -9,7 +9,7 @@ cmake_minimum_required(VERSION 2.6)
 
 set (VERSION 0.8.2)
 
-add_definitions (-DVERSION=\\\"${VERSION}\\\" -DTIMESTAMP=\\\"\\\")
+add_definitions (-DVERSION=\"${VERSION}\" -DTIMESTAMP=\"\")
 
 if (WIN32)
     set (BINDEST .)
