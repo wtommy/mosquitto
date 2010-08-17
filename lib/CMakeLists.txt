@@ -5,6 +5,7 @@ link_directories(${mosquitto_SOURCE_DIR}/lib)
 
 add_library(mosquitto SHARED
 	logging_mosq.c logging_mosq.h
+	memory_mosq.c memory_mosq.h
 	messages_mosq.c messages_mosq.h
 	mosquitto.c mosquitto.h
 	mqtt3_protocol.h
