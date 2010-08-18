@@ -17,6 +17,15 @@ add_executable(mosquitto
 	util.c
 	../lib/util_mosq.c ../lib/util_mosq.h)
 
+option(USE_LIBWRAP
+	"Include tcp-wrappers support?" OFF)
+option(INC_DB_UPGRADE
+	"Include database upgrade support? (recommended)" ON)
+option(INC_REGEX
+	"Include topic regex matching support? (recommended)" ON)
+option(INC_MEMTRACK
+	"Include memory tracking support?" ON)
+
 add_definitions (-DWITH_BROKER)
 target_link_libraries(mosquitto sqlite3)
 set_target_properties(mosquitto PROPERTIES
