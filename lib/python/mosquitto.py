@@ -84,6 +84,10 @@ class Mosquitto:
 		self._mosquitto_will_set.argtypes = [c_void_p, c_bool, c_char_p, c_uint32, POINTER(c_uint8), c_int, c_bool]
 		self._mosquitto_will_set.restype = c_int
 
+		self._mosquitto_username_pw_set = self._libmosq.mosquitto_username_pw_set
+		self._mosquitto_username_pw_set.argtypes = [c_void_p, c_char_p, c_char_p]
+		self._mosquitto_username_pw_set.restype = c_int
+
 		self._mosquitto_log_init = self._libmosq.mosquitto_log_init
 		self._mosquitto_log_init.argtypes = [c_void_p, c_int, c_int]
 		self._mosquitto_log_init.restype = c_int
@@ -186,6 +190,9 @@ class Mosquitto:
 
 	def will_set(self, will, topic, payloadlen, payload, qos=0, retain=False):
 		return self._mosquitto_will_set(self._mosq, will, topic, payloadlen, payload, qos, retain)
+
+	def username_pw_set(self, username, password=None)
+		return self._mosquitto_username_pw_set(self._mosq, username, password)
 
 	def _internal_on_connect(self, obj, rc):
 		if self.on_connect:

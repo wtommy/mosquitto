@@ -148,6 +148,20 @@ mosq_EXPORT int mosquitto_will_set(struct mosquitto *mosq, bool will, const char
  * Returns 0 on success, 1 on failure.
  */
 
+mosq_EXPORT int mosquitto_username_pw_set(struct mosquitto *mosq, const char *username, const char *password);
+/* Configure username and password for a mosquitton instance. This is only
+ * supported by brokers that implement the MQTT spec v3.1. By default, no
+ * username or password will be sent.
+ * This must be called before calling mosquitto_connect().
+ *
+ * mosq :     a valid mosquitto instance
+ * username : the username to send. Set to NULL to disable username and
+ *            password.
+ * password : the password to send. Set to NULL when username is valid in order
+ *            to send just a username.
+ *
+ * Returns 0 on success, 1 on failure.
+ */
 
 mosq_EXPORT int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session);
 /* Connect to an MQTT broker.

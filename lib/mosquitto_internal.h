@@ -90,6 +90,8 @@ struct mosquitto {
 	SOCKET sock;
 #endif
 	char *id;
+	char *username;
+	char *password;
 	int keepalive;
 	unsigned int message_retry;
 	time_t last_retry_check;

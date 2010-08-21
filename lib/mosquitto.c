@@ -91,6 +91,8 @@ struct mosquitto *mosquitto_new(const char *id, void *obj)
 		mosq->message_retry = 20;
 		mosq->last_retry_check = 0;
 		mosq->id = _mosquitto_strdup(id);
+		mosq->username = NULL;
+		mosq->password = NULL;
 		mosq->in_packet.payload = NULL;
 		_mosquitto_packet_cleanup(&mosq->in_packet);
 		mosq->out_packet = NULL;
@@ -145,6 +147,39 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 
 	return 0;
 }
+
+int mosquitto_username_pw_set(struct mosquitto *mosq, const char *username, const char *password)
+{
+	if(!mosq) return 1;
+
+	if(username){
+		mosq->username = _mosquitto_strdup(username);
+		if(!mosq->username) return 1;
+		if(mosq->password){
+			_mosquitto_free(mosq->password);
+			mosq->password = NULL;
+		}
+		if(password){
+			mosq->password = _mosquitto_strdup(password);
+			if(!mosq->password){
+				_mosquitto_free(mosq->username);
+				mosq->username = NULL;
+				return 1;
+			}
+		}
+	}else{
+		if(mosq->username){
+			_mosquitto_free(mosq->username);
+			mosq->username = NULL;
+		}
+		if(mosq->password){
+			_mosquitto_free(mosq->password);
+			mosq->password = NULL;
+		}
+	}
+	return 0;
+}
+
 
 void mosquitto_destroy(struct mosquitto *mosq)
 {
