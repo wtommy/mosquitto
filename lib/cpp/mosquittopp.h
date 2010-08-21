@@ -35,7 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <time.h>
 #include <mosquitto.h>
 
-class mosquittopp {
+class mosq_EXPORT mosquittopp {
 	private:
 		struct mosquitto *mosq;
 	public:
