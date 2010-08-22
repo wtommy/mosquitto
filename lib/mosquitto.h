@@ -152,6 +152,7 @@ mosq_EXPORT int mosquitto_username_pw_set(struct mosquitto *mosq, const char *us
 /* Configure username and password for a mosquitton instance. This is only
  * supported by brokers that implement the MQTT spec v3.1. By default, no
  * username or password will be sent.
+ * If username is NULL, the password argument is ignored.
  * This must be called before calling mosquitto_connect().
  *
  * mosq :     a valid mosquitto instance
