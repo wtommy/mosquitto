@@ -43,6 +43,8 @@ POSSIBILITY OF SUCH DAMAGE.
 static char **topics = NULL;
 static int topic_count = 0;
 static int topic_qos = 0;
+static char *username = NULL;
+static char *password = NULL;
 int verbose = 0;
 
 void my_message_callback(void *obj, const struct mosquitto_message *message)
@@ -91,6 +93,7 @@ void print_usage(void)
 {
 	printf("mosquitto_sub is a simple mqtt client that will subscribe to a single topic and print all messages it receives.\n\n");
 	printf("Usage: mosquitto_sub [-c] [-i id] [-k keepalive] [-p port] [-q qos] [-v] -t topic ...\n");
+	printf("                     [-u username [--pw password]]\n");
 	printf("                     [--will-topic [--will-payload payload] [--will-qos qos] [--will-retain]]\n\n");
 	printf(" -c : disable 'clean session' (store subscription and pending messages when client disconnects).\n");
 	printf(" -d : enable debug messages.\n");
@@ -100,7 +103,9 @@ void print_usage(void)
 	printf(" -p : network port to connect to. Defaults to 1883.\n");
 	printf(" -q : quality of service level to use for the subscription. Defaults to 0.\n");
 	printf(" -t : mqtt topic to subscribe to. May be repeated multiple times.\n");
+	printf(" -u : provide a username (requires MQTT 3.1 broker)\n");
 	printf(" -v : print published messages verbosely.\n");
+	printf(" --pw : provide a password (requires MQTT 3.1 broker)\n");
 	printf(" --will-payload : payload for the client Will, which is sent by the broker in case of\n");
 	printf("                  unexpected disconnection. If not given and will-topic is set, a zero\n");
 	printf("                  length message will be sent.\n");
@@ -205,8 +210,26 @@ int main(int argc, char *argv[])
 				topics[topic_count-1] = argv[i+1];
 			}
 			i++;
+		}else if(!strcmp(argv[i], "-u") || !strcmp(argv[i], "--username")){
+			if(i==argc-1){
+				fprintf(stderr, "Error: -u argument given but no username specified.\n\n");
+				print_usage();
+				return 1;
+			}else{
+				username = argv[i+1];
+			}
+			i++;
 		}else if(!strcmp(argv[i], "-v") || !strcmp(argv[i], "--verbose")){
 			verbose = 1;
+		}else if(!strcmp(argv[i], "--pw")){
+			if(i==argc-1){
+				fprintf(stderr, "Error: --pw argument given but no password specified.\n\n");
+				print_usage();
+				return 1;
+			}else{
+				password = argv[i+1];
+			}
+			i++;
 		}else if(!strcmp(argv[i], "--will-payload")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: --will-payload argument given but no will payload specified.\n\n");
@@ -262,6 +285,9 @@ int main(int argc, char *argv[])
 		print_usage();
 		return 1;
 	}
+	if(password && !username){
+		fprintf(stderr, "Warning: Not using password since username not set.\n");
+	}
 	mosquitto_lib_init();
 	mosq = mosquitto_new(id, NULL);
 	if(!mosq){
@@ -274,6 +300,10 @@ int main(int argc, char *argv[])
 	}
 	if(will_topic && mosquitto_will_set(mosq, true, will_topic, will_payloadlen, will_payload, will_qos, will_retain)){
 		fprintf(stderr, "Error: Problem setting will.\n");
+		return 1;
+	}
+	if(username && mosquitto_username_pw_set(mosq, username, password)){
+		fprintf(stderr, "Error: Problem setting username and password.\n");
 		return 1;
 	}
 	mosquitto_connect_callback_set(mosq, my_connect_callback);

@@ -10,7 +10,7 @@
 
 	<refnamediv>
 		<refname>mosquitto_sub</refname>
-		<refpurpose>an mqtt version 3 client for subscribing to topics</refpurpose>
+		<refpurpose>an mqtt version 3.1 client for subscribing to topics</refpurpose>
 	</refnamediv>
 
 	<refsynopsisdiv>
@@ -39,6 +39,16 @@
 			</group>
 			<group choice='opt'>
 				<arg><option>-v</option></arg>
+			</group>
+			<group choice='opt'>
+				<arg>
+					<group choice='plain'>
+						<arg><option>-u</option> <replaceable>username</replaceable></arg>
+					</group>
+					<group choice='opt'>
+						<arg><option>--pw</option> <replaceable>password</replaceable></arg>
+					</group>
+				</arg>
 			</group>
 			<group choice='opt'>
 				<arg>
@@ -125,6 +135,15 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>--pw</option></term>
+				<listitem>
+					<para>Provide a password to be used for authenticating with
+					the broker. Using this argument without also specifying a
+					username is invalid. This requires a broker that supports
+					MQTT v3.1.  See also the --username option.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>-q</option></term>
 				<term><option>--qos</option></term>
 				<listitem>
@@ -144,6 +163,15 @@
 					<citerefentry><refentrytitle>mqtt</refentrytitle><manvolnum>7</manvolnum></citerefentry>
 					for more information on mqtt topics.</para>
 					<para>This option may be repeated to subscribe to multiple topics.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-u</option></term>
+				<term><option>--username</option></term>
+				<listitem>
+					<para>Provide a username to be used for authenticating with
+					the broker. This requires a broker that supports MQTT v3.1.
+					See also the --pw argument.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
