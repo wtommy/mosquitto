@@ -86,14 +86,14 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 	fromhost(&wrap_req);
 	if(!hosts_access(&wrap_req)){
 		/* Access is denied */
-		mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client connection denied access by tcpd.");
+		mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client connection denied access by tcpd.");
 		close(new_sock);
 		return -1;
 	}else{
 #endif
 		new_context = mqtt3_context_init(new_sock);
 		if(!new_context) return -1;
-		mqtt3_log_printf(MQTT3_LOG_NOTICE, "New client connected from %s.", new_context->address);
+		mqtt3_log_printf(MOSQ_LOG_NOTICE, "New client connected from %s.", new_context->address);
 		for(i=0; i<(*context_count); i++){
 			if((*contexts)[i] == NULL){
 				(*contexts)[i] = new_context;
@@ -146,11 +146,11 @@ static int _mqtt3_socket_listen(struct sockaddr *addr)
 
 	if(!addr) return -1;
 
-	mqtt3_log_printf(MQTT3_LOG_INFO, "Opening listen socket on port %d.", ntohs(((struct sockaddr_in *)addr)->sin_port));
+	mqtt3_log_printf(MOSQ_LOG_INFO, "Opening listen socket on port %d.", ntohs(((struct sockaddr_in *)addr)->sin_port));
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock == -1){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", strerror(errno));
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
 		return -1;
 	}
 
@@ -162,13 +162,13 @@ static int _mqtt3_socket_listen(struct sockaddr *addr)
 	if(fcntl(sock, F_SETFL, opt | O_NONBLOCK) < 0) return -1;
 
 	if(bind(sock, addr, sizeof(struct sockaddr_in)) == -1){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", strerror(errno));
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
 		close(sock);
 		return -1;
 	}
 
 	if(listen(sock, 100) == -1){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", strerror(errno));
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
 		close(sock);
 		return -1;
 	}

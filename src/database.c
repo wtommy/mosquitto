@@ -156,7 +156,7 @@ int mqtt3_db_open(mqtt3_config *config)
 	}
 
 	if(sqlite3_open_v2(":memory:", &db, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", sqlite3_errmsg(db));
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", sqlite3_errmsg(db));
 		return 1;
 	}
 
@@ -179,16 +179,16 @@ int mqtt3_db_open(mqtt3_config *config)
 				if(_mqtt3_db_version_check()){
 #if defined(WITH_BROKER) && defined(WITH_DB_UPGRADE)
 					if(_mqtt3_db_upgrade()){
-						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to upgrade database.");
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to upgrade database.");
 						return 1;
 					}
 #else
-					mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid database version.");
+					mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid database version.");
 					return 1;
 #endif
 				}
 			}else{
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Couldn't restore database %s (%d).", db_filepath, dbrc);
+				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Couldn't restore database %s (%d).", db_filepath, dbrc);
 				return 1;
 			}
 			sqlite3_close(restore_db);
@@ -199,19 +199,19 @@ int mqtt3_db_open(mqtt3_config *config)
 					case ENOENT:
 						/* File doesn't exist - ok to create */
 						if(_mqtt3_db_tables_create()){
-							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to populate new database. Try restarting mosquitto.");
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to populate new database. Try restarting mosquitto.");
 							return 1;
 						}
 						break;
 					case EACCES:
-						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Permission denied trying to restore persistent database %s.", db_filepath);
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Permission denied trying to restore persistent database %s.", db_filepath);
 						return 1;
 					default:
-						mqtt3_log_printf(MQTT3_LOG_ERR, "%s", strerror(errno));
+						mqtt3_log_printf(MOSQ_LOG_ERR, "%s", strerror(errno));
 						return 1;
 				}
 			}else{
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Possibly corrupt database file. Try restarting mosquitto.");
+				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Possibly corrupt database file. Try restarting mosquitto.");
 				fclose(fptr);
 			}
 		}
@@ -221,7 +221,7 @@ int mqtt3_db_open(mqtt3_config *config)
 	sqlite3_enable_load_extension(db, 1);
 	if(sqlite3_load_extension(db, config->ext_sqlite_regex, NULL, &errmsg) != SQLITE_OK){
 		if(errmsg){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", errmsg);
 			sqlite3_free(errmsg);
 		}
 		return 1;
@@ -254,12 +254,12 @@ int mqtt3_db_backup(bool cleanup)
 	sqlite3_backup *backup;
 
 	if(!db || !db_filepath) return 1;
-	mqtt3_log_printf(MQTT3_LOG_INFO, "Saving in-memory database to %s.", db_filepath);
+	mqtt3_log_printf(MOSQ_LOG_INFO, "Saving in-memory database to %s.", db_filepath);
 	if(cleanup){
 		mqtt3_db_store_clean();
 	}
 	if(sqlite3_open(db_filepath, &backup_db) != SQLITE_OK){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to open on-disk database for writing.");
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to open on-disk database for writing.");
 		return 1;
 	}
 	backup = sqlite3_backup_init(backup_db, "main", db, "main");
@@ -267,7 +267,7 @@ int mqtt3_db_backup(bool cleanup)
 		sqlite3_backup_step(backup, -1);
 		sqlite3_backup_finish(backup);
 	}else{
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to save in-memory database to disk.");
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to save in-memory database to disk.");
 		rc = 1;
 	}
 	if(cleanup){
@@ -435,7 +435,7 @@ static int _mqtt3_db_upgrade(void)
 		}
 		switch(version){
 			case 0:
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Upgrading from DB version 0 not supported.");
+				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Upgrading from DB version 0 not supported.");
 				return 1;
 			case 1:
 				if(_mqtt3_db_upgrade_1_2()){
@@ -464,10 +464,10 @@ static int _mqtt3_db_upgrade_1_2(void)
 	old_db = db;
 	db = NULL;
 	
-	mqtt3_log_printf(MQTT3_LOG_NOTICE, "Upgrading database from version 1 to 2.");
+	mqtt3_log_printf(MOSQ_LOG_NOTICE, "Upgrading database from version 1 to 2.");
 
 	if(sqlite3_open_v2(":memory:", &db, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", sqlite3_errmsg(db));
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", sqlite3_errmsg(db));
 		db = old_db;
 		return 1;
 	}
@@ -653,7 +653,7 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 			/* Client is reconnecting after a disconnect */
 		}else if(oldsock != context->sock){
 			/* Client is already connected, disconnect old version */
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Client %s already connected, closing old connection.", context->id);
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Client %s already connected, closing old connection.", context->id);
 #ifdef WITH_BROKER
 			mqtt3_context_close_duplicate(oldsock);
 #else
@@ -896,7 +896,7 @@ static int _mqtt3_db_cleanup(void)
 		}
 		sqlite3_free(query);
 		if(errmsg){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", errmsg);
 			sqlite3_free(errmsg);
 		}
 	}else{
@@ -911,7 +911,7 @@ static int _mqtt3_db_cleanup(void)
 		}
 		sqlite3_free(query);
 		if(errmsg){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", errmsg);
 			sqlite3_free(errmsg);
 		}
 	}else{
@@ -926,7 +926,7 @@ static int _mqtt3_db_cleanup(void)
 		}
 		sqlite3_free(query);
 		if(errmsg){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", errmsg);
 			sqlite3_free(errmsg);
 		}
 	}else{
@@ -941,7 +941,7 @@ static int _mqtt3_db_cleanup(void)
 		}
 		sqlite3_free(query);
 		if(errmsg){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", errmsg);
 			sqlite3_free(errmsg);
 		}
 	}else{

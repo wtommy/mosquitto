@@ -75,13 +75,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MQTT3_LOG_TOPIC 0x10
 #define MQTT3_LOG_ALL 0xFF
 
-/* Log types */
-#define MQTT3_LOG_INFO 0x01
-#define MQTT3_LOG_NOTICE 0x02
-#define MQTT3_LOG_WARNING 0x04
-#define MQTT3_LOG_ERR 0x08
-#define MQTT3_LOG_DEBUG 0x10
-
 enum mqtt3_bridge_direction{
 	bd_out = 0,
 	bd_in = 1,

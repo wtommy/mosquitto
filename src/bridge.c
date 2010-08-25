@@ -87,10 +87,10 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 	context->in_packet.payload = NULL;
 	mqtt3_bridge_packet_cleanup(context);
 
-	mqtt3_log_printf(MQTT3_LOG_NOTICE, "Connecting bridge %s", context->bridge->name);
+	mqtt3_log_printf(MOSQ_LOG_NOTICE, "Connecting bridge %s", context->bridge->name);
 	new_sock = _mosquitto_socket_connect(context->bridge->address, context->bridge->port);
 	if(new_sock == -1){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error creating bridge.");
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error creating bridge.");
 		return 1;
 	}
 
