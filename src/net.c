@@ -128,9 +128,8 @@ int mqtt3_socket_close(mqtt3_context *context)
 		if(context->core.id){
 			mqtt3_db_client_invalidate_socket(context->core.id, context->core.sock);
 		}
-		rc = close(context->core.sock);
-		context->core.sock = -1;
 	}
+	rc = _mosquitto_socket_close(&context->core);
 
 	return rc;
 }

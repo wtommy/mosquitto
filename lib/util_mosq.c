@@ -43,7 +43,7 @@ void _mosquitto_check_keepalive(struct mosquitto *mosq)
 		if(mosq->core.state == mosq_cs_connected){
 			_mosquitto_send_pingreq(mosq);
 		}else{
-			_mosquitto_socket_close(mosq);
+			_mosquitto_socket_close(&mosq->core);
 		}
 	}
 }

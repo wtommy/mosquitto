@@ -335,7 +335,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	}else{
 		if(FD_ISSET(mosq->core.sock, &readfds)){
 			if(mosquitto_loop_read(mosq)){
-				_mosquitto_socket_close(mosq);
+				_mosquitto_socket_close(&mosq->core);
 				if(mosq->core.state == mosq_cs_disconnecting){
 					if(mosq->on_disconnect){
 						mosq->on_disconnect(mosq->obj);
@@ -349,7 +349,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 		}
 		if(FD_ISSET(mosq->core.sock, &writefds)){
 			if(mosquitto_loop_write(mosq)){
-				_mosquitto_socket_close(mosq);
+				_mosquitto_socket_close(&mosq->core);
 				if(mosq->core.state == mosq_cs_disconnecting){
 					if(mosq->on_disconnect){
 						mosq->on_disconnect(mosq->obj);
