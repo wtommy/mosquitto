@@ -401,7 +401,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 		/* FIXME - check command and fill in expected length if we know it.
 		 * This means we can check the client is sending valid data some times.
 		 */
-		read_length = _mosquitto_net_read(mosq->core.sock, &byte, 1);
+		read_length = _mosquitto_net_read(&mosq->core, &byte, 1);
 		if(read_length == 1){
 			mosq->core.in_packet.command = byte;
 		}else{
@@ -423,7 +423,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 		 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
 		 */
 		do{
-			read_length = _mosquitto_net_read(mosq->core.sock, &byte, 1);
+			read_length = _mosquitto_net_read(&mosq->core, &byte, 1);
 			if(read_length == 1){
 				mosq->core.in_packet.remaining_count++;
 				/* Max 4 bytes length for remaining length as defined by protocol.
@@ -455,7 +455,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 		mosq->core.in_packet.have_remaining = 1;
 	}
 	while(mosq->core.in_packet.to_process>0){
-		read_length = _mosquitto_net_read(mosq->core.sock, &(mosq->core.in_packet.payload[mosq->core.in_packet.pos]), mosq->core.in_packet.to_process);
+		read_length = _mosquitto_net_read(&mosq->core, &(mosq->core.in_packet.payload[mosq->core.in_packet.pos]), mosq->core.in_packet.to_process);
 		if(read_length > 0){
 			mosq->core.in_packet.to_process -= read_length;
 			mosq->core.in_packet.pos += read_length;
@@ -499,7 +499,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 			packet->to_process = packet->remaining_length;
 			packet->pos = 0;
 
-			write_length = _mosquitto_net_write(mosq->core.sock, &packet->command, 1);
+			write_length = _mosquitto_net_write(&mosq->core, &packet->command, 1);
 			if(write_length == 1){
 				packet->command = 0;
 			}else{
@@ -527,7 +527,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 				if(packet->remaining_length>0){
 					byte = byte | 0x80;
 				}
-				write_length = _mosquitto_net_write(mosq->core.sock, &byte, 1);
+				write_length = _mosquitto_net_write(&mosq->core, &byte, 1);
 				if(write_length == 1){
 					packet->remaining_count++;
 					/* Max 4 bytes length for remaining length as defined by protocol. */
@@ -549,7 +549,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 			packet->have_remaining = 1;
 		}
 		while(packet->to_process > 0){
-			write_length = _mosquitto_net_write(mosq->core.sock, &(packet->payload[packet->pos]), packet->to_process);
+			write_length = _mosquitto_net_write(&mosq->core, &(packet->payload[packet->pos]), packet->to_process);
 			if(write_length > 0){
 				packet->to_process -= write_length;
 				packet->pos += write_length;

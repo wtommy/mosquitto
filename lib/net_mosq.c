@@ -253,21 +253,21 @@ int _mosquitto_write_uint16(struct _mosquitto_packet *packet, uint16_t word)
 	return 0;
 }
 
-ssize_t _mosquitto_net_read(int fd, void *buf, size_t count)
+ssize_t _mosquitto_net_read(struct _mosquitto_core *core, void *buf, size_t count)
 {
 #ifndef WIN32
-	return read(fd, buf, count);
+	return read(core->sock, buf, count);
 #else
-	return recv(fd, buf, count, 0);
+	return recv(core->sock, buf, count, 0);
 #endif
 }
 
-ssize_t _mosquitto_net_write(int fd, void *buf, size_t count)
+ssize_t _mosquitto_net_write(struct _mosquitto_core *core, void *buf, size_t count)
 {
 #ifndef WIN32
-	return write(fd, buf, count);
+	return write(core->sock, buf, count);
 #else
-	return send(fd, buf, count, 0);
+	return send(core->sock, buf, count, 0);
 #endif
 }
 

@@ -265,7 +265,7 @@ int mqtt3_net_read(mqtt3_context *context)
 		/* FIXME - check command and fill in expected length if we know it.
 		 * This means we can check the client is sending valid data some times.
 		 */
-		read_length = read(context->core.sock, &byte, 1);
+		read_length = _mosquitto_net_read(&context->core, &byte, 1);
 		if(read_length == 1){
 			bytes_received++;
 			context->core.in_packet.command = byte;
@@ -288,7 +288,7 @@ int mqtt3_net_read(mqtt3_context *context)
 		 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
 		 */
 		do{
-			read_length = read(context->core.sock, &byte, 1);
+			read_length = _mosquitto_net_read(&context->core, &byte, 1);
 			if(read_length == 1){
 				context->core.in_packet.remaining_count++;
 				/* Max 4 bytes length for remaining length as defined by protocol.
@@ -317,7 +317,7 @@ int mqtt3_net_read(mqtt3_context *context)
 		context->core.in_packet.have_remaining = 1;
 	}
 	while(context->core.in_packet.to_process>0){
-		read_length = read(context->core.sock, &(context->core.in_packet.payload[context->core.in_packet.pos]), context->core.in_packet.to_process);
+		read_length = _mosquitto_net_read(&context->core, &(context->core.in_packet.payload[context->core.in_packet.pos]), context->core.in_packet.to_process);
 		if(read_length > 0){
 			bytes_received += read_length;
 			context->core.in_packet.to_process -= read_length;
@@ -359,7 +359,7 @@ int mqtt3_net_write(mqtt3_context *context)
 			packet->to_process = packet->remaining_length;
 			packet->pos = 0;
 
-			write_length = write(context->core.sock, &packet->command, 1);
+			write_length = _mosquitto_net_write(&context->core, &packet->command, 1);
 			if(write_length == 1){
 				bytes_sent++;
 				packet->command = 0;
@@ -384,7 +384,7 @@ int mqtt3_net_write(mqtt3_context *context)
 				if(packet->remaining_length>0){
 					byte = byte | 0x80;
 				}
-				write_length = write(context->core.sock, &byte, 1);
+				write_length = _mosquitto_net_write(&context->core, &byte, 1);
 				if(write_length == 1){
 					packet->remaining_count++;
 					/* Max 4 bytes length for remaining length as defined by protocol. */
@@ -403,7 +403,7 @@ int mqtt3_net_write(mqtt3_context *context)
 			packet->have_remaining = 1;
 		}
 		while(packet->to_process > 0){
-			write_length = write(context->core.sock, &(packet->payload[packet->pos]), packet->to_process);
+			write_length = _mosquitto_net_write(&context->core, &(packet->payload[packet->pos]), packet->to_process);
 			if(write_length > 0){
 				bytes_sent += write_length;
 				packet->to_process -= write_length;
