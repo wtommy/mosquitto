@@ -40,6 +40,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 
 #include <mqtt3.h>
+#include <mqtt3_protocol.h>
 #include <memory_mosq.h>
 
 static uint64_t bytes_received = 0;

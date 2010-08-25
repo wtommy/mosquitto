@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <mqtt3_protocol.h>
 #include <memory_mosq.h>
 #include <util_mosq.h>
 

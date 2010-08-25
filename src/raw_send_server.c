@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <mqtt3_protocol.h>
 #include <memory_mosq.h>
 
 int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)

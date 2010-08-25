@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 #include <mqtt3.h>
+#include <mqtt3_protocol.h>
 
 /* Convert mqtt command (as defined in mqtt3.h) to corresponding string. */
 const char *mqtt3_command_to_string(uint8_t command)
