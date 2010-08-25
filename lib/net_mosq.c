@@ -255,19 +255,42 @@ int _mosquitto_write_uint16(struct _mosquitto_packet *packet, uint16_t word)
 
 ssize_t _mosquitto_net_read(struct _mosquitto_core *core, void *buf, size_t count)
 {
+#ifdef WITH_SSL
+	if(core->ssl){
+		return (ssize_t )SSL_read(core->ssl, buf, count);
+	}else{
+		/* Call normal read/recv */
+
+#endif
+
 #ifndef WIN32
 	return read(core->sock, buf, count);
 #else
 	return recv(core->sock, buf, count, 0);
 #endif
+
+#ifdef WITH_SSL
+	}
+#endif
 }
 
 ssize_t _mosquitto_net_write(struct _mosquitto_core *core, void *buf, size_t count)
 {
+#ifdef WITH_SSL
+	if(core->ssl){
+		return (ssize_t )SSL_write(core->ssl, buf, count);
+	}else{
+		/* Call normal write/send */
+#endif
+
 #ifndef WIN32
 	return write(core->sock, buf, count);
 #else
 	return send(core->sock, buf, count, 0);
+#endif
+
+#ifdef WITH_SSL
+	}
 #endif
 }
 
