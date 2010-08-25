@@ -58,7 +58,7 @@ int mqtt3_handle_connack(mqtt3_context *context)
 					}
 				}
 			}
-			context->connected = true;
+			context->state = mosq_cs_connected;
 			return 0;
 		case 1:
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Connection Refused: unacceptable protocol version");

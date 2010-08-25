@@ -270,7 +270,7 @@ int mqtt3_net_read(mqtt3_context *context)
 			context->in_packet.command = byte;
 #ifdef WITH_BROKER
 			/* Clients must send CONNECT as their first command. */
-			if(!(context->bridge) && context->connected == false && (byte&0xF0) != CONNECT) return 1;
+			if(!(context->bridge) && context->state == mosq_cs_new && (byte&0xF0) != CONNECT) return 1;
 #endif
 		}else{
 			if(read_length == 0) return 1; /* EOF */

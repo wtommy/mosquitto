@@ -76,8 +76,7 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 
 	if(!context || !context->bridge) return 1;
 
-	context->connected = false;
-	context->disconnecting = false;
+	context->state = mosq_cs_new;
 	context->duplicate = false;
 	context->sock = -1;
 	context->last_msg_in = time(NULL);
@@ -96,8 +95,6 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 
 	context->sock = new_sock;
 
-	context->connected = false;
-	context->disconnecting = false;
 	context->last_msg_in = time(NULL);
 	mqtt3_db_client_update(context, 0, 0, 0, NULL, NULL);
 	if(mqtt3_raw_connect(context, context->id,

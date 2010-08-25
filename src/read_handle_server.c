@@ -44,7 +44,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	uint8_t will, will_retain, will_qos, clean_session;
 	
 	/* Don't accept multiple CONNECT commands. */
-	if(context->connected) return 1;
+	if(context->state != mosq_cs_new) return 1;
 
 	if(_mosquitto_read_string(&context->in_packet, &protocol_name)) return 1;
 	if(!protocol_name){
@@ -93,7 +93,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	if(will_topic) _mosquitto_free(will_topic);
 	if(will_message) _mosquitto_free(will_message);
 
-	context->connected = true;
+	context->state = mosq_cs_connected;
 	return mqtt3_raw_connack(context, 0);
 }
 
@@ -103,7 +103,7 @@ int mqtt3_handle_disconnect(mqtt3_context *context)
 		return 1;
 	}
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received DISCONNECT from %s", context->id);
-	context->disconnecting = true;
+	context->state = mosq_cs_disconnecting;
 	return mqtt3_socket_close(context);
 }
 

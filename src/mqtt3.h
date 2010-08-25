@@ -103,8 +103,7 @@ typedef struct _mqtt3_context{
 	time_t last_msg_out;
 	uint16_t keepalive;
 	bool clean_session;
-	bool connected;
-	bool disconnecting;
+	enum mosquitto_client_state state;
 	bool duplicate;
 	char *id;
 	char *address;

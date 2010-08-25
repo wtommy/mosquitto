@@ -243,7 +243,7 @@ static void loop_handle_errors(void)
 	for(i=0; i<context_count; i++){
 		if(contexts[i] && fstat(contexts[i]->sock, &statbuf) == -1){
 			if(errno == EBADF){
-				if(!contexts[i]->disconnecting){
+				if(contexts[i]->state != mosq_cs_disconnecting){
 					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket error on client %s, disconnecting.", contexts[i]->id);
 					mqtt3_db_client_will_queue(contexts[i]);
 				}else{
@@ -268,7 +268,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 		if(contexts[i] && contexts[i]->sock != -1){
 			if(pollfds[contexts[i]->sock].revents & POLLOUT){
 				if(mqtt3_net_write(contexts[i])){
-					if(!contexts[i]->disconnecting){
+					if(contexts[i]->state != mosq_cs_disconnecting){
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket write error on client %s, disconnecting.", contexts[i]->id);
 						mqtt3_db_client_will_queue(contexts[i]);
 					}else{
@@ -288,7 +288,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 		if(contexts[i] && contexts[i]->sock != -1){
 			if(pollfds[contexts[i]->sock].revents & POLLIN){
 				if(mqtt3_net_read(contexts[i])){
-					if(!contexts[i]->disconnecting){
+					if(contexts[i]->state != mosq_cs_disconnecting){
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket read error on client %s, disconnecting.", contexts[i]->id);
 						mqtt3_db_client_will_queue(contexts[i]);
 					}else{

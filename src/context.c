@@ -44,8 +44,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context = _mosquitto_malloc(sizeof(mqtt3_context));
 	if(!context) return NULL;
 	
-	context->connected = false;
-	context->disconnecting = false;
+	context->state = mosq_cs_new;
 	context->duplicate = false;
 	context->sock = sock;
 	context->last_msg_in = time(NULL);
