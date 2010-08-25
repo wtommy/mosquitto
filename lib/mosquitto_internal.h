@@ -30,6 +30,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef _MOSQUITTO_INTERNAL_H_
 #define _MOSQUITTO_INTERNAL_H_
 
+#include <config.h>
+
+#ifdef WITH_SSL
+#include <openssl/ssl.h>
+#endif
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -98,6 +103,9 @@ struct _mosquitto_core
 	time_t last_msg_out;
 	struct _mosquitto_packet in_packet;
 	struct _mosquitto_packet *out_packet;
+#ifdef WITH_SSL
+	SSL *ssl;
+#endif
 };
 
 struct mosquitto {

@@ -1,5 +1,5 @@
 include_directories(${mosquitto_SOURCE_DIR} ${mosquitto_SOURCE_DIR}/src
-		${mosquitto_SOURCE_DIR}/lib)
+		${mosquitto_SOURCE_DIR}/lib ${OPENSSL_INCLUDE_DIR})
 
 add_executable(mosquitto 
 	bridge.c
@@ -27,7 +27,7 @@ option(INC_MEMTRACK
 	"Include memory tracking support?" ON)
 
 add_definitions (-DWITH_BROKER)
-target_link_libraries(mosquitto sqlite3)
+target_link_libraries(mosquitto sqlite3 ${OPENSSL_LIBRARIES})
 set_target_properties(mosquitto PROPERTIES
 	VERSION ${VERSION})
 

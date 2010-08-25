@@ -109,6 +109,9 @@ struct mosquitto *mosquitto_new(const char *id, void *obj)
 		mosq->on_unsubscribe = NULL;
 		mosq->log_destinations = MOSQ_LOG_NONE;
 		mosq->log_priorities = MOSQ_LOG_ERR | MOSQ_LOG_WARNING | MOSQ_LOG_NOTICE | MOSQ_LOG_INFO;
+#ifdef WITH_SSL
+		mosq->core.ssl = NULL;
+#endif
 	}
 	return mosq;
 }

@@ -1,6 +1,7 @@
 add_subdirectory(cpp)
 
-include_directories(${mosquitto_SOURCE_DIR} ${mosquitto_SOURCE_DIR}/lib)
+include_directories(${mosquitto_SOURCE_DIR} ${mosquitto_SOURCE_DIR}/lib
+		${OPENSSL_INCLUDE_DIR})
 link_directories(${mosquitto_SOURCE_DIR}/lib)
 
 add_library(libmosquitto SHARED
@@ -17,7 +18,9 @@ add_library(libmosquitto SHARED
 	util_mosq.c util_mosq.h)
 
 if (WIN32)
-	target_link_libraries(libmosquitto ws2_32)
+	target_link_libraries(libmosquitto ws2_32 ${OPENSSL_LIBRARIES})
+else (WIN32)
+	target_link_libraries(libmosquitto ${OPENSSL_LIBRARIES})
 endif (WIN32)
 
 set_target_properties(libmosquitto PROPERTIES
