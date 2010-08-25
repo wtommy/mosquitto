@@ -636,7 +636,7 @@ static void _mqtt3_db_statements_finalize(sqlite3 *fdb)
  * If will=1 then a will will be stored for the client. In this case,
  * will_topic and will_message must not be NULL otherwise this will return
  * failure.
- * Returns 1 on failure (context or context->id is NULL, sqlite error)
+ * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
  * Returns 0 on success.
  */
 int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
@@ -645,15 +645,15 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 	int rc = 0;
 	int oldsock;
 
-	if(!context || !context->id) return 1;
+	if(!context || !context->core.id) return 1;
 	if(will && (!will_topic || !will_message)) return 1;
 
-	if(!mqtt3_db_client_find_socket(context->id, &oldsock)){
+	if(!mqtt3_db_client_find_socket(context->core.id, &oldsock)){
 		if(oldsock == -1){
 			/* Client is reconnecting after a disconnect */
-		}else if(oldsock != context->sock){
+		}else if(oldsock != context->core.sock){
 			/* Client is already connected, disconnect old version */
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Client %s already connected, closing old connection.", context->id);
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Client %s already connected, closing old connection.", context->core.id);
 #ifdef WITH_BROKER
 			mqtt3_context_close_duplicate(oldsock);
 #else
@@ -671,8 +671,8 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 				return 1;
 			}
 		}
-		if(sqlite3_bind_int(stmt, 1, context->sock) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_text(stmt, 2, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt, 1, context->core.sock) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt, 2, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(stmt, 3, context->clean_session) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(stmt, 4, will) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(stmt, 5, will_retain) != SQLITE_OK) rc = 1;
@@ -702,7 +702,7 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
  * If will=1 then a will will be stored for the client. In this case,
  * will_topic and will_message must not be NULL otherwise this will return
  * failure.
- * Returns 1 on failure (context or context->id is NULL, sqlite error)
+ * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
  * Returns 0 on success.
  */
 int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
@@ -710,7 +710,7 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 
-	if(!context || !context->id) return 1;
+	if(!context || !context->core.id) return 1;
 	if(will && (!will_topic || !will_message)) return 1;
 
 	if(!stmt){
@@ -721,7 +721,7 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 			return 1;
 		}
 	}
-	if(sqlite3_bind_int(stmt, 1, context->sock) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 1, context->core.sock) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 2, context->clean_session) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 3, will) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 4, will_retain) != SQLITE_OK) rc = 1;
@@ -736,7 +736,7 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 	}else{
 		if(sqlite3_bind_text(stmt, 7, "", 0, SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	}
-	if(sqlite3_bind_text(stmt, 8, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 8, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -745,7 +745,7 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 }
 
 /* Called on client death to add a will to the message queue if the will exists.
- * Returns 1 on failure (context or context->id is NULL, sqlite error)
+ * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
  * Returns 0 on success (will queued or will not found)
  */
 int mqtt3_db_client_will_queue(mqtt3_context *context)
@@ -759,7 +759,7 @@ int mqtt3_db_client_will_queue(mqtt3_context *context)
 	int retain;
 	int will;
 
-	if(!context || !context->id) return 1;
+	if(!context || !context->core.id) return 1;
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("SELECT will,will_topic,will_qos,will_message,will_retain FROM clients WHERE id=?");
@@ -767,7 +767,7 @@ int mqtt3_db_client_will_queue(mqtt3_context *context)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 1, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	dbrc = sqlite3_step(stmt);
 	if(dbrc == SQLITE_ROW){
 		will = sqlite3_column_int(stmt, 0);
@@ -781,7 +781,7 @@ int mqtt3_db_client_will_queue(mqtt3_context *context)
 		payload = sqlite3_column_text(stmt, 3);
 		retain = sqlite3_column_int(stmt, 4);
 		if(!rc){
-			if(mqtt3_db_messages_easy_queue(context->id, topic, qos, strlen((const char *)payload), payload, retain)) rc = 1;
+			if(mqtt3_db_messages_easy_queue(context->core.id, topic, qos, strlen((const char *)payload), payload, retain)) rc = 1;
 		}
 	}else if(dbrc != SQLITE_DONE){
 		rc = 1;
@@ -822,7 +822,7 @@ int mqtt3_db_client_count(int *count)
 
 /* Delete a client from the database.
  * Called when clients with clean start enabled disconnect.
- * Returns 1 on failure (context or context->id is NULL, sqlite error)
+ * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
  * Returns 0 on success.
  */
 int mqtt3_db_client_delete(mqtt3_context *context)
@@ -830,7 +830,7 @@ int mqtt3_db_client_delete(mqtt3_context *context)
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 
-	if(!context || !(context->id)) return 1;
+	if(!context || !(context->core.id)) return 1;
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("DELETE FROM clients WHERE id=?");
@@ -838,7 +838,7 @@ int mqtt3_db_client_delete(mqtt3_context *context)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 1, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -1368,7 +1368,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	uint32_t payloadlen;
 	const uint8_t *payload;
 
-	if(!context || !context->id || context->sock == -1) return 1;
+	if(!context || !context->core.id || context->core.sock == -1) return 1;
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("SELECT messages.OID,messages.status,messages.mid,"
@@ -1381,7 +1381,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 1, context->id, strlen(context->id), SQLITE_STATIC) == SQLITE_OK){
+	if(sqlite3_bind_text(stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) == SQLITE_OK){
 		_mqtt3_db_transaction_begin();
 		while(sqlite3_step(stmt) == SQLITE_ROW){
 			OID = sqlite3_column_int64(stmt, 0);
@@ -1406,25 +1406,25 @@ int mqtt3_db_message_write(mqtt3_context *context)
 
 				case ms_publish_puback:
 					if(!mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload)){
-						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_puback);
+						mqtt3_db_message_update(context->core.id, mid, mosq_md_out, ms_wait_puback);
 					}
 					break;
 
 				case ms_publish_pubrec:
 					if(!mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload)){
-						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_pubrec);
+						mqtt3_db_message_update(context->core.id, mid, mosq_md_out, ms_wait_pubrec);
 					}
 					break;
 				
 				case ms_resend_pubrel:
 					if(!mqtt3_raw_pubrel(context, mid)){
-						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_pubrel);
+						mqtt3_db_message_update(context->core.id, mid, mosq_md_out, ms_wait_pubrel);
 					}
 					break;
 
 				case ms_resend_pubcomp:
 					if(!mqtt3_raw_pubcomp(context, mid)){
-						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_pubcomp);
+						mqtt3_db_message_update(context->core.id, mid, mosq_md_out, ms_wait_pubcomp);
 					}
 					break;
 			}
@@ -1766,19 +1766,19 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 
 		if(qos > sub_qos) qos = sub_qos;
 		if(qos > 0){
-			mid = mqtt3_db_mid_generate(context->id);
+			mid = mqtt3_db_mid_generate(context->core.id);
 		}else{
 			mid = 0;
 		}
 		switch(qos){
 			case 0:
-				if(mqtt3_db_message_insert(context->id, mid, mosq_md_out, ms_publish, qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(context->core.id, mid, mosq_md_out, ms_publish, qos, store_id) == 1) rc = 1;
 				break;
 			case 1:
-				if(mqtt3_db_message_insert(context->id, mid, mosq_md_out, ms_publish_puback, qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(context->core.id, mid, mosq_md_out, ms_publish_puback, qos, store_id) == 1) rc = 1;
 				break;
 			case 2:
-				if(mqtt3_db_message_insert(context->id, mid, mosq_md_out, ms_publish_pubrec, qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(context->core.id, mid, mosq_md_out, ms_publish_pubrec, qos, store_id) == 1) rc = 1;
 				break;
 		}
 	}

@@ -122,8 +122,8 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 		if(new_clients){
 			client_max = -1;
 			for(i=0; i<context_count; i++){
-				if(contexts[i] && contexts[i]->sock != -1 && contexts[i]->sock > sock_max){
-					client_max = contexts[i]->sock;
+				if(contexts[i] && contexts[i]->core.sock != -1 && contexts[i]->core.sock > sock_max){
+					client_max = contexts[i]->core.sock;
 				}
 			}
 			new_clients = 0;
@@ -154,22 +154,22 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 		now = time(NULL);
 		for(i=0; i<context_count; i++){
 			if(contexts[i]){
-				if(contexts[i]->sock != -1){
+				if(contexts[i]->core.sock != -1){
 					if(contexts[i]->bridge){
 						mqtt3_check_keepalive(contexts[i]);
 					}
-					if(!(contexts[i]->keepalive) || now - contexts[i]->last_msg_in < contexts[i]->keepalive*3/2){
+					if(!(contexts[i]->core.keepalive) || now - contexts[i]->core.last_msg_in < contexts[i]->core.keepalive*3/2){
 						if(mqtt3_db_message_write(contexts[i])){
 							// FIXME - do something here.
 						}
-						pollfds[contexts[i]->sock].fd = contexts[i]->sock;
-						pollfds[contexts[i]->sock].events = POLLIN | POLLPRI;
-						pollfds[contexts[i]->sock].revents = 0;
-						if(contexts[i]->out_packet){
-							pollfds[contexts[i]->sock].events |= POLLOUT;
+						pollfds[contexts[i]->core.sock].fd = contexts[i]->core.sock;
+						pollfds[contexts[i]->core.sock].events = POLLIN | POLLPRI;
+						pollfds[contexts[i]->core.sock].revents = 0;
+						if(contexts[i]->core.out_packet){
+							pollfds[contexts[i]->core.sock].events |= POLLOUT;
 						}
 					}else{
-						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", contexts[i]->id);
+						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", contexts[i]->core.id);
 						/* Client has exceeded keepalive*1.5 */
 						mqtt3_db_client_will_queue(contexts[i]);
 						if(contexts[i]->bridge){
@@ -241,13 +241,13 @@ static void loop_handle_errors(void)
 	int i;
 
 	for(i=0; i<context_count; i++){
-		if(contexts[i] && fstat(contexts[i]->sock, &statbuf) == -1){
+		if(contexts[i] && fstat(contexts[i]->core.sock, &statbuf) == -1){
 			if(errno == EBADF){
-				if(contexts[i]->state != mosq_cs_disconnecting){
-					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket error on client %s, disconnecting.", contexts[i]->id);
+				if(contexts[i]->core.state != mosq_cs_disconnecting){
+					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket error on client %s, disconnecting.", contexts[i]->core.id);
 					mqtt3_db_client_will_queue(contexts[i]);
 				}else{
-					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
+					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", contexts[i]->core.id);
 				}
 				if(contexts[i]->bridge){
 					mqtt3_socket_close(contexts[i]);
@@ -265,14 +265,14 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 	int i;
 
 	for(i=0; i<context_count; i++){
-		if(contexts[i] && contexts[i]->sock != -1){
-			if(pollfds[contexts[i]->sock].revents & POLLOUT){
+		if(contexts[i] && contexts[i]->core.sock != -1){
+			if(pollfds[contexts[i]->core.sock].revents & POLLOUT){
 				if(mqtt3_net_write(contexts[i])){
-					if(contexts[i]->state != mosq_cs_disconnecting){
-						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket write error on client %s, disconnecting.", contexts[i]->id);
+					if(contexts[i]->core.state != mosq_cs_disconnecting){
+						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket write error on client %s, disconnecting.", contexts[i]->core.id);
 						mqtt3_db_client_will_queue(contexts[i]);
 					}else{
-						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
+						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", contexts[i]->core.id);
 					}
 					/* Write error or other that means we should disconnect */
 					/* Bridges don't get cleaned up because they will reconnect later. */
@@ -285,14 +285,14 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 				}
 			}
 		}
-		if(contexts[i] && contexts[i]->sock != -1){
-			if(pollfds[contexts[i]->sock].revents & POLLIN){
+		if(contexts[i] && contexts[i]->core.sock != -1){
+			if(pollfds[contexts[i]->core.sock].revents & POLLIN){
 				if(mqtt3_net_read(contexts[i])){
-					if(contexts[i]->state != mosq_cs_disconnecting){
-						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket read error on client %s, disconnecting.", contexts[i]->id);
+					if(contexts[i]->core.state != mosq_cs_disconnecting){
+						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket read error on client %s, disconnecting.", contexts[i]->core.id);
 						mqtt3_db_client_will_queue(contexts[i]);
 					}else{
-						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
+						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", contexts[i]->core.id);
 					}
 					/* Read error or other that means we should disconnect */
 					/* Bridges don't get cleaned up because they will reconnect later. */
@@ -317,7 +317,7 @@ void mqtt3_context_close_duplicate(int sock)
 
 	for(i=0; i<context_count; i++){
 		if(contexts[i]){
-			if(contexts[i]->sock == sock){
+			if(contexts[i]->core.sock == sock){
 				contexts[i]->duplicate = true;
 				mqtt3_db_client_will_queue(contexts[i]);
 				mqtt3_context_cleanup(contexts[i]);

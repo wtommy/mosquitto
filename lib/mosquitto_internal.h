@@ -82,8 +82,8 @@ struct mosquitto_message_all{
 	struct mosquitto_message msg;
 };
 
-struct mosquitto {
-	void *obj;
+struct _mosquitto_core
+{
 #ifndef WIN32
 	int sock;
 #else
@@ -92,17 +92,22 @@ struct mosquitto {
 	char *id;
 	char *username;
 	char *password;
-	int keepalive;
+	uint16_t keepalive;
+	enum mosquitto_client_state state;
+	time_t last_msg_in;
+	time_t last_msg_out;
+	struct _mosquitto_packet in_packet;
+	struct _mosquitto_packet *out_packet;
+};
+
+struct mosquitto {
+	struct _mosquitto_core core;
+	void *obj;
 	unsigned int message_retry;
 	time_t last_retry_check;
-	enum mosquitto_client_state state;
 	uint16_t last_mid;
 	struct mosquitto_message_all *messages;
 	struct mosquitto_message *will;
-	struct _mosquitto_packet in_packet;
-	struct _mosquitto_packet *out_packet;
-	time_t last_msg_in;
-	time_t last_msg_out;
 	int log_priorities;
 	int log_destinations;
 	void (*on_connect)(void *obj, int rc);

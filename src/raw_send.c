@@ -38,7 +38,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 {
-	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBACK to %s (Mid: %d)", context->id, mid);
+	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBACK to %s (Mid: %d)", context->core.id, mid);
 	return mqtt3_send_command_with_mid(context, PUBACK, mid);
 }
 
@@ -47,9 +47,9 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 	struct _mosquitto_packet *packet = NULL;
 	int packetlen;
 
-	if(!context || context->sock == -1 || !topic) return 1;
+	if(!context || context->core.sock == -1 || !topic) return 1;
 
-	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBLISH to %s (%d, %d, %d, %d, '%s', ... (%ld bytes))", context->id, dup, qos, retain, mid, topic, (long)payloadlen);
+	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBLISH to %s (%d, %d, %d, %d, '%s', ... (%ld bytes))", context->core.id, dup, qos, retain, mid, topic, (long)payloadlen);
 
 	packetlen = 2+strlen(topic) + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
@@ -99,19 +99,19 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 
 int mqtt3_raw_pubcomp(mqtt3_context *context, uint16_t mid)
 {
-	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBCOMP to %s (Mid: %d)", context->id, mid);
+	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBCOMP to %s (Mid: %d)", context->core.id, mid);
 	return mqtt3_send_command_with_mid(context, PUBCOMP, mid);
 }
 
 int mqtt3_raw_pubrec(mqtt3_context *context, uint16_t mid)
 {
-	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBREC to %s (Mid: %d)", context->id, mid);
+	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBREC to %s (Mid: %d)", context->core.id, mid);
 	return mqtt3_send_command_with_mid(context, PUBREC, mid);
 }
 
 int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid)
 {
-	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBREL to %s (Mid: %d)", context->id, mid);
+	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBREL to %s (Mid: %d)", context->core.id, mid);
 	return mqtt3_send_command_with_mid(context, PUBREL, mid);
 }
 
@@ -159,13 +159,13 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command)
 
 int mqtt3_raw_pingreq(mqtt3_context *context)
 {
-	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PINGREQ to %s", context->id);
+	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PINGREQ to %s", context->core.id);
 	return mqtt3_send_simple_command(context, PINGREQ);
 }
 
 int mqtt3_raw_pingresp(mqtt3_context *context)
 {
-	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PINGRESP to %s", context->id);
+	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PINGRESP to %s", context->core.id);
 	return mqtt3_send_simple_command(context, PINGRESP);
 }
 

@@ -67,14 +67,14 @@ int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *pa
 	if(!mosq || !packet) return 1;
 
 	packet->next = NULL;
-	if(mosq->out_packet){
-		tail = mosq->out_packet;
+	if(mosq->core.out_packet){
+		tail = mosq->core.out_packet;
 		while(tail->next){
 			tail = tail->next;
 		}
 		tail->next = packet;
 	}else{
-		mosq->out_packet = packet;
+		mosq->core.out_packet = packet;
 	}
 	return 0;
 }
@@ -88,13 +88,13 @@ int _mosquitto_socket_close(struct mosquitto *mosq)
 	int rc = 0;
 
 	if(!mosq) return 1;
-	if(mosq->sock != -1){
+	if(mosq->core.sock != -1){
 #ifndef WIN32
-		rc = close(mosq->sock);
+		rc = close(mosq->core.sock);
 #else
-		rc = closesocket(mosq->sock);
+		rc = closesocket(mosq->core.sock);
 #endif
-		mosq->sock = -1;
+		mosq->core.sock = -1;
 	}
 
 	return rc;

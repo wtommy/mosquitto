@@ -110,7 +110,7 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 	struct _mosquitto_packet *packet = NULL;
 	int packetlen;
 
-	if(!mosq || mosq->sock == -1 || !topic) return 1;
+	if(!mosq || mosq->core.sock == -1 || !topic) return 1;
 
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBLISH (%d, %d, %d, %d, '%s', ... (%ld bytes))", dup, qos, retain, mid, topic, (long)payloadlen);
 

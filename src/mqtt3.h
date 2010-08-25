@@ -77,17 +77,10 @@ struct _mqtt3_bridge{
 };
 
 typedef struct _mqtt3_context{
-	int sock;
-	time_t last_msg_in;
-	time_t last_msg_out;
-	uint16_t keepalive;
+	struct _mosquitto_core core;
 	bool clean_session;
-	enum mosquitto_client_state state;
 	bool duplicate;
-	char *id;
 	char *address;
-	struct _mosquitto_packet in_packet;
-	struct _mosquitto_packet *out_packet;
 	struct _mqtt3_bridge *bridge;
 } mqtt3_context;
 

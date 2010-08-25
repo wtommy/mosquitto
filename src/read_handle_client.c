@@ -38,12 +38,12 @@ int mqtt3_handle_connack(mqtt3_context *context)
 	uint8_t rc;
 	int i;
 
-	if(!context || context->in_packet.remaining_length != 2){
+	if(!context || context->core.in_packet.remaining_length != 2){
 		return 1;
 	}
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNACK");
-	if(_mosquitto_read_byte(&context->in_packet, &byte)) return 1; // Reserved byte, not used
-	if(_mosquitto_read_byte(&context->in_packet, &rc)) return 1;
+	if(_mosquitto_read_byte(&context->core.in_packet, &byte)) return 1; // Reserved byte, not used
+	if(_mosquitto_read_byte(&context->core.in_packet, &rc)) return 1;
 	if(client_connack_callback){
 		client_connack_callback(rc);
 	}
@@ -58,7 +58,7 @@ int mqtt3_handle_connack(mqtt3_context *context)
 					}
 				}
 			}
-			context->state = mosq_cs_connected;
+			context->core.state = mosq_cs_connected;
 			return 0;
 		case 1:
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Connection Refused: unacceptable protocol version");
@@ -79,11 +79,11 @@ int mqtt3_handle_suback(mqtt3_context *context)
 	uint8_t granted_qos;
 
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received SUBACK");
-	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
+	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;
 
-	while(context->in_packet.pos < context->in_packet.remaining_length){
+	while(context->core.in_packet.pos < context->core.in_packet.remaining_length){
 		/* FIXME - Need to do something with this */
-		if(_mosquitto_read_byte(&context->in_packet, &granted_qos)) return 1;
+		if(_mosquitto_read_byte(&context->core.in_packet, &granted_qos)) return 1;
 	}
 
 	return 0;
@@ -93,11 +93,11 @@ int mqtt3_handle_unsuback(mqtt3_context *context)
 {
 	uint16_t mid;
 
-	if(!context || context->in_packet.remaining_length != 2){
+	if(!context || context->core.in_packet.remaining_length != 2){
 		return 1;
 	}
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received UNSUBACK");
-	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
+	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;
 
 	return 0;
 }

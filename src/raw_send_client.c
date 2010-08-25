@@ -72,7 +72,7 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 		if(_mosquitto_write_string(packet, will_msg, strlen(will_msg))) return 1;
 	}
 
-	context->keepalive = keepalive;
+	context->core.keepalive = keepalive;
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
 	return 0;
 }
@@ -105,7 +105,7 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 	}
 
 	/* Variable header */
-	mid = mqtt3_db_mid_generate(context->id);
+	mid = mqtt3_db_mid_generate(context->core.id);
 	if(_mosquitto_write_uint16(packet, mid)) return 1;
 
 	/* Payload */
@@ -140,7 +140,7 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic)
 	}
 
 	/* Variable header */
-	mid = mqtt3_db_mid_generate(context->id);
+	mid = mqtt3_db_mid_generate(context->core.id);
 	if(_mosquitto_write_uint16(packet, mid)) return 1;
 
 	/* Payload */

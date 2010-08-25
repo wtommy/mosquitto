@@ -43,12 +43,12 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	uint8_t will = 0;
 	uint8_t byte;
 
-	if(!mosq || !mosq->id) return 1;
+	if(!mosq || !mosq->core.id) return 1;
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
 
-	payloadlen = 2+strlen(mosq->id);
+	payloadlen = 2+strlen(mosq->core.id);
 	if(mosq->will){
 		will = 1;
 		if(mosq->will->topic){
@@ -58,10 +58,10 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 			return 1;
 		}
 	}
-	if(mosq->username){
-		payloadlen += 2+strlen(mosq->username);
-		if(mosq->password){
-			payloadlen += 2+strlen(mosq->password);
+	if(mosq->core.username){
+		payloadlen += 2+strlen(mosq->core.username);
+		if(mosq->core.password){
+			payloadlen += 2+strlen(mosq->core.password);
 		}
 	}
 
@@ -80,9 +80,9 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	if(will){
 		byte = byte | ((mosq->will->retain&0x1)<<5) | ((mosq->will->qos&0x3)<<3) | ((will&0x1)<<2);
 	}
-	if(mosq->username){
+	if(mosq->core.username){
 		byte = byte | 0x1<<6;
-		if(mosq->password){
+		if(mosq->core.password){
 			byte = byte | 0x1<<7;
 		}
 	}
@@ -90,19 +90,19 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	if(_mosquitto_write_uint16(packet, keepalive)) return 1;
 
 	/* Payload */
-	if(_mosquitto_write_string(packet, mosq->id, strlen(mosq->id))) return 1;
+	if(_mosquitto_write_string(packet, mosq->core.id, strlen(mosq->core.id))) return 1;
 	if(will){
 		if(_mosquitto_write_string(packet, mosq->will->topic, strlen(mosq->will->topic))) return 1;
 		if(_mosquitto_write_string(packet, (const char *)mosq->will->payload, mosq->will->payloadlen)) return 1;
 	}
-	if(mosq->username){
-		if(_mosquitto_write_string(packet, mosq->username, strlen(mosq->username))) return 1;
-		if(mosq->password){
-			if(_mosquitto_write_string(packet, mosq->password, strlen(mosq->password))) return 1;
+	if(mosq->core.username){
+		if(_mosquitto_write_string(packet, mosq->core.username, strlen(mosq->core.username))) return 1;
+		if(mosq->core.password){
+			if(_mosquitto_write_string(packet, mosq->core.password, strlen(mosq->core.password))) return 1;
 		}
 	}
 
-	mosq->keepalive = keepalive;
+	mosq->core.keepalive = keepalive;
 	if(_mosquitto_packet_queue(mosq, packet)) return 1;
 	return 0;
 }

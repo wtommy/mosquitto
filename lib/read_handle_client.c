@@ -38,18 +38,18 @@ int _mosquitto_handle_connack(struct mosquitto *mosq)
 	uint8_t byte;
 	uint8_t rc;
 
-	if(!mosq || mosq->in_packet.remaining_length != 2){
+	if(!mosq || mosq->core.in_packet.remaining_length != 2){
 		return 1;
 	}
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received CONNACK");
-	if(_mosquitto_read_byte(&mosq->in_packet, &byte)) return 1; // Reserved byte, not used
-	if(_mosquitto_read_byte(&mosq->in_packet, &rc)) return 1;
+	if(_mosquitto_read_byte(&mosq->core.in_packet, &byte)) return 1; // Reserved byte, not used
+	if(_mosquitto_read_byte(&mosq->core.in_packet, &rc)) return 1;
 	if(mosq->on_connect){
 		mosq->on_connect(mosq->obj, rc);
 	}
 	switch(rc){
 		case 0:
-			mosq->state = mosq_cs_connected;
+			mosq->core.state = mosq_cs_connected;
 			return 0;
 		case 1:
 			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Connection Refused: unacceptable protocol version");
@@ -73,13 +73,13 @@ int _mosquitto_handle_suback(struct mosquitto *mosq)
 
 	if(!mosq) return 1;
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received SUBACK");
-	if(_mosquitto_read_uint16(&mosq->in_packet, &mid)) return 1;
+	if(_mosquitto_read_uint16(&mosq->core.in_packet, &mid)) return 1;
 
-	qos_count = mosq->in_packet.remaining_length - mosq->in_packet.pos;
+	qos_count = mosq->core.in_packet.remaining_length - mosq->core.in_packet.pos;
 	granted_qos = _mosquitto_malloc(qos_count*sizeof(uint8_t));
 	if(!granted_qos) return 1;
-	while(mosq->in_packet.pos < mosq->in_packet.remaining_length){
-		if(_mosquitto_read_byte(&mosq->in_packet, &(granted_qos[i]))){
+	while(mosq->core.in_packet.pos < mosq->core.in_packet.remaining_length){
+		if(_mosquitto_read_byte(&mosq->core.in_packet, &(granted_qos[i]))){
 			_mosquitto_free(granted_qos);
 			return 1;
 		}
@@ -97,11 +97,11 @@ int _mosquitto_handle_unsuback(struct mosquitto *mosq)
 {
 	uint16_t mid;
 
-	if(!mosq || mosq->in_packet.remaining_length != 2){
+	if(!mosq || mosq->core.in_packet.remaining_length != 2){
 		return 1;
 	}
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received UNSUBACK");
-	if(_mosquitto_read_uint16(&mosq->in_packet, &mid)) return 1;
+	if(_mosquitto_read_uint16(&mosq->core.in_packet, &mid)) return 1;
 	if(mosq->on_unsubscribe) mosq->on_unsubscribe(mosq->obj, mid);
 
 	return 0;
