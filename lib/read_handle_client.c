@@ -80,7 +80,7 @@ int _mosquitto_handle_suback(struct mosquitto *mosq)
 
 	qos_count = mosq->core.in_packet.remaining_length - mosq->core.in_packet.pos;
 	granted_qos = _mosquitto_malloc(qos_count*sizeof(uint8_t));
-	if(!granted_qos) return 1;
+	if(!granted_qos) return MOSQ_ERR_NOMEM;
 	while(mosq->core.in_packet.pos < mosq->core.in_packet.remaining_length){
 		if(_mosquitto_read_byte(&mosq->core.in_packet, &(granted_qos[i]))){
 			_mosquitto_free(granted_qos);

@@ -69,14 +69,14 @@ int mosquitto_message_copy(struct mosquitto_message *dst, const struct mosquitto
 
 	dst->mid = src->mid;
 	dst->topic = _mosquitto_strdup(src->topic);
-	if(!dst->topic) return 1;
+	if(!dst->topic) return MOSQ_ERR_NOMEM;
 	dst->qos = src->qos;
 	dst->retain = src->retain;
 	if(src->payloadlen){
 		dst->payload = _mosquitto_malloc(src->payloadlen);
 		if(!dst->payload){
 			_mosquitto_free(dst->topic);
-			return 1;
+			return MOSQ_ERR_NOMEM;
 		}
 		memcpy(dst->payload, src->payload, src->payloadlen);
 		dst->payloadlen = src->payloadlen;

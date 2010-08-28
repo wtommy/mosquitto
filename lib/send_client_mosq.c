@@ -48,7 +48,7 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	assert(mosq->core.id);
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	payloadlen = 2+strlen(mosq->core.id);
 	if(mosq->will){
@@ -72,7 +72,7 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*(12+payloadlen));
 	if(!packet->payload){
 		_mosquitto_free(packet);
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 
 	/* Variable header */
@@ -126,7 +126,7 @@ int _mosquitto_send_subscribe(struct mosquitto *mosq, uint16_t *mid, bool dup, c
 	assert(topic);
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packetlen = 2 + 2+strlen(topic) + 1;
 
@@ -135,7 +135,7 @@ int _mosquitto_send_subscribe(struct mosquitto *mosq, uint16_t *mid, bool dup, c
 	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){
 		_mosquitto_free(packet);
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 
 	/* Variable header */
@@ -163,7 +163,7 @@ int _mosquitto_send_unsubscribe(struct mosquitto *mosq, uint16_t *mid, bool dup,
 	assert(topic);
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packetlen = 2 + 2+strlen(topic);
 
@@ -172,7 +172,7 @@ int _mosquitto_send_unsubscribe(struct mosquitto *mosq, uint16_t *mid, bool dup,
 	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){
 		_mosquitto_free(packet);
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 
 	/* Variable header */

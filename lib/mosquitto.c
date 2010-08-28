@@ -132,14 +132,14 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 
 	if(will){
 		mosq->will = _mosquitto_calloc(1, sizeof(struct mosquitto_message));
-		if(!mosq->will) return 1;
+		if(!mosq->will) return MOSQ_ERR_NOMEM;
 		mosq->will->topic = _mosquitto_strdup(topic);
-		if(!mosq->will->topic) return 1;
+		if(!mosq->will->topic) return MOSQ_ERR_NOMEM;
 		mosq->will->payloadlen = payloadlen;
 		if(mosq->will->payloadlen > 0){
 			if(!payload) return 1;
 			mosq->will->payload = _mosquitto_malloc(sizeof(uint8_t)*mosq->will->payloadlen);
-			if(!mosq->will->payload) return 1;
+			if(!mosq->will->payload) return MOSQ_ERR_NOMEM;
 
 			memcpy(mosq->will->payload, payload, payloadlen);
 		}
@@ -156,7 +156,7 @@ int mosquitto_username_pw_set(struct mosquitto *mosq, const char *username, cons
 
 	if(username){
 		mosq->core.username = _mosquitto_strdup(username);
-		if(!mosq->core.username) return 1;
+		if(!mosq->core.username) return MOSQ_ERR_NOMEM;
 		if(mosq->core.password){
 			_mosquitto_free(mosq->core.password);
 			mosq->core.password = NULL;
@@ -166,7 +166,7 @@ int mosquitto_username_pw_set(struct mosquitto *mosq, const char *username, cons
 			if(!mosq->core.password){
 				_mosquitto_free(mosq->core.username);
 				mosq->core.username = NULL;
-				return 1;
+				return MOSQ_ERR_NOMEM;
 			}
 		}
 	}else{
@@ -238,7 +238,7 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 		return _mosquitto_send_publish(mosq, local_mid, topic, payloadlen, payload, qos, retain, false);
 	}else{
 		message = _mosquitto_calloc(1, sizeof(struct mosquitto_message_all));
-		if(!message) return 1;
+		if(!message) return MOSQ_ERR_NOMEM;
 
 		message->next = NULL;
 		message->timestamp = time(NULL);
@@ -252,14 +252,14 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 		message->msg.topic = _mosquitto_strdup(topic);
 		if(!message->msg.topic){
 			_mosquitto_message_cleanup(&message);
-			return 1;
+			return MOSQ_ERR_NOMEM;
 		}
 		if(payloadlen){
 			message->msg.payloadlen = payloadlen;
 			message->msg.payload = _mosquitto_malloc(payloadlen*sizeof(uint8_t));
 			if(!message){
 				_mosquitto_message_cleanup(&message);
-				return 1;
+				return MOSQ_ERR_NOMEM;
 			}
 			memcpy(message->msg.payload, payload, payloadlen*sizeof(uint8_t));
 		}else{
@@ -458,7 +458,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 
 		if(mosq->core.in_packet.remaining_length > 0){
 			mosq->core.in_packet.payload = _mosquitto_malloc(mosq->core.in_packet.remaining_length*sizeof(uint8_t));
-			if(!mosq->core.in_packet.payload) return 1;
+			if(!mosq->core.in_packet.payload) return MOSQ_ERR_NOMEM;
 			mosq->core.in_packet.to_process = mosq->core.in_packet.remaining_length;
 		}
 		mosq->core.in_packet.have_remaining = 1;

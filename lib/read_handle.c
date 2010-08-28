@@ -122,7 +122,7 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 	assert(mosq);
 
 	message = _mosquitto_calloc(1, sizeof(struct mosquitto_message_all));
-	if(!message) return 1;
+	if(!message) return MOSQ_ERR_NOMEM;
 
 	header = mosq->core.in_packet.command;
 
@@ -151,7 +151,7 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 		message->msg.payload = _mosquitto_calloc(message->msg.payloadlen+1, sizeof(uint8_t));
 		if(_mosquitto_read_bytes(&mosq->core.in_packet, message->msg.payload, message->msg.payloadlen)){
 			_mosquitto_message_cleanup(&message);
-			return 1;
+			return MOSQ_ERR_NOMEM;
 		}
 	}
 

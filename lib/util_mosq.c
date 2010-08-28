@@ -64,7 +64,7 @@ int _mosquitto_fix_sub_topic(char **subtopic)
 	/* size of fixed here is +1 for the terminating 0 and +1 for the spurious /
 	 * that gets appended. */
 	fixed = _mosquitto_calloc(strlen(*subtopic)+2, 1);
-	if(!fixed) return 1;
+	if(!fixed) return MOSQ_ERR_NOMEM;
 
 	if((*subtopic)[0] == '/'){
 		fixed[0] = '/';

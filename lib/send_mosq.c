@@ -47,14 +47,14 @@ static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t comm
 
 	assert(mosq);
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packet->command = command;
 	packet->remaining_length = 2;
 	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*2);
 	if(!packet->payload){
 		_mosquitto_free(packet);
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 	packet->payload[0] = MOSQ_MSB(mid);
 	packet->payload[1] = MOSQ_LSB(mid);
@@ -71,7 +71,7 @@ int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 
 	assert(mosq);
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packet->command = command;
 	packet->remaining_length = 0;
@@ -123,7 +123,7 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet){
 		_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "PUBLISH failed allocating packet memory.");
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 
 	packet->mid = mid;
@@ -134,7 +134,7 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 	if(!packet->payload){
 		_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "PUBLISH failed allocating payload memory.");
 		_mosquitto_free(packet);
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 	/* Variable header (topic string) */
 	if(_mosquitto_write_string(packet, topic, strlen(topic))){
