@@ -26,6 +26,7 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
+#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -35,7 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int mosquitto_log_init(struct mosquitto *mosq, int priorities, int destinations)
 {
-	if(!mosq) return 1;
+	assert(mosq);
 
 	mosq->log_priorities = priorities;
 	mosq->log_destinations = destinations;
@@ -48,7 +49,7 @@ int _mosquitto_log_printf(struct mosquitto *mosq, int priority, const char *fmt,
 	va_list va;
 	char s[500];
 
-	if(!mosq) return 1;
+	assert(mosq);
 
 	if((mosq->log_priorities & priority) && mosq->log_destinations != MOSQ_LOG_NONE){
 		va_start(va, fmt);

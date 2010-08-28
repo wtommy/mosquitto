@@ -27,9 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <memory_mosq.h>
-#include <net_mosq.h>
-
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -43,6 +41,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #endif
+
+#include <memory_mosq.h>
+#include <net_mosq.h>
 
 void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet)
 {
@@ -64,7 +65,8 @@ int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *pa
 {
 	struct _mosquitto_packet *tail;
 
-	if(!mosq || !packet) return 1;
+	assert(mosq);
+	if(!packet) return 1;
 
 	packet->next = NULL;
 	if(mosq->core.out_packet){
@@ -87,7 +89,7 @@ int _mosquitto_socket_close(struct mosquitto *mosq)
 {
 	int rc = 0;
 
-	if(!mosq) return 1;
+	assert(mosq);
 	if(mosq->core.sock != -1){
 #ifndef WIN32
 		rc = close(mosq->core.sock);
@@ -160,6 +162,7 @@ int _mosquitto_socket_connect(const char *host, uint16_t port)
 
 int _mosquitto_read_byte(struct _mosquitto_packet *packet, uint8_t *byte)
 {
+	assert(packet);
 	if(packet->pos+1 > packet->remaining_length)
 		return 1;
 
@@ -171,6 +174,7 @@ int _mosquitto_read_byte(struct _mosquitto_packet *packet, uint8_t *byte)
 
 int _mosquitto_write_byte(struct _mosquitto_packet *packet, uint8_t byte)
 {
+	assert(packet);
 	if(packet->pos+1 > packet->remaining_length) return 1;
 
 	packet->payload[packet->pos] = byte;
@@ -181,6 +185,7 @@ int _mosquitto_write_byte(struct _mosquitto_packet *packet, uint8_t byte)
 
 int _mosquitto_read_bytes(struct _mosquitto_packet *packet, uint8_t *bytes, uint32_t count)
 {
+	assert(packet);
 	if(packet->pos+count > packet->remaining_length)
 		return 1;
 
@@ -192,6 +197,7 @@ int _mosquitto_read_bytes(struct _mosquitto_packet *packet, uint8_t *bytes, uint
 
 int _mosquitto_write_bytes(struct _mosquitto_packet *packet, const uint8_t *bytes, uint32_t count)
 {
+	assert(packet);
 	if(packet->pos+count > packet->remaining_length) return 1;
 
 	memcpy(&(packet->payload[packet->pos]), bytes, count);
@@ -204,6 +210,7 @@ int _mosquitto_read_string(struct _mosquitto_packet *packet, char **str)
 {
 	uint16_t len;
 
+	assert(packet);
 	if(_mosquitto_read_uint16(packet, &len)) return 1;
 
 	if(packet->pos+len > packet->remaining_length)
@@ -222,6 +229,7 @@ int _mosquitto_read_string(struct _mosquitto_packet *packet, char **str)
 
 int _mosquitto_write_string(struct _mosquitto_packet *packet, const char *str, uint16_t length)
 {
+	assert(packet);
 	if(_mosquitto_write_uint16(packet, length)) return 1;
 	if(_mosquitto_write_bytes(packet, (uint8_t *)str, length)) return 1;
 
@@ -232,6 +240,7 @@ int _mosquitto_read_uint16(struct _mosquitto_packet *packet, uint16_t *word)
 {
 	uint8_t msb, lsb;
 
+	assert(packet);
 	if(packet->pos+2 > packet->remaining_length)
 		return 1;
 
@@ -247,6 +256,7 @@ int _mosquitto_read_uint16(struct _mosquitto_packet *packet, uint16_t *word)
 
 int _mosquitto_write_uint16(struct _mosquitto_packet *packet, uint16_t word)
 {
+	assert(packet);
 	if(_mosquitto_write_byte(packet, MOSQ_MSB(word))) return 1;
 	if(_mosquitto_write_byte(packet, MOSQ_LSB(word))) return 1;
 
@@ -255,6 +265,7 @@ int _mosquitto_write_uint16(struct _mosquitto_packet *packet, uint16_t word)
 
 ssize_t _mosquitto_net_read(struct _mosquitto_core *core, void *buf, size_t count)
 {
+	assert(core);
 #ifndef WIN32
 	return read(core->sock, buf, count);
 #else
@@ -264,6 +275,7 @@ ssize_t _mosquitto_net_read(struct _mosquitto_core *core, void *buf, size_t coun
 
 ssize_t _mosquitto_net_write(struct _mosquitto_core *core, void *buf, size_t count)
 {
+	assert(core);
 #ifndef WIN32
 	return write(core->sock, buf, count);
 #else

@@ -27,6 +27,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <assert.h>
+
 #include <mosquitto.h>
 #include <logging_mosq.h>
 #include <memory_mosq.h>
@@ -38,7 +40,8 @@ int _mosquitto_handle_connack(struct mosquitto *mosq)
 	uint8_t byte;
 	uint8_t rc;
 
-	if(!mosq || mosq->core.in_packet.remaining_length != 2){
+	assert(mosq);
+	if(mosq->core.in_packet.remaining_length != 2){
 		return 1;
 	}
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received CONNACK");
@@ -71,7 +74,7 @@ int _mosquitto_handle_suback(struct mosquitto *mosq)
 	int qos_count;
 	int i = 0;
 
-	if(!mosq) return 1;
+	assert(mosq);
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received SUBACK");
 	if(_mosquitto_read_uint16(&mosq->core.in_packet, &mid)) return 1;
 
@@ -97,7 +100,8 @@ int _mosquitto_handle_unsuback(struct mosquitto *mosq)
 {
 	uint16_t mid;
 
-	if(!mosq || mosq->core.in_packet.remaining_length != 2){
+	assert(mosq);
+	if(mosq->core.in_packet.remaining_length != 2){
 		return 1;
 	}
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received UNSUBACK");

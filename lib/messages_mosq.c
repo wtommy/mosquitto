@@ -27,14 +27,15 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <mosquitto_internal.h>
 #include <mosquitto.h>
 #include <memory_mosq.h>
 #include <messages_mosq.h>
 #include <send_mosq.h>
-
-#include <stdlib.h>
-#include <string.h>
 
 void _mosquitto_message_cleanup(struct mosquitto_message_all **message)
 {
@@ -53,7 +54,7 @@ void _mosquitto_message_cleanup_all(struct mosquitto *mosq)
 {
 	struct mosquitto_message_all *tmp;
 
-	if(!mosq) return;
+	assert(mosq);
 
 	while(mosq->messages){
 		tmp = mosq->messages->next;
@@ -89,7 +90,7 @@ int mosquitto_message_copy(struct mosquitto_message *dst, const struct mosquitto
 int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir)
 {
 	struct mosquitto_message_all *message, *prev = NULL;
-	if(!mosq) return 1;
+	assert(mosq);
 
 	message = mosq->messages;
 	while(message){
@@ -125,7 +126,8 @@ int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message_al
 {
 	struct mosquitto_message_all *tail;
 
-	if(!mosq || !message) return 1;
+	assert(mosq);
+	assert(message);
 
 	message->next = NULL;
 	if(mosq->messages){
@@ -143,7 +145,8 @@ int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message_al
 int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, struct mosquitto_message_all **message)
 {
 	struct mosquitto_message_all *cur, *prev = NULL;
-	if(!mosq || !message) return 1;
+	assert(mosq);
+	assert(message);
 
 	cur = mosq->messages;
 	while(cur){
@@ -166,7 +169,7 @@ void _mosquitto_message_retry_check(struct mosquitto *mosq)
 {
 	struct mosquitto_message_all *message;
 	time_t now = time(NULL);
-	if(!mosq) return;
+	assert(mosq);
 
 	message = mosq->messages;
 	while(message){
@@ -196,13 +199,14 @@ void _mosquitto_message_retry_check(struct mosquitto *mosq)
 
 void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_retry)
 {
+	assert(mosq);
 	if(mosq) mosq->message_retry = message_retry;
 }
 
 int _mosquitto_message_update(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, enum mosquitto_msg_state state)
 {
 	struct mosquitto_message_all *message;
-	if(!mosq) return 1;
+	assert(mosq);
 
 	message = mosq->messages;
 	while(message){

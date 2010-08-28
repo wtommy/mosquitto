@@ -27,6 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <assert.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -44,6 +45,7 @@ static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t comm
 {
 	struct _mosquitto_packet *packet = NULL;
 
+	assert(mosq);
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
 
@@ -67,6 +69,7 @@ int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 {
 	struct _mosquitto_packet *packet = NULL;
 
+	assert(mosq);
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
 
@@ -83,7 +86,8 @@ int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 
 int _mosquitto_send_pingreq(struct mosquitto *mosq)
 {
-	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PINGREQ");
+	assert(mosq);
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PINGREQ");
 	return _mosquitto_send_simple_command(mosq, PINGREQ);
 }
 

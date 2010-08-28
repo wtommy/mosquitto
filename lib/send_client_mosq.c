@@ -27,6 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <assert.h>
 #include <string.h>
 
 #include <mosquitto.h>
@@ -43,7 +44,8 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	uint8_t will = 0;
 	uint8_t byte;
 
-	if(!mosq || !mosq->core.id) return 1;
+	assert(mosq);
+	assert(mosq->core.id);
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
@@ -109,6 +111,7 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 
 int _mosquitto_send_disconnect(struct mosquitto *mosq)
 {
+	assert(mosq);
 	return _mosquitto_send_simple_command(mosq, DISCONNECT);
 }
 
@@ -119,7 +122,8 @@ int _mosquitto_send_subscribe(struct mosquitto *mosq, uint16_t *mid, bool dup, c
 	uint32_t packetlen;
 	uint16_t local_mid;
 
-	if(!mosq || !topic) return 1;
+	assert(mosq);
+	assert(topic);
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
@@ -155,7 +159,8 @@ int _mosquitto_send_unsubscribe(struct mosquitto *mosq, uint16_t *mid, bool dup,
 	uint32_t packetlen;
 	uint16_t local_mid;
 
-	if(!mosq || !topic) return 1;
+	assert(mosq);
+	assert(topic);
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return 1;
