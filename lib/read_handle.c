@@ -68,7 +68,7 @@ int _mosquitto_packet_handle(struct mosquitto *mosq)
 		default:
 			/* If we don't recognise the command, return an error straight away. */
 			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Error: Unrecognised command %d\n", (mosq->core.in_packet.command)&0xF0);
-			return 1;
+			return MOSQ_ERR_PROTOCOL;
 	}
 }
 
@@ -76,7 +76,7 @@ int _mosquitto_handle_pingreq(struct mosquitto *mosq)
 {
 	assert(mosq);
 	if(mosq->core.in_packet.remaining_length != 0){
-		return 1;
+		return MOSQ_ERR_PROTOCOL;
 	}
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PINGREQ");
 	return _mosquitto_send_pingresp(mosq);
@@ -86,7 +86,7 @@ int _mosquitto_handle_pingresp(struct mosquitto *mosq)
 {
 	assert(mosq);
 	if(mosq->core.in_packet.remaining_length != 0){
-		return 1;
+		return MOSQ_ERR_PROTOCOL;
 	}
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PINGRESP");
 	return MOSQ_ERR_SUCCESS;
@@ -98,7 +98,7 @@ int _mosquitto_handle_pubackcomp(struct mosquitto *mosq)
 
 	assert(mosq);
 	if(mosq->core.in_packet.remaining_length != 2){
-		return 1;
+		return MOSQ_ERR_PROTOCOL;
 	}
 	if(_mosquitto_read_uint16(&mosq->core.in_packet, &mid)) return 1;
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBACK/PUBCOMP (Mid: %d)", mid);
@@ -186,7 +186,7 @@ int _mosquitto_handle_pubrec(struct mosquitto *mosq)
 
 	assert(mosq);
 	if(mosq->core.in_packet.remaining_length != 2){
-		return 1;
+		return MOSQ_ERR_PROTOCOL;
 	}
 	if(_mosquitto_read_uint16(&mosq->core.in_packet, &mid)) return 1;
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBREC (Mid: %d)", mid);
@@ -204,7 +204,7 @@ int _mosquitto_handle_pubrel(struct mosquitto *mosq)
 
 	assert(mosq);
 	if(mosq->core.in_packet.remaining_length != 2){
-		return 1;
+		return MOSQ_ERR_PROTOCOL;
 	}
 	if(_mosquitto_read_uint16(&mosq->core.in_packet, &mid)) return 1;
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBREL (Mid: %d)", mid);
