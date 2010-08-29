@@ -79,7 +79,7 @@ int _mosquitto_fix_sub_topic(char **subtopic)
 	fixed[strlen(fixed)-1] = '\0';
 	_mosquitto_free(*subtopic);
 	*subtopic = fixed;
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 uint16_t _mosquitto_mid_generate(struct mosquitto *mosq)

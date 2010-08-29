@@ -62,7 +62,7 @@ int mosquitto_lib_init(void)
 	WSAStartup(MAKEWORD(2,2), &wsaData);
 #endif
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mosquitto_lib_cleanup(void)
@@ -71,7 +71,7 @@ int mosquitto_lib_cleanup(void)
 	WSACleanup();
 #endif
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 struct mosquitto *mosquitto_new(const char *id, void *obj)
@@ -147,7 +147,7 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 		mosq->will->retain = retain;
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mosquitto_username_pw_set(struct mosquitto *mosq, const char *username, const char *password)
@@ -179,7 +179,7 @@ int mosquitto_username_pw_set(struct mosquitto *mosq, const char *username, cons
 			mosq->core.password = NULL;
 		}
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 
@@ -345,7 +345,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 					if(mosq->on_disconnect){
 						mosq->on_disconnect(mosq->obj);
 					}
-					return 0;
+					return MOSQ_ERR_SUCCESS;
 				}else{
 					fprintf(stderr, "Error in network read.\n");
 					return 1;
@@ -359,7 +359,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 					if(mosq->on_disconnect){
 						mosq->on_disconnect(mosq->obj);
 					}
-					return 0;
+					return MOSQ_ERR_SUCCESS;
 				}else{
 					fprintf(stderr, "Error in network write.\n");
 					return 1;
@@ -369,7 +369,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	}
 	mosquitto_loop_misc(mosq);
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mosquitto_loop_misc(struct mosquitto *mosq)
@@ -381,7 +381,7 @@ int mosquitto_loop_misc(struct mosquitto *mosq)
 		_mosquitto_message_retry_check(mosq);
 		mosq->last_retry_check = time(NULL);
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mosquitto_loop_read(struct mosquitto *mosq)
@@ -420,7 +420,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 #else
 			if(WSAGetLastError() == WSAEWOULDBLOCK){
 #endif
-				return 0;
+				return MOSQ_ERR_SUCCESS;
 			}else{
 				return 1;
 			}
@@ -449,7 +449,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 #else
 				if(WSAGetLastError() == WSAEWOULDBLOCK){
 #endif
-					return 0;
+					return MOSQ_ERR_SUCCESS;
 				}else{
 					return 1;
 				}
@@ -474,7 +474,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 #else
 			if(WSAGetLastError() == WSAEWOULDBLOCK){
 #endif
-				return 0;
+				return MOSQ_ERR_SUCCESS;
 			}else{
 				return 1;
 			}
@@ -519,7 +519,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 #else
 				if(WSAGetLastError() == WSAEWOULDBLOCK){
 #endif
-					return 0;
+					return MOSQ_ERR_SUCCESS;
 				}else{
 					return 1;
 				}
@@ -550,7 +550,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 #else
 					if(WSAGetLastError() == WSAEWOULDBLOCK){
 #endif
-						return 0;
+						return MOSQ_ERR_SUCCESS;
 					}else{
 						return 1;
 					}
@@ -569,7 +569,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 #else
 				if(WSAGetLastError() == WSAEWOULDBLOCK){
 #endif
-					return 0;
+					return MOSQ_ERR_SUCCESS;
 				}else{
 					return 1;
 				}
@@ -588,7 +588,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 
 		mosq->core.last_msg_out = time(NULL);
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 void mosquitto_connect_callback_set(struct mosquitto *mosq, void (*on_connect)(void *, int))

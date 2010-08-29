@@ -168,7 +168,7 @@ int _mosquitto_read_byte(struct _mosquitto_packet *packet, uint8_t *byte)
 	*byte = packet->payload[packet->pos];
 	packet->pos++;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_write_byte(struct _mosquitto_packet *packet, uint8_t byte)
@@ -179,7 +179,7 @@ int _mosquitto_write_byte(struct _mosquitto_packet *packet, uint8_t byte)
 	packet->payload[packet->pos] = byte;
 	packet->pos++;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_read_bytes(struct _mosquitto_packet *packet, uint8_t *bytes, uint32_t count)
@@ -191,7 +191,7 @@ int _mosquitto_read_bytes(struct _mosquitto_packet *packet, uint8_t *bytes, uint
 	memcpy(bytes, &(packet->payload[packet->pos]), count);
 	packet->pos += count;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_write_bytes(struct _mosquitto_packet *packet, const uint8_t *bytes, uint32_t count)
@@ -202,7 +202,7 @@ int _mosquitto_write_bytes(struct _mosquitto_packet *packet, const uint8_t *byte
 	memcpy(&(packet->payload[packet->pos]), bytes, count);
 	packet->pos += count;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_read_string(struct _mosquitto_packet *packet, char **str)
@@ -223,7 +223,7 @@ int _mosquitto_read_string(struct _mosquitto_packet *packet, char **str)
 		return 1;
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_write_string(struct _mosquitto_packet *packet, const char *str, uint16_t length)
@@ -232,7 +232,7 @@ int _mosquitto_write_string(struct _mosquitto_packet *packet, const char *str, u
 	if(_mosquitto_write_uint16(packet, length)) return 1;
 	if(_mosquitto_write_bytes(packet, (uint8_t *)str, length)) return 1;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_read_uint16(struct _mosquitto_packet *packet, uint16_t *word)
@@ -250,7 +250,7 @@ int _mosquitto_read_uint16(struct _mosquitto_packet *packet, uint16_t *word)
 
 	*word = (msb<<8) + lsb;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_write_uint16(struct _mosquitto_packet *packet, uint16_t word)
@@ -259,7 +259,7 @@ int _mosquitto_write_uint16(struct _mosquitto_packet *packet, uint16_t word)
 	if(_mosquitto_write_byte(packet, MOSQ_MSB(word))) return 1;
 	if(_mosquitto_write_byte(packet, MOSQ_LSB(word))) return 1;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 ssize_t _mosquitto_net_read(struct _mosquitto_core *core, void *buf, size_t count)

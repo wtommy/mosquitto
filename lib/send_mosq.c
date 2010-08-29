@@ -61,7 +61,7 @@ static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t comm
 
 	_mosquitto_packet_queue(mosq, packet);
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 /* For DISCONNECT, PINGREQ and PINGRESP */
@@ -78,7 +78,7 @@ int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 
 	_mosquitto_packet_queue(mosq, packet);
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_send_pingreq(struct mosquitto *mosq)
@@ -156,7 +156,7 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 
 	_mosquitto_packet_queue(mosq, packet);
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_send_pubrec(struct mosquitto *mosq, uint16_t mid)

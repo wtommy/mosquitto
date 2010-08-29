@@ -84,7 +84,7 @@ int mosquitto_message_copy(struct mosquitto_message *dst, const struct mosquitto
 		dst->payloadlen = 0;
 		dst->payload = NULL;
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir)
@@ -101,7 +101,7 @@ int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquit
 				mosq->messages = message->next;
 			}
 			_mosquitto_message_cleanup(&message);
-			return 0;
+			return MOSQ_ERR_SUCCESS;
 		}
 		prev = message;
 		message = message->next;
@@ -139,7 +139,7 @@ int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message_al
 	}else{
 		mosq->messages = message;
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, struct mosquitto_message_all **message)
@@ -157,7 +157,7 @@ int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquit
 				mosq->messages = cur->next;
 			}
 			*message = cur;
-			return 0;
+			return MOSQ_ERR_SUCCESS;
 		}
 		prev = cur;
 		cur = cur->next;
@@ -213,7 +213,7 @@ int _mosquitto_message_update(struct mosquitto *mosq, uint16_t mid, enum mosquit
 		if(message->msg.mid == mid && message->direction == dir){
 			message->state = state;
 			message->timestamp = time(NULL);
-			return 0;
+			return MOSQ_ERR_SUCCESS;
 		}
 		message = message->next;
 	}

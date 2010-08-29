@@ -89,7 +89,7 @@ int _mosquitto_handle_pingresp(struct mosquitto *mosq)
 		return 1;
 	}
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PINGRESP");
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_handle_pubackcomp(struct mosquitto *mosq)
@@ -110,7 +110,7 @@ int _mosquitto_handle_pubackcomp(struct mosquitto *mosq)
 		}
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_handle_publish(struct mosquitto *mosq)
@@ -194,7 +194,7 @@ int _mosquitto_handle_pubrec(struct mosquitto *mosq)
 	if(_mosquitto_message_update(mosq, mid, mosq_md_out, mosq_ms_wait_pubcomp)) return 1;
 	if(_mosquitto_send_pubrel(mosq, mid)) return 1;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_handle_pubrel(struct mosquitto *mosq)
@@ -220,5 +220,5 @@ int _mosquitto_handle_pubrel(struct mosquitto *mosq)
 	}
 	if(_mosquitto_send_pubcomp(mosq, mid)) return 1;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }

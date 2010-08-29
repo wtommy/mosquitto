@@ -53,7 +53,7 @@ int _mosquitto_handle_connack(struct mosquitto *mosq)
 	switch(rc){
 		case 0:
 			mosq->core.state = mosq_cs_connected;
-			return 0;
+			return MOSQ_ERR_SUCCESS;
 		case 1:
 			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Connection Refused: unacceptable protocol version");
 			return 1;
@@ -93,7 +93,7 @@ int _mosquitto_handle_suback(struct mosquitto *mosq)
 	}
 	_mosquitto_free(granted_qos);
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_handle_unsuback(struct mosquitto *mosq)
@@ -108,5 +108,5 @@ int _mosquitto_handle_unsuback(struct mosquitto *mosq)
 	if(_mosquitto_read_uint16(&mosq->core.in_packet, &mid)) return 1;
 	if(mosq->on_unsubscribe) mosq->on_unsubscribe(mosq->obj, mid);
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }

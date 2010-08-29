@@ -41,7 +41,7 @@ int mosquitto_log_init(struct mosquitto *mosq, int priorities, int destinations)
 	mosq->log_priorities = priorities;
 	mosq->log_destinations = destinations;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_log_printf(struct mosquitto *mosq, int priority, const char *fmt, ...)
@@ -66,6 +66,6 @@ int _mosquitto_log_printf(struct mosquitto *mosq, int priority, const char *fmt,
 		}
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
