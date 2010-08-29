@@ -220,7 +220,7 @@ int _mosquitto_read_string(struct _mosquitto_packet *packet, char **str)
 		memcpy(*str, &(packet->payload[packet->pos]), len);
 		packet->pos += len;
 	}else{
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 
 	return MOSQ_ERR_SUCCESS;
