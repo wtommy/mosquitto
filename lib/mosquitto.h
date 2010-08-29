@@ -67,6 +67,8 @@ extern "C" {
 /* Error values */
 #define MOSQ_ERR_SUCCESS 0
 #define MOSQ_ERR_NOMEM 1
+#define MOSQ_ERR_PROTOCOL 2
+#define MOSQ_ERR_INVAL 3
 
 struct mosquitto_message{
 	uint16_t mid;

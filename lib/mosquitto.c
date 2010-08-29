@@ -227,7 +227,7 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 	uint16_t local_mid;
 
 	assert(mosq);
-	if(!topic || qos<0 || qos>2) return 1;
+	if(!topic || qos<0 || qos>2) return MOSQ_ERR_INVAL;
 
 	local_mid = _mosquitto_mid_generate(mosq);
 	if(mid){
