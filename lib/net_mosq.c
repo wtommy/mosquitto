@@ -61,12 +61,12 @@ void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet)
 	packet->pos = 0;
 }
 
-int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *packet)
+void _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *packet)
 {
 	struct _mosquitto_packet *tail;
 
 	assert(mosq);
-	if(!packet) return 1;
+	assert(packet);
 
 	packet->next = NULL;
 	if(mosq->core.out_packet){
@@ -78,7 +78,6 @@ int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *pa
 	}else{
 		mosq->core.out_packet = packet;
 	}
-	return 0;
 }
 
 /* Close a socket associated with a context and set it to -1.

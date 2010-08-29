@@ -59,7 +59,7 @@ static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t comm
 	packet->payload[0] = MOSQ_MSB(mid);
 	packet->payload[1] = MOSQ_LSB(mid);
 
-	if(_mosquitto_packet_queue(mosq, packet)) return 1;
+	_mosquitto_packet_queue(mosq, packet);
 
 	return 0;
 }
@@ -76,10 +76,7 @@ int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 	packet->command = command;
 	packet->remaining_length = 0;
 
-	if(_mosquitto_packet_queue(mosq, packet)){
-		_mosquitto_free(packet);
-		return 1;
-	}
+	_mosquitto_packet_queue(mosq, packet);
 
 	return 0;
 }
@@ -157,11 +154,7 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 		return 1;
 	}
 
-	if(_mosquitto_packet_queue(mosq, packet)){
-		_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "PUBLISH failed queuing packet.");
-		_mosquitto_free(packet);
-		return 1;
-	}
+	_mosquitto_packet_queue(mosq, packet);
 
 	return 0;
 }
