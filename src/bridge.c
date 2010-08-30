@@ -44,7 +44,7 @@ int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3
 
 	new_context = mqtt3_context_init(-1);
 	if(!new_context){
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 	new_context->bridge = bridge;
 	for(i=0; i<(*context_count); i++){
@@ -59,10 +59,15 @@ int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3
 		if(tmp_contexts){
 			contexts = tmp_contexts;
 			contexts[(*context_count)-1] = new_context;
+		}else{
+			return MOSQ_ERR_NOMEM;
 		}
 	}
 
 	new_context->core.id = _mosquitto_strdup(bridge->name);
+	if(!new_context->core.id){
+		return MOSQ_ERR_NOMEM;
+	}
 	if(!mqtt3_db_client_insert(new_context, 0, 0, 0, NULL, NULL)){
 		return mqtt3_bridge_connect(new_context);
 	}

@@ -56,7 +56,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet){
 		mqtt3_log_printf(MOSQ_LOG_DEBUG, "PUBLISH failed allocating packet memory.");
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 
 	packet->command = PUBLISH | ((dup&0x1)<<3) | (qos<<1) | retain;
@@ -65,7 +65,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 	if(!packet->payload){
 		mqtt3_log_printf(MOSQ_LOG_DEBUG, "PUBLISH failed allocating payload memory.");
 		_mosquitto_free(packet);
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 	/* Variable header (topic string) */
 	if(_mosquitto_write_string(packet, topic, strlen(topic))){
@@ -94,7 +94,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 		return 1;
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_raw_pubcomp(mqtt3_context *context, uint16_t mid)
@@ -121,21 +121,21 @@ int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_
 	struct _mosquitto_packet *packet = NULL;
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packet->command = command;
 	packet->remaining_length = 2;
 	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*2);
 	if(!packet->payload){
 		_mosquitto_free(packet);
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 	packet->payload[0] = MOSQ_MSB(mid);
 	packet->payload[1] = MOSQ_LSB(mid);
 
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 /* For DISCONNECT, PINGREQ and PINGRESP */
@@ -144,7 +144,7 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command)
 	struct _mosquitto_packet *packet = NULL;
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packet->command = command;
 	packet->remaining_length = 0;
@@ -154,7 +154,7 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command)
 		return 1;
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_raw_pingreq(mqtt3_context *context)

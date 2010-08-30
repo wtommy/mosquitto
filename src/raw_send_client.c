@@ -42,7 +42,7 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 	if(!context || !client_id) return 1;
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	payloadlen = 2+strlen(client_id);
 	if(will && will_topic && will_msg){
@@ -56,7 +56,7 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*(12+payloadlen));
 	if(!packet->payload){
 		_mosquitto_free(packet);
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 
 	/* Variable header */
@@ -74,7 +74,7 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 
 	context->core.keepalive = keepalive;
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_raw_disconnect(mqtt3_context *context)
@@ -92,7 +92,7 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 	if(!context || !topic) return 1;
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packetlen = 2 + 2+strlen(topic) + 1;
 
@@ -101,7 +101,7 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){
 		_mosquitto_free(packet);
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 
 	/* Variable header */
@@ -113,7 +113,7 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 	if(_mosquitto_write_byte(packet, topic_qos)) return 1;
 
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 
@@ -127,7 +127,7 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic)
 	if(!context || !topic) return 1;
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packetlen = 2 + 2+strlen(topic);
 
@@ -136,7 +136,7 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic)
 	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){
 		_mosquitto_free(packet);
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 
 	/* Variable header */
@@ -147,6 +147,6 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic)
 	if(_mosquitto_write_string(packet, topic, strlen(topic))) return 1;
 
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 

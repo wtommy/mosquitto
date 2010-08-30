@@ -38,8 +38,11 @@ int mqtt3_handle_connack(mqtt3_context *context)
 	uint8_t rc;
 	int i;
 
-	if(!context || context->core.in_packet.remaining_length != 2){
+	if(!context){
 		return 1;
+	}
+	if(context->core.in_packet.remaining_length != 2){
+		return MOSQ_ERR_PROTOCOL;
 	}
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNACK");
 	if(_mosquitto_read_byte(&context->core.in_packet, &byte)) return 1; // Reserved byte, not used
@@ -59,7 +62,7 @@ int mqtt3_handle_connack(mqtt3_context *context)
 				}
 			}
 			context->core.state = mosq_cs_connected;
-			return 0;
+			return MOSQ_ERR_SUCCESS;
 		case 1:
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Connection Refused: unacceptable protocol version");
 			return 1;
@@ -86,18 +89,21 @@ int mqtt3_handle_suback(mqtt3_context *context)
 		if(_mosquitto_read_byte(&context->core.in_packet, &granted_qos)) return 1;
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_handle_unsuback(mqtt3_context *context)
 {
 	uint16_t mid;
 
-	if(!context || context->core.in_packet.remaining_length != 2){
+	if(!context){
 		return 1;
+	}
+	if(context->core.in_packet.remaining_length != 2){
+		return MOSQ_ERR_PROTOCOL;
 	}
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received UNSUBACK");
 	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }

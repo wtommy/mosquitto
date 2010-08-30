@@ -94,7 +94,7 @@ int drop_privileges(mqtt3_config *config)
 		}
 	}
 #endif
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int loop(mqtt3_config *config, int *listensock, int listener_max)
@@ -139,7 +139,7 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 			pollfds = _mosquitto_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
 			if(!pollfds){
 				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-				return 1;
+				return MOSQ_ERR_NOMEM;
 			}
 		}
 
@@ -229,7 +229,7 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 	}
 
 	if(pollfds) _mosquitto_free(pollfds);
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 /* Error ocurred, probably an fd has been closed. 
@@ -367,7 +367,7 @@ int main(int argc, char *argv[])
 				mqtt3_log_printf(MOSQ_LOG_ERR, "Error in fork: %s", strerror(errno));
 				return 1;
 			default:
-				return 0;
+				return MOSQ_ERR_SUCCESS;
 		}
 	}
 
@@ -385,7 +385,7 @@ int main(int argc, char *argv[])
 
 	context_count = 1;
 	contexts = _mosquitto_malloc(sizeof(mqtt3_context*)*context_count);
-	if(!contexts) return 1;
+	if(!contexts) return MOSQ_ERR_NOMEM;
 	contexts[0] = NULL;
 
 	if(mqtt3_db_open(&config)){

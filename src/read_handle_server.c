@@ -45,7 +45,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	uint8_t will, will_retain, will_qos, clean_session;
 	
 	/* Don't accept multiple CONNECT commands. */
-	if(context->core.state != mosq_cs_new) return 1;
+	if(context->core.state != mosq_cs_new) return MOSQ_ERR_PROTOCOL;
 
 	if(_mosquitto_read_string(&context->core.in_packet, &protocol_name)) return 1;
 	if(!protocol_name){
@@ -57,7 +57,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 				protocol_name, context->address);
 		_mosquitto_free(protocol_name);
 		mqtt3_socket_close(context);
-		return 1;
+		return MOSQ_ERR_PROTOCOL;
 	}
 	if(_mosquitto_read_byte(&context->core.in_packet, &protocol_version)) return 1;
 	if(protocol_version != PROTOCOL_VERSION){
@@ -66,7 +66,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 		_mosquitto_free(protocol_name);
 		mqtt3_raw_connack(context, 1);
 		mqtt3_socket_close(context);
-		return 1;
+		return MOSQ_ERR_PROTOCOL;
 	}
 
 	_mosquitto_free(protocol_name);
@@ -100,8 +100,11 @@ int mqtt3_handle_connect(mqtt3_context *context)
 
 int mqtt3_handle_disconnect(mqtt3_context *context)
 {
-	if(!context || context->core.in_packet.remaining_length != 0){
+	if(!context){
 		return 1;
+	}
+	if(context->core.in_packet.remaining_length != 0){
+		return MOSQ_ERR_PROTOCOL;
 	}
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received DISCONNECT from %s", context->core.id);
 	context->core.state = mosq_cs_disconnecting;
@@ -194,6 +197,6 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 
 	if(mqtt3_send_command_with_mid(context, UNSUBACK, mid)) return 1;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
