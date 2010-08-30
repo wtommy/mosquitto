@@ -65,7 +65,7 @@ void _mosquitto_message_cleanup_all(struct mosquitto *mosq)
 
 int mosquitto_message_copy(struct mosquitto_message *dst, const struct mosquitto_message *src)
 {
-	if(!dst || !src) return 1;
+	if(!dst || !src) return MOSQ_ERR_INVAL;
 
 	dst->mid = src->mid;
 	dst->topic = _mosquitto_strdup(src->topic);

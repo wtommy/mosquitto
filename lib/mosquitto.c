@@ -116,9 +116,7 @@ struct mosquitto *mosquitto_new(const char *id, void *obj)
 
 int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
-	assert(mosq);
-
-	if(will && !topic) return 1;
+	if(!mosq || (will && !topic)) return MOSQ_ERR_INVAL;
 
 	if(mosq->will){
 		if(mosq->will->topic) _mosquitto_free(mosq->will->topic);
@@ -137,7 +135,7 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 		if(!mosq->will->topic) return MOSQ_ERR_NOMEM;
 		mosq->will->payloadlen = payloadlen;
 		if(mosq->will->payloadlen > 0){
-			if(!payload) return 1;
+			if(!payload) return MOSQ_ERR_INVAL;
 			mosq->will->payload = _mosquitto_malloc(sizeof(uint8_t)*mosq->will->payloadlen);
 			if(!mosq->will->payload) return MOSQ_ERR_NOMEM;
 
@@ -152,7 +150,7 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 
 int mosquitto_username_pw_set(struct mosquitto *mosq, const char *username, const char *password)
 {
-	assert(mosq);
+	if(!mosq) return MOSQ_ERR_INVAL;
 
 	if(username){
 		mosq->core.username = _mosquitto_strdup(username);
@@ -185,7 +183,6 @@ int mosquitto_username_pw_set(struct mosquitto *mosq, const char *username, cons
 
 void mosquitto_destroy(struct mosquitto *mosq)
 {
-	assert(mosq);
 	if(mosq->core.id) _mosquitto_free(mosq->core.id);
 	_mosquitto_message_cleanup_all(mosq);
 	_mosquitto_free(mosq);
@@ -193,14 +190,14 @@ void mosquitto_destroy(struct mosquitto *mosq)
 
 int mosquitto_socket(struct mosquitto *mosq)
 {
-	assert(mosq);
+	if(!mosq) return MOSQ_ERR_INVAL;
 	return mosq->core.sock;
 }
 
 int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session)
 {
-	assert(mosq);
-	if(!host || !port) return 1;
+	if(!mosq) return MOSQ_ERR_INVAL;
+	if(!host || !port) return MOSQ_ERR_INVAL;
 
 	mosq->core.sock = _mosquitto_socket_connect(host, port);
 
@@ -213,7 +210,7 @@ int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int ke
 
 int mosquitto_disconnect(struct mosquitto *mosq)
 {
-	assert(mosq);
+	if(!mosq) return MOSQ_ERR_INVAL;
 	if(mosq->core.sock == INVALID_SOCKET) return 1;
 
 	mosq->core.state = mosq_cs_disconnecting;
@@ -226,8 +223,7 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 	struct mosquitto_message_all *message;
 	uint16_t local_mid;
 
-	assert(mosq);
-	if(!topic || qos<0 || qos>2) return MOSQ_ERR_INVAL;
+	if(!mosq || !topic || qos<0 || qos>2) return MOSQ_ERR_INVAL;
 
 	local_mid = _mosquitto_mid_generate(mosq);
 	if(mid){
@@ -280,7 +276,7 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 
 int mosquitto_subscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub, int qos)
 {
-	assert(mosq);
+	if(!mosq) return MOSQ_ERR_INVAL;
 	if(mosq->core.sock == INVALID_SOCKET) return 1;
 
 	return _mosquitto_send_subscribe(mosq, mid, false, sub, qos);
@@ -288,7 +284,7 @@ int mosquitto_subscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub, 
 
 int mosquitto_unsubscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub)
 {
-	assert(mosq);
+	if(!mosq) return MOSQ_ERR_INVAL;
 	if(mosq->core.sock == INVALID_SOCKET) return 1;
 
 	return _mosquitto_send_unsubscribe(mosq, mid, false, sub);
@@ -304,7 +300,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	fd_set readfds, writefds;
 	int fdcount;
 
-	assert(mosq);
+	if(!mosq) return MOSQ_ERR_INVAL;
 	if(mosq->core.sock == INVALID_SOCKET) return 1;
 
 	FD_ZERO(&readfds);
@@ -374,7 +370,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 
 int mosquitto_loop_misc(struct mosquitto *mosq)
 {
-	assert(mosq);
+	if(!mosq) return MOSQ_ERR_INVAL;
 
 	_mosquitto_check_keepalive(mosq);
 	if(mosq->last_retry_check+1 < time(NULL)){
@@ -390,7 +386,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 	ssize_t read_length;
 	int rc = 0;
 
-	assert(mosq);
+	if(!mosq) return MOSQ_ERR_INVAL;
 	if(mosq->core.sock == INVALID_SOCKET) return 1;
 	/* This gets called if pselect() indicates that there is network data
 	 * available - ie. at least one byte.  What we do depends on what data we
@@ -498,7 +494,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 	ssize_t write_length;
 	struct _mosquitto_packet *packet;
 
-	assert(mosq);
+	if(!mosq) return MOSQ_ERR_INVAL;
 	if(mosq->core.sock == INVALID_SOCKET) return 1;
 
 	while(mosq->core.out_packet){
@@ -593,32 +589,31 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 
 void mosquitto_connect_callback_set(struct mosquitto *mosq, void (*on_connect)(void *, int))
 {
-	assert(mosq);
 	mosq->on_connect = on_connect;
 }
 
 void mosquitto_disconnect_callback_set(struct mosquitto *mosq, void (*on_disconnect)(void *))
 {
-	if(mosq) mosq->on_disconnect = on_disconnect;
+	mosq->on_disconnect = on_disconnect;
 }
 
 void mosquitto_publish_callback_set(struct mosquitto *mosq, void (*on_publish)(void *, uint16_t))
 {
-	if(mosq) mosq->on_publish = on_publish;
+	mosq->on_publish = on_publish;
 }
 
 void mosquitto_message_callback_set(struct mosquitto *mosq, void (*on_message)(void *, const struct mosquitto_message *))
 {
-	if(mosq) mosq->on_message = on_message;
+	mosq->on_message = on_message;
 }
 
 void mosquitto_subscribe_callback_set(struct mosquitto *mosq, void (*on_subscribe)(void *, uint16_t, int, const uint8_t *))
 {
-	if(mosq) mosq->on_subscribe = on_subscribe;
+	mosq->on_subscribe = on_subscribe;
 }
 
 void mosquitto_unsubscribe_callback_set(struct mosquitto *mosq, void (*on_unsubscribe)(void *, uint16_t))
 {
-	if(mosq) mosq->on_unsubscribe = on_unsubscribe;
+	mosq->on_unsubscribe = on_unsubscribe;
 }
 
