@@ -59,7 +59,8 @@ int _mosquitto_fix_sub_topic(char **subtopic)
 	char *fixed = NULL;
 	char *token;
 
-	if(!subtopic || !(*subtopic)) return 1;
+	assert(subtopic);
+	assert(*subtopic);
 
 	/* size of fixed here is +1 for the terminating 0 and +1 for the spurious /
 	 * that gets appended. */
