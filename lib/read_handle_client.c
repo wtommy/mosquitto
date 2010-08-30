@@ -56,15 +56,15 @@ int _mosquitto_handle_connack(struct mosquitto *mosq)
 			return MOSQ_ERR_SUCCESS;
 		case 1:
 			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Connection Refused: unacceptable protocol version");
-			return 1;
+			break;
 		case 2:
 			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Connection Refused: identifier rejected");
-			return 1;
+			break;
 		case 3:
 			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Connection Refused: broker unavailable");
-			return 1;
+			break;
 	}
-	return 1;
+	return MOSQ_ERR_CONN_REFUSED;
 }
 
 int _mosquitto_handle_suback(struct mosquitto *mosq)
