@@ -89,13 +89,13 @@ int _mosquitto_socket_close(struct mosquitto *mosq)
 	int rc = 0;
 
 	assert(mosq);
-	if(mosq->core.sock != -1){
+	if(mosq->core.sock != INVALID_SOCKET){
 #ifndef WIN32
 		rc = close(mosq->core.sock);
 #else
 		rc = closesocket(mosq->core.sock);
 #endif
-		mosq->core.sock = -1;
+		mosq->core.sock = INVALID_SOCKET;
 	}
 
 	return rc;

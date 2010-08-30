@@ -41,7 +41,7 @@ POSSIBILITY OF SUCH DAMAGE.
 void _mosquitto_check_keepalive(struct mosquitto *mosq)
 {
 	assert(mosq);
-	if(mosq->core.sock != -1 && time(NULL) - mosq->core.last_msg_out >= mosq->core.keepalive){
+	if(mosq->core.sock != INVALID_SOCKET && time(NULL) - mosq->core.last_msg_out >= mosq->core.keepalive){
 		if(mosq->core.state == mosq_cs_connected){
 			_mosquitto_send_pingreq(mosq);
 		}else{

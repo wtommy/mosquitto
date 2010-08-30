@@ -114,7 +114,7 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 	assert(mosq);
 	assert(topic);
 
-	if(mosq->core.sock == -1) return 1;
+	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBLISH (%d, %d, %d, %d, '%s', ... (%ld bytes))", dup, qos, retain, mid, topic, (long)payloadlen);
 

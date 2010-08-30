@@ -211,7 +211,7 @@ int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int ke
 int mosquitto_disconnect(struct mosquitto *mosq)
 {
 	if(!mosq) return MOSQ_ERR_INVAL;
-	if(mosq->core.sock == INVALID_SOCKET) return 1;
+	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 
 	mosq->core.state = mosq_cs_disconnecting;
 
@@ -277,7 +277,7 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 int mosquitto_subscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub, int qos)
 {
 	if(!mosq) return MOSQ_ERR_INVAL;
-	if(mosq->core.sock == INVALID_SOCKET) return 1;
+	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 
 	return _mosquitto_send_subscribe(mosq, mid, false, sub, qos);
 }
@@ -285,7 +285,7 @@ int mosquitto_subscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub, 
 int mosquitto_unsubscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub)
 {
 	if(!mosq) return MOSQ_ERR_INVAL;
-	if(mosq->core.sock == INVALID_SOCKET) return 1;
+	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 
 	return _mosquitto_send_unsubscribe(mosq, mid, false, sub);
 }
@@ -301,7 +301,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	int fdcount;
 
 	if(!mosq) return MOSQ_ERR_INVAL;
-	if(mosq->core.sock == INVALID_SOCKET) return 1;
+	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 
 	FD_ZERO(&readfds);
 	FD_SET(mosq->core.sock, &readfds);
@@ -387,7 +387,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 	int rc = 0;
 
 	if(!mosq) return MOSQ_ERR_INVAL;
-	if(mosq->core.sock == INVALID_SOCKET) return 1;
+	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 	/* This gets called if pselect() indicates that there is network data
 	 * available - ie. at least one byte.  What we do depends on what data we
 	 * already have.
@@ -495,7 +495,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 	struct _mosquitto_packet *packet;
 
 	if(!mosq) return MOSQ_ERR_INVAL;
-	if(mosq->core.sock == INVALID_SOCKET) return 1;
+	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 
 	while(mosq->core.out_packet){
 		packet = mosq->core.out_packet;
