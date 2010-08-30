@@ -438,7 +438,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 				/* Max 4 bytes length for remaining length as defined by protocol.
 				 * Anything more likely means a broken/malicious client.
 				 */
-				if(mosq->core.in_packet.remaining_count > 4) return 1;
+				if(mosq->core.in_packet.remaining_count > 4) return MOSQ_ERR_PROTOCOL;
 
 				mosq->core.in_packet.remaining_length += (byte & 127) * mosq->core.in_packet.remaining_mult;
 				mosq->core.in_packet.remaining_mult *= 128;
@@ -541,7 +541,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 				if(write_length == 1){
 					packet->remaining_count++;
 					/* Max 4 bytes length for remaining length as defined by protocol. */
-					if(packet->remaining_count > 4) return 1;
+					if(packet->remaining_count > 4) return MOSQ_ERR_PROTOCOL;
 	
 				}else{
 					if(write_length == 0) return 1; /* EOF */
