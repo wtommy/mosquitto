@@ -60,16 +60,16 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 	}
 
 	/* Variable header */
-	if(_mosquitto_write_string(packet, PROTOCOL_NAME, strlen(PROTOCOL_NAME))) return 1;
-	if(_mosquitto_write_byte(packet, PROTOCOL_VERSION)) return 1;
-	if(_mosquitto_write_byte(packet, ((will_retain&0x1)<<5) | ((will_qos&0x3)<<3) | ((will&0x1)<<2) | ((clean_session&0x1)<<1))) return 1;
-	if(_mosquitto_write_uint16(packet, keepalive)) return 1;
+	_mosquitto_write_string(packet, PROTOCOL_NAME, strlen(PROTOCOL_NAME));
+	_mosquitto_write_byte(packet, PROTOCOL_VERSION);
+	_mosquitto_write_byte(packet, ((will_retain&0x1)<<5) | ((will_qos&0x3)<<3) | ((will&0x1)<<2) | ((clean_session&0x1)<<1));
+	_mosquitto_write_uint16(packet, keepalive);
 
 	/* Payload */
-	if(_mosquitto_write_string(packet, client_id, strlen(client_id))) return 1;
+	_mosquitto_write_string(packet, client_id, strlen(client_id));
 	if(will){
-		if(_mosquitto_write_string(packet, will_topic, strlen(will_topic))) return 1;
-		if(_mosquitto_write_string(packet, will_msg, strlen(will_msg))) return 1;
+		_mosquitto_write_string(packet, will_topic, strlen(will_topic));
+		_mosquitto_write_string(packet, will_msg, strlen(will_msg));
 	}
 
 	context->core.keepalive = keepalive;
@@ -106,11 +106,11 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 
 	/* Variable header */
 	mid = mqtt3_db_mid_generate(context->core.id);
-	if(_mosquitto_write_uint16(packet, mid)) return 1;
+	_mosquitto_write_uint16(packet, mid);
 
 	/* Payload */
-	if(_mosquitto_write_string(packet, topic, strlen(topic))) return 1;
-	if(_mosquitto_write_byte(packet, topic_qos)) return 1;
+	_mosquitto_write_string(packet, topic, strlen(topic));
+	_mosquitto_write_byte(packet, topic_qos);
 
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
 	return MOSQ_ERR_SUCCESS;
@@ -141,10 +141,10 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic)
 
 	/* Variable header */
 	mid = mqtt3_db_mid_generate(context->core.id);
-	if(_mosquitto_write_uint16(packet, mid)) return 1;
+	_mosquitto_write_uint16(packet, mid);
 
 	/* Payload */
-	if(_mosquitto_write_string(packet, topic, strlen(topic))) return 1;
+	_mosquitto_write_string(packet, topic, strlen(topic));
 
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
 	return MOSQ_ERR_SUCCESS;

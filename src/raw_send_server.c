@@ -73,8 +73,10 @@ int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, 
 		_mosquitto_free(packet);
 		return MOSQ_ERR_NOMEM;
 	}
-	if(_mosquitto_write_uint16(packet, mid)) return 1;
-	if(payloadlen && _mosquitto_write_bytes(packet, payload, payloadlen)) return 1;
+	_mosquitto_write_uint16(packet, mid);
+	if(payloadlen){
+		_mosquitto_write_bytes(packet, payload, payloadlen);
+	}
 
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
 

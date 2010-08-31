@@ -68,24 +68,14 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 		return MOSQ_ERR_NOMEM;
 	}
 	/* Variable header (topic string) */
-	if(_mosquitto_write_string(packet, topic, strlen(topic))){
-		mqtt3_log_printf(MOSQ_LOG_DEBUG, "PUBLISH failed writing topic.");
-		_mosquitto_free(packet);
-	  	return 1;
-	}
+	_mosquitto_write_string(packet, topic, strlen(topic));
 	if(qos > 0){
-		if(_mosquitto_write_uint16(packet, mid)){
-			mqtt3_log_printf(MOSQ_LOG_DEBUG, "PUBLISH failed writing mid.");
-			_mosquitto_free(packet);
-			return 1;
-		}
+		_mosquitto_write_uint16(packet, mid);
 	}
 
 	/* Payload */
-	if(payloadlen && _mosquitto_write_bytes(packet, payload, payloadlen)){
-		mqtt3_log_printf(MOSQ_LOG_DEBUG, "PUBLISH failed writing payload.");
-		_mosquitto_free(packet);
-		return 1;
+	if(payloadlen){
+		_mosquitto_write_bytes(packet, payload, payloadlen);
 	}
 
 	if(mqtt3_net_packet_queue(context, packet)){

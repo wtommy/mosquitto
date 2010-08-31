@@ -137,24 +137,14 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 		return MOSQ_ERR_NOMEM;
 	}
 	/* Variable header (topic string) */
-	if(_mosquitto_write_string(packet, topic, strlen(topic))){
-		_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "PUBLISH failed writing topic.");
-		_mosquitto_free(packet);
-	  	return 1;
-	}
+	_mosquitto_write_string(packet, topic, strlen(topic));
 	if(qos > 0){
-		if(_mosquitto_write_uint16(packet, mid)){
-			_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "PUBLISH failed writing mid.");
-			_mosquitto_free(packet);
-			return 1;
-		}
+		_mosquitto_write_uint16(packet, mid);
 	}
 
 	/* Payload */
-	if(payloadlen && _mosquitto_write_bytes(packet, payload, payloadlen)){
-		_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "PUBLISH failed writing payload.");
-		_mosquitto_free(packet);
-		return 1;
+	if(payloadlen){
+		_mosquitto_write_bytes(packet, payload, payloadlen);
 	}
 
 	_mosquitto_packet_queue(mosq, packet);
