@@ -162,8 +162,7 @@ int _mosquitto_socket_connect(const char *host, uint16_t port)
 int _mosquitto_read_byte(struct _mosquitto_packet *packet, uint8_t *byte)
 {
 	assert(packet);
-	if(packet->pos+1 > packet->remaining_length)
-		return 1;
+	if(packet->pos+1 > packet->remaining_length) return MOSQ_ERR_PROTOCOL;
 
 	*byte = packet->payload[packet->pos];
 	packet->pos++;
@@ -183,8 +182,7 @@ void _mosquitto_write_byte(struct _mosquitto_packet *packet, uint8_t byte)
 int _mosquitto_read_bytes(struct _mosquitto_packet *packet, uint8_t *bytes, uint32_t count)
 {
 	assert(packet);
-	if(packet->pos+count > packet->remaining_length)
-		return 1;
+	if(packet->pos+count > packet->remaining_length) return MOSQ_ERR_PROTOCOL;
 
 	memcpy(bytes, &(packet->payload[packet->pos]), count);
 	packet->pos += count;
@@ -204,12 +202,13 @@ void _mosquitto_write_bytes(struct _mosquitto_packet *packet, const uint8_t *byt
 int _mosquitto_read_string(struct _mosquitto_packet *packet, char **str)
 {
 	uint16_t len;
+	int rc;
 
 	assert(packet);
-	if(_mosquitto_read_uint16(packet, &len)) return 1;
+	rc = _mosquitto_read_uint16(packet, &len);
+	if(rc) return rc;
 
-	if(packet->pos+len > packet->remaining_length)
-		return 1;
+	if(packet->pos+len > packet->remaining_length) return MOSQ_ERR_PROTOCOL;
 
 	*str = _mosquitto_calloc(len+1, sizeof(char));
 	if(*str){
@@ -234,8 +233,7 @@ int _mosquitto_read_uint16(struct _mosquitto_packet *packet, uint16_t *word)
 	uint8_t msb, lsb;
 
 	assert(packet);
-	if(packet->pos+2 > packet->remaining_length)
-		return 1;
+	if(packet->pos+2 > packet->remaining_length) return MOSQ_ERR_PROTOCOL;
 
 	msb = packet->payload[packet->pos];
 	packet->pos++;

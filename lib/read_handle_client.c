@@ -38,33 +38,37 @@ POSSIBILITY OF SUCH DAMAGE.
 int _mosquitto_handle_connack(struct mosquitto *mosq)
 {
 	uint8_t byte;
-	uint8_t rc;
+	uint8_t result;
+	int rc;
 
 	assert(mosq);
 	if(mosq->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
 	}
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received CONNACK");
-	if(_mosquitto_read_byte(&mosq->core.in_packet, &byte)) return 1; // Reserved byte, not used
-	if(_mosquitto_read_byte(&mosq->core.in_packet, &rc)) return 1;
+	rc = _mosquitto_read_byte(&mosq->core.in_packet, &byte); // Reserved byte, not used
+	if(rc) return rc;
+	rc = _mosquitto_read_byte(&mosq->core.in_packet, &result);
+	if(rc) return rc;
 	if(mosq->on_connect){
 		mosq->on_connect(mosq->obj, rc);
 	}
-	switch(rc){
+	switch(result){
 		case 0:
 			mosq->core.state = mosq_cs_connected;
 			return MOSQ_ERR_SUCCESS;
 		case 1:
 			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Connection Refused: unacceptable protocol version");
-			break;
+			return MOSQ_ERR_CONN_REFUSED;
 		case 2:
 			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Connection Refused: identifier rejected");
-			break;
+			return MOSQ_ERR_CONN_REFUSED;
 		case 3:
 			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Connection Refused: broker unavailable");
-			break;
+			return MOSQ_ERR_CONN_REFUSED;
+		default:
+			return MOSQ_ERR_PROTOCOL;
 	}
-	return MOSQ_ERR_CONN_REFUSED;
 }
 
 int _mosquitto_handle_suback(struct mosquitto *mosq)
@@ -73,18 +77,21 @@ int _mosquitto_handle_suback(struct mosquitto *mosq)
 	uint8_t *granted_qos;
 	int qos_count;
 	int i = 0;
+	int rc;
 
 	assert(mosq);
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received SUBACK");
-	if(_mosquitto_read_uint16(&mosq->core.in_packet, &mid)) return 1;
+	rc = _mosquitto_read_uint16(&mosq->core.in_packet, &mid);
+	if(rc) return rc;
 
 	qos_count = mosq->core.in_packet.remaining_length - mosq->core.in_packet.pos;
 	granted_qos = _mosquitto_malloc(qos_count*sizeof(uint8_t));
 	if(!granted_qos) return MOSQ_ERR_NOMEM;
 	while(mosq->core.in_packet.pos < mosq->core.in_packet.remaining_length){
-		if(_mosquitto_read_byte(&mosq->core.in_packet, &(granted_qos[i]))){
+		rc = _mosquitto_read_byte(&mosq->core.in_packet, &(granted_qos[i]));
+		if(rc){
 			_mosquitto_free(granted_qos);
-			return 1;
+			return rc;
 		}
 		i++;
 	}
@@ -99,13 +106,15 @@ int _mosquitto_handle_suback(struct mosquitto *mosq)
 int _mosquitto_handle_unsuback(struct mosquitto *mosq)
 {
 	uint16_t mid;
+	int rc;
 
 	assert(mosq);
 	if(mosq->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
 	}
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received UNSUBACK");
-	if(_mosquitto_read_uint16(&mosq->core.in_packet, &mid)) return 1;
+	rc = _mosquitto_read_uint16(&mosq->core.in_packet, &mid);
+	if(rc) return rc;
 	if(mosq->on_unsubscribe) mosq->on_unsubscribe(mosq->obj, mid);
 
 	return MOSQ_ERR_SUCCESS;

@@ -95,12 +95,14 @@ int _mosquitto_handle_pingresp(struct mosquitto *mosq)
 int _mosquitto_handle_pubackcomp(struct mosquitto *mosq)
 {
 	uint16_t mid;
+	int rc;
 
 	assert(mosq);
 	if(mosq->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
 	}
-	if(_mosquitto_read_uint16(&mosq->core.in_packet, &mid)) return 1;
+	rc = _mosquitto_read_uint16(&mosq->core.in_packet, &mid);
+	if(rc) return rc;
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBACK/PUBCOMP (Mid: %d)", mid);
 
 	if(!_mosquitto_message_delete(mosq, mid, mosq_md_out)){
@@ -132,7 +134,8 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 	message->msg.qos = (header & 0x06)>>1;
 	message->msg.retain = (header & 0x01);
 
-	if(_mosquitto_read_string(&mosq->core.in_packet, &message->msg.topic)) return 1;
+	rc = _mosquitto_read_string(&mosq->core.in_packet, &message->msg.topic);
+	if(rc) return rc;
 	if(_mosquitto_fix_sub_topic(&message->msg.topic)) return 1;
 	if(!strlen(message->msg.topic)){
 		_mosquitto_message_cleanup(&message);
@@ -140,18 +143,20 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 	}
 
 	if(message->msg.qos > 0){
-		if(_mosquitto_read_uint16(&mosq->core.in_packet, &message->msg.mid)){
+		rc = _mosquitto_read_uint16(&mosq->core.in_packet, &message->msg.mid);
+		if(rc){
 			_mosquitto_message_cleanup(&message);
-			return 1;
+			return rc;
 		}
 	}
 
 	message->msg.payloadlen = mosq->core.in_packet.remaining_length - mosq->core.in_packet.pos;
 	if(message->msg.payloadlen){
 		message->msg.payload = _mosquitto_calloc(message->msg.payloadlen+1, sizeof(uint8_t));
-		if(_mosquitto_read_bytes(&mosq->core.in_packet, message->msg.payload, message->msg.payloadlen)){
+		_mosquitto_read_bytes(&mosq->core.in_packet, message->msg.payload, message->msg.payloadlen);
+		if(rc){
 			_mosquitto_message_cleanup(&message);
-			return MOSQ_ERR_NOMEM;
+			return rc;
 		}
 	}
 
@@ -162,37 +167,41 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 				mosq->on_message(mosq->obj, &message->msg);
 			}
 			_mosquitto_message_cleanup(&message);
-			break;
+			return MOSQ_ERR_SUCCESS;
 		case 1:
-			if(_mosquitto_send_puback(mosq, message->msg.mid)) rc = 1;
+			rc = _mosquitto_send_puback(mosq, message->msg.mid);
 			if(mosq->on_message){
 				mosq->on_message(mosq->obj, &message->msg);
 			}
 			_mosquitto_message_cleanup(&message);
-			break;
+			return rc;
 		case 2:
-			if(_mosquitto_send_pubrec(mosq, message->msg.mid)) rc = 1;
+			rc = _mosquitto_send_pubrec(mosq, message->msg.mid);
 			message->state = mosq_ms_wait_pubrel;
 			_mosquitto_message_queue(mosq, message);
-			break;
+			return rc;
+		default:
+			return MOSQ_ERR_PROTOCOL;
 	}
-
-	return rc;
 }
 
 int _mosquitto_handle_pubrec(struct mosquitto *mosq)
 {
 	uint16_t mid;
+	int rc;
 
 	assert(mosq);
 	if(mosq->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
 	}
-	if(_mosquitto_read_uint16(&mosq->core.in_packet, &mid)) return 1;
+	rc = _mosquitto_read_uint16(&mosq->core.in_packet, &mid);
+	if(rc) return rc;
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBREC (Mid: %d)", mid);
 
-	if(_mosquitto_message_update(mosq, mid, mosq_md_out, mosq_ms_wait_pubcomp)) return 1;
-	if(_mosquitto_send_pubrel(mosq, mid)) return 1;
+	rc = _mosquitto_message_update(mosq, mid, mosq_md_out, mosq_ms_wait_pubcomp);
+	if(rc) return rc;
+	rc = _mosquitto_send_pubrel(mosq, mid);
+	if(rc) return rc;
 
 	return MOSQ_ERR_SUCCESS;
 }
@@ -201,12 +210,14 @@ int _mosquitto_handle_pubrel(struct mosquitto *mosq)
 {
 	uint16_t mid;
 	struct mosquitto_message_all *message = NULL;
+	int rc;
 
 	assert(mosq);
 	if(mosq->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
 	}
-	if(_mosquitto_read_uint16(&mosq->core.in_packet, &mid)) return 1;
+	rc = _mosquitto_read_uint16(&mosq->core.in_packet, &mid);
+	if(rc) return rc;
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBREL (Mid: %d)", mid);
 
 	if(!_mosquitto_message_remove(mosq, mid, mosq_md_in, &message)){
@@ -218,7 +229,8 @@ int _mosquitto_handle_pubrel(struct mosquitto *mosq)
 			_mosquitto_message_cleanup(&message);
 		}
 	}
-	if(_mosquitto_send_pubcomp(mosq, mid)) return 1;
+	rc = _mosquitto_send_pubcomp(mosq, mid);
+	if(rc) return rc;
 
 	return MOSQ_ERR_SUCCESS;
 }
