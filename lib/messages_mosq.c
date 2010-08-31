@@ -89,24 +89,15 @@ int mosquitto_message_copy(struct mosquitto_message *dst, const struct mosquitto
 
 int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir)
 {
-	struct mosquitto_message_all *message, *prev = NULL;
+	struct mosquitto_message_all *message;
+	int rc;
 	assert(mosq);
 
-	message = mosq->messages;
-	while(message){
-		if(message->msg.mid == mid && message->direction == dir){
-			if(prev){
-				prev->next = message->next;
-			}else{
-				mosq->messages = message->next;
-			}
-			_mosquitto_message_cleanup(&message);
-			return MOSQ_ERR_SUCCESS;
-		}
-		prev = message;
-		message = message->next;
+	rc = _mosquitto_message_remove(mosq, mid, dir, &message);
+	if(rc == MOSQ_ERR_SUCCESS){
+		_mosquitto_message_cleanup(&message);
 	}
-	return 1;
+	return rc;
 }
 
 void mosquitto_message_free(struct mosquitto_message **message)
