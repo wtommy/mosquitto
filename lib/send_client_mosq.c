@@ -53,13 +53,9 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	payloadlen = 2+strlen(mosq->core.id);
 	if(mosq->will){
 		will = 1;
-		if(mosq->will->topic){
-			payloadlen += 2+strlen(mosq->will->topic) + 2+mosq->will->payloadlen;
-		}else{
-			_mosquitto_free(packet);
-			//FIXME - error
-			return 1;
-		}
+		assert(mosq->will->topic);
+
+		payloadlen += 2+strlen(mosq->will->topic) + 2+mosq->will->payloadlen;
 	}
 	if(mosq->core.username){
 		payloadlen += 2+strlen(mosq->core.username);
