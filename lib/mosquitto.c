@@ -116,10 +116,15 @@ struct mosquitto *mosquitto_new(const char *id, void *obj)
 
 int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
+	int rc = MOSQ_ERR_SUCCESS;
+
 	if(!mosq || (will && !topic)) return MOSQ_ERR_INVAL;
 
 	if(mosq->will){
-		if(mosq->will->topic) _mosquitto_free(mosq->will->topic);
+		if(mosq->will->topic){
+			_mosquitto_free(mosq->will->topic);
+			mosq->will->topic = NULL;
+		}
 		if(mosq->will->payload){
 			_mosquitto_free(mosq->will->payload);
 			mosq->will->payload = NULL;
@@ -132,12 +137,21 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 		mosq->will = _mosquitto_calloc(1, sizeof(struct mosquitto_message));
 		if(!mosq->will) return MOSQ_ERR_NOMEM;
 		mosq->will->topic = _mosquitto_strdup(topic);
-		if(!mosq->will->topic) return MOSQ_ERR_NOMEM;
+		if(!mosq->will->topic){
+			rc = MOSQ_ERR_NOMEM;
+			goto cleanup;
+		}
 		mosq->will->payloadlen = payloadlen;
 		if(mosq->will->payloadlen > 0){
-			if(!payload) return MOSQ_ERR_INVAL;
+			if(!payload){
+				rc = MOSQ_ERR_INVAL;
+				goto cleanup;
+			}
 			mosq->will->payload = _mosquitto_malloc(sizeof(uint8_t)*mosq->will->payloadlen);
-			if(!mosq->will->payload) return MOSQ_ERR_NOMEM;
+			if(!mosq->will->payload){
+				rc = MOSQ_ERR_NOMEM;
+				goto cleanup;
+			}
 
 			memcpy(mosq->will->payload, payload, payloadlen);
 		}
@@ -146,6 +160,16 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 	}
 
 	return MOSQ_ERR_SUCCESS;
+
+cleanup:
+	if(mosq->will){
+		if(mosq->will->topic) _mosquitto_free(mosq->will->topic);
+		if(mosq->will->payload) _mosquitto_free(mosq->will->payload);
+	}
+	_mosquitto_free(mosq->will);
+	mosq->will = NULL;
+
+	return rc;
 }
 
 int mosquitto_username_pw_set(struct mosquitto *mosq, const char *username, const char *password)
