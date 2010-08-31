@@ -153,7 +153,7 @@ int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquit
 		prev = cur;
 		cur = cur->next;
 	}
-	return 1;
+	return MOSQ_ERR_NOT_FOUND;
 }
 
 void _mosquitto_message_retry_check(struct mosquitto *mosq)
@@ -208,6 +208,6 @@ int _mosquitto_message_update(struct mosquitto *mosq, uint16_t mid, enum mosquit
 		}
 		message = message->next;
 	}
-	return 1;
+	return MOSQ_ERR_NOT_FOUND;
 }
 
