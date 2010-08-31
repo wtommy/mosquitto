@@ -113,7 +113,7 @@ void mosquitto_message_free(struct mosquitto_message **message)
 	_mosquitto_free(msg);
 }
 
-int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message_all *message)
+void _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message_all *message)
 {
 	struct mosquitto_message_all *tail;
 
@@ -130,7 +130,6 @@ int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message_al
 	}else{
 		mosq->messages = message;
 	}
-	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, struct mosquitto_message_all **message)

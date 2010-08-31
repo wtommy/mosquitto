@@ -290,10 +290,7 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 		message->msg.retain = retain;
 		message->dup = false;
 
-		if(_mosquitto_message_queue(mosq, message)){
-			_mosquitto_message_cleanup(&message);
-			return 1;
-		}
+		_mosquitto_message_queue(mosq, message);
 		return _mosquitto_send_publish(mosq, message->msg.mid, message->msg.topic, message->msg.payloadlen, message->msg.payload, message->msg.qos, message->msg.retain, message->dup);
 	}
 }
