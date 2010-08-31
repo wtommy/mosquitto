@@ -51,8 +51,9 @@ int _mosquitto_packet_handle(struct mosquitto *mosq)
 		case PINGRESP:
 			return _mosquitto_handle_pingresp(mosq);
 		case PUBACK:
+			return _mosquitto_handle_pubackcomp(mosq, "PUBACK");
 		case PUBCOMP:
-			return _mosquitto_handle_pubackcomp(mosq);
+			return _mosquitto_handle_pubackcomp(mosq, "PUBCOMP");
 		case PUBLISH:
 			return _mosquitto_handle_publish(mosq);
 		case PUBREC:
@@ -92,7 +93,7 @@ int _mosquitto_handle_pingresp(struct mosquitto *mosq)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int _mosquitto_handle_pubackcomp(struct mosquitto *mosq)
+int _mosquitto_handle_pubackcomp(struct mosquitto *mosq, const char *type)
 {
 	uint16_t mid;
 	int rc;
@@ -103,7 +104,7 @@ int _mosquitto_handle_pubackcomp(struct mosquitto *mosq)
 	}
 	rc = _mosquitto_read_uint16(&mosq->core.in_packet, &mid);
 	if(rc) return rc;
-	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBACK/PUBCOMP (Mid: %d)", mid);
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received %s (Mid: %d)", type, mid);
 
 	if(!_mosquitto_message_delete(mosq, mid, mosq_md_out)){
 		/* Only inform the client the message has been sent once. */
