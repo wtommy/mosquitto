@@ -135,11 +135,18 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 	message->msg.retain = (header & 0x01);
 
 	rc = _mosquitto_read_string(&mosq->core.in_packet, &message->msg.topic);
-	if(rc) return rc;
-	if(_mosquitto_fix_sub_topic(&message->msg.topic)) return 1;
+	if(rc){
+		_mosquitto_message_cleanup(&message);
+		return rc;
+	}
+	rc = _mosquitto_fix_sub_topic(&message->msg.topic);
+	if(rc){
+		_mosquitto_message_cleanup(&message);
+		return rc;
+	}
 	if(!strlen(message->msg.topic)){
 		_mosquitto_message_cleanup(&message);
-		return 1;
+		return MOSQ_ERR_PROTOCOL;
 	}
 
 	if(message->msg.qos > 0){
