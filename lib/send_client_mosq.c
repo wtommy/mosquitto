@@ -102,7 +102,7 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	}
 
 	mosq->core.keepalive = keepalive;
-	_mosquitto_packet_queue(mosq, packet);
+	_mosquitto_packet_queue(&mosq->core, packet);
 	return MOSQ_ERR_SUCCESS;
 }
 
@@ -144,7 +144,7 @@ int _mosquitto_send_subscribe(struct mosquitto *mosq, uint16_t *mid, bool dup, c
 	_mosquitto_write_string(packet, topic, strlen(topic));
 	_mosquitto_write_byte(packet, topic_qos);
 
-	_mosquitto_packet_queue(mosq, packet);
+	_mosquitto_packet_queue(&mosq->core, packet);
 	return MOSQ_ERR_SUCCESS;
 }
 
@@ -180,7 +180,7 @@ int _mosquitto_send_unsubscribe(struct mosquitto *mosq, uint16_t *mid, bool dup,
 	/* Payload */
 	_mosquitto_write_string(packet, topic, strlen(topic));
 
-	_mosquitto_packet_queue(mosq, packet);
+	_mosquitto_packet_queue(&mosq->core, packet);
 	return MOSQ_ERR_SUCCESS;
 }
 

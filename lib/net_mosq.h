@@ -50,7 +50,7 @@ typedef int ssize_t;
 #define MOSQ_LSB(A) (uint8_t)(A & 0x00FF)
 
 void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet);
-void _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *packet);
+void _mosquitto_packet_queue(struct _mosquitto_core *core, struct _mosquitto_packet *packet);
 int _mosquitto_socket_connect(const char *host, uint16_t port);
 int _mosquitto_socket_close(struct mosquitto *mosq);
 
