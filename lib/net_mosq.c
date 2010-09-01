@@ -84,18 +84,18 @@ void _mosquitto_packet_queue(struct _mosquitto_core *core, struct _mosquitto_pac
  * Returns 1 on failure (context is NULL)
  * Returns 0 on success.
  */
-int _mosquitto_socket_close(struct mosquitto *mosq)
+int _mosquitto_socket_close(struct _mosquitto_core *core)
 {
 	int rc = 0;
 
-	assert(mosq);
-	if(mosq->core.sock != INVALID_SOCKET){
+	assert(core);
+	if(core->sock != INVALID_SOCKET){
 #ifndef WIN32
-		rc = close(mosq->core.sock);
+		rc = close(core->sock);
 #else
-		rc = closesocket(mosq->core.sock);
+		rc = closesocket(core->sock);
 #endif
-		mosq->core.sock = INVALID_SOCKET;
+		core->sock = INVALID_SOCKET;
 	}
 
 	return rc;
