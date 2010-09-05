@@ -7,7 +7,13 @@ OBJS=context.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o 
 
 .PHONY: all clean
 
-all : qos
+all : packet-gen qos
+
+packet-gen : packet-gen.o
+	${CC} $^ -o $@ ../lib/libmosquitto.so.0 -nopie
+
+packet-gen.o : packet-gen.c
+	${CC} $(CFLAGS) -c $< -o $@
 
 qos : qos.o
 	${CC} $^ -o $@ ../lib/libmosquitto.so.0 -nopie

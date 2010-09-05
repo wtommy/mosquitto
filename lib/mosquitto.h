@@ -64,6 +64,15 @@ extern "C" {
 #define MOSQ_LOG_ERR 0x08
 #define MOSQ_LOG_DEBUG 0x10
 
+/* Error values */
+#define MOSQ_ERR_SUCCESS 0
+#define MOSQ_ERR_NOMEM 1
+#define MOSQ_ERR_PROTOCOL 2
+#define MOSQ_ERR_INVAL 3
+#define MOSQ_ERR_NO_CONN 4
+#define MOSQ_ERR_CONN_REFUSED 5
+#define MOSQ_ERR_NOT_FOUND 6
+
 struct mosquitto_message{
 	uint16_t mid;
 	char *topic;

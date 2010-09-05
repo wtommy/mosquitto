@@ -41,20 +41,20 @@ int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending CONNACK to %s (%d)", context->core.id, result);
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packet->command = CONNACK;
 	packet->remaining_length = 2;
 	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*2);
 	if(!packet->payload){
 		_mosquitto_free(packet);
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 	packet->payload[0] = 0;
 	packet->payload[1] = result;
 
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload)
@@ -64,19 +64,21 @@ int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, 
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending SUBACK to %s", context->core.id);
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packet->command = SUBACK;
 	packet->remaining_length = 2+payloadlen;
 	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*(2+payloadlen));
 	if(!packet->payload){
 		_mosquitto_free(packet);
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
-	if(_mosquitto_write_uint16(packet, mid)) return 1;
-	if(payloadlen && _mosquitto_write_bytes(packet, payload, payloadlen)) return 1;
+	_mosquitto_write_uint16(packet, mid);
+	if(payloadlen){
+		_mosquitto_write_bytes(packet, payload, payloadlen);
+	}
 
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }

@@ -236,7 +236,7 @@ int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *pac
 	}else{
 		context->core.out_packet = packet;
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_net_read(mqtt3_context *context)
@@ -275,7 +275,7 @@ int mqtt3_net_read(mqtt3_context *context)
 		}else{
 			if(read_length == 0) return 1; /* EOF */
 			if(errno == EAGAIN || errno == EWOULDBLOCK){
-				return 0;
+				return MOSQ_ERR_SUCCESS;
 			}else{
 				return 1;
 			}
@@ -293,7 +293,7 @@ int mqtt3_net_read(mqtt3_context *context)
 				/* Max 4 bytes length for remaining length as defined by protocol.
 				 * Anything more likely means a broken/malicious client.
 				 */
-				if(context->core.in_packet.remaining_count > 4) return 1;
+				if(context->core.in_packet.remaining_count > 4) return MOSQ_ERR_PROTOCOL;
 
 				bytes_received++;
 				context->core.in_packet.remaining_length += (byte & 127) * context->core.in_packet.remaining_mult;
@@ -301,7 +301,7 @@ int mqtt3_net_read(mqtt3_context *context)
 			}else{
 				if(read_length == 0) return 1; /* EOF */
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
-					return 0;
+					return MOSQ_ERR_SUCCESS;
 				}else{
 					return 1;
 				}
@@ -310,7 +310,7 @@ int mqtt3_net_read(mqtt3_context *context)
 
 		if(context->core.in_packet.remaining_length > 0){
 			context->core.in_packet.payload = _mosquitto_malloc(context->core.in_packet.remaining_length*sizeof(uint8_t));
-			if(!context->core.in_packet.payload) return 1;
+			if(!context->core.in_packet.payload) return MOSQ_ERR_NOMEM;
 			context->core.in_packet.to_process = context->core.in_packet.remaining_length;
 		}
 		context->core.in_packet.have_remaining = 1;
@@ -323,7 +323,7 @@ int mqtt3_net_read(mqtt3_context *context)
 			context->core.in_packet.pos += read_length;
 		}else{
 			if(errno == EAGAIN || errno == EWOULDBLOCK){
-				return 0;
+				return MOSQ_ERR_SUCCESS;
 			}else{
 				return 1;
 			}
@@ -365,7 +365,7 @@ int mqtt3_net_write(mqtt3_context *context)
 			}else{
 				if(write_length == 0) return 1; /* EOF */
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
-					return 0;
+					return MOSQ_ERR_SUCCESS;
 				}else{
 					return 1;
 				}
@@ -387,13 +387,13 @@ int mqtt3_net_write(mqtt3_context *context)
 				if(write_length == 1){
 					packet->remaining_count++;
 					/* Max 4 bytes length for remaining length as defined by protocol. */
-					if(packet->remaining_count > 4) return 1;
+					if(packet->remaining_count > 4) return MOSQ_ERR_PROTOCOL;
 	
 					bytes_sent++;
 				}else{
 					if(write_length == 0) return 1; /* EOF */
 					if(errno == EAGAIN || errno == EWOULDBLOCK){
-						return 0;
+						return MOSQ_ERR_SUCCESS;
 					}else{
 						return 1;
 					}
@@ -409,7 +409,7 @@ int mqtt3_net_write(mqtt3_context *context)
 				packet->pos += write_length;
 			}else{
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
-					return 0;
+					return MOSQ_ERR_SUCCESS;
 				}else{
 					return 1;
 				}
@@ -425,7 +425,7 @@ int mqtt3_net_write(mqtt3_context *context)
 
 		context->core.last_msg_out = time(NULL);
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 uint64_t mqtt3_net_bytes_total_received(void)

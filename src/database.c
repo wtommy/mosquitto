@@ -243,7 +243,7 @@ int mqtt3_db_close(void)
 
 	if(db_filepath) _mosquitto_free(db_filepath);
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_db_backup(bool cleanup)
@@ -774,7 +774,7 @@ int mqtt3_db_client_will_queue(mqtt3_context *context)
 		if(!will){
 			sqlite3_reset(stmt);
 			sqlite3_clear_bindings(stmt);
-			return 0;
+			return MOSQ_ERR_SUCCESS;
 		}
 		topic = (const char *)sqlite3_column_text(stmt, 1);
 		qos = sqlite3_column_int(stmt, 2);
@@ -1307,7 +1307,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	sqlite3_reset(stmt_select);
 	sqlite3_clear_bindings(stmt_select);
 	_mqtt3_db_transaction_end();
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_db_message_release(const char *client_id, uint16_t mid, enum mosquitto_msg_direction dir)
@@ -1583,7 +1583,7 @@ static int _mqtt3_db_regex_create(const char *topic, char **regex)
 	}
 	*regex = local_regex;
 	_mosquitto_free(local_topic);
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
@@ -1670,7 +1670,7 @@ static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 	}
 	*regex = local_regex;
 	_mosquitto_free(local_sub);
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 #endif
 

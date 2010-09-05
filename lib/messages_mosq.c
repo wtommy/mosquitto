@@ -27,14 +27,15 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <mosquitto_internal.h>
 #include <mosquitto.h>
 #include <memory_mosq.h>
 #include <messages_mosq.h>
 #include <send_mosq.h>
-
-#include <stdlib.h>
-#include <string.h>
 
 void _mosquitto_message_cleanup(struct mosquitto_message_all **message)
 {
@@ -53,7 +54,7 @@ void _mosquitto_message_cleanup_all(struct mosquitto *mosq)
 {
 	struct mosquitto_message_all *tmp;
 
-	if(!mosq) return;
+	assert(mosq);
 
 	while(mosq->messages){
 		tmp = mosq->messages->next;
@@ -64,18 +65,18 @@ void _mosquitto_message_cleanup_all(struct mosquitto *mosq)
 
 int mosquitto_message_copy(struct mosquitto_message *dst, const struct mosquitto_message *src)
 {
-	if(!dst || !src) return 1;
+	if(!dst || !src) return MOSQ_ERR_INVAL;
 
 	dst->mid = src->mid;
 	dst->topic = _mosquitto_strdup(src->topic);
-	if(!dst->topic) return 1;
+	if(!dst->topic) return MOSQ_ERR_NOMEM;
 	dst->qos = src->qos;
 	dst->retain = src->retain;
 	if(src->payloadlen){
 		dst->payload = _mosquitto_malloc(src->payloadlen);
 		if(!dst->payload){
 			_mosquitto_free(dst->topic);
-			return 1;
+			return MOSQ_ERR_NOMEM;
 		}
 		memcpy(dst->payload, src->payload, src->payloadlen);
 		dst->payloadlen = src->payloadlen;
@@ -83,29 +84,20 @@ int mosquitto_message_copy(struct mosquitto_message *dst, const struct mosquitto
 		dst->payloadlen = 0;
 		dst->payload = NULL;
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir)
 {
-	struct mosquitto_message_all *message, *prev = NULL;
-	if(!mosq) return 1;
+	struct mosquitto_message_all *message;
+	int rc;
+	assert(mosq);
 
-	message = mosq->messages;
-	while(message){
-		if(message->msg.mid == mid && message->direction == dir){
-			if(prev){
-				prev->next = message->next;
-			}else{
-				mosq->messages = message->next;
-			}
-			_mosquitto_message_cleanup(&message);
-			return 0;
-		}
-		prev = message;
-		message = message->next;
+	rc = _mosquitto_message_remove(mosq, mid, dir, &message);
+	if(rc == MOSQ_ERR_SUCCESS){
+		_mosquitto_message_cleanup(&message);
 	}
-	return 1;
+	return rc;
 }
 
 void mosquitto_message_free(struct mosquitto_message **message)
@@ -121,11 +113,12 @@ void mosquitto_message_free(struct mosquitto_message **message)
 	_mosquitto_free(msg);
 }
 
-int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message_all *message)
+void _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message_all *message)
 {
 	struct mosquitto_message_all *tail;
 
-	if(!mosq || !message) return 1;
+	assert(mosq);
+	assert(message);
 
 	message->next = NULL;
 	if(mosq->messages){
@@ -137,13 +130,13 @@ int _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message_al
 	}else{
 		mosq->messages = message;
 	}
-	return 0;
 }
 
 int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, struct mosquitto_message_all **message)
 {
 	struct mosquitto_message_all *cur, *prev = NULL;
-	if(!mosq || !message) return 1;
+	assert(mosq);
+	assert(message);
 
 	cur = mosq->messages;
 	while(cur){
@@ -154,19 +147,19 @@ int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquit
 				mosq->messages = cur->next;
 			}
 			*message = cur;
-			return 0;
+			return MOSQ_ERR_SUCCESS;
 		}
 		prev = cur;
 		cur = cur->next;
 	}
-	return 1;
+	return MOSQ_ERR_NOT_FOUND;
 }
 
 void _mosquitto_message_retry_check(struct mosquitto *mosq)
 {
 	struct mosquitto_message_all *message;
 	time_t now = time(NULL);
-	if(!mosq) return;
+	assert(mosq);
 
 	message = mosq->messages;
 	while(message){
@@ -196,23 +189,24 @@ void _mosquitto_message_retry_check(struct mosquitto *mosq)
 
 void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_retry)
 {
+	assert(mosq);
 	if(mosq) mosq->message_retry = message_retry;
 }
 
 int _mosquitto_message_update(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, enum mosquitto_msg_state state)
 {
 	struct mosquitto_message_all *message;
-	if(!mosq) return 1;
+	assert(mosq);
 
 	message = mosq->messages;
 	while(message){
 		if(message->msg.mid == mid && message->direction == dir){
 			message->state = state;
 			message->timestamp = time(NULL);
-			return 0;
+			return MOSQ_ERR_SUCCESS;
 		}
 		message = message->next;
 	}
-	return 1;
+	return MOSQ_ERR_NOT_FOUND;
 }
 

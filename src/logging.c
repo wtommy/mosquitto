@@ -70,7 +70,7 @@ int mqtt3_log_close(void)
 	}
 	/* FIXME - do something for all destinations! */
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_log_printf(int priority, const char *fmt, ...)
@@ -126,6 +126,6 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 		}
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 

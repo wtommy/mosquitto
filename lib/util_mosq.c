@@ -27,6 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <assert.h>
 #include <string.h>
 #include <time.h>
 
@@ -39,7 +40,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef WITH_BROKER
 void _mosquitto_check_keepalive(struct mosquitto *mosq)
 {
-	if(mosq && mosq->core.sock != -1 && time(NULL) - mosq->core.last_msg_out >= mosq->core.keepalive){
+	assert(mosq);
+	if(mosq->core.sock != INVALID_SOCKET && time(NULL) - mosq->core.last_msg_out >= mosq->core.keepalive){
 		if(mosq->core.state == mosq_cs_connected){
 			_mosquitto_send_pingreq(mosq);
 		}else{
@@ -57,12 +59,13 @@ int _mosquitto_fix_sub_topic(char **subtopic)
 	char *fixed = NULL;
 	char *token;
 
-	if(!subtopic || !(*subtopic)) return 1;
+	assert(subtopic);
+	assert(*subtopic);
 
 	/* size of fixed here is +1 for the terminating 0 and +1 for the spurious /
 	 * that gets appended. */
 	fixed = _mosquitto_calloc(strlen(*subtopic)+2, 1);
-	if(!fixed) return 1;
+	if(!fixed) return MOSQ_ERR_NOMEM;
 
 	if((*subtopic)[0] == '/'){
 		fixed[0] = '/';
@@ -77,12 +80,12 @@ int _mosquitto_fix_sub_topic(char **subtopic)
 	fixed[strlen(fixed)-1] = '\0';
 	_mosquitto_free(*subtopic);
 	*subtopic = fixed;
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 uint16_t _mosquitto_mid_generate(struct mosquitto *mosq)
 {
-	if(!mosq) return 1;
+	assert(mosq);
 
 	mosq->last_mid++;
 	if(mosq->last_mid == 0) mosq->last_mid++;
