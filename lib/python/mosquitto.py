@@ -223,27 +223,27 @@ _mosquitto_log_init.argtypes = [c_void_p, c_int, c_int]
 _mosquitto_log_init.restype = c_int
 
 _mosquitto_connect_callback_set = _libmosq.mosquitto_connect_callback_set
-#_mosquitto_connect_callback_set.argtypes = [c_void_p, c_void_p]
+_mosquitto_connect_callback_set.argtypes = [c_void_p, c_void_p]
 _mosquitto_connect_callback_set.restype = None
 
 _mosquitto_disconnect_callback_set = _libmosq.mosquitto_disconnect_callback_set
-#_mosquitto_disconnect_callback_set.argtypes = [c_void_p, c_void_p]
+_mosquitto_disconnect_callback_set.argtypes = [c_void_p, c_void_p]
 _mosquitto_disconnect_callback_set.restype = None
 
 _mosquitto_publish_callback_set = _libmosq.mosquitto_publish_callback_set
-#_mosquitto_publish_callback_set.argtypes = [c_void_p, c_void_p]
+_mosquitto_publish_callback_set.argtypes = [c_void_p, c_void_p]
 _mosquitto_publish_callback_set.restype = None
 
 _mosquitto_message_callback_set = _libmosq.mosquitto_message_callback_set
-#_mosquitto_message_callback_set.argtypes = [c_void_p, c_void_p]
+_mosquitto_message_callback_set.argtypes = [c_void_p, c_void_p]
 _mosquitto_message_callback_set.restype = None
 
 _mosquitto_subscribe_callback_set = _libmosq.mosquitto_subscribe_callback_set
-#_mosquitto_subscribe_callback_set.argtypes = [c_void_p, c_void_p]
+_mosquitto_subscribe_callback_set.argtypes = [c_void_p, c_void_p]
 _mosquitto_subscribe_callback_set.restype = None
 
 _mosquitto_unsubscribe_callback_set = _libmosq.mosquitto_unsubscribe_callback_set
-#_mosquitto_unsubscribe_callback_set.argtypes = [c_void_p, c_void_p]
+_mosquitto_unsubscribe_callback_set.argtypes = [c_void_p, c_void_p]
 _mosquitto_unsubscribe_callback_set.restype = None
 
 _MOSQ_CONNECT_FUNC = CFUNCTYPE(None, c_void_p, c_int)
