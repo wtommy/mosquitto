@@ -85,6 +85,57 @@ int _sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *subhier
 	return _sub_add(context, qos, branch, NULL);
 }
 
+int _sub_remove(mqtt3_context *context, struct _mosquitto_subhier *subhier, char *sub)
+{
+	char *token;
+	struct _mosquitto_subhier *branch, *last = NULL;
+	struct _mosquitto_subleaf *leaf, *last_leaf;
+
+	if(!sub){
+		token = strtok(NULL, "/");
+	}else{
+		token = strtok(sub, "/");
+	}
+	if(!token){
+		leaf = subhier->subs;
+		last_leaf = NULL;
+		while(leaf){
+			if(leaf->context==context){
+				if(last_leaf){
+					last_leaf->next = leaf->next;
+				}else{
+					subhier->subs = leaf->next;
+				}
+				_mosquitto_free(leaf);
+				return 0;
+			}
+			last_leaf = leaf;
+			leaf = leaf->next;
+		}
+		return 0;
+	}
+
+	branch = subhier->children;
+	while(branch){
+		if(!strcmp(branch->topic, token)){
+			_sub_remove(context, branch, NULL);
+			if(!branch->children && !branch->subs){
+				if(last){
+					last->next = branch->next;
+				}else{
+					subhier->children = branch->next;
+				}
+				_mosquitto_free(branch->topic);
+				_mosquitto_free(branch);
+			}
+			return 0;
+		}
+		last = branch;
+		branch = branch->next;
+	}
+	return 0;
+}
+
 int mqtt3_sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *root, const char *sub)
 {
 	char *local_sub;
@@ -119,6 +170,49 @@ int mqtt3_sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *ro
 			return rc;
 		}else if(!strcmp(subhier->topic, "$SYS") && tree == 2){
 			rc = _sub_add(context, qos, subhier, local_sub);
+			_mosquitto_free(local_sub);
+			return rc;
+		}
+		subhier = subhier->next;
+	}
+
+	return 1;
+}
+
+int mqtt3_sub_remove(mqtt3_context *context, struct _mosquitto_subhier *root, const char *sub)
+{
+	char *local_sub;
+	int tree;
+	struct _mosquitto_subhier *subhier;
+	int rc;
+
+	assert(root);
+	assert(sub);
+
+	if(!strncmp(sub, "$SYS", 4)){
+		tree = 2;
+		local_sub = _mosquitto_strdup(sub);
+	}else if(sub[0] == '/'){
+		tree = 1;
+		local_sub = _mosquitto_strdup(sub+1);
+	}else{
+		tree = 0;
+		local_sub = _mosquitto_strdup(sub);
+	}
+	if(!local_sub) return 1;
+
+	subhier = root->children;
+	while(subhier){
+		if(!strcmp(subhier->topic, "") && tree == 0){
+			rc = _sub_remove(context, subhier, local_sub);
+			_mosquitto_free(local_sub);
+			return rc;
+		}else if(!strcmp(subhier->topic, "/") && tree == 1){
+			rc = _sub_remove(context, subhier, local_sub);
+			_mosquitto_free(local_sub);
+			return rc;
+		}else if(!strcmp(subhier->topic, "$SYS") && tree == 2){
+			rc = _sub_remove(context, subhier, local_sub);
 			_mosquitto_free(local_sub);
 			return rc;
 		}
