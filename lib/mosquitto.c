@@ -366,7 +366,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 					}
 					return MOSQ_ERR_SUCCESS;
 				}else{
-					fprintf(stderr, "Error in network read.\n");
+					_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Error in network read.\n");
 					return rc;
 				}
 			}
@@ -381,7 +381,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 					}
 					return MOSQ_ERR_SUCCESS;
 				}else{
-					fprintf(stderr, "Error in network write.\n");
+					_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Error in network write.\n");
 					return rc;
 				}
 			}
