@@ -34,7 +34,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <subs.h>
 #include <memory_mosq.h>
 
-int _sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *subhier, char *sub)
+static int _sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *subhier, char *sub)
 {
 	char *token;
 	struct _mosquitto_subhier *branch, *last = NULL;
@@ -90,7 +90,7 @@ int _sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *subhier
 	return _sub_add(context, qos, branch, NULL);
 }
 
-int _sub_remove(mqtt3_context *context, struct _mosquitto_subhier *subhier, char *sub)
+static int _sub_remove(mqtt3_context *context, struct _mosquitto_subhier *subhier, char *sub)
 {
 	char *token;
 	struct _mosquitto_subhier *branch, *last = NULL;
