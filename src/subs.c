@@ -181,6 +181,7 @@ int mqtt3_sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *ro
 		}
 		subhier = subhier->next;
 	}
+	_mosquitto_free(local_sub);
 
 	return 1;
 }
@@ -224,6 +225,7 @@ int mqtt3_sub_remove(mqtt3_context *context, struct _mosquitto_subhier *root, co
 		}
 		subhier = subhier->next;
 	}
+	_mosquitto_free(local_sub);
 
 	return 1;
 }
