@@ -88,9 +88,7 @@ int _sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *subhier
 int mqtt3_sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *root, const char *sub)
 {
 	char *local_sub;
-	char *stmp;
 	int tree;
-	int hier;
 	struct _mosquitto_subhier *subhier;
 	int rc;
 
