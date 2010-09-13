@@ -320,6 +320,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 #endif
 	fd_set readfds, writefds;
 	int fdcount;
+	int rc;
 
 	if(!mosq) return MOSQ_ERR_INVAL;
 	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
@@ -356,7 +357,8 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 		return 1;
 	}else{
 		if(FD_ISSET(mosq->core.sock, &readfds)){
-			if(mosquitto_loop_read(mosq)){
+			rc = mosquitto_loop_read(mosq);
+			if(rc){
 				_mosquitto_socket_close(mosq);
 				if(mosq->core.state == mosq_cs_disconnecting){
 					if(mosq->on_disconnect){
@@ -365,12 +367,13 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 					return MOSQ_ERR_SUCCESS;
 				}else{
 					fprintf(stderr, "Error in network read.\n");
-					return 1;
+					return rc;
 				}
 			}
 		}
 		if(FD_ISSET(mosq->core.sock, &writefds)){
-			if(mosquitto_loop_write(mosq)){
+			rc = mosquitto_loop_write(mosq);
+			if(rc){
 				_mosquitto_socket_close(mosq);
 				if(mosq->core.state == mosq_cs_disconnecting){
 					if(mosq->on_disconnect){
@@ -379,7 +382,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 					return MOSQ_ERR_SUCCESS;
 				}else{
 					fprintf(stderr, "Error in network write.\n");
-					return 1;
+					return rc;
 				}
 			}
 		}
