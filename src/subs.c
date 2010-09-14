@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <mqtt3.h>
 #include <subs.h>
@@ -38,6 +39,47 @@ struct _sub_token {
 	struct _sub_token *next;
 	char *topic;
 };
+
+static int _subs_process(struct _mosquitto_subleaf *leaf, const char *source_id, const char *topic, int qos, int retain, int64_t store_id)
+{
+	int rc = 0;
+	char *client_id;
+	int client_qos, msg_qos;
+	uint16_t mid;
+
+	while(leaf){
+		if(leaf->context->bridge && !strcmp(leaf->context->core.id, source_id)){
+			leaf = leaf->next;
+			continue;
+		}
+		client_id = leaf->context->core.id;
+		client_qos = leaf->qos;
+
+		if(qos > client_qos){
+			msg_qos = client_qos;
+		}else{
+			msg_qos = qos;
+		}
+		if(msg_qos){
+			mid = mqtt3_db_mid_generate(client_id);
+		}else{
+			mid = 0;
+		}
+		switch(msg_qos){
+			case 0:
+				if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish, msg_qos, store_id) == 1) rc = 1;
+				break;
+			case 1:
+				if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish_puback, msg_qos, store_id) == 1) rc = 1;
+				break;
+			case 2:
+				if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish_pubrec, msg_qos, store_id) == 1) rc = 1;
+				break;
+		}
+		leaf = leaf->next;
+	}
+	return 0;
+}
 
 static int _sub_topic_tokenise(const char *subtopic, struct _sub_token **topics)
 {
@@ -177,33 +219,25 @@ static int _sub_remove(mqtt3_context *context, struct _mosquitto_subhier *subhie
 	return 0;
 }
 
-static int _sub_search(const char *topic, struct _mosquitto_subhier *subhier, struct _sub_token *tokens)
+static int _sub_search(struct _mosquitto_subhier *subhier, struct _sub_token *tokens, const char *source_id, const char *topic, int qos, int retain, int64_t store_id)
 {
+	/* FIXME - need to take into account source_id if the client is a bridge */
 	struct _mosquitto_subhier *branch, *last = NULL;
-	struct _mosquitto_subleaf *leaf, *last_leaf;
-
-	if(!tokens){
-		leaf = subhier->subs;
-		last_leaf = NULL;
-		while(leaf){
-			/* FIXME - this is subscribed, send message */
-			printf("%s matched\n", topic);
-			leaf = leaf->next;
-		}
-		return 0;
-	}
 
 	branch = subhier->children;
 	while(branch){
 		if(!strcmp(branch->topic, tokens->topic) || !strcmp(branch->topic, "+")){
 			/* The topic matches this subscription.
 			 * Doesn't include # wildcards */
-			_sub_search(topic, branch, tokens->next);
+			if(tokens->next){
+				_sub_search(branch, tokens->next, source_id, topic, qos, retain, store_id);
+			}else{
+				_subs_process(branch->subs, source_id, topic, qos, retain, store_id);
+			}
 		}else if(!strcmp(branch->topic, "#") && !branch->children){
 			/* The topic matches due to a # wildcard - process the
 			 * subscriptions and return. */
-			/* FIXME */
-			printf("%s matched\n", topic);
+			_subs_process(branch->subs, source_id, topic, qos, retain, store_id);
 			return 0;
 		}
 		last = branch;
@@ -303,7 +337,7 @@ int mqtt3_sub_remove(mqtt3_context *context, struct _mosquitto_subhier *root, co
 	return rc;
 }
 
-int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *topic)
+int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *source_id, const char *topic, int qos, int retain, int64_t store_id)
 {
 	int rc = 0;
 	int tree;
@@ -327,11 +361,11 @@ int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *topic)
 	subhier = root->children;
 	while(subhier){
 		if(!strcmp(subhier->topic, "") && tree == 0){
-			rc = _sub_search(topic, subhier, tokens);
+			rc = _sub_search(subhier, tokens, source_id, topic, qos, retain, store_id);
 		}else if(!strcmp(subhier->topic, "/") && tree == 1){
-			rc = _sub_search(topic, subhier, tokens);
+			rc = _sub_search(subhier, tokens, source_id, topic, qos, retain, store_id);
 		}else if(!strcmp(subhier->topic, "$SYS") && tree == 2){
-			rc = _sub_search(topic, subhier, tokens);
+			rc = _sub_search(subhier, tokens, source_id, topic, qos, retain, store_id);
 		}
 		subhier = subhier->next;
 	}
