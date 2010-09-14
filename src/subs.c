@@ -385,15 +385,70 @@ int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *source_id, con
 	return rc;
 }
 
+static int _subs_clean_session(mqtt3_context *context, struct _mosquitto_subhier *root)
+{
+	int rc = 0;
+	struct _mosquitto_subhier *child, *last = NULL;
+	struct _mosquitto_subleaf *leaf, *next;
+
+	if(!root) return 0;
+
+	leaf = root->subs;
+	while(leaf){
+		if(leaf->context == context){
+			if(leaf->prev){
+				leaf->prev->next = leaf->next;
+			}else{
+				root->subs = leaf->next;
+			}
+			if(leaf->next){
+				leaf->next->prev = leaf->prev;
+			}
+			next = leaf->next;
+			_mosquitto_free(leaf);
+			leaf = next;
+		}else{
+			leaf = leaf->next;
+		}
+	}
+
+	child = root->children;
+	while(child){
+		_subs_clean_session(context, child);
+		if(!child->children && !child->subs){
+			if(last){
+				last->next = child->next;
+			}else{
+				root->children = child->next;
+			}
+			_mosquitto_free(child->topic);
+			_mosquitto_free(child);
+			if(last){
+				child = last->next;
+			}else{
+				child = root->children;
+			}
+		}else{
+			last = child;
+			child = child->next;
+		}
+	}
+	return rc;
+}
+
 /* Remove all subscriptions for a client.
- * Returns 1 on failure (client_id is NULL, sqlite error)
- * Returns 0 on success.
  */
 int mqtt3_subs_clean_session(mqtt3_context *context, struct _mosquitto_subhier *root)
 {
-	int rc = 0;
+	struct _mosquitto_subhier *child;
 
-	return rc;
+	child = root->children;
+	while(child){
+		_subs_clean_session(context, child);
+		child = child->next;
+	}
+
+	return 0;
 }
 
 void mqtt3_sub_tree_print(struct _mosquitto_subhier *root, int level)
