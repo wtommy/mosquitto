@@ -142,6 +142,45 @@ static int _sub_remove(mqtt3_context *context, struct _mosquitto_subhier *subhie
 	return 0;
 }
 
+static int _sub_search(struct _mosquitto_subhier *subhier, char *topic)
+{
+	char *token;
+	struct _mosquitto_subhier *branch, *last = NULL;
+	struct _mosquitto_subleaf *leaf, *last_leaf;
+
+	if(!topic){
+		token = strtok(NULL, "/");
+	}else{
+		token = strtok(topic, "/");
+	}
+	if(!token){
+		leaf = subhier->subs;
+		last_leaf = NULL;
+		while(leaf){
+			/* FIXME - this is subscribed, send message */
+			leaf = leaf->next;
+		}
+		return 0;
+	}
+
+	branch = subhier->children;
+	while(branch){
+		if(!strcmp(branch->topic, token) || !strcmp(branch->topic, "+")){
+			/* The topic matches this subscription.
+			 * Doesn't include # wildcards */
+			_sub_search(branch, NULL);
+		}else if(!strcmp(branch->topic, "#") && !branch->children){
+			/* The topic matches due to a # wildcard - process the
+			 * subscriptions and return. */
+			/* FIXME */
+			return 0;
+		}
+		last = branch;
+		branch = branch->next;
+	}
+	return 0;
+}
+
 int mqtt3_sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *root, const char *sub)
 {
 	char *local_sub;
@@ -181,8 +220,8 @@ int mqtt3_sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *ro
 		}
 		subhier = subhier->next;
 	}
-	_mosquitto_free(local_sub);
 
+	_mosquitto_free(local_sub);
 	return 1;
 }
 
@@ -225,9 +264,64 @@ int mqtt3_sub_remove(mqtt3_context *context, struct _mosquitto_subhier *root, co
 		}
 		subhier = subhier->next;
 	}
-	_mosquitto_free(local_sub);
 
+	_mosquitto_free(local_sub);
 	return 1;
+}
+
+int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *topic)
+{
+	char *stmp;
+	int hier;
+	char *local_topic;
+	int tree;
+	struct _mosquitto_subhier *subhier;
+
+	assert(root);
+	assert(topic);
+
+	if(!strncmp(topic, "$SYS", 4)){
+		tree = 2;
+		local_topic = _mosquitto_strdup(topic);
+	}else if(topic[0] == '/'){
+		tree = 1;
+		local_topic = _mosquitto_strdup(topic+1);
+	}else{
+		tree = 0;
+		local_topic = _mosquitto_strdup(topic);
+	}
+	if(!local_topic) return 1;
+
+	hier = 0;
+	stmp = local_topic;
+	while(stmp){
+		stmp = index(stmp, '/');
+		if(stmp) stmp++;
+		hier++;
+	}
+
+	subhier = root->children;
+	while(subhier){
+		if(!strcmp(subhier->topic, "") && tree == 0){
+			if(_sub_search(subhier, local_topic)){
+				_mosquitto_free(local_topic);
+				return 1;
+			}
+		}else if(!strcmp(subhier->topic, "/") && tree == 1){
+			if(_sub_search(subhier, local_topic)){
+				_mosquitto_free(local_topic);
+				return 1;
+			}
+		}else if(!strcmp(subhier->topic, "$SYS") && tree == 2){
+			if(_sub_search(subhier, local_topic)){
+				_mosquitto_free(local_topic);
+				return 1;
+			}
+		}
+		subhier = subhier->next;
+	}
+	_mosquitto_free(local_topic);
+	return 0;
 }
 
 void mqtt3_sub_tree_print(struct _mosquitto_subhier *root, int level)
