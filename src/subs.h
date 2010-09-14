@@ -35,7 +35,6 @@ POSSIBILITY OF SUCH DAMAGE.
 struct _mosquitto_subleaf {
 	struct _mosquitto_subleaf *next;
 	struct _mqtt3_context *context;
-	char *client_id;
 	int qos;
 };
 
