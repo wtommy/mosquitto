@@ -148,8 +148,10 @@ static int _sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *
 		leaf->qos = qos;
 		if(last_leaf){
 			last_leaf->next = leaf;
+			leaf->prev = last_leaf;
 		}else{
 			subhier->subs = leaf;
+			leaf->prev = NULL;
 		}
 		return 0;
 	}
@@ -177,22 +179,23 @@ static int _sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *
 static int _sub_remove(mqtt3_context *context, struct _mosquitto_subhier *subhier, struct _sub_token *tokens)
 {
 	struct _mosquitto_subhier *branch, *last = NULL;
-	struct _mosquitto_subleaf *leaf, *last_leaf;
+	struct _mosquitto_subleaf *leaf;
 
 	if(!tokens){
 		leaf = subhier->subs;
-		last_leaf = NULL;
 		while(leaf){
 			if(leaf->context==context){
-				if(last_leaf){
-					last_leaf->next = leaf->next;
+				if(leaf->prev){
+					leaf->prev->next = leaf->next;
 				}else{
 					subhier->subs = leaf->next;
+				}
+				if(leaf->next){
+					leaf->next->prev = leaf->prev;
 				}
 				_mosquitto_free(leaf);
 				return 0;
 			}
-			last_leaf = leaf;
 			leaf = leaf->next;
 		}
 		return 0;
