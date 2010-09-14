@@ -45,7 +45,7 @@ struct _mosquitto_subhier {
 	char *topic;
 };
 
-int mqtt3_sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *root, const char *sub);
+int mqtt3_sub_add(mqtt3_context *context, const char *sub, int qos, struct _mosquitto_subhier *root);
 int mqtt3_sub_remove(mqtt3_context *context, struct _mosquitto_subhier *root, const char *sub);
 int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *source_id, const char *topic, int qos, int retain, int64_t store_id);
 void mqtt3_sub_tree_print(struct _mosquitto_subhier *root, int level);

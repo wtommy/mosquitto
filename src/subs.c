@@ -246,7 +246,7 @@ static int _sub_search(struct _mosquitto_subhier *subhier, struct _sub_token *to
 	return 0;
 }
 
-int mqtt3_sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *root, const char *sub)
+int mqtt3_sub_add(mqtt3_context *context, const char *sub, int qos, struct _mosquitto_subhier *root)
 {
 	int tree;
 	int rc = 0;
