@@ -256,14 +256,17 @@ int mqtt3_sub_add(mqtt3_context *context, const char *sub, int qos, struct _mosq
 	assert(root);
 	assert(sub);
 
-	if(!strncmp(sub, "$SYS", 4)){
+	if(!strncmp(sub, "$SYS/", 5)){
 		tree = 2;
-		if(_sub_topic_tokenise(sub, &tokens)) return 1;
+		if(strlen(sub+5) == 0) return 0;
+		if(_sub_topic_tokenise(sub+5, &tokens)) return 1;
 	}else if(sub[0] == '/'){
 		tree = 1;
+		if(strlen(sub+1) == 0) return 0;
 		if(_sub_topic_tokenise(sub+1, &tokens)) return 1;
 	}else{
 		tree = 0;
+		if(strlen(sub) == 0) return 0;
 		if(_sub_topic_tokenise(sub, &tokens)) return 1;
 	}
 
@@ -301,9 +304,9 @@ int mqtt3_sub_remove(mqtt3_context *context, const char *sub, struct _mosquitto_
 	assert(root);
 	assert(sub);
 
-	if(!strncmp(sub, "$SYS", 4)){
+	if(!strncmp(sub, "$SYS/", 5)){
 		tree = 2;
-		if(_sub_topic_tokenise(sub, &tokens)) return 1;
+		if(_sub_topic_tokenise(sub+5, &tokens)) return 1;
 	}else if(sub[0] == '/'){
 		tree = 1;
 		if(_sub_topic_tokenise(sub, &tokens)) return 1;
@@ -347,9 +350,9 @@ int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *source_id, con
 	assert(root);
 	assert(topic);
 
-	if(!strncmp(topic, "$SYS", 4)){
+	if(!strncmp(topic, "$SYS/", 5)){
 		tree = 2;
-		if(_sub_topic_tokenise(topic, &tokens)) return 1;
+		if(_sub_topic_tokenise(topic+5, &tokens)) return 1;
 	}else if(topic[0] == '/'){
 		tree = 1;
 		if(_sub_topic_tokenise(topic+1, &tokens)) return 1;
