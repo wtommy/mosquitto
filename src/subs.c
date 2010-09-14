@@ -291,7 +291,7 @@ int mqtt3_sub_add(mqtt3_context *context, const char *sub, int qos, struct _mosq
 	return rc;
 }
 
-int mqtt3_sub_remove(mqtt3_context *context, struct _mosquitto_subhier *root, const char *sub)
+int mqtt3_sub_remove(mqtt3_context *context, const char *sub, struct _mosquitto_subhier *root)
 {
 	int rc = 0;
 	int tree;
