@@ -111,7 +111,7 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 
 	for(i=0; i<context->bridge->topic_count; i++){
 		if(context->bridge->topics[i].direction == bd_out || context->bridge->topics[i].direction == bd_both){
-			if(mqtt3_db_sub_insert(context->core.id, context->bridge->topics[i].topic, 2)) return 1;
+			if(mqtt3_sub_add(context, context->bridge->topics[i].topic, 2, &int_db.subs)) return 1;
 		}
 	}
 
