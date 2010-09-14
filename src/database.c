@@ -109,18 +109,19 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 #include <mqtt3.h>
 #include <memory_mosq.h>
+#include <subs.h>
+
+struct _mosquitto_db int_db;
 
 static sqlite3 *db = NULL;
 static char *db_filepath = NULL;
 
-static sqlite3_stmt *stmt_sub_search = NULL;
 static int max_inflight = 20;
 static int max_queued = 100;
 
 static int _mqtt3_db_tables_create(void);
 static int _mqtt3_db_cleanup(void);
 #ifdef WITH_REGEX
-static int _mqtt3_db_regex_create(const char *topic, char **regex);
 static int _mqtt3_db_retain_regex_create(const char *sub, char **regex);
 #endif
 static sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query);
@@ -1175,10 +1176,6 @@ int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, i
 {
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
-	char *client_id;
-	uint8_t client_qos;
-	uint8_t msg_qos;
-	uint16_t mid;
 
 	/* Find all clients that subscribe to topic and put messages into the db for them. */
 	if(!source_id || !topic || !store_id) return 1;
@@ -1186,35 +1183,7 @@ int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, i
 	if(retain){
 		if(mqtt3_db_retain_insert(topic, store_id)) rc = 1;
 	}
-	if(!mqtt3_db_sub_search_start(source_id, topic, qos)){
-		while(sqlite3_step(stmt_sub_search) == SQLITE_ROW){
-			client_id = (char *)sqlite3_column_text(stmt_sub_search, 0);
-			client_qos = sqlite3_column_int(stmt_sub_search, 1);
-			if(qos > client_qos){
-				msg_qos = client_qos;
-			}else{
-				msg_qos = qos;
-			}
-			if(msg_qos){
-				mid = mqtt3_db_mid_generate(client_id);
-			}else{
-				mid = 0;
-			}
-			switch(msg_qos){
-				case 0:
-					if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish, msg_qos, store_id) == 1) rc = 1;
-					break;
-				case 1:
-					if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish_puback, msg_qos, store_id) == 1) rc = 1;
-					break;
-				case 2:
-					if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish_pubrec, msg_qos, store_id) == 1) rc = 1;
-					break;
-			}
-		}
-	}
-	sqlite3_reset(stmt_sub_search);
-	sqlite3_clear_bindings(stmt_sub_search);
+	mqtt3_sub_search(&int_db.subs, source_id, topic, qos, retain, store_id);
 	return rc;
 }
 
@@ -1491,101 +1460,6 @@ uint16_t mqtt3_db_mid_generate(const char *client_id)
 }
 
 #ifdef WITH_REGEX
-/* Internal function.
- * Create a regular expression based on 'topic' to match all subscriptions with
- * wildcards + and #.
- * Returns 1 on failure (topic or regex are NULL, out of memory).
- * Regular expression is returned in 'regex'. This memory must not be freed by
- * the caller.
- */
-static int _mqtt3_db_regex_create(const char *topic, char **regex)
-{
-	char *stmp;
-	int hier;
-	static char *local_regex = NULL;
-	static int regex_len = 0;
-	char *local_topic;
-	int new_len;
-	char *token;
-	int pos;
-	int i;
-	int sys = 0;
-	char *start_slash;
-
-	if(!topic || !regex) return 1;
-
-	if(!strncmp(topic, "$SYS", 4)){
-		sys = 1;
-	}
-	hier = 0;
-	if(topic[0] == '/'){
-		local_topic = _mosquitto_strdup(topic+1);
-		start_slash = "/";
-	}else{
-		local_topic = _mosquitto_strdup(topic);
-		start_slash = "";
-	}
-	if(!local_topic) return 1;
-	stmp = local_topic;
-	while(stmp){
-		stmp = index(stmp, '/');
-		if(stmp) stmp++;
-		hier++;
-	}
-	if(hier > 1){
-		new_len = strlen(local_topic) - (hier-1)
-			  + 24 /* For hier==1 start */
-			  + 24*(hier-2) /* For hier>1 && hier<(max-1) start */
-			  + 15 /* For final hier start */
-			  + 5*(hier-2) /* For hier>1 end */
-			  + 6 /* For hier==1 and NULL */
-			  + 4*hier; /* For \Q ... \E per hierarchy level */
-	}else{
-		new_len = strlen(local_topic) + 21;
-	}
-	if(regex_len < new_len){
-		local_regex = _mosquitto_realloc(local_regex, new_len);
-		regex_len = new_len;
-		if(!local_regex) return 1;
-	}
-	if(hier > 1){
-		token = strtok(local_topic, "/");
-		if(!sys){
-			pos = sprintf(local_regex, "^%s(?:(?:(?:\\Q%s\\E|\\+)(?!$))", start_slash, token);
-		}else{
-			pos = sprintf(local_regex, "^(?:(?:(?:\\Q%s\\E)(?!$))", token);
-		}
-		token = strtok(NULL, "/");
-		i=1;
-		while(token){
-			if(i < hier-1){
-				pos += sprintf(&(local_regex[pos]), "(?:(?:/(?:(?:\\Q%s\\E|\\+)(?!$)))", token);
-			}else{
-				pos += sprintf(&(local_regex[pos]), "(?:(?:/(?:\\Q%s\\E|\\+))", token);
-			}
-			token = strtok(NULL, "/");
-			i++;
-		}
-		for(i=0; i<hier-1; i++){
-			pos += sprintf(&(local_regex[pos]), "|/#)?");
-		}
-		if(!sys){
-			sprintf(&(local_regex[pos]), "|#)$");
-		}else{
-			sprintf(&(local_regex[pos]), ")$");
-		}
-	}else{
-		if(!sys){
-			pos = sprintf(local_regex, "^%s(?:(?:(?:\\Q%s\\E|\\+))|#)$", start_slash, local_topic);
-		}else{
-			pos = sprintf(local_regex, "^(?:(?:(?:%s|\\+)))$", local_topic);
-		}
-	}
-	*regex = local_regex;
-	_mosquitto_free(local_topic);
-	return MOSQ_ERR_SUCCESS;
-}
-
 static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 {
 	char *stmp;
@@ -1887,55 +1761,6 @@ int mqtt3_db_sub_delete(const char *client_id, const char *sub)
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
-
-	return rc;
-}
-
-/* Begin a new search for subscriptions that match 'topic'.
- * Returns 1 on failure (topic is NULL, sqlite error)
- * Returns 0 on failure.
- * Will use regex for pattern matching if compiled with WITH_REGEX defined.
- * Wildcards in subscriptions are disabled if WITH_REGEX not defined.
- */
-int mqtt3_db_sub_search_start(const char *source_id, const char *topic, int qos)
-{
-	/* Warning: Don't start transaction in this function. */
-	int rc = 0;
-#ifdef WITH_REGEX
-	char *regex;
-#endif
-
-	if(!source_id || !topic) return 1;
-
-	if(!stmt_sub_search){
-		/* Only queue messages for clients that are connected, or clients that
-		 * are disconnected and have QoS>0. */
-#ifdef WITH_REGEX
-		stmt_sub_search = _mqtt3_db_statement_prepare("SELECT client_id,qos FROM subs "
-				"JOIN clients ON subs.client_id=clients.id "
-				"WHERE regexp(?, subs.sub)"
-				" AND ((clients.sock=-1 AND subs.qos<>0 AND ?<>0) OR clients.sock<>-1)"
-				" AND (clients.is_bridge=0 OR (clients.is_bridge=1 AND clients.id<>?))");
-#else
-		stmt_sub_search = _mqtt3_db_statement_prepare("SELECT client_id,qos FROM subs "
-				"JOIN clients ON subs.client_id=clients.id "
-				"WHERE subs.sub=?"
-				" AND ((clients.sock=-1 AND subs.qos<>0 AND ?<>0) OR clients.sock<>-1)"
-				" AND (clients.is_bridge=0 OR (clients.is_bridge=1 AND clients.id<>?))");
-#endif
-		if(!stmt_sub_search){
-			return 1;
-		}
-	}
-
-#ifdef WITH_REGEX
-	if(_mqtt3_db_regex_create(topic, &regex)) return 1;
-	if(sqlite3_bind_text(stmt_sub_search, 1, regex, strlen(regex), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-#else
-	if(sqlite3_bind_text(stmt_sub_search, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-#endif
-	if(sqlite3_bind_int(stmt_sub_search, 2, qos) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_text(stmt_sub_search, 3, source_id, strlen(source_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 
 	return rc;
 }

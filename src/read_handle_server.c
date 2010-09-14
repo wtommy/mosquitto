@@ -33,6 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
 #include <memory_mosq.h>
+#include <subs.h>
 #include <util_mosq.h>
 
 int mqtt3_handle_connect(mqtt3_context *context)
@@ -154,7 +155,7 @@ int mqtt3_handle_subscribe(mqtt3_context *context)
 				return 1;
 			}
 			mqtt3_log_printf(MOSQ_LOG_DEBUG, "\t%s (QoS %d)", sub, qos);
-			mqtt3_db_sub_insert(context->core.id, sub, qos);
+			mqtt3_sub_add(context, sub, qos, &int_db.subs);
 	
 			if(mqtt3_db_retain_queue(context, sub, qos)) rc = 1;
 			_mosquitto_free(sub);
@@ -190,7 +191,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 
 		if(sub){
 			mqtt3_log_printf(MOSQ_LOG_DEBUG, "\t%s", sub);
-			mqtt3_db_sub_delete(context->core.id, sub);
+			mqtt3_sub_remove(context, sub, &int_db.subs);
 			_mosquitto_free(sub);
 		}
 	}

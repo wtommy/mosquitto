@@ -355,6 +355,7 @@ int main(int argc, char *argv[])
 	FILE *pid;
 	int listener_max;
 	int rc;
+	struct _mosquitto_subhier *child;
 
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
@@ -387,6 +388,28 @@ int main(int argc, char *argv[])
 	contexts = _mosquitto_malloc(sizeof(mqtt3_context*)*context_count);
 	if(!contexts) return MOSQ_ERR_NOMEM;
 	contexts[0] = NULL;
+
+	int_db.subs.next = NULL;
+	int_db.subs.subs = NULL;
+	int_db.subs.topic = "";
+
+	child = malloc(sizeof(struct _mosquitto_subhier));
+	child->next = NULL;
+	child->topic = strdup("");
+	child->children = NULL;
+	int_db.subs.children = child;
+
+	child = malloc(sizeof(struct _mosquitto_subhier));
+	child->next = NULL;
+	child->topic = strdup("/");
+	child->children = NULL;
+	int_db.subs.children->next = child;
+
+	child = malloc(sizeof(struct _mosquitto_subhier));
+	child->next = NULL;
+	child->topic = strdup("$SYS");
+	child->children = NULL;
+	int_db.subs.children->next->next = child;
 
 	if(mqtt3_db_open(&config)){
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Couldn't open database.");
