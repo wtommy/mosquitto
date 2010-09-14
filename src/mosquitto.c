@@ -343,7 +343,8 @@ void handle_sigusr1(int signal)
 /* Signal handler for SIGUSR2 - vacuum the db. */
 void handle_sigusr2(int signal)
 {
-	mqtt3_db_vacuum();
+	//mqtt3_db_vacuum();
+	mqtt3_sub_tree_print(&int_db.subs, 0);
 }
 
 int main(int argc, char *argv[])

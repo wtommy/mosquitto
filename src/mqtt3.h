@@ -256,8 +256,6 @@ int mqtt3_db_retain_insert(const char *topic, int64_t store_id);
 int mqtt3_db_retain_delete(const char *topic);
 int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos);
 int mqtt3_db_store_clean(void);
-/* Remove all subscriptions for a client. */
-int mqtt3_db_subs_clean_session(const char *client_id);
 void mqtt3_db_sys_update(int interval, time_t start_time);
 void mqtt3_db_vacuum(void);
 

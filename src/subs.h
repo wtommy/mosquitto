@@ -51,5 +51,6 @@ int mqtt3_sub_add(struct _mqtt3_context *context, const char *sub, int qos, stru
 int mqtt3_sub_remove(struct _mqtt3_context *context, const char *sub, struct _mosquitto_subhier *root);
 int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *source_id, const char *topic, int qos, int retain, int64_t store_id);
 void mqtt3_sub_tree_print(struct _mosquitto_subhier *root, int level);
+int mqtt3_subs_clean_session(struct _mqtt3_context *context, struct _mosquitto_subhier *root);
 
 #endif

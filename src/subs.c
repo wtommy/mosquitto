@@ -382,6 +382,17 @@ int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *source_id, con
 	return rc;
 }
 
+/* Remove all subscriptions for a client.
+ * Returns 1 on failure (client_id is NULL, sqlite error)
+ * Returns 0 on success.
+ */
+int mqtt3_subs_clean_session(mqtt3_context *context, struct _mosquitto_subhier *root)
+{
+	int rc = 0;
+
+	return rc;
+}
+
 void mqtt3_sub_tree_print(struct _mosquitto_subhier *root, int level)
 {
 	int i;

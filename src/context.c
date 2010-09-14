@@ -33,6 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 #include <mqtt3.h>
 #include <memory_mosq.h>
+#include <subs.h>
 
 mqtt3_context *mqtt3_context_init(int sock)
 {
@@ -88,7 +89,7 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 		mqtt3_socket_close(context);
 	}
 	if(context->clean_session && !context->duplicate){
-		mqtt3_db_subs_clean_session(context->core.id);
+		mqtt3_subs_clean_session(context, &int_db.subs);
 		mqtt3_db_messages_delete(context->core.id);
 		mqtt3_db_client_delete(context);
 	}

@@ -1681,31 +1681,6 @@ int mqtt3_db_store_clean(void)
 	return rc;
 }
 
-/* Remove all subscriptions for a client.
- * Returns 1 on failure (client_id is NULL, sqlite error)
- * Returns 0 on success.
- */
-int mqtt3_db_subs_clean_session(const char *client_id)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!client_id) return 1;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM subs WHERE client_id=?");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_bind_text(stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-
-	return rc;
-}
-
 /* Send messages for the $SYS hierarchy if the last update is longer than
  * 'interval' seconds ago.
  * 'interval' is the amount of seconds between updates. If 0, then no periodic
