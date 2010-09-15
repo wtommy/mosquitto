@@ -331,18 +331,6 @@ static int _mqtt3_db_tables_create(void)
 	}
 
 	if(sqlite3_exec(db,
-		"CREATE TABLE IF NOT EXISTS subs("
-		"client_id TEXT, sub TEXT, qos INTEGER)",
-		NULL, NULL, &errmsg) != SQLITE_OK){
-
-		rc = 1;
-	}
-	if(errmsg){
-		sqlite3_free(errmsg);
-		errmsg = NULL;
-	}
-
-	if(sqlite3_exec(db,
 		"CREATE TABLE IF NOT EXISTS retain("
 		"topic TEXT UNIQUE, store_id INTEGER)",
 		NULL, NULL, &errmsg) != SQLITE_OK){
