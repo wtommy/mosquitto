@@ -209,6 +209,11 @@ void mosquitto_destroy(struct mosquitto *mosq)
 {
 	if(mosq->core.id) _mosquitto_free(mosq->core.id);
 	_mosquitto_message_cleanup_all(mosq);
+	if(mosq->core.will){
+		if(mosq->core.will->topic) _mosquitto_free(mosq->core.will->topic);
+		if(mosq->core.will->payload) _mosquitto_free(mosq->core.will->payload);
+	}
+	_mosquitto_free(mosq->core.will);
 	_mosquitto_free(mosq);
 }
 

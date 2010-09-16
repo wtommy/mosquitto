@@ -104,6 +104,11 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 		context->core.out_packet = context->core.out_packet->next;
 		_mosquitto_free(packet);
 	}
+	if(context->core.will){
+		if(context->core.will->topic) _mosquitto_free(context->core.will->topic);
+		if(context->core.will->payload) _mosquitto_free(context->core.will->payload);
+	}
+	_mosquitto_free(context->core.will);
 	_mosquitto_free(context);
 }
 
