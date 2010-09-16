@@ -55,8 +55,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MQTT3_LOG_TOPIC 0x10
 #define MQTT3_LOG_ALL 0xFF
 
+struct _mqtt3_context;
+
 struct _mosquitto_db{
 	struct _mosquitto_subhier subs;
+	struct _mqtt3_context **contexts;
+	int context_count;
 };
 
 enum mqtt3_bridge_direction{
