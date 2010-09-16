@@ -82,8 +82,19 @@ int mqtt3_handle_connect(mqtt3_context *context)
 
 	if(_mosquitto_read_string(&context->core.in_packet, &client_id)) return 1;
 	if(connect_flags & 0x04){
-		if(_mosquitto_read_string(&context->core.in_packet, &will_topic)) return 1;
+		context->core.will = malloc(sizeof(struct mosquitto_message));
+		if(!context->core.will) return MOSQ_ERR_NOMEM;
+		if(_mosquitto_read_string(&context->core.in_packet, &context->core.will->topic)) return 1;
 		if(_mosquitto_read_string(&context->core.in_packet, &will_message)) return 1;
+		if(will_message){
+			context->core.will->payload = (uint8_t *)will_message;
+			context->core.will->payloadlen = strlen(will_message);
+		}else{
+			context->core.will->payload = NULL;
+			context->core.will->payloadlen = 0;
+		}
+		context->core.will->qos = will_qos;
+		context->core.will->retain = will_retain;
 	}
 
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
