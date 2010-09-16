@@ -903,34 +903,6 @@ static int _mqtt3_db_cleanup(void)
 	return rc;
 }
 
-/* Sets stored socket for a given client to -1.
- * Called when a client with clean start disabled disconnects and hence has no
- * associated socket.
- * Returns 1 on failure (client_id is NULL, sqlite error)
- * Returns 0 on success.
- */
-int mqtt3_db_client_invalidate_socket(const char *client_id, int sock)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!db || !client_id) return 1;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("UPDATE clients SET sock=-1 WHERE id=? AND sock=?");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_bind_text(stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 2, sock) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-
-	return rc;
-}
-
 /* Returns the number of messages currently in the database - this is the
  * number of messages in flight and doesn't include retained messages.
  * FIXME - this probably needs updating to consider messages in the store.

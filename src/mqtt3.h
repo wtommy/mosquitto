@@ -234,8 +234,6 @@ int mqtt3_db_client_count(int *count);
 int mqtt3_db_client_delete(mqtt3_context *context);
 /* Return the socket number in sock of a client client_id. */
 int mqtt3_db_client_find_socket(const char *client_id, int *sock);
-/* Set the socket column = -1 for a disconnectd client. */
-int mqtt3_db_client_invalidate_socket(const char *client_id, int sock);
 /* Add the will of the client in context to the queue of clients subscribed to the appropriate topic. */
 int mqtt3_db_client_will_queue(mqtt3_context *context);
 void mqtt3_db_limits_set(int inflight, int queued);
