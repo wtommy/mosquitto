@@ -99,7 +99,7 @@ struct mosquitto *mosquitto_new(const char *id, void *obj)
 		mosq->core.out_packet = NULL;
 		mosq->core.last_msg_in = time(NULL);
 		mosq->core.last_msg_out = time(NULL);
-		mosq->last_mid = 0;
+		mosq->core.last_mid = 0;
 		mosq->core.state = mosq_cs_new;
 		mosq->messages = NULL;
 		mosq->will = NULL;

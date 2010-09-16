@@ -96,6 +96,7 @@ struct _mosquitto_core
 	enum mosquitto_client_state state;
 	time_t last_msg_in;
 	time_t last_msg_out;
+	uint16_t last_mid;
 	struct _mosquitto_packet in_packet;
 	struct _mosquitto_packet *out_packet;
 };
@@ -105,7 +106,6 @@ struct mosquitto {
 	void *obj;
 	unsigned int message_retry;
 	time_t last_retry_check;
-	uint16_t last_mid;
 	struct mosquitto_message_all *messages;
 	struct mosquitto_message *will;
 	int log_priorities;

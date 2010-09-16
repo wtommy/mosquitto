@@ -87,8 +87,8 @@ uint16_t _mosquitto_mid_generate(struct mosquitto *mosq)
 {
 	assert(mosq);
 
-	mosq->last_mid++;
-	if(mosq->last_mid == 0) mosq->last_mid++;
+	mosq->core.last_mid++;
+	if(mosq->core.last_mid == 0) mosq->core.last_mid++;
 	
-	return mosq->last_mid;
+	return mosq->core.last_mid;
 }
