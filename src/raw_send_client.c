@@ -33,6 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
 #include <memory_mosq.h>
+#include <util_mosq.h>
 
 int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, const char *will_msg, uint16_t keepalive, bool clean_session)
 {
@@ -105,7 +106,7 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 	}
 
 	/* Variable header */
-	mid = mqtt3_db_mid_generate(context->core.id);
+	mid = _mosquitto_mid_generate(&context->core);
 	_mosquitto_write_uint16(packet, mid);
 
 	/* Payload */
@@ -140,7 +141,7 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic)
 	}
 
 	/* Variable header */
-	mid = mqtt3_db_mid_generate(context->core.id);
+	mid = _mosquitto_mid_generate(&context->core);
 	_mosquitto_write_uint16(packet, mid);
 
 	/* Payload */

@@ -83,12 +83,12 @@ int _mosquitto_fix_sub_topic(char **subtopic)
 	return MOSQ_ERR_SUCCESS;
 }
 
-uint16_t _mosquitto_mid_generate(struct mosquitto *mosq)
+uint16_t _mosquitto_mid_generate(struct _mosquitto_core *core)
 {
-	assert(mosq);
+	assert(core);
 
-	mosq->core.last_mid++;
-	if(mosq->core.last_mid == 0) mosq->core.last_mid++;
+	core->last_mid++;
+	if(core->last_mid == 0) core->last_mid++;
 	
-	return mosq->core.last_mid;
+	return core->last_mid;
 }

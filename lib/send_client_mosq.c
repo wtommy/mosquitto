@@ -136,7 +136,7 @@ int _mosquitto_send_subscribe(struct mosquitto *mosq, uint16_t *mid, bool dup, c
 	}
 
 	/* Variable header */
-	local_mid = _mosquitto_mid_generate(mosq);
+	local_mid = _mosquitto_mid_generate(&mosq->core);
 	if(mid) *mid = local_mid;
 	_mosquitto_write_uint16(packet, local_mid);
 
@@ -173,7 +173,7 @@ int _mosquitto_send_unsubscribe(struct mosquitto *mosq, uint16_t *mid, bool dup,
 	}
 
 	/* Variable header */
-	local_mid = _mosquitto_mid_generate(mosq);
+	local_mid = _mosquitto_mid_generate(&mosq->core);
 	if(mid) *mid = local_mid;
 	_mosquitto_write_uint16(packet, local_mid);
 

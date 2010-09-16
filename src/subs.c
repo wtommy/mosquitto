@@ -34,6 +34,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <subs.h>
 #include <memory_mosq.h>
+#include <util_mosq.h>
 
 struct _sub_token {
 	struct _sub_token *next;
@@ -61,7 +62,7 @@ static int _subs_process(struct _mosquitto_subleaf *leaf, const char *source_id,
 			msg_qos = qos;
 		}
 		if(msg_qos){
-			mid = mqtt3_db_mid_generate(client_id);
+			mid = _mosquitto_mid_generate(&leaf->context->core);
 		}else{
 			mid = 0;
 		}

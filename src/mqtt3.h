@@ -249,8 +249,6 @@ int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, i
 int mqtt3_db_message_store(const char *source, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, int64_t *store_id);
 /* Check all messages waiting on a client reply and resend if timeout has been exceeded. */
 int mqtt3_db_message_timeout_check(unsigned int timeout);
-/* Generate an outgoing mid for client_id. */
-uint16_t mqtt3_db_mid_generate(const char *client_id);
 /* Add a retained message for a topic, overwriting an existing one if necessary. */
 int mqtt3_db_retain_insert(const char *topic, int64_t store_id);
 int mqtt3_db_retain_delete(const char *topic);

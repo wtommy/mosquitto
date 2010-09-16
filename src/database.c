@@ -110,6 +110,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <memory_mosq.h>
 #include <subs.h>
+#include <util_mosq.h>
 
 struct _mosquitto_db int_db;
 
@@ -1395,58 +1396,6 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	return rc;
 }
 
-/* Generate the next message id for a particular client.
- * This is last_mid+1. last_mid remains persistent across connections if clean start is not enabled.
- * Returns 1 on failure (client_id is NULL, sqlite error)
- * Returns new message id on success.
- */
-uint16_t mqtt3_db_mid_generate(const char *client_id)
-{
-	/* Warning: Don't start transaction in this function. */
-	int rc = 0;
-	static sqlite3_stmt *stmt_select = NULL;
-	static sqlite3_stmt *stmt_update = NULL;
-	uint16_t mid = 0;
-
-	if(!client_id) return 1;
-
-	if(!stmt_select){
-		stmt_select = _mqtt3_db_statement_prepare("SELECT last_mid FROM clients WHERE id=?");
-		if(!stmt_select){
-			return 1;
-		}
-	}
-	if(!stmt_update){
-		stmt_update = _mqtt3_db_statement_prepare("UPDATE clients SET last_mid=? WHERE id=?");
-		if(!stmt_update){
-			return 1;
-		}
-	}
-
-	if(sqlite3_bind_text(stmt_select, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt_select) == SQLITE_ROW){
-		mid = sqlite3_column_int(stmt_select, 0);
-		if(mid == 65535) mid = 0;
-		mid++;
-
-		if(sqlite3_bind_int(stmt_update, 1, mid) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_text(stmt_update, 2, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_step(stmt_update) != SQLITE_DONE) rc = 1;
-		sqlite3_reset(stmt_update);
-		sqlite3_clear_bindings(stmt_update);
-	}else{
-		rc = 1;
-	}
-	sqlite3_reset(stmt_select);
-	sqlite3_clear_bindings(stmt_select);
-
-	if(!rc){
-		return mid;
-	}else{
-		return 1;
-	}
-}
-
 #ifdef WITH_REGEX
 static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 {
@@ -1628,7 +1577,7 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 
 		if(qos > sub_qos) qos = sub_qos;
 		if(qos > 0){
-			mid = mqtt3_db_mid_generate(context->core.id);
+			mid = _mosquitto_mid_generate(&context->core);
 		}else{
 			mid = 0;
 		}
