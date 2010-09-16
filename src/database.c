@@ -738,46 +738,10 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
  */
 int mqtt3_db_client_will_queue(mqtt3_context *context)
 {
-	int rc = 0;
-	int dbrc;
-	static sqlite3_stmt *stmt = NULL;
-	const char *topic;
-	int qos;
-	const uint8_t *payload;
-	int retain;
-	int will;
-
 	if(!context || !context->core.id) return 1;
+	if(!context->core.will) return 0;
 
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT will,will_topic,will_qos,will_message,will_retain FROM clients WHERE id=?");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_bind_text(stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	dbrc = sqlite3_step(stmt);
-	if(dbrc == SQLITE_ROW){
-		will = sqlite3_column_int(stmt, 0);
-		if(!will){
-			sqlite3_reset(stmt);
-			sqlite3_clear_bindings(stmt);
-			return MOSQ_ERR_SUCCESS;
-		}
-		topic = (const char *)sqlite3_column_text(stmt, 1);
-		qos = sqlite3_column_int(stmt, 2);
-		payload = sqlite3_column_text(stmt, 3);
-		retain = sqlite3_column_int(stmt, 4);
-		if(!rc){
-			if(mqtt3_db_messages_easy_queue(context->core.id, topic, qos, strlen((const char *)payload), payload, retain)) rc = 1;
-		}
-	}else if(dbrc != SQLITE_DONE){
-		rc = 1;
-	}
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-
-	return rc;
+	return mqtt3_db_messages_easy_queue(context->core.id, context->core.will->topic, context->core.will->qos, context->core.will->payloadlen, context->core.will->payload, context->core.will->retain);
 }
 
 /* Returns the number of client currently in the database.
