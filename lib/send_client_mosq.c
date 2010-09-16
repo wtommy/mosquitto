@@ -51,11 +51,11 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	if(!packet) return MOSQ_ERR_NOMEM;
 
 	payloadlen = 2+strlen(mosq->core.id);
-	if(mosq->will){
+	if(mosq->core.will){
 		will = 1;
-		assert(mosq->will->topic);
+		assert(mosq->core.will->topic);
 
-		payloadlen += 2+strlen(mosq->will->topic) + 2+mosq->will->payloadlen;
+		payloadlen += 2+strlen(mosq->core.will->topic) + 2+mosq->core.will->payloadlen;
 	}
 	if(mosq->core.username){
 		payloadlen += 2+strlen(mosq->core.username);
@@ -77,7 +77,7 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	_mosquitto_write_byte(packet, PROTOCOL_VERSION);
 	byte = (clean_session&0x1)<<1;
 	if(will){
-		byte = byte | ((mosq->will->retain&0x1)<<5) | ((mosq->will->qos&0x3)<<3) | ((will&0x1)<<2);
+		byte = byte | ((mosq->core.will->retain&0x1)<<5) | ((mosq->core.will->qos&0x3)<<3) | ((will&0x1)<<2);
 	}
 	if(mosq->core.username){
 		byte = byte | 0x1<<6;
@@ -91,8 +91,8 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	/* Payload */
 	_mosquitto_write_string(packet, mosq->core.id, strlen(mosq->core.id));
 	if(will){
-		_mosquitto_write_string(packet, mosq->will->topic, strlen(mosq->will->topic));
-		_mosquitto_write_string(packet, (const char *)mosq->will->payload, mosq->will->payloadlen);
+		_mosquitto_write_string(packet, mosq->core.will->topic, strlen(mosq->core.will->topic));
+		_mosquitto_write_string(packet, (const char *)mosq->core.will->payload, mosq->core.will->payloadlen);
 	}
 	if(mosq->core.username){
 		_mosquitto_write_string(packet, mosq->core.username, strlen(mosq->core.username));

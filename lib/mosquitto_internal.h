@@ -99,6 +99,7 @@ struct _mosquitto_core
 	uint16_t last_mid;
 	struct _mosquitto_packet in_packet;
 	struct _mosquitto_packet *out_packet;
+	struct mosquitto_message *will;
 };
 
 struct mosquitto {
@@ -107,7 +108,6 @@ struct mosquitto {
 	unsigned int message_retry;
 	time_t last_retry_check;
 	struct mosquitto_message_all *messages;
-	struct mosquitto_message *will;
 	int log_priorities;
 	int log_destinations;
 	void (*on_connect)(void *obj, int rc);
