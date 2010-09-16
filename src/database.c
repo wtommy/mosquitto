@@ -112,8 +112,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <subs.h>
 #include <util_mosq.h>
 
-struct _mosquitto_db int_db;
-
 static sqlite3 *db = NULL;
 static char *db_filepath = NULL;
 

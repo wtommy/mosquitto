@@ -50,6 +50,8 @@ int allow_severity = LOG_INFO;
 int deny_severity = LOG_INFO;
 #endif
 
+struct _mosquitto_db int_db;
+
 static mqtt3_context **contexts = NULL;
 static int context_count;
 
