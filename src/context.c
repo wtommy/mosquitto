@@ -53,6 +53,8 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context->core.keepalive = 60; /* Default to 60s */
 	context->clean_session = true;
 	context->core.id = NULL;
+	context->core.last_mid = 0;
+	context->core.will = NULL;
 
 	context->core.in_packet.payload = NULL;
 	_mosquitto_packet_cleanup(&context->core.in_packet);
