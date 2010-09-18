@@ -130,7 +130,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 							}
 						}
 					}else{
-						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty interface value in configuration.");
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty address value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "autosave_interval")){
