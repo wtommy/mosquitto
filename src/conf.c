@@ -74,6 +74,9 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 		}
 	}
 
+	if(config->iface[0].host == NULL && config->iface[0].port == 0){
+		config->iface[0].port = 1883;
+	}
 	return MOSQ_ERR_SUCCESS;
 }
 
@@ -384,9 +387,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	}
 	fclose(fptr);
 
-	if(config->iface[0].host == NULL && config->iface[0].port == 0){
-		config->iface[0].port = 1883;
-	}
 	mqtt3_db_limits_set(max_inflight_messages, max_queued_messages);
 	mqtt3_net_set_max_connections(config->max_connections);
 
