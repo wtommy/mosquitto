@@ -134,12 +134,11 @@ int mqtt3_socket_close(mqtt3_context *context)
 }
 
 /* Creates a socket and listens on port 'port'.
- * Returns -1 on failure
- * Returns sock number on success.
+ * Returns 1 on failure
+ * Returns 0 on success.
  */
-int mqtt3_socket_listen(const char *host, uint16_t port)
+int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_count)
 {
-	int rc = 0;
 	int sock = -1;
 	struct addrinfo hints;
 	struct addrinfo *ainfo, *rp;
@@ -152,8 +151,10 @@ int mqtt3_socket_listen(const char *host, uint16_t port)
 	hints.ai_flags = AI_PASSIVE;
 	hints.ai_socktype = SOCK_STREAM;
 
-	snprintf(service, 10, "%d", port);
 	if(getaddrinfo(host, service, &hints, &ainfo)) return INVALID_SOCKET;
+
+	*sock_count = 0;
+	*socks = NULL;
 
 	for(rp = ainfo; rp; rp = rp->ai_next){
 		if(rp->ai_family == AF_INET){
@@ -167,8 +168,11 @@ int mqtt3_socket_listen(const char *host, uint16_t port)
 		sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 		if(sock == -1){
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
-			return -1;
+			return 1;
 		}
+		(*sock_count)++;
+		*socks = _mosquitto_realloc(*socks, sizeof(int)*(*sock_count));
+		(*socks)[(*sock_count)-1] = sock;
 
 		opt = 1;
 		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -178,23 +182,23 @@ int mqtt3_socket_listen(const char *host, uint16_t port)
 		/* Set non-blocking */
 		opt = fcntl(sock, F_GETFL, 0);
 		if(opt < 0) return -1;
-		if(fcntl(sock, F_SETFL, opt | O_NONBLOCK) < 0) return -1;
+		if(fcntl(sock, F_SETFL, opt | O_NONBLOCK) < 0) return 1;
 
 		if(bind(sock, rp->ai_addr, rp->ai_addrlen) == -1){
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
 			close(sock);
-			return -1;
+			return 1;
 		}
 
 		if(listen(sock, 100) == -1){
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
 			close(sock);
-			return -1;
+			return 1;
 		}
 	}
 	freeaddrinfo(ainfo);
 
-	return rc;
+	return 0;
 }
 
 int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *packet)
