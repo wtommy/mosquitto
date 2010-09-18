@@ -31,7 +31,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <errno.h>
 #include <fcntl.h>
-#include <ifaddrs.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
@@ -49,8 +48,6 @@ static uint64_t bytes_sent = 0;
 static unsigned long msgs_received = 0;
 static unsigned long msgs_sent = 0;
 static int max_connections = -1;
-
-static int _mqtt3_socket_listen(struct sockaddr *addr);
 
 void mqtt3_net_set_max_connections(int max)
 {
@@ -136,20 +133,6 @@ int mqtt3_socket_close(mqtt3_context *context)
 	return rc;
 }
 
-/* Internal function.
- * Create a socket and set it to listen based on the sockaddr details in addr.
- * Returns -1 on failure (addr is NULL, socket creation/listening error)
- * Returns sock number on success.
- */
-static int _mqtt3_socket_listen(struct sockaddr *addr)
-{
-	int sock = -1;
-
-	if(!addr) return -1;
-
-	return sock;
-}
-
 /* Creates a socket and listens on port 'port'.
  * Returns -1 on failure
  * Returns sock number on success.
@@ -212,35 +195,6 @@ int mqtt3_socket_listen(const char *host, uint16_t port)
 	freeaddrinfo(ainfo);
 
 	return rc;
-}
-
-/* Creates a socket and listens on port 'port' on address associated with
- * network interface 'iface'.
- * Returns -1 on failure (iface is NULL, socket creation/listen error)
- * Returns sock number on success.
- */
-int mqtt3_socket_listen_if(const char *iface, uint16_t port)
-{
-	struct ifaddrs *ifa;
-	struct ifaddrs *tmp;
-	int sock;
-
-	if(!iface) return -1;
-
-	if(!getifaddrs(&ifa)){
-		tmp = ifa;
-		while(tmp){
-			if(!strcmp(tmp->ifa_name, iface) && tmp->ifa_addr->sa_family == AF_INET){
-				((struct sockaddr_in *)tmp->ifa_addr)->sin_port = htons(port);
-				sock = _mqtt3_socket_listen(tmp->ifa_addr);
-				freeifaddrs(ifa);
-				return sock;
-			}
-			tmp = tmp->ifa_next;
-		}
-		freeifaddrs(ifa);
-	}
-	return -1;
 }
 
 int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *packet)

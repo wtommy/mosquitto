@@ -53,6 +53,17 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>bind_address</option></term>
+				<listitem>
+					<para>Listen for incoming network connections on the
+					specified IP address/hostname only. This is useful to
+					restrict access to certain network interfaces. To restrict
+					access to mosquitto to the local host only, use "bind_address
+					localhost". This only applies to the default listener. Use
+					the listener variable to control other listeners.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>ext_sqlite_regex</option></term>
 				<listitem>
 					<para>The path to the sqlite3 regex extension which is
@@ -62,18 +73,6 @@
 					"/usr/lib/sqlite3/pcre.so".</para>
 					<para>The sqlite3 pcre extension used is available at
 					http://git.altlinux.org/people/at/packages/?p=sqlite3-pcre.git</para>
-				</listitem>
-			</varlistentry>
-			<varlistentry>
-				<term><option>interface</option></term>
-				<listitem>
-					<para>Listen for incoming network connections on the
-					specified interface only. The port to listen to can be
-					changed from the default by appending it to the interface
-					name, e.g. eth0:1884. This is useful to restrict access to
-					certain network interfaces. To restrict access to mosquitto
-					to the local host only, use "interface lo". This option
-					may be specified multiple times.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -130,14 +129,6 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>port</option></term>
-				<listitem>
-					<para>Set the network port to listen on. Defaults to 1883.
-					This option may be given any number of times. A socket will
-					be created for each port listed.</para>
-				</listitem>
-			</varlistentry>
-			<varlistentry>
 				<term><option>persistence</option></term>
 				<listitem>
 					<para>Can be true or false. If true, connection,
@@ -177,6 +168,13 @@
 					init script it will usually be required to write a pid
 					file. This should then be configured as
 					/var/run/mosquitto.pid</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>port</option></term>
+				<listitem>
+					<para>Set the network port for the default listener to
+					listen on. Defaults to 1883.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
