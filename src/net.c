@@ -33,6 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <fcntl.h>
 #include <ifaddrs.h>
 #include <netdb.h>
+#include <stdio.h>
 #include <string.h>
 #ifdef WITH_WRAP
 #include <tcpd.h>
@@ -142,37 +143,9 @@ int mqtt3_socket_close(mqtt3_context *context)
  */
 static int _mqtt3_socket_listen(struct sockaddr *addr)
 {
-	int sock;
-	int opt = 1;
+	int sock = -1;
 
 	if(!addr) return -1;
-
-	mqtt3_log_printf(MOSQ_LOG_INFO, "Opening listen socket on port %d.", ntohs(((struct sockaddr_in *)addr)->sin_port));
-
-	sock = socket(AF_INET, SOCK_STREAM, 0);
-	if(sock == -1){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
-		return -1;
-	}
-
-	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-
-	/* Set non-blocking */
-	opt = fcntl(sock, F_GETFL, 0);
-	if(opt < 0) return -1;
-	if(fcntl(sock, F_SETFL, opt | O_NONBLOCK) < 0) return -1;
-
-	if(bind(sock, addr, sizeof(struct sockaddr_in)) == -1){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
-		close(sock);
-		return -1;
-	}
-
-	if(listen(sock, 100) == -1){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
-		close(sock);
-		return -1;
-	}
 
 	return sock;
 }
@@ -181,15 +154,64 @@ static int _mqtt3_socket_listen(struct sockaddr *addr)
  * Returns -1 on failure
  * Returns sock number on success.
  */
-int mqtt3_socket_listen(uint16_t port)
+int mqtt3_socket_listen(const char *host, uint16_t port)
 {
-	struct sockaddr_in addr;
+	int rc = 0;
+	int sock = -1;
+	struct addrinfo hints;
+	struct addrinfo *ainfo, *rp;
+	char service[10];
+	int opt;
 
-	memset(&addr, 0, sizeof(struct sockaddr_in));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
+	snprintf(service, 10, "%d", port);
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = PF_UNSPEC;
+	hints.ai_flags = AI_PASSIVE;
+	hints.ai_socktype = SOCK_STREAM;
 
-	return _mqtt3_socket_listen((struct sockaddr *)&addr);
+	snprintf(service, 10, "%d", port);
+	if(getaddrinfo(host, service, &hints, &ainfo)) return INVALID_SOCKET;
+
+	for(rp = ainfo; rp; rp = rp->ai_next){
+		if(rp->ai_family == AF_INET){
+			mqtt3_log_printf(MOSQ_LOG_INFO, "Opening ipv4 listen socket on port %d.", ntohs(((struct sockaddr_in *)rp->ai_addr)->sin_port));
+		}else if(rp->ai_family == AF_INET6){
+			mqtt3_log_printf(MOSQ_LOG_INFO, "Opening ipv6 listen socket on port %d.", ntohs(((struct sockaddr_in6 *)rp->ai_addr)->sin6_port));
+		}else{
+			continue;
+		}
+
+		sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+		if(sock == -1){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
+			return -1;
+		}
+
+		opt = 1;
+		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+		opt = 1;
+		setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt, sizeof(opt));
+
+		/* Set non-blocking */
+		opt = fcntl(sock, F_GETFL, 0);
+		if(opt < 0) return -1;
+		if(fcntl(sock, F_SETFL, opt | O_NONBLOCK) < 0) return -1;
+
+		if(bind(sock, rp->ai_addr, rp->ai_addrlen) == -1){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
+			close(sock);
+			return -1;
+		}
+
+		if(listen(sock, 100) == -1){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
+			close(sock);
+			return -1;
+		}
+	}
+	freeaddrinfo(ainfo);
+
+	return rc;
 }
 
 /* Creates a socket and listens on port 'port' on address associated with

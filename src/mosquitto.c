@@ -411,7 +411,7 @@ int main(int argc, char *argv[])
 		if(config.iface[i].iface){
 			listensock[i] = mqtt3_socket_listen_if(config.iface[i].iface, config.iface[i].port);
 		}else{
-			listensock[i] = mqtt3_socket_listen(config.iface[i].port);
+			listensock[i] = mqtt3_socket_listen(NULL, config.iface[i].port);
 		}
 		if(listensock[i] == -1){
 			_mosquitto_free(contexts);

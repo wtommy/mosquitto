@@ -178,7 +178,7 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command);
  * ============================================================ */
 int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int listensock);
 int mqtt3_socket_close(mqtt3_context *context);
-int mqtt3_socket_listen(uint16_t port);
+int mqtt3_socket_listen(const char *host, uint16_t port);
 int mqtt3_socket_listen_if(const char *iface, uint16_t port);
 
 int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *packet);
