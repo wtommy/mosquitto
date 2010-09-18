@@ -24,9 +24,6 @@
 				<arg><option>--daemon</option></arg>
 			</group>
 			<group choice='opt'>
-				<arg><option>-i</option> <replaceable>interface<group choice='opt'>:port</group></replaceable></arg>
-			</group>
-			<group choice='opt'>
 				<arg><option>-p</option> <replaceable>port number</replaceable></arg>
 			</group>
 		</cmdsynopsis>
@@ -53,19 +50,6 @@
 				<term><option>--daemon</option></term>
 				<listitem>
 					<para>Run <command>mosquitto</command> in the background as a daemon. All other behaviour remains the same.</para>
-				</listitem>
-			</varlistentry>
-			<varlistentry>
-				<term><option>-i</option></term>
-				<term><option>--interface</option></term>
-				<listitem>
-					<para>Listen for incoming network connections on the
-					specified interface only. The port to listen to can be
-					changed from the default by appending it to the interface
-					name, e.g. eth0:1884. This is useful to restrict access to
-					certain network interfaces. To restrict access to mosquitto
-					to the local host only, use "--interface lo". This option
-					may be specified multiple times.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

@@ -56,34 +56,6 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 			i++;
 		}else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--daemon")){
 			config->daemon = true;
-		}else if(!strcmp(argv[i], "-i") || !strcmp(argv[i], "--interface")){
-			if(i<argc-1){
-				i++;
-				str = strtok(argv[i], ":");
-				if(str){
-					config->iface_count++;
-					config->iface = _mosquitto_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
-					if(!config->iface){
-						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-						return MOSQ_ERR_NOMEM;
-					}
-					config->iface[config->iface_count-1].iface = _mosquitto_strdup(str);
-					str = strtok(NULL, ":");
-					if(str){
-						port_tmp = atoi(str);
-						if(port_tmp < 1 || port_tmp > 65535){
-							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid port value (%d).", port_tmp);
-							return MOSQ_ERR_INVAL;
-						}
-						config->iface[config->iface_count-1].port = port_tmp;
-					}else{
-						config->iface[config->iface_count-1].port = 1883;
-					}
-				}
-			}else{
-				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: -i argument given, but no interface specifed.");
-				return MOSQ_ERR_INVAL;
-			}
 		}else if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
 			if(i<argc-1){
 				port_tmp = atoi(argv[i+1]);
