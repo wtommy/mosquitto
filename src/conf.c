@@ -409,7 +409,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "autosave_on_changes")
 						|| !strcmp(token, "clientid_prefixes")
 						|| !strcmp(token, "connection_messages")
-						|| !strcmp(token, "listener")
 						|| !strcmp(token, "retained_persistence")
 						|| !strcmp(token, "trace_level")
 						|| !strcmp(token, "addresses")
@@ -420,7 +419,16 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						|| !strcmp(token, "start_type")
 						|| !strcmp(token, "threshold")
 						|| !strcmp(token, "try_private")
-						|| !strcmp(token, "mount_point")){
+						|| !strcmp(token, "mount_point")
+						|| !strcmp(token, "username")
+						|| !strcmp(token, "password")
+						|| !strcmp(token, "clientid")
+						|| !strcmp(token, "acl_file")
+						|| !strcmp(token, "allow_anonymous")
+						|| !strcmp(token, "ffdc_output")
+						|| !strcmp(token, "max_log_entries")
+						|| !strcmp(token, "password_file")
+						|| !strcmp(token, "trace_output")){
 					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Unsupported rsmb configuration option \"%s\".", token);
 				}else{
 					mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unknown configuration variable \"%s\".", token);
