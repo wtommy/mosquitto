@@ -76,6 +76,17 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>listener</option></term>
+				<listitem>
+					<para>Listen for incoming network connection on the
+					specified port. A second optional argument allows the
+					listener to be bound to a specific ip address/hostname. If
+					this variable is used and neither bind_address nor port are
+					used then the default listener will not be started. This
+					option may be specified multiple times.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>log_dest</option></term>
 				<listitem>
 					<para>Send log messages to a particular destination.

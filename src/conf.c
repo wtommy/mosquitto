@@ -197,6 +197,31 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "keepalive interval too low, using 5 seconds.");
 						cur_bridge->keepalive = 5;
 					}
+				}else if(!strcmp(token, "listener")){
+					token = strtok(NULL, " ");
+					if(token){
+						config->iface_count++;
+						config->iface = _mosquitto_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
+						if(!config->iface){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+							return MOSQ_ERR_NOMEM;
+						}
+						port_tmp = atoi(token);
+						if(port_tmp < 1 || port_tmp > 65535){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid port value (%d).", port_tmp);
+							return MOSQ_ERR_INVAL;
+						}
+						config->iface[config->iface_count-1].port = port_tmp;
+						token = strtok(NULL, " ");
+						if(token){
+							config->iface[config->iface_count-1].host = _mosquitto_strdup(token);
+						}else{
+							config->iface[config->iface_count-1].host = NULL;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty listener value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
 				}else if(!strcmp(token, "log_dest")){
 					token = strtok(NULL, " ");
 					if(token){

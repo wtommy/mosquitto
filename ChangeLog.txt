@@ -9,6 +9,8 @@
   python object itself if nothing was given to Mosquitto().
 - Remove the mosquitto command line option "-i interface".
 - Remove the mosquitto.conf "interface" variable.
+- Add support for the listener config variable (replaces the interface
+  variable)
 - Add support for the bind_address config variable.
 - Change the port config variable behaviour to match that of rsmb (applies to
   the default listener only, can be given just once).
