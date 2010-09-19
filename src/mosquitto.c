@@ -410,8 +410,8 @@ int main(int argc, char *argv[])
 
 	listener_max = -1;
 	listensock_index = 0;
-	for(i=0; i<config.iface_count; i++){
-		if(mqtt3_socket_listen(config.iface[i].host, config.iface[i].port, &socks, &sock_count)){
+	for(i=0; i<config.listener_count; i++){
+		if(mqtt3_socket_listen(config.listener[i].host, config.listener[i].port, &socks, &sock_count)){
 			_mosquitto_free(contexts);
 			mqtt3_db_close();
 			if(config.pid_file){
