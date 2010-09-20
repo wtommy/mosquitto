@@ -290,7 +290,8 @@
 					<para>Configure a password for the bridge. This is used for
 					authentication purposes when connecting to a broker that
 					support MQTT v3.1 and requires a username and/or password
-					to connect. See also the username option.</para>
+					to connect. This option is only valid if a username is also
+					supplied.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
