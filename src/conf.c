@@ -406,6 +406,26 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid user value.");
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "username")){
+					if(!cur_bridge){
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					token = strtok(NULL, " ");
+					if(token){
+						if(cur_bridge->username){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Duplicate username value in bridge configuration.");
+							return MOSQ_ERR_INVAL;
+						}
+						cur_bridge->username = _mosquitto_strdup(token);
+						if(!cur_bridge->username){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty username value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
 				}else if(!strcmp(token, "autosave_on_changes")
 						|| !strcmp(token, "clientid_prefixes")
 						|| !strcmp(token, "connection_messages")
@@ -420,7 +440,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						|| !strcmp(token, "threshold")
 						|| !strcmp(token, "try_private")
 						|| !strcmp(token, "mount_point")
-						|| !strcmp(token, "username")
 						|| !strcmp(token, "password")
 						|| !strcmp(token, "clientid")
 						|| !strcmp(token, "acl_file")

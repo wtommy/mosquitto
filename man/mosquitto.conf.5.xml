@@ -304,6 +304,15 @@
 					messages.</para>
 				</listitem>
 			</varlistentry>
+			<varlistentry>
+				<term><option>username</option> <replaceable>name</replaceable></term>
+				<listitem>
+					<para>Configure a username for the bridge. This is used for
+					authentication purposes when connecting to a broker that
+					support MQTT v3.1 and requires a username and/or password
+					to connect. See also the password option.</para>
+				</listitem>
+			</varlistentry>
 		</variablelist>
 	</refsect1>
 
