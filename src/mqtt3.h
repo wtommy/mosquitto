@@ -75,6 +75,7 @@ struct _mqtt3_bridge{
 	int topic_count;
 	time_t restart_t;
 	char *username;
+	char *password;
 };
 
 typedef struct _mqtt3_context{

@@ -202,6 +202,8 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						cur_bridge->topics = NULL;
 						cur_bridge->topic_count = 0;
 						cur_bridge->restart_t = 0;
+						cur_bridge->username = NULL;
+						cur_bridge->password = NULL;
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty connection value in configuration.");
 						return MOSQ_ERR_INVAL;
@@ -309,6 +311,26 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						if(max_queued_messages < 0) max_queued_messages = 0;
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty max_queued_messages value in configuration.");
+					}
+				}else if(!strcmp(token, "password")){
+					if(!cur_bridge){
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					token = strtok(NULL, " ");
+					if(token){
+						if(cur_bridge->password){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Duplicate password value in bridge configuration.");
+							return MOSQ_ERR_INVAL;
+						}
+						cur_bridge->password = _mosquitto_strdup(token);
+						if(!cur_bridge->password){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty password value in configuration.");
+						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "persistence")){
 					if(_mqtt3_conf_parse_bool(&token, "persistence", &config->persistence)) return 1;
@@ -440,7 +462,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						|| !strcmp(token, "threshold")
 						|| !strcmp(token, "try_private")
 						|| !strcmp(token, "mount_point")
-						|| !strcmp(token, "password")
 						|| !strcmp(token, "clientid")
 						|| !strcmp(token, "acl_file")
 						|| !strcmp(token, "allow_anonymous")

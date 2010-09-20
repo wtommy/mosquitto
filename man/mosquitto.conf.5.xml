@@ -285,6 +285,15 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>password</option> <replaceable>value</replaceable></term>
+				<listitem>
+					<para>Configure a password for the bridge. This is used for
+					authentication purposes when connecting to a broker that
+					support MQTT v3.1 and requires a username and/or password
+					to connect. See also the username option.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>topic</option> <replaceable>pattern</replaceable> [ out | in | both ]</term>
 				<listitem>
 					<para>Define a topic pattern to be shared between the two
