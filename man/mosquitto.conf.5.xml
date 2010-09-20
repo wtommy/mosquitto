@@ -280,7 +280,7 @@
 				<listitem>
 					<para>Set the number of seconds after which the bridge
 					should send a ping if no other traffic has occurred.
-					Deefaults to 660. A minimum value of 5 seconds
+					Defaults to 60. A minimum value of 5 seconds
 					isallowed.</para>
 				</listitem>
 			</varlistentry>
