@@ -99,17 +99,20 @@ enum mqtt3_msg_status {
 	ms_wait_pubcomp = 9
 };
 
-struct mqtt3_iface {
+struct _mqtt3_listener {
+	int fd;
 	char *host;
-	int port;
+	uint16_t port;
+	int max_connections;
+	char *mount_point;
 };
 
 typedef struct {
 	int autosave_interval;
 	bool daemon;
-	struct mqtt3_iface default_listener;
+	struct _mqtt3_listener default_listener;
+	struct _mqtt3_listener *listeners;
 	char *ext_sqlite_regex;
-	struct mqtt3_iface *listener;
 	int listener_count;
 	int log_dest;
 	int log_type;
@@ -125,15 +128,6 @@ typedef struct {
 	struct _mqtt3_bridge *bridges;
 	int bridge_count;
 } mqtt3_config;
-
-struct _mqtt3_listener {
-	int fd;
-	char *host;
-	uint16_t port;
-	int max_connections;
-	char *mount_point;
-	char *client_prefix;
-};
 
 /* ============================================================
  * Utility functions

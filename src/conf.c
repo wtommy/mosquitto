@@ -21,7 +21,7 @@ void mqtt3_config_init(mqtt3_config *config)
 #else
 	config->ext_sqlite_regex = "/usr/lib/sqlite3/pcre.so";
 #endif
-	config->listener = NULL;
+	config->listeners = NULL;
 	config->listener_count = 0;
 	config->log_dest = MQTT3_LOG_STDERR;
 	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING | MOSQ_LOG_NOTICE | MOSQ_LOG_INFO;
@@ -78,20 +78,20 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 
 	if(config->listener_count == 0 || config->default_listener.host || config->default_listener.port){
 		config->listener_count++;
-		config->listener = _mosquitto_realloc(config->listener, sizeof(struct mqtt3_iface)*config->listener_count);
-		if(!config->listener){
+		config->listeners = _mosquitto_realloc(config->listeners, sizeof(struct _mqtt3_listener)*config->listener_count);
+		if(!config->listeners){
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
 			return MOSQ_ERR_NOMEM;
 		}
 		if(config->default_listener.port){
-			config->listener[config->listener_count-1].port = config->default_listener.port;
+			config->listeners[config->listener_count-1].port = config->default_listener.port;
 		}else{
-			config->listener[config->listener_count-1].port = 1883;
+			config->listeners[config->listener_count-1].port = 1883;
 		}
 		if(config->default_listener.host){
-			config->listener[config->listener_count-1].host = config->default_listener.host;
+			config->listeners[config->listener_count-1].host = config->default_listener.host;
 		}else{
-			config->listener[config->listener_count-1].host = NULL;
+			config->listeners[config->listener_count-1].host = NULL;
 		}
 		
 	}
@@ -222,8 +222,8 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					token = strtok(NULL, " ");
 					if(token){
 						config->listener_count++;
-						config->listener = _mosquitto_realloc(config->listener, sizeof(struct mqtt3_iface)*config->listener_count);
-						if(!config->listener){
+						config->listeners = _mosquitto_realloc(config->listeners, sizeof(struct _mqtt3_listener)*config->listener_count);
+						if(!config->listeners){
 							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
 							return MOSQ_ERR_NOMEM;
 						}
@@ -232,12 +232,12 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid port value (%d).", port_tmp);
 							return MOSQ_ERR_INVAL;
 						}
-						config->listener[config->listener_count-1].port = port_tmp;
+						config->listeners[config->listener_count-1].port = port_tmp;
 						token = strtok(NULL, " ");
 						if(token){
-							config->listener[config->listener_count-1].host = _mosquitto_strdup(token);
+							config->listeners[config->listener_count-1].host = _mosquitto_strdup(token);
 						}else{
-							config->listener[config->listener_count-1].host = NULL;
+							config->listeners[config->listener_count-1].host = NULL;
 						}
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty listener value in configuration.");
