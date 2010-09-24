@@ -35,7 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <util_mosq.h>
 
-int mqtt3_packet_handle(mqtt3_context *context)
+int mqtt3_packet_handle(struct _mosquitto_db *db, mqtt3_context *context)
 {
 	if(!context) return 1;
 
@@ -56,7 +56,7 @@ int mqtt3_packet_handle(mqtt3_context *context)
 			return mqtt3_handle_pubrel(context);
 #ifdef WITH_BROKER
 		case CONNECT:
-			return mqtt3_handle_connect(context);
+			return mqtt3_handle_connect(db, context);
 		case DISCONNECT:
 			return mqtt3_handle_disconnect(context);
 		case SUBSCRIBE:

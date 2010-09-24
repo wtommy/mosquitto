@@ -193,7 +193,7 @@ int mqtt3_socket_listen(uint16_t port);
 int mqtt3_socket_listen_if(const char *iface, uint16_t port);
 
 int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *packet);
-int mqtt3_net_read(mqtt3_context *context);
+int mqtt3_net_read(struct _mosquitto_db *db, mqtt3_context *context);
 int mqtt3_net_write(mqtt3_context *context);
 
 void mqtt3_net_set_max_connections(int max);
@@ -205,9 +205,9 @@ unsigned long mqtt3_net_msgs_total_sent(void);
 /* ============================================================
  * Read handling functions
  * ============================================================ */
-int mqtt3_packet_handle(mqtt3_context *context);
+int mqtt3_packet_handle(struct _mosquitto_db *db, mqtt3_context *context);
 int mqtt3_handle_connack(mqtt3_context *context);
-int mqtt3_handle_connect(mqtt3_context *context);
+int mqtt3_handle_connect(struct _mosquitto_db *db, mqtt3_context *context);
 int mqtt3_handle_disconnect(mqtt3_context *context);
 int mqtt3_handle_pingreq(mqtt3_context *context);
 int mqtt3_handle_pingresp(mqtt3_context *context);
@@ -227,7 +227,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context);
 int mqtt3_db_open(mqtt3_config *config);
 int mqtt3_db_close(void);
 int mqtt3_db_backup(bool cleanup);
-int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message);
+int mqtt3_db_client_insert(struct _mosquitto_db *db, mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message);
 int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message);
 int mqtt3_db_client_count(int *count);
 /* Remove the client detailed in context from the clients table only. */
@@ -276,7 +276,7 @@ int mqtt3_log_printf(int level, const char *fmt, ...) __attribute__((format(prin
 /* ============================================================
  * Bridge functions
  * ============================================================ */
-int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3_bridge *bridge);
+int mqtt3_bridge_new(struct _mosquitto_db *db, struct _mqtt3_bridge *bridge);
 int mqtt3_bridge_connect(mqtt3_context *context);
 void mqtt3_bridge_packet_cleanup(mqtt3_context *context);
 

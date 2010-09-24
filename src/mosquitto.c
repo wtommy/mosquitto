@@ -286,7 +286,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 		}
 		if(int_db.contexts[i] && int_db.contexts[i]->core.sock != -1){
 			if(pollfds[int_db.contexts[i]->core.sock].revents & POLLIN){
-				if(mqtt3_net_read(int_db.contexts[i])){
+				if(mqtt3_net_read(&int_db, int_db.contexts[i])){
 					if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket read error on client %s, disconnecting.", int_db.contexts[i]->core.id);
 						mqtt3_db_client_will_queue(int_db.contexts[i]);
@@ -456,7 +456,7 @@ int main(int argc, char *argv[])
 	signal(SIGPIPE, SIG_IGN);
 
 	for(i=0; i<config.bridge_count; i++){
-		if(mqtt3_bridge_new(int_db.contexts, &int_db.context_count, &(config.bridges[i]))){
+		if(mqtt3_bridge_new(&int_db, &(config.bridges[i]))){
 			mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Unable to connect to bridge %s.", 
 					config.bridges[i].name);
 		}

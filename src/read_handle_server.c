@@ -36,7 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <subs.h>
 #include <util_mosq.h>
 
-int mqtt3_handle_connect(mqtt3_context *context)
+int mqtt3_handle_connect(struct _mosquitto_db *db, mqtt3_context *context)
 {
 	char *protocol_name;
 	uint8_t protocol_version;
@@ -101,7 +101,7 @@ int mqtt3_handle_connect(mqtt3_context *context)
 	context->core.id = client_id;
 	context->clean_session = clean_session;
 
-	mqtt3_db_client_insert(context, will, will_retain, will_qos, will_topic, will_message);
+	mqtt3_db_client_insert(db, context, will, will_retain, will_qos, will_topic, will_message);
 
 	if(will_topic) _mosquitto_free(will_topic);
 	if(will_message) _mosquitto_free(will_message);

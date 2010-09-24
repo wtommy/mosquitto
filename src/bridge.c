@@ -27,6 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <assert.h>
 #include <stdint.h>
 
 #include <config.h>
@@ -34,31 +35,32 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <memory_mosq.h>
 
-int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3_bridge *bridge)
+int mqtt3_bridge_new(struct _mosquitto_db *db, struct _mqtt3_bridge *bridge)
 {
 	int i;
 	mqtt3_context *new_context = NULL;
 	mqtt3_context **tmp_contexts;
 
-	if(!contexts || !bridge) return 1;
+	assert(db);
+	assert(bridge);
 
 	new_context = mqtt3_context_init(-1);
 	if(!new_context){
 		return MOSQ_ERR_NOMEM;
 	}
 	new_context->bridge = bridge;
-	for(i=0; i<(*context_count); i++){
-		if(contexts[i] == NULL){
-			contexts[i] = new_context;
+	for(i=0; i<db->context_count; i++){
+		if(db->contexts[i] == NULL){
+			db->contexts[i] = new_context;
 			break;
 		}
 	}
-	if(i==(*context_count)){
-		(*context_count)++;
-		tmp_contexts = _mosquitto_realloc(contexts, sizeof(mqtt3_context*)*(*context_count));
+	if(i==db->context_count){
+		db->context_count++;
+		tmp_contexts = _mosquitto_realloc(db->contexts, sizeof(mqtt3_context*)*db->context_count);
 		if(tmp_contexts){
-			contexts = tmp_contexts;
-			contexts[(*context_count)-1] = new_context;
+			db->contexts = tmp_contexts;
+			db->contexts[db->context_count-1] = new_context;
 		}else{
 			return MOSQ_ERR_NOMEM;
 		}
@@ -68,7 +70,7 @@ int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3
 	if(!new_context->core.id){
 		return MOSQ_ERR_NOMEM;
 	}
-	if(!mqtt3_db_client_insert(new_context, 0, 0, 0, NULL, NULL)){
+	if(!mqtt3_db_client_insert(db, new_context, 0, 0, 0, NULL, NULL)){
 		return mqtt3_bridge_connect(new_context);
 	}
 	return 1;

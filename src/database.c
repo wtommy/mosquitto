@@ -627,7 +627,7 @@ static void _mqtt3_db_statements_finalize(sqlite3 *fdb)
  * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
  * Returns 0 on success.
  */
-int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
+int mqtt3_db_client_insert(struct _mosquitto_db *db, mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
 {
 	static sqlite3_stmt *stmt = NULL;
 	int rc = 0;
