@@ -14,11 +14,6 @@ void mqtt3_config_init(mqtt3_config *config)
 	/* Set defaults */
 	config->autosave_interval = 1800;
 	config->daemon = false;
-#ifdef __CYGWIN__
-	config->ext_sqlite_regex = "./sqlite3-pcre.dll";
-#else
-	config->ext_sqlite_regex = "/usr/lib/sqlite3/pcre.so";
-#endif
 	config->iface = NULL;
 	config->iface_count = 0;
 	config->log_dest = MQTT3_LOG_STDERR;
@@ -176,13 +171,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					if(_mqtt3_conf_parse_int(&token, "autosave_interval", &config->autosave_interval)) return 1;
 					if(config->autosave_interval < 0) config->autosave_interval = 0;
 				}else if(!strcmp(token, "ext_sqlite_regex")){
-					token = strtok(NULL, " ");
-					if(token){
-						config->ext_sqlite_regex = _mosquitto_strdup(token);
-					}else{
-						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty ext_sqlite_regex value in config.");
-						return MOSQ_ERR_INVAL;
-					}
+					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: ext_sqlite_regex variable no longer in use.");
 				}else if(!strcmp(token, "cleansession")){
 					if(!cur_bridge){
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");

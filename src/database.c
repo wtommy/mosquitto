@@ -139,9 +139,6 @@ static int _mqtt3_db_transaction_rollback(void);
 
 int mqtt3_db_open(mqtt3_config *config)
 {
-#ifdef WITH_REGEX
-	char *errmsg = NULL;
-#endif
 	int dbrc;
 	int rc = 0;
 	sqlite3_backup *restore;
@@ -149,9 +146,6 @@ int mqtt3_db_open(mqtt3_config *config)
 	FILE *fptr;
 
 	if(!config) return 1;
-#ifdef WITH_REGEX
-	if(!config->ext_sqlite_regex) return 1;
-#endif
 	if(sqlite3_initialize() != SQLITE_OK){
 		return 1;
 	}
@@ -218,16 +212,6 @@ int mqtt3_db_open(mqtt3_config *config)
 		}
 	}
 
-#ifdef WITH_REGEX
-	sqlite3_enable_load_extension(db, 1);
-	if(sqlite3_load_extension(db, config->ext_sqlite_regex, NULL, &errmsg) != SQLITE_OK){
-		if(errmsg){
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", errmsg);
-			sqlite3_free(errmsg);
-		}
-		return 1;
-	}
-#endif
 	if(_mqtt3_db_cleanup()) return 1;
 
 	return rc;

@@ -53,18 +53,6 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>ext_sqlite_regex</option></term>
-				<listitem>
-					<para>The path to the sqlite3 regex extension which is
-					needed for wildcard subscription matching. If it is not
-					found, mosquitto will not start. The default when compiled
-					for Windows is "./sqlite3-pcre.dll" and for other platforms
-					"/usr/lib/sqlite3/pcre.so".</para>
-					<para>The sqlite3 pcre extension used is available at
-					http://git.altlinux.org/people/at/packages/?p=sqlite3-pcre.git</para>
-				</listitem>
-			</varlistentry>
-			<varlistentry>
 				<term><option>interface</option></term>
 				<listitem>
 					<para>Listen for incoming network connections on the
