@@ -101,6 +101,7 @@ POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
+#include <assert.h>
 #include <errno.h>
 #include <sqlite3.h>
 #include <stdio.h>
@@ -309,24 +310,6 @@ static int _mqtt3_db_tables_create(void)
 		}
 	}else{
 		return 1;
-	}
-
-	if(sqlite3_exec(db,
-		"CREATE TABLE IF NOT EXISTS clients("
-		"sock INTEGER, "
-		"id TEXT PRIMARY KEY, "
-		"clean_session INTEGER, "
-		"will INTEGER, will_retain INTEGER, will_qos INTEGER, "
-		"will_topic TEXT, will_message TEXT, "
-		"last_mid INTEGER, "
-		"is_bridge INTEGER)",
-		NULL, NULL, &errmsg) != SQLITE_OK){
-
-		rc = 1;
-	}
-	if(errmsg){
-		sqlite3_free(errmsg);
-		errmsg = NULL;
 	}
 
 	if(sqlite3_exec(db,
@@ -617,121 +600,6 @@ static void _mqtt3_db_statements_finalize(sqlite3 *fdb)
 	}
 }
 
-/* Adds a new client to the database.
- * This should be called when a new connection has successfully sent a CONNECT command.
- * If a client is already connected with the same id, the old client will be
- * disconnected and the information updated.
- * If will=1 then a will will be stored for the client. In this case,
- * will_topic and will_message must not be NULL otherwise this will return
- * failure.
- * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
- * Returns 0 on success.
- */
-int mqtt3_db_client_insert(struct _mosquitto_db *db, mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
-{
-	static sqlite3_stmt *stmt = NULL;
-	int rc = 0;
-	int oldsock;
-
-	if(!context || !context->core.id) return 1;
-	if(will && (!will_topic || !will_message)) return 1;
-
-	if(!mqtt3_db_client_find_socket(context->core.id, &oldsock)){
-		if(oldsock == -1){
-			/* Client is reconnecting after a disconnect */
-		}else if(oldsock != context->core.sock){
-			/* Client is already connected, disconnect old version */
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Client %s already connected, closing old connection.", context->core.id);
-#ifdef WITH_BROKER
-			mqtt3_context_close_duplicate(oldsock);
-#else
-			close(oldsock);
-#endif
-		}
-		mqtt3_db_client_update(context, will, will_retain, will_qos, will_topic, will_message);
-	}else{
-		if(!stmt){
-			stmt = _mqtt3_db_statement_prepare("INSERT INTO clients "
-					"(sock,id,clean_session,will,will_retain,will_qos,will_topic,will_message,last_mid,is_bridge) "
-					"SELECT ?,?,?,?,?,?,?,?,0,? WHERE NOT EXISTS "
-					"(SELECT 1 FROM clients WHERE id=?)");
-			if(!stmt){
-				return 1;
-			}
-		}
-		if(sqlite3_bind_int(stmt, 1, context->core.sock) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_text(stmt, 2, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt, 3, context->clean_session) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt, 4, will) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt, 5, will_retain) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_int(stmt, 6, will_qos) != SQLITE_OK) rc = 1;
-		if(will_topic){
-			if(sqlite3_bind_text(stmt, 7, will_topic, strlen(will_topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		}else{
-			if(sqlite3_bind_text(stmt, 7, "", 0, SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		}
-		if(will_message){
-			if(sqlite3_bind_text(stmt, 8, will_message, strlen(will_message), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		}else{
-			if(sqlite3_bind_text(stmt, 8, "", 0, SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		}
-		if(sqlite3_bind_int(stmt, 9, (context->bridge)?1:0) != SQLITE_OK) rc = 1;
-		if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-		sqlite3_reset(stmt);
-		sqlite3_clear_bindings(stmt);
-	}
-	return rc;
-}
-
-/* Update a client connection in the database.
- * This will be called if a client with the same id connects twice (see
- * mqtt3_db_client_insert()), or if a client reconnects that had clean start
- * disabled.
- * If will=1 then a will will be stored for the client. In this case,
- * will_topic and will_message must not be NULL otherwise this will return
- * failure.
- * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
- * Returns 0 on success.
- */
-int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!context || !context->core.id) return 1;
-	if(will && (!will_topic || !will_message)) return 1;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("UPDATE clients SET "
-				"sock=?,clean_session=?,will=?,will_retain=?,will_qos=?,"
-				"will_topic=?,will_message=? WHERE id=?");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_bind_int(stmt, 1, context->core.sock) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 2, context->clean_session) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 3, will) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 4, will_retain) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 5, will_qos) != SQLITE_OK) rc = 1;
-	if(will_topic){
-		if(sqlite3_bind_text(stmt, 6, will_topic, strlen(will_topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	}else{
-		if(sqlite3_bind_text(stmt, 6, "", 0, SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	}
-	if(will_message){
-		if(sqlite3_bind_text(stmt, 7, will_message, strlen(will_message), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	}else{
-		if(sqlite3_bind_text(stmt, 7, "", 0, SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	}
-	if(sqlite3_bind_text(stmt, 8, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-
-	return rc;
-}
-
 /* Called on client death to add a will to the message queue if the will exists.
  * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
  * Returns 0 on success (will queued or will not found)
@@ -749,82 +617,18 @@ int mqtt3_db_client_will_queue(mqtt3_context *context)
  * Returns 1 on failure (count is NULL, sqlite error)
  * Returns 0 on success.
  */
-int mqtt3_db_client_count(int *count)
+int mqtt3_db_client_count(struct _mosquitto_db *db, int *count)
 {
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
+	int i;
 
-	if(!count) return 1;
+	if(!db || !count) return 1;
 
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT COUNT(*) FROM clients");
-		if(!stmt){
-			return 1;
-		}
+	*count = 0;
+	for(i=0; i<db->context_count; i++){
+		if(db->contexts[i]) (*count)++;
 	}
-	if(sqlite3_step(stmt) == SQLITE_ROW){
-		*count = sqlite3_column_int(stmt, 0);
-	}else{
-		rc = 1;
-	}
-	sqlite3_reset(stmt);
 
-	return rc;
-}
-
-/* Delete a client from the database.
- * Called when clients with clean start enabled disconnect.
- * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
- * Returns 0 on success.
- */
-int mqtt3_db_client_delete(mqtt3_context *context)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!context || !(context->core.id)) return 1;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM clients WHERE id=?");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_bind_text(stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-
-	return rc;
-}
-
-/* Find the socket for given client id.
- * Returns 1 on failure (client_id or sock is NULL, client id not found)
- * Returns 0 on success.
- */
-int mqtt3_db_client_find_socket(const char *client_id, int *sock)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!client_id || !sock) return 1;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT sock FROM clients WHERE id=?");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_bind_text(stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt) == SQLITE_ROW){
-		*sock = sqlite3_column_int(stmt, 0);
-	}else{
-		rc = 1;
-	}
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-
-	return rc;
+	return 0;
 }
 
 /* Internal function.
@@ -1558,7 +1362,7 @@ int mqtt3_db_store_clean(void)
  * messages are sent for the $SYS hierarchy.
  * 'start_time' is the result of time() that the broker was started at.
  */
-void mqtt3_db_sys_update(int interval, time_t start_time)
+void mqtt3_db_sys_update(struct _mosquitto_db *db, int interval, time_t start_time)
 {
 	static time_t last_update = 0;
 	time_t now = time(NULL);
@@ -1576,7 +1380,7 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 			mqtt3_db_messages_easy_queue("", "$SYS/broker/messages/inflight", 2, strlen(buf), (uint8_t *)buf, 1);
 		}
 
-		if(!mqtt3_db_client_count(&count)){
+		if(!mqtt3_db_client_count(db, &count)){
 			snprintf(buf, 100, "%d", count);
 			mqtt3_db_messages_easy_queue("", "$SYS/broker/clients/total", 2, strlen(buf), (uint8_t *)buf, 1);
 		}

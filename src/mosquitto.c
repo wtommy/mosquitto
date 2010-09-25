@@ -116,7 +116,7 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 	sigaddset(&sigblock, SIGINT);
 
 	while(run){
-		mqtt3_db_sys_update(config->sys_interval, start_time);
+		mqtt3_db_sys_update(&int_db, config->sys_interval, start_time);
 
 		if(new_clients){
 			client_max = -1;

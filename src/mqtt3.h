@@ -227,13 +227,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context);
 int mqtt3_db_open(mqtt3_config *config);
 int mqtt3_db_close(void);
 int mqtt3_db_backup(bool cleanup);
-int mqtt3_db_client_insert(struct _mosquitto_db *db, mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message);
-int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message);
-int mqtt3_db_client_count(int *count);
-/* Remove the client detailed in context from the clients table only. */
-int mqtt3_db_client_delete(mqtt3_context *context);
-/* Return the socket number in sock of a client client_id. */
-int mqtt3_db_client_find_socket(const char *client_id, int *sock);
+int mqtt3_db_client_count(struct _mosquitto_db *db, int *count);
 /* Add the will of the client in context to the queue of clients subscribed to the appropriate topic. */
 int mqtt3_db_client_will_queue(mqtt3_context *context);
 void mqtt3_db_limits_set(int inflight, int queued);
@@ -256,7 +250,7 @@ int mqtt3_db_retain_insert(const char *topic, int64_t store_id);
 int mqtt3_db_retain_delete(const char *topic);
 int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos);
 int mqtt3_db_store_clean(void);
-void mqtt3_db_sys_update(int interval, time_t start_time);
+void mqtt3_db_sys_update(struct _mosquitto_db *db, int interval, time_t start_time);
 void mqtt3_db_vacuum(void);
 
 /* ============================================================

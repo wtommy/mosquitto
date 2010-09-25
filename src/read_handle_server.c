@@ -44,6 +44,7 @@ int mqtt3_handle_connect(struct _mosquitto_db *db, mqtt3_context *context)
 	char *client_id;
 	char *will_topic = NULL, *will_message = NULL;
 	uint8_t will, will_retain, will_qos, clean_session;
+	int i;
 	
 	/* Don't accept multiple CONNECT commands. */
 	if(context->core.state != mosq_cs_new) return MOSQ_ERR_PROTOCOL;
@@ -81,6 +82,28 @@ int mqtt3_handle_connect(struct _mosquitto_db *db, mqtt3_context *context)
 	if(_mosquitto_read_uint16(&context->core.in_packet, &(context->core.keepalive))) return 1;
 
 	if(_mosquitto_read_string(&context->core.in_packet, &client_id)) return 1;
+
+	/* Find if this client already has an entry */
+	for(i=0; i<db->context_count; i++){
+		if(db->contexts[i] && !strcmp(db->contexts[i]->core.id, client_id)){
+			/* Client does match. */
+			if(db->contexts[i]->core.sock == -1){
+				/* Client is reconnecting after a disconnect */
+				/* FIXME - does anything else need to be done here? 
+				 * Subs aren't tied directly to the context struct.
+				 * Messages neither yet. */
+				mqtt3_context_cleanup(db->contexts[i]);
+				db->contexts[i] = NULL;
+			}else{
+				/* Client is already connected, disconnect old version */
+				mqtt3_log_printf(MOSQ_LOG_ERR, "Client %s already connected, closing old connection.", context->core.id);
+				db->contexts[i]->core.state = mosq_cs_disconnecting;
+				mqtt3_socket_close(db->contexts[i]);
+			}
+			break;
+		}
+	}
+
 	if(connect_flags & 0x04){
 		context->core.will = malloc(sizeof(struct mosquitto_message));
 		if(!context->core.will) return MOSQ_ERR_NOMEM;
@@ -100,8 +123,6 @@ int mqtt3_handle_connect(struct _mosquitto_db *db, mqtt3_context *context)
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
 	context->core.id = client_id;
 	context->clean_session = clean_session;
-
-	mqtt3_db_client_insert(db, context, will, will_retain, will_qos, will_topic, will_message);
 
 	if(will_topic) _mosquitto_free(will_topic);
 	if(will_message) _mosquitto_free(will_message);

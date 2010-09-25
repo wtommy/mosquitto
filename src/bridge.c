@@ -66,14 +66,12 @@ int mqtt3_bridge_new(struct _mosquitto_db *db, struct _mqtt3_bridge *bridge)
 		}
 	}
 
+	/* FIXME - need to check that this name isn't already in use. */
 	new_context->core.id = _mosquitto_strdup(bridge->name);
 	if(!new_context->core.id){
 		return MOSQ_ERR_NOMEM;
 	}
-	if(!mqtt3_db_client_insert(db, new_context, 0, 0, 0, NULL, NULL)){
-		return mqtt3_bridge_connect(new_context);
-	}
-	return 1;
+	return mqtt3_bridge_connect(new_context);
 }
 
 int mqtt3_bridge_connect(mqtt3_context *context)
@@ -103,7 +101,6 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 	context->core.sock = new_sock;
 
 	context->core.last_msg_in = time(NULL);
-	mqtt3_db_client_update(context, 0, 0, 0, NULL, NULL);
 	if(mqtt3_raw_connect(context, context->core.id,
 			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
 			context->core.keepalive, context->clean_session)){
