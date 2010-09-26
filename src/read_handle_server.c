@@ -85,7 +85,7 @@ int mqtt3_handle_connect(struct _mosquitto_db *db, mqtt3_context *context)
 
 	/* Find if this client already has an entry */
 	for(i=0; i<db->context_count; i++){
-		if(db->contexts[i] && !strcmp(db->contexts[i]->core.id, client_id)){
+		if(db->contexts[i] && db->contexts[i]->core.id && !strcmp(db->contexts[i]->core.id, client_id)){
 			/* Client does match. */
 			if(db->contexts[i]->core.sock == -1){
 				/* Client is reconnecting after a disconnect */
