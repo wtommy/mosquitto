@@ -629,6 +629,8 @@ static int _mqtt3_db_cleanup(void)
 
 	if(!db) return 1;
 
+#if 0
+// FIXME - reimplement for new db
 	query = sqlite3_mprintf("UPDATE clients SET sock=-1");
 	if(query){
 		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
@@ -687,7 +689,7 @@ static int _mqtt3_db_cleanup(void)
 	}else{
 		return 1;
 	}
-
+#endif
 	return rc;
 }
 
