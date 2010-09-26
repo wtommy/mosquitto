@@ -88,7 +88,7 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 	}
 	if(context->clean_session && !context->duplicate){
 		mqtt3_subs_clean_session(context, &int_db.subs);
-		mqtt3_db_messages_delete(context->core.id);
+		mqtt3_db_messages_delete(context);
 	}
 	if(context->address) _mosquitto_free(context->address);
 	if(context->core.id) _mosquitto_free(context->core.id);

@@ -44,7 +44,6 @@ struct _sub_token {
 static int _subs_process(struct _mosquitto_subleaf *leaf, const char *source_id, const char *topic, int qos, int retain, int64_t store_id)
 {
 	int rc = 0;
-	char *client_id;
 	int client_qos, msg_qos;
 	uint16_t mid;
 
@@ -53,7 +52,6 @@ static int _subs_process(struct _mosquitto_subleaf *leaf, const char *source_id,
 			leaf = leaf->next;
 			continue;
 		}
-		client_id = leaf->context->core.id;
 		client_qos = leaf->qos;
 
 		if(qos > client_qos){
@@ -68,13 +66,13 @@ static int _subs_process(struct _mosquitto_subleaf *leaf, const char *source_id,
 		}
 		switch(msg_qos){
 			case 0:
-				if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish, msg_qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, ms_publish, msg_qos, store_id) == 1) rc = 1;
 				break;
 			case 1:
-				if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish_puback, msg_qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, ms_publish_puback, msg_qos, store_id) == 1) rc = 1;
 				break;
 			case 2:
-				if(mqtt3_db_message_insert(client_id, mid, mosq_md_out, ms_publish_pubrec, msg_qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, ms_publish_pubrec, msg_qos, store_id) == 1) rc = 1;
 				break;
 		}
 		leaf = leaf->next;
