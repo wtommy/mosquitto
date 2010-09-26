@@ -396,18 +396,21 @@ int main(int argc, char *argv[])
 	child = malloc(sizeof(struct _mosquitto_subhier));
 	child->next = NULL;
 	child->topic = strdup("");
+	child->subs = NULL;
 	child->children = NULL;
 	int_db.subs.children = child;
 
 	child = malloc(sizeof(struct _mosquitto_subhier));
 	child->next = NULL;
 	child->topic = strdup("/");
+	child->subs = NULL;
 	child->children = NULL;
 	int_db.subs.children->next = child;
 
 	child = malloc(sizeof(struct _mosquitto_subhier));
 	child->next = NULL;
 	child->topic = strdup("$SYS");
+	child->subs = NULL;
 	child->children = NULL;
 	int_db.subs.children->next->next = child;
 
