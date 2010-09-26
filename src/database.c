@@ -127,14 +127,9 @@ static int _mqtt3_db_retain_regex_create(const char *sub, char **regex);
 static sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query);
 static void _mqtt3_db_statements_finalize(sqlite3 *fdb);
 static int _mqtt3_db_version_check(void);
-static int _mqtt3_db_transaction_begin(void);
-static int _mqtt3_db_transaction_end(void);
 #if defined(WITH_BROKER) && defined(WITH_DB_UPGRADE)
 static int _mqtt3_db_upgrade(void);
 static int _mqtt3_db_upgrade_1_2(void);
-#endif
-#if 0
-static int _mqtt3_db_transaction_rollback(void);
 #endif
 
 int mqtt3_db_open(mqtt3_config *config)
@@ -766,7 +761,6 @@ int mqtt3_db_message_delete_by_oid(int64_t oid)
 
 int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_status status, int qos, int64_t store_id)
 {
-	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 	static sqlite3_stmt *count_stmt = NULL;
@@ -828,7 +822,6 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 
 int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_status status)
 {
-	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 
@@ -856,7 +849,6 @@ int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, enum mosquitto
 
 int mqtt3_db_messages_delete(mqtt3_context *context)
 {
-	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 
@@ -895,7 +887,6 @@ int mqtt3_db_messages_easy_queue(mqtt3_context *context, const char *topic, int 
 
 int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, int retain, int64_t store_id)
 {
-	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 
 	/* Find all clients that subscribe to topic and put messages into the db for them. */
@@ -910,7 +901,6 @@ int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, i
 
 int mqtt3_db_message_store(const char *source, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, int64_t *store_id)
 {
-	/* Warning: Don't start transaction in this function. */
 	static sqlite3_stmt *stmt = NULL;
 	int rc = 0;
 
@@ -965,7 +955,6 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 			return 1;
 		}
 	}
-	_mqtt3_db_transaction_begin();
 	if(sqlite3_bind_int(stmt_select, 1, now) != SQLITE_OK) rc = 1;
 	while(sqlite3_step(stmt_select) == SQLITE_ROW){
 		OID = sqlite3_column_int64(stmt_select, 0);
@@ -996,7 +985,6 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	}
 	sqlite3_reset(stmt_select);
 	sqlite3_clear_bindings(stmt_select);
-	_mqtt3_db_transaction_end();
 	return MOSQ_ERR_SUCCESS;
 }
 
@@ -1072,7 +1060,6 @@ int mqtt3_db_message_write(mqtt3_context *context)
 		}
 	}
 	if(sqlite3_bind_text(stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) == SQLITE_OK){
-		_mqtt3_db_transaction_begin();
 		while(sqlite3_step(stmt) == SQLITE_ROW){
 			OID = sqlite3_column_int64(stmt, 0);
 			status = sqlite3_column_int(stmt, 1);
@@ -1119,7 +1106,6 @@ int mqtt3_db_message_write(mqtt3_context *context)
 					break;
 			}
 		}
-		_mqtt3_db_transaction_end();
 	}else{
 		rc = 1;
 	}
@@ -1224,7 +1210,6 @@ static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
  */
 int mqtt3_db_retain_insert(const char *topic, int64_t store_id)
 {
-	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 
@@ -1364,8 +1349,6 @@ void mqtt3_db_sys_update(struct _mosquitto_db *db, int interval, time_t start_ti
 	int count;
 
 	if(interval && now - interval > last_update){
-		_mqtt3_db_transaction_begin();
-
 		snprintf(buf, 100, "%d seconds", (int)(now - start_time));
 		mqtt3_db_messages_easy_queue(NULL, "$SYS/broker/uptime", 2, strlen(buf), (uint8_t *)buf, 1);
 
@@ -1397,8 +1380,6 @@ void mqtt3_db_sys_update(struct _mosquitto_db *db, int interval, time_t start_ti
 		mqtt3_db_messages_easy_queue(NULL, "$SYS/broker/bytes/sent", 2, strlen(buf), (uint8_t *)buf, 1);
 		
 		last_update = time(NULL);
-
-		_mqtt3_db_transaction_end();
 	}
 }
 
@@ -1426,74 +1407,6 @@ static sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query)
 	}
 	return stmt;
 }
-
-/* Internal function.
- * Begin a sqlite transaction.
- * Returns 1 on failure (sqlite error)
- * Returns 0 on success.
- */
-static int _mqtt3_db_transaction_begin(void)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("BEGIN TRANSACTION");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-
-	return rc;
-}
-
-/* Internal function.
- * End a sqlite transaction.
- * Returns 1 on failure (sqlite error)
- * Returns 0 on success.
- */
-static int _mqtt3_db_transaction_end(void)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("END TRANSACTION");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-
-	return rc;
-}
-
-#if 0
-/* Internal function.
- * Roll back a sqlite transaction.
- * Returns 1 on failure (sqlite error)
- * Returns 0 on success.
- */
-static int _mqtt3_db_transaction_rollback(void)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("ROLLBACK TRANSACTION");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-
-	return rc;
-}
-#endif
 
 void mqtt3_db_limits_set(int inflight, int queued)
 {
