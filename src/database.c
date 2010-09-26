@@ -776,6 +776,8 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, enum mosquitto_
 
 	if(!client_id || !store_id) return 1;
 
+#if 0
+// FIXME - reimplement for new database
 	if(!count_stmt){
 		count_stmt = _mqtt3_db_statement_prepare("SELECT "
 				"(SELECT COUNT(*) FROM messages WHERE client_id=?),"
@@ -801,7 +803,7 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, enum mosquitto_
 		sqlite3_clear_bindings(count_stmt);
 		if(limited) return 2;
 	}
-
+#endif
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("INSERT INTO messages "
 				"(client_id, timestamp, direction, status, mid, retries, qos, store_id) "
