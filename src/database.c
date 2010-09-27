@@ -945,10 +945,7 @@ int mqtt3_db_message_release(mosquitto_db *db, mqtt3_context *context, uint16_t 
 
 int mqtt3_db_message_write(mqtt3_context *context)
 {
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-	int64_t OID;
-	int status;
+	mosquitto_client_msg *tail, *last = NULL;
 	uint16_t mid;
 	int retries;
 	int retain;
@@ -959,70 +956,78 @@ int mqtt3_db_message_write(mqtt3_context *context)
 
 	if(!context || !context->core.id || context->core.sock == -1) return 1;
 
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT messages.OID,messages.status,messages.mid,"
-				"messages.retries,message_store.retain,message_store.topic,messages.qos,"
-				"message_store.payloadlen,message_store.payload "
-				"FROM messages JOIN message_store ON messages.store_id=message_store.id "
-				"WHERE status IN (1, 2, 4, 6, 8) "
-				"AND direction=1 AND client_id=? ORDER BY message_store.timestamp");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_bind_text(stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) == SQLITE_OK){
-		while(sqlite3_step(stmt) == SQLITE_ROW){
-			OID = sqlite3_column_int64(stmt, 0);
-			status = sqlite3_column_int(stmt, 1);
-			mid = sqlite3_column_int(stmt, 2);
-			retries = sqlite3_column_int(stmt, 3);
-			retain = sqlite3_column_int(stmt, 4);
-			topic = (const char *)sqlite3_column_text(stmt, 5);
-			qos = sqlite3_column_int(stmt, 6);
-			payloadlen = sqlite3_column_int(stmt, 7);
-			if(payloadlen){
-				payload = sqlite3_column_blob(stmt, 8);
-			}else{
-				payload = NULL;
-			}
-			switch(status){
+	tail = context->msgs;
+	while(tail){
+		if(tail->direction == mosq_md_out){
+			mid = tail->mid;
+			retries = tail->dup;
+			retain = tail->store->msg.retain;
+			topic = tail->store->msg.topic;
+			qos = tail->store->msg.qos;
+			payloadlen = tail->store->msg.payloadlen;
+			payload = tail->store->msg.payload;
+
+			switch(tail->state){
 				case ms_publish:
 					if(!mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload)){
-						mqtt3_db_message_delete_by_oid(OID);
+						if(last){
+							last->next = tail->next;
+							tail->store->ref_count--;
+							tail = last->next;
+							_mosquitto_free(tail);
+						}else{
+							context->msgs = tail->next;
+							tail->store->ref_count--;
+							_mosquitto_free(tail);
+							tail = context->msgs;
+						}
 					}
 					break;
 
 				case ms_publish_puback:
 					if(!mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload)){
-						mqtt3_db_message_update(context, mid, mosq_md_out, ms_wait_puback);
+						tail->state = ms_wait_puback;
 					}
+					last = tail;
+					tail = tail->next;
 					break;
 
 				case ms_publish_pubrec:
 					if(!mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload)){
-						mqtt3_db_message_update(context, mid, mosq_md_out, ms_wait_pubrec);
+						tail->state = ms_wait_pubrec;
 					}
+					last = tail;
+					tail = tail->next;
 					break;
 				
 				case ms_resend_pubrel:
 					if(!mqtt3_raw_pubrel(context, mid)){
-						mqtt3_db_message_update(context, mid, mosq_md_out, ms_wait_pubrel);
+						tail->state = ms_wait_pubrel;
 					}
+					last = tail;
+					tail = tail->next;
 					break;
 
 				case ms_resend_pubcomp:
 					if(!mqtt3_raw_pubcomp(context, mid)){
-						mqtt3_db_message_update(context, mid, mosq_md_out, ms_wait_pubcomp);
+						tail->state = ms_wait_pubcomp;
 					}
+					last = tail;
+					tail = tail->next;
+					break;
+
+				default:
+					last = tail;
+					tail = tail->next;
 					break;
 			}
+		}else{
+			last = tail;
+			tail = tail->next;
 		}
-	}else{
-		rc = 1;
 	}
-	sqlite3_reset(stmt);
 
-	return rc;
+	return 0;
 }
 
 int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
