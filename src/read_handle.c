@@ -177,12 +177,6 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 			_mosquitto_free(topic);
 			return 1;
 		}
-	}else{
-		if(retain){
-			/* If retain is set and we have a zero payloadlen, delete the
-			 * retained message because the last message was a null! */
-			rc = mqtt3_db_retain_delete(topic);
-		}
 	}
 
 	if(mqtt3_db_message_store(db, context->core.id, mid, topic, qos, payloadlen, payload, retain, &stored)){

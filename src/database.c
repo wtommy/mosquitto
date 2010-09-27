@@ -803,9 +803,6 @@ int mqtt3_db_messages_queue(mosquitto_db *db, const char *source_id, const char 
 	/* Find all clients that subscribe to topic and put messages into the db for them. */
 	if(!source_id || !topic) return 1;
 
-	if(retain){
-		if(mqtt3_db_retain_insert(topic, 1 /* FIXME */)) rc = 1;
-	}
 	mqtt3_sub_search(&db->subs, source_id, topic, qos, retain, stored);
 	return rc;
 }
@@ -1032,58 +1029,6 @@ int mqtt3_db_message_write(mqtt3_context *context)
 		rc = 1;
 	}
 	sqlite3_reset(stmt);
-
-	return rc;
-}
-
-/* Add a retained message to the database for a particular topic.
- * Only one retained message exists per topic, so does an update if one already exists.
- * Returns 1 on failure (topic is NULL, sqlite error)
- * Returns 0 on success.
- */
-int mqtt3_db_retain_insert(const char *topic, int64_t store_id)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!topic || !store_id) return 1;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("REPLACE INTO retain (topic,store_id) VALUES (?,?)");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_bind_text(stmt, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int64(stmt, 2, store_id) != SQLITE_OK) rc = 1;
-	if(!rc){
-		if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	}
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-
-	return rc;
-}
-
-int mqtt3_db_retain_delete(const char *topic)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!topic) return 1;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM retain WHERE topic=?");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_bind_text(stmt, 1, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(!rc){
-		if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	}
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
 
 	return rc;
 }

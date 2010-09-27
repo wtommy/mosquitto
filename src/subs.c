@@ -41,12 +41,27 @@ struct _sub_token {
 	char *topic;
 };
 
-static int _subs_process(struct _mosquitto_subleaf *leaf, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
+static int _subs_process(struct _mosquitto_subhier *hier, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
 {
 	int rc = 0;
 	int client_qos, msg_qos;
 	uint16_t mid;
+	struct _mosquitto_subleaf *leaf;
 
+	leaf = hier->subs;
+
+	if(retain){
+		if(hier->retained){
+			hier->retained->ref_count--;
+			/* FIXME - it would be nice to be able to remove the message from the store at this point if ref_count == 0 */
+			if(stored->msg.payloadlen){
+				hier->retained = stored;
+				hier->retained->ref_count++;
+			}else{
+				hier->retained = NULL;
+			}
+		}
+	}
 	while(leaf){
 		if(leaf->context->bridge && !strcmp(leaf->context->core.id, source_id)){
 			leaf = leaf->next;
@@ -234,12 +249,12 @@ static int _sub_search(struct _mosquitto_subhier *subhier, struct _sub_token *to
 			if(tokens->next){
 				_sub_search(branch, tokens->next, source_id, topic, qos, retain, stored);
 			}else{
-				_subs_process(branch->subs, source_id, topic, qos, retain, stored);
+				_subs_process(branch, source_id, topic, qos, retain, stored);
 			}
 		}else if(!strcmp(branch->topic, "#") && !branch->children){
 			/* The topic matches due to a # wildcard - process the
 			 * subscriptions and return. */
-			_subs_process(branch->subs, source_id, topic, qos, retain, stored);
+			_subs_process(branch, source_id, topic, qos, retain, stored);
 			return 0;
 		}
 		last = branch;
