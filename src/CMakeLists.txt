@@ -21,8 +21,6 @@ option(USE_LIBWRAP
 	"Include tcp-wrappers support?" OFF)
 option(INC_DB_UPGRADE
 	"Include database upgrade support? (recommended)" ON)
-option(INC_REGEX
-	"Include topic regex matching support? (recommended)" ON)
 option(INC_MEMTRACK
 	"Include memory tracking support?" ON)
 

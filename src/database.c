@@ -56,49 +56,6 @@ POSSIBILITY OF SUCH DAMAGE.
  *	+/b
  *	b/c/a
  *	a/b/d
- *
- * When a message is ready to be published at the broker, we need to check all
- * of the subscriptions to see which ones the message should be sent to. This
- * would be easy without wildcards, but requires a bit more work with them.
- *
- * The regex used to do the matching is of the form below for a topic of a/b/c:
- *
- * ^(?:(?:(a|\+)(?!$))(?:(?:/(?:(b|\+)(?!$)))(?:(?:/(?:c|\+))|/#)?|/#)?|#)$
- *
- * In general, we're matching (a or +) followed by (the next levels of
- * hierarchy or #).
- * More specifically, all the levels of hierarchy must match, unless the last
- * level is #.
- *
- * ^(?:							# Must start at beginning of string
- * 		(?:						# (Level 1 hierarchy)
- * 			(a|\+)(?!$) 		# Match a or +, but only if not EOL.
- * 		)						# AND 
- * 		(?:
- * 			(?:					# (Level 2 hierarchy)
- * 				/				# Match /
- * 				(?:				# AND
- * 					(b|\+)(?!$)	# Match b or +, but only if not EOL.
- * 				)
- * 			)					# AND
- * 			(?:
- * 				(?:				# (Level 3 hierarchy)
- * 					/			# Match /
- * 					(?:			# AND
- * 						c|\+	# Match c or +.
- * 					)
- * 				)
- * 				|				# OR (instead of level 3)
- * 				/#				# Match /# at level 3
- * 			)?					# Level 3 exist 1/0 times
- * 			|					# OR (instead of level 2)
- * 			/#					# Match /# at level 2
- * 		)?						# Level 2 exist 1/0 times
- * 		|						# OR (instead of level 1)
- * 		#						# Match # at level 1
- * 	)$							# Must end on EOL.
- *
- *
  */
 
 #include <assert.h>
@@ -121,9 +78,6 @@ static int max_queued = 100;
 
 static int _mqtt3_db_tables_create(void);
 static int _mqtt3_db_cleanup(void);
-#ifdef WITH_REGEX
-static int _mqtt3_db_retain_regex_create(const char *sub, char **regex);
-#endif
 static sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query);
 static void _mqtt3_db_statements_finalize(sqlite3 *fdb);
 static int _mqtt3_db_version_check(void);
@@ -583,12 +537,12 @@ static void _mqtt3_db_statements_finalize(sqlite3 *fdb)
  * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
  * Returns 0 on success (will queued or will not found)
  */
-int mqtt3_db_client_will_queue(mqtt3_context *context)
+int mqtt3_db_client_will_queue(struct _mosquitto_db *db, mqtt3_context *context)
 {
 	if(!context || !context->core.id) return 1;
 	if(!context->core.will) return 0;
 
-	return mqtt3_db_messages_easy_queue(context, context->core.will->topic, context->core.will->qos, context->core.will->payloadlen, context->core.will->payload, context->core.will->retain);
+	return mqtt3_db_messages_easy_queue(db, context, context->core.will->topic, context->core.will->qos, context->core.will->payloadlen, context->core.will->payload, context->core.will->retain);
 }
 
 /* Returns the number of client currently in the database.
@@ -759,7 +713,7 @@ int mqtt3_db_message_delete_by_oid(int64_t oid)
 	return rc;
 }
 
-int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_status status, int qos, int64_t store_id)
+int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_status status, int qos, struct mosquitto_msg_store *stored)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
@@ -768,7 +722,8 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 	int sock = -1;
 	int limited = 0;
 
-	if(!context || !store_id) return 1;
+	assert(stored);
+	if(!context) return 1;
 
 #if 0
 // FIXME - reimplement for new database
@@ -812,7 +767,7 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 	if(sqlite3_bind_int(stmt, 4, status) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 5, mid) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 6, qos) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int64(stmt, 7, store_id) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int64(stmt, 7, 1 /* FIXME */) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -868,10 +823,12 @@ int mqtt3_db_messages_delete(mqtt3_context *context)
 	return rc;
 }
 
-int mqtt3_db_messages_easy_queue(mqtt3_context *context, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
+int mqtt3_db_messages_easy_queue(struct _mosquitto_db *db, mqtt3_context *context, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
 {
-	int64_t store_id;
+	struct mosquitto_msg_store *stored;
 	char *source_id;
+
+	assert(db);
 
 	if(!topic) return 1;
 
@@ -880,56 +837,71 @@ int mqtt3_db_messages_easy_queue(mqtt3_context *context, const char *topic, int 
 	}else{
 		source_id = "";
 	}
-	if(mqtt3_db_message_store(source_id, topic, qos, payloadlen, payload, retain, &store_id)) return 1;
+	if(mqtt3_db_message_store(db, source_id, topic, qos, payloadlen, payload, retain, &stored)) return 1;
 
-	return mqtt3_db_messages_queue(context->core.id, topic, qos, retain, store_id);
+	return mqtt3_db_messages_queue(db, context->core.id, topic, qos, retain, stored);
 }
 
-int mqtt3_db_messages_queue(const char *source_id, const char *topic, int qos, int retain, int64_t store_id)
+int mqtt3_db_messages_queue(struct _mosquitto_db *db, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
 {
 	int rc = 0;
 
+	assert(db);
+	assert(stored);
+
 	/* Find all clients that subscribe to topic and put messages into the db for them. */
-	if(!source_id || !topic || !store_id) return 1;
+	if(!source_id || !topic) return 1;
 
 	if(retain){
-		if(mqtt3_db_retain_insert(topic, store_id)) rc = 1;
+		if(mqtt3_db_retain_insert(topic, 1 /* FIXME */)) rc = 1;
 	}
-	mqtt3_sub_search(&int_db.subs, source_id, topic, qos, retain, store_id);
+	mqtt3_sub_search(&db->subs, source_id, topic, qos, retain, stored);
 	return rc;
 }
 
-int mqtt3_db_message_store(const char *source, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, int64_t *store_id)
+int mqtt3_db_message_store(struct _mosquitto_db *db, const char *source, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, struct mosquitto_msg_store **stored)
 {
 	static sqlite3_stmt *stmt = NULL;
 	int rc = 0;
+	struct mosquitto_msg_store *temp;
 
-	if(!topic || !store_id) return 1;
+	assert(db);
+	assert(stored);
 
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("INSERT INTO message_store "
-				"(timestamp, qos, retain, topic, payloadlen, payload, source_id) "
-				"VALUES (?,?,?,?,?,?,?)");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_bind_int(stmt, 1, time(NULL)) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 2, qos) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 3, retain) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_text(stmt, 4, topic, strlen(topic), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 5, payloadlen) != SQLITE_OK) rc = 1;
+	if(!topic) return 1;
+
+	temp = realloc(db->msg_store, sizeof(struct mosquitto_msg_store)*(db->msg_store_count+1));
+	if(!temp) return 1;
+	db->msg_store_count++;
+	db->msg_store = temp;
+
+	(*stored) = &db->msg_store[db->msg_store_count];
+	(*stored)->timestamp = time(NULL);
+	(*stored)->source_id = _mosquitto_strdup(source);
+	// FIXME - need source mid. stored->mid = 
+	(*stored)->msg.qos = qos;
+	(*stored)->msg.retain = retain;
+	(*stored)->msg.topic = _mosquitto_strdup(topic);
+	(*stored)->msg.payloadlen = payloadlen;
 	if(payloadlen){
-		if(sqlite3_bind_blob(stmt, 6, payload, payloadlen, SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		(*stored)->msg.payload = malloc(sizeof(uint8_t)*payloadlen);
+		memcpy((*stored)->msg.payload, payload, sizeof(uint8_t)*payloadlen);
+	}else{
+		(*stored)->msg.payload = NULL;
 	}
-	if(sqlite3_bind_text(stmt, 7, source, strlen(source), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-	if(rc) return 1;
-	*store_id = sqlite3_last_insert_rowid(db);
 
-	return rc;
+	if(!(*stored)->source_id || !(*stored)->msg.topic || (payloadlen && !(*stored)->msg.payload)){
+		if((*stored)->source_id) _mosquitto_free((*stored)->source_id);
+		if((*stored)->msg.topic) _mosquitto_free((*stored)->msg.topic);
+		if((*stored)->msg.payload) _mosquitto_free((*stored)->msg.payload);
+		db->msg_store_count--;
+		temp = realloc(db->msg_store, sizeof(struct mosquitto_msg_store)*db->msg_store_count);
+		if(temp){
+			db->msg_store = temp;
+		}
+		return 1;
+	}
+	return 0;
 }
 
 int mqtt3_db_message_timeout_check(unsigned int timeout)
@@ -988,7 +960,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_db_message_release(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir)
+int mqtt3_db_message_release(struct _mosquitto_db *db, mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
@@ -1019,7 +991,7 @@ int mqtt3_db_message_release(mqtt3_context *context, uint16_t mid, enum mosquitt
 		retain = sqlite3_column_int(stmt, 3);
 		topic = (char *)sqlite3_column_text(stmt, 4);
 		source_id = (char *)sqlite3_column_text(stmt, 5);
-		if(!mqtt3_db_messages_queue(source_id, topic, qos, retain, store_id)){
+		if(!mqtt3_db_messages_queue(db, source_id, topic, qos, retain, NULL /* FIXME */)){
 			if(mqtt3_db_message_delete_by_oid(OID)) rc = 1;
 		}else{
 			rc = 1;
@@ -1114,95 +1086,6 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	return rc;
 }
 
-#ifdef WITH_REGEX
-static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
-{
-	char *stmp;
-	int hier;
-	char *local_regex = NULL;
-	int regex_len;
-	char *local_sub;
-	char *token;
-	int pos;
-	int i;
-	char *sys;
-
-	if(!sub || !regex) return 1;
-
-	if(strncmp(sub, "$SYS", 4)){
-		if(sub[0] == '/'){
-			sys = "^/(?!\\$SYS)";
-			local_sub = _mosquitto_strdup(sub+1);
-		}else{
-			sys = "^(?!\\$SYS)";
-			local_sub = _mosquitto_strdup(sub);
-		}
-	}else{
-		sys = "^";
-		local_sub = _mosquitto_strdup(sub);
-	}
-	if(!local_sub) return 1;
-	hier = 0;
-	stmp = local_sub;
-	while(stmp){
-		stmp = index(stmp, '/');
-		if(stmp) stmp++;
-		hier++;
-	}
-	regex_len = strlen(sys) + strlen(local_sub) + 5*hier + 2;
-	local_regex = _mosquitto_realloc(local_regex, regex_len);
-	if(!local_regex) return 1;
-
-	if(hier > 1){
-		token = strtok(local_sub, "/");
-		if(!strcmp(token, "+")){
-			pos = sprintf(local_regex, "%s[^/]+", sys);
-		}else{
-			pos = sprintf(local_regex, "%s\\Q%s\\E", sys, token);
-		}
-		for(i=1; i<hier-1; i++){
-			token = strtok(NULL, "/");
-			if(token){
-				/* Token may be NULL here if there are multiple / in a row in
-				 * the subscription string. */
-				if(!strcmp(token, "+")){
-					pos += sprintf(&(local_regex[pos]), "/[^/]+");
-				}else{
-					pos += sprintf(&(local_regex[pos]), "/\\Q%s\\E", token);
-				}
-			}
-		}
-		token = strtok(NULL, "/");
-		if(token){
-			if(!strcmp(token, "+")){
-				pos += sprintf(&(local_regex[pos]), "/[^/]+$");
-			}else if(!strcmp(token, "#")){
-				pos += sprintf(&(local_regex[pos]), "/.*");
-			}else{
-				pos += sprintf(&(local_regex[pos]), "/\\Q%s\\E$", token);
-			}
-		}else{
-			/* If token is NULL, this means we have one hierarchy too few.
-			 * This is caused by the first character of the sub being / or by
-			 * multiple / (ie //) appearing in a row. */
-			pos += sprintf(&(local_regex[pos]), "$");
-		}
-	}else{
-		token = strtok(local_sub, "/");
-		if(!strcmp(token, "+")){
-			pos = sprintf(local_regex, "%s[^/]+$", sys);
-		}else if(!strcmp(token, "#")){
-			pos = sprintf(local_regex, "%s.*", sys);
-		}else{
-			pos = sprintf(local_regex, "%s\\Q%s\\E$", sys, token);
-		}
-	}
-	*regex = local_regex;
-	_mosquitto_free(local_sub);
-	return MOSQ_ERR_SUCCESS;
-}
-#endif
-
 /* Add a retained message to the database for a particular topic.
  * Only one retained message exists per topic, so does an update if one already exists.
  * Returns 1 on failure (topic is NULL, sqlite error)
@@ -1259,38 +1142,21 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
-#ifdef WITH_REGEX
-	char *regex = NULL;
-#endif
 	const char *topic;
 	int qos;
-	int64_t store_id;
+	struct mosquitto_msg_store *stored = NULL;
 	uint16_t mid;
 
 	if(!stmt){
-#ifdef WITH_REGEX
-		stmt = _mqtt3_db_statement_prepare("SELECT message_store.topic,qos,id FROM message_store "
-				"JOIN retain ON message_store.id=retain.store_id WHERE regexp(?, retain.topic)");
-#else
 		stmt = _mqtt3_db_statement_prepare("SELECT message_store.topic,qos,id FROM message_store "
 				"JOIN retain ON message_store.id=retain.store_id WHERE retain.topic=?");
-#endif
 		if(!stmt) return 1;
 	}
-#ifdef WITH_REGEX
-	if(_mqtt3_db_retain_regex_create(sub, &regex)) return 1;
-#endif
-
-#ifdef WITH_REGEX
-	if(sqlite3_bind_text(stmt, 1, regex, strlen(regex), _mosquitto_free) != SQLITE_OK) rc = 1;
-#else
 	if(sqlite3_bind_text(stmt, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-#endif
 
 	while(sqlite3_step(stmt) == SQLITE_ROW){
 		topic = (const char *)sqlite3_column_text(stmt, 0);
 		qos = sqlite3_column_int(stmt, 1);
-		store_id = sqlite3_column_int64(stmt, 2);
 
 		if(qos > sub_qos) qos = sub_qos;
 		if(qos > 0){
@@ -1300,13 +1166,13 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 		}
 		switch(qos){
 			case 0:
-				if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish, qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish, qos, stored) == 1) rc = 1;
 				break;
 			case 1:
-				if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish_puback, qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish_puback, qos, stored) == 1) rc = 1;
 				break;
 			case 2:
-				if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish_pubrec, qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish_pubrec, qos, stored) == 1) rc = 1;
 				break;
 		}
 	}
@@ -1350,34 +1216,34 @@ void mqtt3_db_sys_update(struct _mosquitto_db *db, int interval, time_t start_ti
 
 	if(interval && now - interval > last_update){
 		snprintf(buf, 100, "%d seconds", (int)(now - start_time));
-		mqtt3_db_messages_easy_queue(NULL, "$SYS/broker/uptime", 2, strlen(buf), (uint8_t *)buf, 1);
+		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/uptime", 2, strlen(buf), (uint8_t *)buf, 1);
 
 		if(!mqtt3_db_message_count(&count)){
 			snprintf(buf, 100, "%d", count);
-			mqtt3_db_messages_easy_queue(NULL, "$SYS/broker/messages/inflight", 2, strlen(buf), (uint8_t *)buf, 1);
+			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/inflight", 2, strlen(buf), (uint8_t *)buf, 1);
 		}
 
 		if(!mqtt3_db_client_count(db, &count)){
 			snprintf(buf, 100, "%d", count);
-			mqtt3_db_messages_easy_queue(NULL, "$SYS/broker/clients/total", 2, strlen(buf), (uint8_t *)buf, 1);
+			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/clients/total", 2, strlen(buf), (uint8_t *)buf, 1);
 		}
 
 #ifdef WITH_MEMORY_TRACKING
 		snprintf(buf, 100, "%lld", _mosquitto_memory_used()+sqlite3_memory_used());
-		mqtt3_db_messages_easy_queue(NULL, "$SYS/broker/heap/current size", 2, strlen(buf), (uint8_t *)buf, 1);
+		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/heap/current size", 2, strlen(buf), (uint8_t *)buf, 1);
 #endif
 
 		snprintf(buf, 100, "%lu", mqtt3_net_msgs_total_received());
-		mqtt3_db_messages_easy_queue(NULL, "$SYS/broker/messages/received", 2, strlen(buf), (uint8_t *)buf, 1);
+		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/received", 2, strlen(buf), (uint8_t *)buf, 1);
 		
 		snprintf(buf, 100, "%lu", mqtt3_net_msgs_total_sent());
-		mqtt3_db_messages_easy_queue(NULL, "$SYS/broker/messages/sent", 2, strlen(buf), (uint8_t *)buf, 1);
+		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/sent", 2, strlen(buf), (uint8_t *)buf, 1);
 
 		snprintf(buf, 100, "%llu", (unsigned long long)mqtt3_net_bytes_total_received());
-		mqtt3_db_messages_easy_queue(NULL, "$SYS/broker/bytes/received", 2, strlen(buf), (uint8_t *)buf, 1);
+		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/bytes/received", 2, strlen(buf), (uint8_t *)buf, 1);
 		
 		snprintf(buf, 100, "%llu", (unsigned long long)mqtt3_net_bytes_total_sent());
-		mqtt3_db_messages_easy_queue(NULL, "$SYS/broker/bytes/sent", 2, strlen(buf), (uint8_t *)buf, 1);
+		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/bytes/sent", 2, strlen(buf), (uint8_t *)buf, 1);
 		
 		last_update = time(NULL);
 	}

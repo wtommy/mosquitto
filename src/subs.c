@@ -41,7 +41,7 @@ struct _sub_token {
 	char *topic;
 };
 
-static int _subs_process(struct _mosquitto_subleaf *leaf, const char *source_id, const char *topic, int qos, int retain, int64_t store_id)
+static int _subs_process(struct _mosquitto_subleaf *leaf, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
 {
 	int rc = 0;
 	int client_qos, msg_qos;
@@ -66,13 +66,13 @@ static int _subs_process(struct _mosquitto_subleaf *leaf, const char *source_id,
 		}
 		switch(msg_qos){
 			case 0:
-				if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, ms_publish, msg_qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, ms_publish, msg_qos, stored) == 1) rc = 1;
 				break;
 			case 1:
-				if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, ms_publish_puback, msg_qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, ms_publish_puback, msg_qos, stored) == 1) rc = 1;
 				break;
 			case 2:
-				if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, ms_publish_pubrec, msg_qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, ms_publish_pubrec, msg_qos, stored) == 1) rc = 1;
 				break;
 		}
 		leaf = leaf->next;
@@ -221,7 +221,7 @@ static int _sub_remove(mqtt3_context *context, struct _mosquitto_subhier *subhie
 	return 0;
 }
 
-static int _sub_search(struct _mosquitto_subhier *subhier, struct _sub_token *tokens, const char *source_id, const char *topic, int qos, int retain, int64_t store_id)
+static int _sub_search(struct _mosquitto_subhier *subhier, struct _sub_token *tokens, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
 {
 	/* FIXME - need to take into account source_id if the client is a bridge */
 	struct _mosquitto_subhier *branch, *last = NULL;
@@ -232,14 +232,14 @@ static int _sub_search(struct _mosquitto_subhier *subhier, struct _sub_token *to
 			/* The topic matches this subscription.
 			 * Doesn't include # wildcards */
 			if(tokens->next){
-				_sub_search(branch, tokens->next, source_id, topic, qos, retain, store_id);
+				_sub_search(branch, tokens->next, source_id, topic, qos, retain, stored);
 			}else{
-				_subs_process(branch->subs, source_id, topic, qos, retain, store_id);
+				_subs_process(branch->subs, source_id, topic, qos, retain, stored);
 			}
 		}else if(!strcmp(branch->topic, "#") && !branch->children){
 			/* The topic matches due to a # wildcard - process the
 			 * subscriptions and return. */
-			_subs_process(branch->subs, source_id, topic, qos, retain, store_id);
+			_subs_process(branch->subs, source_id, topic, qos, retain, stored);
 			return 0;
 		}
 		last = branch;
@@ -342,7 +342,7 @@ int mqtt3_sub_remove(mqtt3_context *context, const char *sub, struct _mosquitto_
 	return rc;
 }
 
-int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *source_id, const char *topic, int qos, int retain, int64_t store_id)
+int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
 {
 	int rc = 0;
 	int tree;
@@ -366,11 +366,11 @@ int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *source_id, con
 	subhier = root->children;
 	while(subhier){
 		if(!strcmp(subhier->topic, "") && tree == 0){
-			rc = _sub_search(subhier, tokens, source_id, topic, qos, retain, store_id);
+			rc = _sub_search(subhier, tokens, source_id, topic, qos, retain, stored);
 		}else if(!strcmp(subhier->topic, "/") && tree == 1){
-			rc = _sub_search(subhier, tokens, source_id, topic, qos, retain, store_id);
+			rc = _sub_search(subhier, tokens, source_id, topic, qos, retain, stored);
 		}else if(!strcmp(subhier->topic, "$SYS") && tree == 2){
-			rc = _sub_search(subhier, tokens, source_id, topic, qos, retain, store_id);
+			rc = _sub_search(subhier, tokens, source_id, topic, qos, retain, stored);
 		}
 		subhier = subhier->next;
 	}

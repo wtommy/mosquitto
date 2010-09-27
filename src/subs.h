@@ -33,6 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 
 struct _mqtt3_context;
+struct mosquitto_msg_store;
 
 struct _mosquitto_subleaf {
 	struct _mosquitto_subleaf *prev;
@@ -50,7 +51,7 @@ struct _mosquitto_subhier {
 
 int mqtt3_sub_add(struct _mqtt3_context *context, const char *sub, int qos, struct _mosquitto_subhier *root);
 int mqtt3_sub_remove(struct _mqtt3_context *context, const char *sub, struct _mosquitto_subhier *root);
-int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *source_id, const char *topic, int qos, int retain, int64_t store_id);
+int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored);
 void mqtt3_sub_tree_print(struct _mosquitto_subhier *root, int level);
 int mqtt3_subs_clean_session(struct _mqtt3_context *context, struct _mosquitto_subhier *root);
 

@@ -170,7 +170,7 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", int_db.contexts[i]->core.id);
 						/* Client has exceeded keepalive*1.5 */
-						mqtt3_db_client_will_queue(int_db.contexts[i]);
+						mqtt3_db_client_will_queue(&int_db, int_db.contexts[i]);
 						if(int_db.contexts[i]->bridge){
 							mqtt3_socket_close(int_db.contexts[i]);
 						}else{
@@ -244,7 +244,7 @@ static void loop_handle_errors(void)
 			if(errno == EBADF){
 				if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
 					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket error on client %s, disconnecting.", int_db.contexts[i]->core.id);
-					mqtt3_db_client_will_queue(int_db.contexts[i]);
+					mqtt3_db_client_will_queue(&int_db, int_db.contexts[i]);
 				}else{
 					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", int_db.contexts[i]->core.id);
 				}
@@ -269,7 +269,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 				if(mqtt3_net_write(int_db.contexts[i])){
 					if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket write error on client %s, disconnecting.", int_db.contexts[i]->core.id);
-						mqtt3_db_client_will_queue(int_db.contexts[i]);
+						mqtt3_db_client_will_queue(&int_db, int_db.contexts[i]);
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", int_db.contexts[i]->core.id);
 					}
@@ -289,7 +289,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 				if(mqtt3_net_read(&int_db, int_db.contexts[i])){
 					if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket read error on client %s, disconnecting.", int_db.contexts[i]->core.id);
-						mqtt3_db_client_will_queue(int_db.contexts[i]);
+						mqtt3_db_client_will_queue(&int_db, int_db.contexts[i]);
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", int_db.contexts[i]->core.id);
 					}
@@ -318,7 +318,7 @@ void mqtt3_context_close_duplicate(int sock)
 		if(int_db.contexts[i]){
 			if(int_db.contexts[i]->core.sock == sock){
 				int_db.contexts[i]->duplicate = true;
-				mqtt3_db_client_will_queue(int_db.contexts[i]);
+				mqtt3_db_client_will_queue(&int_db, int_db.contexts[i]);
 				mqtt3_context_cleanup(int_db.contexts[i]);
 				int_db.contexts[i] = NULL;
 				return;
@@ -425,11 +425,11 @@ int main(int argc, char *argv[])
 
 	/* Set static $SYS messages */
 	snprintf(buf, 1024, "mosquitto version %s", VERSION);
-	mqtt3_db_messages_easy_queue(NULL, "$SYS/broker/version", 2, strlen(buf), (uint8_t *)buf, 1);
+	mqtt3_db_messages_easy_queue(&int_db, NULL, "$SYS/broker/version", 2, strlen(buf), (uint8_t *)buf, 1);
 	snprintf(buf, 1024, "%s", TIMESTAMP);
-	mqtt3_db_messages_easy_queue(NULL, "$SYS/broker/timestamp", 2, strlen(buf), (uint8_t *)buf, 1);
+	mqtt3_db_messages_easy_queue(&int_db, NULL, "$SYS/broker/timestamp", 2, strlen(buf), (uint8_t *)buf, 1);
 	snprintf(buf, 1024, "%s", "$Revision$"); // Requires hg keyword extension.
-	mqtt3_db_messages_easy_queue(NULL, "$SYS/broker/changeset", 2, strlen(buf), (uint8_t *)buf, 1);
+	mqtt3_db_messages_easy_queue(&int_db, NULL, "$SYS/broker/changeset", 2, strlen(buf), (uint8_t *)buf, 1);
 
 	listener_max = -1;
 	listensock = _mosquitto_malloc(sizeof(int)*config.iface_count);
