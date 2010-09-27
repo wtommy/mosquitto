@@ -57,6 +57,19 @@ POSSIBILITY OF SUCH DAMAGE.
 
 struct _mqtt3_context;
 
+enum mqtt3_msg_state {
+	ms_invalid = 0,
+	ms_publish = 1,
+	ms_publish_puback = 2,
+	ms_wait_puback = 3,
+	ms_publish_pubrec = 4,
+	ms_wait_pubrec = 5,
+	ms_resend_pubrel = 6,
+	ms_wait_pubrel = 7,
+	ms_resend_pubcomp = 8,
+	ms_wait_pubcomp = 9
+};
+
 struct mosquitto_msg_store{
 	struct mosquitto_msg_store *next;
 	time_t timestamp;
@@ -72,7 +85,7 @@ typedef struct _mosquitto_client_msg{
 	uint16_t mid;
 	time_t timestamp;
 	enum mosquitto_msg_direction direction;
-	enum mosquitto_msg_state state;
+	enum mqtt3_msg_state state;
 	bool dup;
 } mosquitto_client_msg;
 
@@ -114,19 +127,6 @@ typedef struct _mqtt3_context{
 	struct _mqtt3_bridge *bridge;
 	mosquitto_client_msg *msgs;
 } mqtt3_context;
-
-enum mqtt3_msg_status {
-	ms_invalid = 0,
-	ms_publish = 1,
-	ms_publish_puback = 2,
-	ms_wait_puback = 3,
-	ms_publish_pubrec = 4,
-	ms_wait_pubrec = 5,
-	ms_resend_pubrel = 6,
-	ms_wait_pubrel = 7,
-	ms_resend_pubcomp = 8,
-	ms_wait_pubcomp = 9
-};
 
 struct mqtt3_iface {
 	char *iface;
@@ -256,9 +256,9 @@ void mqtt3_db_limits_set(int inflight, int queued);
 int mqtt3_db_message_count(int *count);
 int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir);
 int mqtt3_db_message_delete_by_oid(int64_t oid);
-int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_status status, int qos, struct mosquitto_msg_store *stored);
+int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_state state, int qos, struct mosquitto_msg_store *stored);
 int mqtt3_db_message_release(mosquitto_db *db, mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir);
-int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_status status);
+int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_state state);
 int mqtt3_db_message_write(mqtt3_context *context);
 int mqtt3_db_messages_delete(mqtt3_context *context);
 int mqtt3_db_messages_easy_queue(mosquitto_db *db, mqtt3_context *context, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain);

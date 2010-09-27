@@ -667,7 +667,7 @@ int mqtt3_db_message_delete_by_oid(int64_t oid)
 	return rc;
 }
 
-int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_status status, int qos, struct mosquitto_msg_store *stored)
+int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_state state, int qos, struct mosquitto_msg_store *stored)
 {
 	mosquitto_client_msg *msg, *tail;
 	int count = 0;
@@ -712,7 +712,7 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 	msg->mid = mid;
 	msg->timestamp = time(NULL);
 	msg->direction = dir;
-	msg->state = status;
+	msg->state = state;
 	msg->dup = false;
 	tail = context->msgs;
 	while(tail && tail->next){
@@ -727,7 +727,7 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 	return 0;
 }
 
-int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_status status)
+int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_state state)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
@@ -742,7 +742,7 @@ int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, enum mosquitto
 			return 1;
 		}
 	}
-	if(sqlite3_bind_int(stmt, 1, status) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 1, state) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 2, time(NULL)) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_text(stmt, 3, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 4, mid) != SQLITE_OK) rc = 1;
@@ -855,9 +855,9 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	static sqlite3_stmt *stmt_select = NULL;
 	static sqlite3_stmt *stmt_update = NULL;
 	int64_t OID;
-	int status;
+	int state;
 	int retries;
-	enum mqtt3_msg_status new_status = ms_invalid;
+	enum mqtt3_msg_state new_state = ms_invalid;
 
 	if(!stmt_select){
 		stmt_select = _mqtt3_db_statement_prepare("SELECT OID,status,retries FROM messages WHERE timestamp<?");
@@ -874,24 +874,24 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	if(sqlite3_bind_int(stmt_select, 1, now) != SQLITE_OK) rc = 1;
 	while(sqlite3_step(stmt_select) == SQLITE_ROW){
 		OID = sqlite3_column_int64(stmt_select, 0);
-		status = sqlite3_column_int(stmt_select, 1);
+		state = sqlite3_column_int(stmt_select, 1);
 		retries = sqlite3_column_int(stmt_select, 2) + 1;
-		switch(status){
+		switch(state){
 			case ms_wait_puback:
-				new_status = ms_publish_puback;
+				new_state = ms_publish_puback;
 				break;
 			case ms_wait_pubrec:
-				new_status = ms_publish_pubrec;
+				new_state = ms_publish_pubrec;
 				break;
 			case ms_wait_pubrel:
-				new_status = ms_resend_pubrel;
+				new_state = ms_resend_pubrel;
 				break;
 			case ms_wait_pubcomp:
-				new_status = ms_resend_pubcomp;
+				new_state = ms_resend_pubcomp;
 				break;
 		}
-		if(new_status != ms_invalid){
-			if(sqlite3_bind_int(stmt_update, 1, new_status) != SQLITE_OK) rc = 1;
+		if(new_state != ms_invalid){
+			if(sqlite3_bind_int(stmt_update, 1, new_state) != SQLITE_OK) rc = 1;
 			if(sqlite3_bind_int(stmt_update, 2, retries) != SQLITE_OK) rc = 1;
 			if(sqlite3_bind_int64(stmt_update, 3, OID) != SQLITE_OK) rc = 1;
 			if(sqlite3_step(stmt_update) != SQLITE_DONE) rc = 1;
