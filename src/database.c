@@ -758,23 +758,21 @@ int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, enum mosquitto
 
 int mqtt3_db_messages_delete(mqtt3_context *context)
 {
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
+	mosquitto_client_msg *tail, *next;
 
 	if(!context) return 1;
 
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM messages WHERE client_id=?");
-		if(!stmt){
-			return 1;
-		}
+	tail = context->msgs;
+	while(tail){
+		/* FIXME - it would be nice to be able to remove the stored message here if rec_count==0 */
+		tail->store->ref_count--;
+		next = tail->next;
+		_mosquitto_free(tail);
+		tail = next;
 	}
-	if(sqlite3_bind_text(stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
+	context->msgs = NULL;
 
-	return rc;
+	return 0;
 }
 
 int mqtt3_db_messages_easy_queue(mosquitto_db *db, mqtt3_context *context, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
