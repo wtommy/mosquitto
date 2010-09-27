@@ -624,25 +624,28 @@ static int _mqtt3_db_cleanup(void)
 
 int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir)
 {
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
+	mosquitto_client_msg *tail, *last = NULL;
 
 	if(!context) return 1;
 
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM messages WHERE client_id=? AND mid=? AND direction=?");
-		if(!stmt){
-			return 1;
+	tail = context->msgs;
+	while(tail){
+		if(tail->mid == mid && tail->direction == dir){
+			/* FIXME - it would be nice to be able to remove the stored message here if rec_count==0 */
+			tail->store->ref_count--;
+			if(last){
+				last->next = tail->next;
+			}else{
+				context->msgs = tail->next;
+			}
+			_mosquitto_free(tail);
+			return 0;
 		}
+		last = tail;
+		tail = tail->next;
 	}
-	if(sqlite3_bind_text(stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 2, mid) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 3, dir) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
 
-	return rc;
+	return 0;
 }
 
 int mqtt3_db_message_delete_by_oid(int64_t oid)

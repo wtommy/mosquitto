@@ -74,7 +74,6 @@ typedef struct _mosquitto_client_msg{
 	enum mosquitto_msg_direction direction;
 	enum mosquitto_msg_state state;
 	bool dup;
-
 } mosquitto_client_msg;
 
 typedef struct _mosquitto_db{
