@@ -710,29 +710,18 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 
 int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_state state)
 {
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
+	mosquitto_client_msg *tail;
 
-	/* This will only ever get called for messages with QoS>0 so mid must not be 0 */
-	if(!context || !mid) return 1;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("UPDATE messages SET status=?,timestamp=? "
-				"WHERE client_id=? AND mid=? AND direction=?");
-		if(!stmt){
-			return 1;
+	tail = context->msgs;
+	while(tail){
+		if(tail->mid == mid && tail->direction == dir){
+			tail->state = state;
+			tail->timestamp = time(NULL);
+			return 0;
 		}
+		tail = tail->next;
 	}
-	if(sqlite3_bind_int(stmt, 1, state) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 2, time(NULL)) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_text(stmt, 3, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 4, mid) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 5, dir) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-
-	return rc;
+	return 1;
 }
 
 int mqtt3_db_messages_delete(mqtt3_context *context)
