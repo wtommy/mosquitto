@@ -58,6 +58,7 @@ POSSIBILITY OF SUCH DAMAGE.
 struct _mqtt3_context;
 
 struct mosquitto_msg_store{
+	struct mosquitto_msg_store *next;
 	time_t timestamp;
 	uint16_t mid;
 	char *source_id;

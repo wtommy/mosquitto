@@ -870,37 +870,35 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, const char *top
 
 	if(!topic) return 1;
 
-	temp = realloc(db->msg_store, sizeof(struct mosquitto_msg_store)*(db->msg_store_count+1));
+	temp = _mosquitto_malloc(sizeof(struct mosquitto_msg_store));
 	if(!temp) return 1;
-	db->msg_store_count++;
-	db->msg_store = temp;
 
-	(*stored) = &db->msg_store[db->msg_store_count];
-	(*stored)->timestamp = time(NULL);
-	(*stored)->source_id = _mosquitto_strdup(source);
+	temp->next = db->msg_store;
+	temp->timestamp = time(NULL);
+	temp->source_id = _mosquitto_strdup(source);
 	// FIXME - need source mid. stored->mid = 
-	(*stored)->msg.qos = qos;
-	(*stored)->msg.retain = retain;
-	(*stored)->msg.topic = _mosquitto_strdup(topic);
-	(*stored)->msg.payloadlen = payloadlen;
+	temp->msg.qos = qos;
+	temp->msg.retain = retain;
+	temp->msg.topic = _mosquitto_strdup(topic);
+	temp->msg.payloadlen = payloadlen;
 	if(payloadlen){
-		(*stored)->msg.payload = malloc(sizeof(uint8_t)*payloadlen);
-		memcpy((*stored)->msg.payload, payload, sizeof(uint8_t)*payloadlen);
+		temp->msg.payload = malloc(sizeof(uint8_t)*payloadlen);
+		memcpy(temp->msg.payload, payload, sizeof(uint8_t)*payloadlen);
 	}else{
-		(*stored)->msg.payload = NULL;
+		temp->msg.payload = NULL;
 	}
 
-	if(!(*stored)->source_id || !(*stored)->msg.topic || (payloadlen && !(*stored)->msg.payload)){
-		if((*stored)->source_id) _mosquitto_free((*stored)->source_id);
-		if((*stored)->msg.topic) _mosquitto_free((*stored)->msg.topic);
-		if((*stored)->msg.payload) _mosquitto_free((*stored)->msg.payload);
-		db->msg_store_count--;
-		temp = realloc(db->msg_store, sizeof(struct mosquitto_msg_store)*db->msg_store_count);
-		if(temp){
-			db->msg_store = temp;
-		}
+	if(!temp->source_id || !temp->msg.topic || (payloadlen && !temp->msg.payload)){
+		if(temp->source_id) _mosquitto_free(temp->source_id);
+		if(temp->msg.topic) _mosquitto_free(temp->msg.topic);
+		if(temp->msg.payload) _mosquitto_free(temp->msg.payload);
+		_mosquitto_free(temp);
 		return 1;
 	}
+	db->msg_store_count++;
+	db->msg_store = temp;
+	(*stored) = temp;
+
 	return 0;
 }
 
