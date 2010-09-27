@@ -622,35 +622,6 @@ static int _mqtt3_db_cleanup(void)
 	return rc;
 }
 
-/* Returns the number of messages currently in the database - this is the
- * number of messages in flight and doesn't include retained messages.
- * FIXME - this probably needs updating to consider messages in the store.
- * Returns 1 on failure (count is NULL, sqlite error)
- * Returns 0 on success.
- */
-int mqtt3_db_message_count(int *count)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!count) return 1;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT COUNT(client_id) FROM messages");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_step(stmt) == SQLITE_ROW){
-		*count = sqlite3_column_int(stmt, 0);
-	}else{
-		rc = 1;
-	}
-	sqlite3_reset(stmt);
-
-	return rc;
-}
-
 int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir)
 {
 	int rc = 0;
@@ -1204,10 +1175,8 @@ void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time)
 		snprintf(buf, 100, "%d seconds", (int)(now - start_time));
 		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/uptime", 2, strlen(buf), (uint8_t *)buf, 1);
 
-		if(!mqtt3_db_message_count(&count)){
-			snprintf(buf, 100, "%d", count);
-			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/inflight", 2, strlen(buf), (uint8_t *)buf, 1);
-		}
+		snprintf(buf, 100, "%d", db->msg_store_count);
+		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/inflight", 2, strlen(buf), (uint8_t *)buf, 1);
 
 		if(!mqtt3_db_client_count(db, &count)){
 			snprintf(buf, 100, "%d", count);
