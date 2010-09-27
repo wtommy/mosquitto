@@ -76,10 +76,8 @@ static char *db_filepath = NULL;
 static int max_inflight = 20;
 static int max_queued = 100;
 
-static int _mqtt3_db_tables_create(void);
 static int _mqtt3_db_cleanup(void);
 static sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query);
-static void _mqtt3_db_statements_finalize(sqlite3 *fdb);
 static int _mqtt3_db_version_check(void);
 #if defined(WITH_BROKER) && defined(WITH_DB_UPGRADE)
 static int _mqtt3_db_upgrade(void);
@@ -104,9 +102,7 @@ int mqtt3_db_open(mqtt3_config *config)
 		return 1;
 	}
 
-	if(!config->persistence){
-		if(_mqtt3_db_tables_create()) return 1;
-	}else{
+	if(config->persistence){
 		if(config->persistence_location && strlen(config->persistence_location)){
 			db_filepath = _mosquitto_malloc(strlen(config->persistence_location) + strlen(config->persistence_file) + 1);
 			if(!db_filepath) return 1;
@@ -142,10 +138,6 @@ int mqtt3_db_open(mqtt3_config *config)
 				switch(errno){
 					case ENOENT:
 						/* File doesn't exist - ok to create */
-						if(_mqtt3_db_tables_create()){
-							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to populate new database. Try restarting mosquitto.");
-							return 1;
-						}
 						break;
 					case EACCES:
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Permission denied trying to restore persistent database %s.", db_filepath);
@@ -168,13 +160,6 @@ int mqtt3_db_open(mqtt3_config *config)
 
 int mqtt3_db_close(void)
 {
-	_mqtt3_db_statements_finalize(db);
-
-	sqlite3_close(db);
-	db = NULL;
-
-	sqlite3_shutdown();
-
 	if(db_filepath) _mosquitto_free(db_filepath);
 
 	return MOSQ_ERR_SUCCESS;
@@ -190,78 +175,6 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 		mqtt3_db_store_clean(db);
 	}
 	/* FIXME - needs implementing */
-
-	return rc;
-}
-
-static int _mqtt3_db_tables_create(void)
-{
-	int rc = 0;
-	char *errmsg = NULL;
-	char *query;
-
-	if(sqlite3_exec(db,
-		"CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY, value TEXT)",
-		NULL, NULL, &errmsg) != SQLITE_OK){
-
-		rc = 1;
-	}
-	if(errmsg){
-		sqlite3_free(errmsg);
-		errmsg = NULL;
-	}
-
-	query = sqlite3_mprintf("INSERT INTO config (key, value) VALUES('version','%d')", MQTT_DB_VERSION);
-	if(query){
-		if(sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK){
-			rc = 1;
-		}
-		sqlite3_free(query);
-		if(errmsg){
-			sqlite3_free(errmsg);
-			errmsg = NULL;
-		}
-	}else{
-		return 1;
-	}
-
-	if(sqlite3_exec(db,
-		"CREATE TABLE IF NOT EXISTS retain("
-		"topic TEXT UNIQUE, store_id INTEGER)",
-		NULL, NULL, &errmsg) != SQLITE_OK){
-
-		rc = 1;
-	}
-	if(errmsg){
-		sqlite3_free(errmsg);
-		errmsg = NULL;
-	}
-
-	if(sqlite3_exec(db,
-		"CREATE TABLE IF NOT EXISTS message_store("
-		"id INTEGER PRIMARY KEY, timestamp INTEGER, qos INTEGER, "
-		"retain INTEGER, topic TEXT, payloadlen INTEGER, payload BLOB, source_id TEXT)",
-		NULL, NULL, &errmsg) != SQLITE_OK){
-
-		rc = 1;
-	}
-	if(errmsg){
-		sqlite3_free(errmsg);
-		errmsg = NULL;
-	}
-
-	if(sqlite3_exec(db,
-		"CREATE TABLE IF NOT EXISTS messages("
-		"client_id TEXT, timestamp INTEGER, direction INTEGER, status INTEGER, "
-		"mid INTEGER, retries INTEGER, qos INTEGER, store_id INTEGER)",
-		NULL, NULL, &errmsg) != SQLITE_OK){
-
-		rc = 1;
-	}
-	if(errmsg){
-		sqlite3_free(errmsg);
-		errmsg = NULL;
-	}
 
 	return rc;
 }
@@ -498,20 +411,6 @@ static int _mqtt3_db_upgrade_1_2(void)
 	return rc;
 }
 #endif
-
-/* Internal function.
- * Finalise all sqlite statements bound to fdb. This must be done before
- * closing the db.
- * See also _mqtt3_db_statement_prepare().
- */
-static void _mqtt3_db_statements_finalize(sqlite3 *fdb)
-{
-	sqlite3_stmt *stmt;
-
-	while((stmt = sqlite3_next_stmt(fdb, NULL))){
-		sqlite3_finalize(stmt);
-	}
-}
 
 /* Called on client death to add a will to the message queue if the will exists.
  * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
