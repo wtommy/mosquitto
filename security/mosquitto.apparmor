@@ -3,7 +3,6 @@
 	/etc/mosquitto.conf r,
 	/var/lib/mosquitto/ r,
 	/var/lib/mosquitto/mosquitto.db rwk,
-	/var/lib/mosquitto/mosquitto.db-journal rw,
 
 	network inet stream,
 	network inet6 stream,
@@ -23,14 +22,6 @@
 	/etc/nsswitch.conf r,
 	/etc/passwd r,
 	/lib/tls/i686/cmov/libnss_*-*.so rm,
-
-	# sqlite
-	/usr/lib{,32,64}/libsqlite3.so* rm,
-	owner /var/tmp/etilqs_* rw,
-
-	# If using regex
-	/lib/libpcre.so*  rm,
-	/usr/lib{,32,64}/sqlite3/pcre.so rm,
 
 	# For tcp-wrappers
 	/lib/libwrap.so*  rm,
