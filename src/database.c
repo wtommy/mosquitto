@@ -908,46 +908,39 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 
 int mqtt3_db_message_release(mosquitto_db *db, mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir)
 {
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-	int64_t OID;
+	mosquitto_client_msg *tail, *last = NULL;
 	int qos;
 	int retain;
-	int64_t store_id;
 	char *topic;
 	char *source_id;
 
 	if(!context) return 1;
 
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT messages.OID,message_store.id,message_store.qos,message_store.retain,message_store.topic,message_store.source_id "
-				"FROM messages JOIN message_store on messages.store_id=message_store.id "
-				"WHERE messages.client_id=? AND messages.mid=? AND messages.direction=?");
-		if(!stmt){
-			return 1;
+	tail = context->msgs;
+	while(tail){
+		if(tail->mid == mid && tail->direction == dir){
+			qos = tail->store->msg.qos;
+			topic = tail->store->msg.topic;
+			retain = tail->store->msg.retain;
+			source_id = tail->store->source_id;
+
+			if(!mqtt3_db_messages_queue(db, source_id, topic, qos, retain, tail->store)){
+				tail->store->ref_count--;
+				if(last){
+					last->next = tail->next;
+				}else{
+					context->msgs = tail->next;
+				}
+				_mosquitto_free(tail);
+				return 0;
+			}else{
+				return 1;
+			}
 		}
+		last = tail;
+		tail = tail->next;
 	}
-	if(sqlite3_bind_text(stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 2, mid) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 3, dir) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt) == SQLITE_ROW){
-		OID = sqlite3_column_int64(stmt, 0);
-		store_id = sqlite3_column_int64(stmt, 1);
-		qos = sqlite3_column_int(stmt, 2);
-		retain = sqlite3_column_int(stmt, 3);
-		topic = (char *)sqlite3_column_text(stmt, 4);
-		source_id = (char *)sqlite3_column_text(stmt, 5);
-		if(!mqtt3_db_messages_queue(db, source_id, topic, qos, retain, NULL /* FIXME */)){
-			if(mqtt3_db_message_delete_by_oid(OID)) rc = 1;
-		}else{
-			rc = 1;
-		}
-	}else{
-		rc = 1;
-	}
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-	return rc;
+	return 1;
 }
 
 int mqtt3_db_message_write(mqtt3_context *context)
