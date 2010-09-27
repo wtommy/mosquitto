@@ -180,37 +180,17 @@ int mqtt3_db_close(void)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_db_backup(bool cleanup)
+int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 {
-	char *errmsg = NULL;
 	int rc = 0;
-	sqlite3 *backup_db;
-	sqlite3_backup *backup;
 
 	if(!db || !db_filepath) return 1;
 	mqtt3_log_printf(MOSQ_LOG_INFO, "Saving in-memory database to %s.", db_filepath);
 	if(cleanup){
-		mqtt3_db_store_clean();
+		mqtt3_db_store_clean(db);
 	}
-	if(sqlite3_open(db_filepath, &backup_db) != SQLITE_OK){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to open on-disk database for writing.");
-		return 1;
-	}
-	backup = sqlite3_backup_init(backup_db, "main", db, "main");
-	if(backup){
-		sqlite3_backup_step(backup, -1);
-		sqlite3_backup_finish(backup);
-	}else{
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to save in-memory database to disk.");
-		rc = 1;
-	}
-	if(cleanup){
-		sqlite3_exec(backup_db, "VACUUM", NULL, NULL, &errmsg);
-		if(errmsg){
-			sqlite3_free(errmsg);
-		}
-	}
-	sqlite3_close(backup_db);
+	/* FIXME - needs implementing */
+
 	return rc;
 }
 
@@ -1179,24 +1159,32 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 	return rc;
 }
 
-int mqtt3_db_store_clean(void)
+void mqtt3_db_store_clean(mosquitto_db *db)
 {
-	static sqlite3_stmt *stmt = NULL;
-	int rc = 0;
+	/* FIXME - this may not be necessary if checks are made when messages are removed. */
+	struct mosquitto_msg_store *tail, *last = NULL;
+	assert(db);
 
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM message_store "
-				"WHERE id NOT IN (SELECT store_id FROM messages) "
-				"AND id NOT IN (SELECT store_id FROM retain)"); 
-		if(!stmt){
-			return 1;
+	tail = db->msg_store;
+	while(tail){
+		if(tail->ref_count == 0){
+			if(tail->source_id) _mosquitto_free(tail->source_id);
+			if(tail->msg.topic) _mosquitto_free(tail->msg.topic);
+			if(tail->msg.payload) _mosquitto_free(tail->msg.payload);
+			if(last){
+				last->next = tail->next;
+				_mosquitto_free(tail);
+				tail = last->next;
+			}else{
+				db->msg_store = tail->next;
+				_mosquitto_free(tail);
+				tail = db->msg_store;
+			}
+		}else{
+			last = tail;
+			tail = tail->next;
 		}
 	}
-
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-
-	return rc;
 }
 
 /* Send messages for the $SYS hierarchy if the last update is longer than

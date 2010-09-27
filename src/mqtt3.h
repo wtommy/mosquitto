@@ -60,6 +60,7 @@ struct _mqtt3_context;
 struct mosquitto_msg_store{
 	struct mosquitto_msg_store *next;
 	time_t timestamp;
+	int ref_count;
 	uint16_t mid;
 	char *source_id;
 	struct mosquitto_message msg;
@@ -235,7 +236,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context);
  * ============================================================ */
 int mqtt3_db_open(mqtt3_config *config);
 int mqtt3_db_close(void);
-int mqtt3_db_backup(bool cleanup);
+int mqtt3_db_backup(mosquitto_db *db, bool cleanup);
 int mqtt3_db_client_count(mosquitto_db *db, int *count);
 /* Add the will of the client in context to the queue of clients subscribed to the appropriate topic. */
 int mqtt3_db_client_will_queue(mosquitto_db *db, mqtt3_context *context);
@@ -258,7 +259,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout);
 int mqtt3_db_retain_insert(const char *topic, int64_t store_id);
 int mqtt3_db_retain_delete(const char *topic);
 int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos);
-int mqtt3_db_store_clean(void);
+void mqtt3_db_store_clean(mosquitto_db *db);
 void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time);
 void mqtt3_db_vacuum(void);
 
