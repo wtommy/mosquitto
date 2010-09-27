@@ -648,25 +648,6 @@ int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid, enum mosquitto
 	return 0;
 }
 
-int mqtt3_db_message_delete_by_oid(int64_t oid)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("DELETE FROM messages WHERE OID=?");
-		if(!stmt){
-			return 1;
-		}
-	}
-	if(sqlite3_bind_int64(stmt, 1, oid) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-
-	return rc;
-}
-
 int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_state state, int qos, struct mosquitto_msg_store *stored)
 {
 	mosquitto_client_msg *msg, *tail;
