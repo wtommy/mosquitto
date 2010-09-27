@@ -812,8 +812,6 @@ int mqtt3_db_messages_queue(mosquitto_db *db, const char *source_id, const char 
 
 int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source_mid, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, struct mosquitto_msg_store **stored)
 {
-	static sqlite3_stmt *stmt = NULL;
-	int rc = 0;
 	struct mosquitto_msg_store *temp;
 
 	assert(db);
