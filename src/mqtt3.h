@@ -66,6 +66,17 @@ struct mosquitto_msg_store{
 	struct mosquitto_message msg;
 };
 
+typedef struct _mosquitto_client_msg{
+	struct _mosquitto_client_msg *next;
+	struct mosquitto_msg_store *store;
+	uint16_t mid;
+	time_t timestamp;
+	enum mosquitto_msg_direction direction;
+	enum mosquitto_msg_state state;
+	bool dup;
+
+} mosquitto_client_msg;
+
 typedef struct _mosquitto_db{
 	struct _mosquitto_subhier subs;
 	struct _mqtt3_context **contexts;
@@ -102,6 +113,7 @@ typedef struct _mqtt3_context{
 	bool duplicate;
 	char *address;
 	struct _mqtt3_bridge *bridge;
+	mosquitto_client_msg *msgs;
 } mqtt3_context;
 
 enum mqtt3_msg_status {

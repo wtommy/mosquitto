@@ -68,6 +68,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 		}
 	}
 	context->bridge = NULL;
+	context->msgs = NULL;
 	
 	return context;
 }
@@ -81,6 +82,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 void mqtt3_context_cleanup(mqtt3_context *context)
 {
 	struct _mosquitto_packet *packet;
+	mosquitto_client_msg *msg, *next;
 	if(!context) return;
 
 	if(context->core.sock != -1){
@@ -102,6 +104,13 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 	if(context->core.will){
 		if(context->core.will->topic) _mosquitto_free(context->core.will->topic);
 		if(context->core.will->payload) _mosquitto_free(context->core.will->payload);
+	}
+	msg = context->msgs;
+	while(msg){
+		next = msg->next;
+		msg->store->ref_count--;
+		_mosquitto_free(msg);
+		msg = next;
 	}
 	_mosquitto_free(context->core.will);
 	_mosquitto_free(context);
