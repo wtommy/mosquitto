@@ -669,9 +669,7 @@ int mqtt3_db_message_delete_by_oid(int64_t oid)
 
 int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_status status, int qos, struct mosquitto_msg_store *stored)
 {
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-	static sqlite3_stmt *count_stmt = NULL;
+	mosquitto_client_msg *msg, *tail;
 	int count = 0;
 	int sock = -1;
 	int limited = 0;
@@ -707,26 +705,26 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 		if(limited) return 2;
 	}
 #endif
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("INSERT INTO messages "
-				"(client_id, timestamp, direction, status, mid, retries, qos, store_id) "
-				"VALUES (?,?,?,?,?,0,?,?)");
-		if(!stmt){
-			return 1;
-		}
+	msg = _mosquitto_malloc(sizeof(mosquitto_client_msg));
+	if(!msg) return 1;
+	msg->next = NULL;
+	msg->store = stored;
+	msg->mid = mid;
+	msg->timestamp = time(NULL);
+	msg->direction = dir;
+	msg->state = status;
+	msg->dup = false;
+	tail = context->msgs;
+	while(tail && tail->next){
+		tail = tail->next;
 	}
-	if(sqlite3_bind_text(stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 2, time(NULL)) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 3, dir) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 4, status) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 5, mid) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int(stmt, 6, qos) != SQLITE_OK) rc = 1;
-	if(sqlite3_bind_int64(stmt, 7, 1 /* FIXME */) != SQLITE_OK) rc = 1;
-	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
+	if(tail){
+		tail->next = msg;
+	}else{
+		context->msgs = msg;
+	}
 
-	return rc;
+	return 0;
 }
 
 int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_status status)
