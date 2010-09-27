@@ -185,7 +185,7 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 		}
 	}
 
-	if(mqtt3_db_message_store(db, context->core.id, topic, qos, payloadlen, payload, retain, &stored)){
+	if(mqtt3_db_message_store(db, context->core.id, mid, topic, qos, payloadlen, payload, retain, &stored)){
 		_mosquitto_free(topic);
 		if(payload) _mosquitto_free(payload);
 		return 1;

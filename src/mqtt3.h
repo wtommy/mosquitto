@@ -61,8 +61,8 @@ struct mosquitto_msg_store{
 	struct mosquitto_msg_store *next;
 	time_t timestamp;
 	int ref_count;
-	uint16_t mid;
 	char *source_id;
+	uint16_t source_mid;
 	struct mosquitto_message msg;
 };
 
@@ -252,7 +252,7 @@ int mqtt3_db_message_write(mqtt3_context *context);
 int mqtt3_db_messages_delete(mqtt3_context *context);
 int mqtt3_db_messages_easy_queue(mosquitto_db *db, mqtt3_context *context, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain);
 int mqtt3_db_messages_queue(mosquitto_db *db, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored);
-int mqtt3_db_message_store(mosquitto_db *db, const char *source, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, struct mosquitto_msg_store **stored);
+int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source_mid, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, struct mosquitto_msg_store **stored);
 /* Check all messages waiting on a client reply and resend if timeout has been exceeded. */
 int mqtt3_db_message_timeout_check(unsigned int timeout);
 /* Add a retained message for a topic, overwriting an existing one if necessary. */
