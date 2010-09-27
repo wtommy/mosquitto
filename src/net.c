@@ -237,7 +237,7 @@ int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *pac
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_net_read(struct _mosquitto_db *db, mqtt3_context *context)
+int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context)
 {
 	uint8_t byte;
 	ssize_t read_length;

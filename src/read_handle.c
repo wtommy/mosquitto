@@ -35,7 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <util_mosq.h>
 
-int mqtt3_packet_handle(struct _mosquitto_db *db, mqtt3_context *context)
+int mqtt3_packet_handle(mosquitto_db *db, mqtt3_context *context)
 {
 	if(!context) return 1;
 
@@ -140,7 +140,7 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_handle_publish(struct _mosquitto_db *db, mqtt3_context *context)
+int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 {
 	char *topic;
 	uint8_t *payload = NULL;
@@ -232,7 +232,7 @@ int mqtt3_handle_pubrec(mqtt3_context *context)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_handle_pubrel(struct _mosquitto_db *db, mqtt3_context *context)
+int mqtt3_handle_pubrel(mosquitto_db *db, mqtt3_context *context)
 {
 	uint16_t mid;
 

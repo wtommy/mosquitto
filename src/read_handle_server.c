@@ -36,7 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <subs.h>
 #include <util_mosq.h>
 
-int mqtt3_handle_connect(struct _mosquitto_db *db, mqtt3_context *context)
+int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 {
 	char *protocol_name;
 	uint8_t protocol_version;

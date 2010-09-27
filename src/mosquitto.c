@@ -50,7 +50,7 @@ int allow_severity = LOG_INFO;
 int deny_severity = LOG_INFO;
 #endif
 
-struct _mosquitto_db int_db;
+mosquitto_db int_db;
 
 int drop_privileges(mqtt3_config *config);
 void handle_sigint(int signal);

@@ -537,7 +537,7 @@ static void _mqtt3_db_statements_finalize(sqlite3 *fdb)
  * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
  * Returns 0 on success (will queued or will not found)
  */
-int mqtt3_db_client_will_queue(struct _mosquitto_db *db, mqtt3_context *context)
+int mqtt3_db_client_will_queue(mosquitto_db *db, mqtt3_context *context)
 {
 	if(!context || !context->core.id) return 1;
 	if(!context->core.will) return 0;
@@ -550,7 +550,7 @@ int mqtt3_db_client_will_queue(struct _mosquitto_db *db, mqtt3_context *context)
  * Returns 1 on failure (count is NULL, sqlite error)
  * Returns 0 on success.
  */
-int mqtt3_db_client_count(struct _mosquitto_db *db, int *count)
+int mqtt3_db_client_count(mosquitto_db *db, int *count)
 {
 	int i;
 
@@ -823,7 +823,7 @@ int mqtt3_db_messages_delete(mqtt3_context *context)
 	return rc;
 }
 
-int mqtt3_db_messages_easy_queue(struct _mosquitto_db *db, mqtt3_context *context, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
+int mqtt3_db_messages_easy_queue(mosquitto_db *db, mqtt3_context *context, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
 {
 	struct mosquitto_msg_store *stored;
 	char *source_id;
@@ -842,7 +842,7 @@ int mqtt3_db_messages_easy_queue(struct _mosquitto_db *db, mqtt3_context *contex
 	return mqtt3_db_messages_queue(db, context->core.id, topic, qos, retain, stored);
 }
 
-int mqtt3_db_messages_queue(struct _mosquitto_db *db, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
+int mqtt3_db_messages_queue(mosquitto_db *db, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
 {
 	int rc = 0;
 
@@ -859,7 +859,7 @@ int mqtt3_db_messages_queue(struct _mosquitto_db *db, const char *source_id, con
 	return rc;
 }
 
-int mqtt3_db_message_store(struct _mosquitto_db *db, const char *source, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, struct mosquitto_msg_store **stored)
+int mqtt3_db_message_store(mosquitto_db *db, const char *source, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, struct mosquitto_msg_store **stored)
 {
 	static sqlite3_stmt *stmt = NULL;
 	int rc = 0;
@@ -960,7 +960,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_db_message_release(struct _mosquitto_db *db, mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir)
+int mqtt3_db_message_release(mosquitto_db *db, mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir)
 {
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
@@ -1207,7 +1207,7 @@ int mqtt3_db_store_clean(void)
  * messages are sent for the $SYS hierarchy.
  * 'start_time' is the result of time() that the broker was started at.
  */
-void mqtt3_db_sys_update(struct _mosquitto_db *db, int interval, time_t start_time)
+void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time)
 {
 	static time_t last_update = 0;
 	time_t now = time(NULL);

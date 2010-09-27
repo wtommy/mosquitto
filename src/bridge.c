@@ -35,7 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <memory_mosq.h>
 
-int mqtt3_bridge_new(struct _mosquitto_db *db, struct _mqtt3_bridge *bridge)
+int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge)
 {
 	int i;
 	mqtt3_context *new_context = NULL;
