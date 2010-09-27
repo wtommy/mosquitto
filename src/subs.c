@@ -204,7 +204,7 @@ static int _sub_remove(mqtt3_context *context, struct _mosquitto_subhier *subhie
 	while(branch){
 		if(!strcmp(branch->topic, tokens->topic)){
 			_sub_remove(context, branch, tokens->next);
-			if(!branch->children && !branch->subs){
+			if(!branch->children && !branch->subs && !branch->retained){
 				if(last){
 					last->next = branch->next;
 				}else{

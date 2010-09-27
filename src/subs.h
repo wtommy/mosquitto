@@ -47,6 +47,7 @@ struct _mosquitto_subhier {
 	struct _mosquitto_subhier *next;
 	struct _mosquitto_subleaf *subs;
 	char *topic;
+	struct mosquitto_msg_store *retained;
 };
 
 int mqtt3_sub_add(struct _mqtt3_context *context, const char *sub, int qos, struct _mosquitto_subhier *root);
