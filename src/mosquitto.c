@@ -197,7 +197,7 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 			}
 		}
 
-		mqtt3_db_message_timeout_check(config->retry_interval);
+		mqtt3_db_message_timeout_check(&int_db, config->retry_interval);
 
 		sigprocmask(SIG_SETMASK, &sigblock, &origsig);
 		fdcount = poll(pollfds, pollfd_count, 1000);

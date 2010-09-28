@@ -717,59 +717,47 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 	return 0;
 }
 
-int mqtt3_db_message_timeout_check(unsigned int timeout)
+int mqtt3_db_message_timeout_check(mosquitto_db *db, unsigned int timeout)
 {
-	int rc = 0;
-	time_t now = time(NULL) - timeout;
-	static sqlite3_stmt *stmt_select = NULL;
-	static sqlite3_stmt *stmt_update = NULL;
-	int64_t OID;
-	int state;
-	int retries;
+	int i;
+	time_t threshold = time(NULL) - timeout;
 	enum mqtt3_msg_state new_state = ms_invalid;
+	mqtt3_context *context;
+	mosquitto_client_msg *msg;
 
-	if(!stmt_select){
-		stmt_select = _mqtt3_db_statement_prepare("SELECT OID,status,retries FROM messages WHERE timestamp<?");
-		if(!stmt_select){
-			return 1;
+	
+	for(i=0; i<db->context_count; i++){
+		context = db->contexts[i];
+		if(!context) continue;
+
+		msg = context->msgs;
+		while(msg){
+			if(msg->timestamp < threshold){
+				switch(msg->state){
+					case ms_wait_puback:
+						new_state = ms_publish_puback;
+						break;
+					case ms_wait_pubrec:
+						new_state = ms_publish_pubrec;
+						break;
+					case ms_wait_pubrel:
+						new_state = ms_resend_pubrel;
+						break;
+					case ms_wait_pubcomp:
+						new_state = ms_resend_pubcomp;
+						break;
+					default:
+						break;
+				}
+				if(new_state != ms_invalid){
+					msg->timestamp = time(NULL);
+					msg->state = new_state;
+					msg->dup = true;
+				}
+			}
 		}
 	}
-	if(!stmt_update){
-		stmt_update = _mqtt3_db_statement_prepare("UPDATE messages SET status=?,retries=? WHERE OID=?");
-		if(!stmt_update){
-			return 1;
-		}
-	}
-	if(sqlite3_bind_int(stmt_select, 1, now) != SQLITE_OK) rc = 1;
-	while(sqlite3_step(stmt_select) == SQLITE_ROW){
-		OID = sqlite3_column_int64(stmt_select, 0);
-		state = sqlite3_column_int(stmt_select, 1);
-		retries = sqlite3_column_int(stmt_select, 2) + 1;
-		switch(state){
-			case ms_wait_puback:
-				new_state = ms_publish_puback;
-				break;
-			case ms_wait_pubrec:
-				new_state = ms_publish_pubrec;
-				break;
-			case ms_wait_pubrel:
-				new_state = ms_resend_pubrel;
-				break;
-			case ms_wait_pubcomp:
-				new_state = ms_resend_pubcomp;
-				break;
-		}
-		if(new_state != ms_invalid){
-			if(sqlite3_bind_int(stmt_update, 1, new_state) != SQLITE_OK) rc = 1;
-			if(sqlite3_bind_int(stmt_update, 2, retries) != SQLITE_OK) rc = 1;
-			if(sqlite3_bind_int64(stmt_update, 3, OID) != SQLITE_OK) rc = 1;
-			if(sqlite3_step(stmt_update) != SQLITE_DONE) rc = 1;
-			sqlite3_reset(stmt_update);
-			sqlite3_clear_bindings(stmt_update);
-		}
-	}
-	sqlite3_reset(stmt_select);
-	sqlite3_clear_bindings(stmt_select);
+
 	return MOSQ_ERR_SUCCESS;
 }
 
