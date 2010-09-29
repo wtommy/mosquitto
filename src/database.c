@@ -755,6 +755,7 @@ int mqtt3_db_message_timeout_check(mosquitto_db *db, unsigned int timeout)
 					msg->dup = true;
 				}
 			}
+			msg = msg->next;
 		}
 	}
 
