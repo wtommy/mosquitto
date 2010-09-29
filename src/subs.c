@@ -241,7 +241,6 @@ static int _sub_remove(mqtt3_context *context, struct _mosquitto_subhier *subhie
 static int _sub_search(struct _mosquitto_subhier *subhier, struct _sub_token *tokens, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
 {
 	/* FIXME - need to take into account source_id if the client is a bridge */
-	int sub_found = 0;
 	struct _mosquitto_subhier *branch, *last = NULL;
 
 	branch = subhier->children;
@@ -252,9 +251,6 @@ static int _sub_search(struct _mosquitto_subhier *subhier, struct _sub_token *to
 			if(tokens->next){
 				_sub_search(branch, tokens->next, source_id, topic, qos, retain, stored);
 			}else{
-				if(!strcmp(branch->topic, tokens->topic)){
-					sub_found = 1;
-				}
 				_subs_process(branch, source_id, topic, qos, retain, stored);
 			}
 		}else if(!strcmp(branch->topic, "#") && !branch->children){
@@ -265,14 +261,6 @@ static int _sub_search(struct _mosquitto_subhier *subhier, struct _sub_token *to
 		}
 		last = branch;
 		branch = branch->next;
-	}
-	if(retain && !tokens->next && !sub_found){
-		/* We have a message that needs to be retained, but there aren't any subscriptions
-		 * for its topic. This means we need to construct the remaining subscription tree
-		 * and then rerun this function to add the retained message.
-		 */
-		_sub_add(NULL, 0, subhier, tokens);
-		_sub_search(subhier, tokens, source_id, topic, qos, retain, stored);
 	}
 	return 0;
 }
@@ -395,10 +383,28 @@ int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *source_id, con
 	subhier = root->children;
 	while(subhier){
 		if(!strcmp(subhier->topic, "") && tree == 0){
+			if(retain){
+				/* We have a message that needs to be retained, so ensure that the subscription
+				 * tree for its topic exists.
+				 */
+				_sub_add(NULL, 0, subhier, tokens);
+			}
 			rc = _sub_search(subhier, tokens, source_id, topic, qos, retain, stored);
 		}else if(!strcmp(subhier->topic, "/") && tree == 1){
+			if(retain){
+				/* We have a message that needs to be retained, so ensure that the subscription
+				 * tree for its topic exists.
+				 */
+				_sub_add(NULL, 0, subhier, tokens);
+			}
 			rc = _sub_search(subhier, tokens, source_id, topic, qos, retain, stored);
 		}else if(!strcmp(subhier->topic, "$SYS") && tree == 2){
+			if(retain){
+				/* We have a message that needs to be retained, so ensure that the subscription
+				 * tree for its topic exists.
+				 */
+				_sub_add(NULL, 0, subhier, tokens);
+			}
 			rc = _sub_search(subhier, tokens, source_id, topic, qos, retain, stored);
 		}
 		subhier = subhier->next;
@@ -493,6 +499,9 @@ void mqtt3_sub_tree_print(struct _mosquitto_subhier *root, int level)
 	while(leaf){
 		printf(" (%s, %d)", "", leaf->qos);
 		leaf = leaf->next;
+	}
+	if(root->retained){
+		printf(" (r)");
 	}
 	printf("\n");
 
