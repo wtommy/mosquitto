@@ -657,7 +657,7 @@ int mqtt3_db_messages_easy_queue(mosquitto_db *db, mqtt3_context *context, const
 	}
 	if(mqtt3_db_message_store(db, source_id, 0, topic, qos, payloadlen, payload, retain, &stored)) return 1;
 
-	return mqtt3_db_messages_queue(db, context->core.id, topic, qos, retain, stored);
+	return mqtt3_db_messages_queue(db, source_id, topic, qos, retain, stored);
 }
 
 int mqtt3_db_messages_queue(mosquitto_db *db, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
