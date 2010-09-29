@@ -489,17 +489,15 @@ void mqtt3_sub_tree_print(struct _mosquitto_subhier *root, int level)
 	}
 }
 
-static int _retain_process(struct _mosquitto_subhier *subhier, mqtt3_context *context, const char *sub, int sub_qos)
+static int _retain_process(struct mosquitto_msg_store *retained, mqtt3_context *context, const char *sub, int sub_qos)
 {
 	int rc = 0;
 	char *topic;
 	int qos;
 	uint16_t mid;
-	struct mosquitto_msg_store *stored;
 
-	stored = subhier->retained;
-	topic = stored->msg.topic;
-	qos = stored->msg.qos;
+	topic = retained->msg.topic;
+	qos = retained->msg.qos;
 
 	if(qos > sub_qos) qos = sub_qos;
 	if(qos > 0){
@@ -509,13 +507,13 @@ static int _retain_process(struct _mosquitto_subhier *subhier, mqtt3_context *co
 	}
 	switch(qos){
 		case 0:
-			if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish, qos, stored) == 1) rc = 1;
+			if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish, qos, retained) == 1) rc = 1;
 			break;
 		case 1:
-			if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish_puback, qos, stored) == 1) rc = 1;
+			if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish_puback, qos, retained) == 1) rc = 1;
 			break;
 		case 2:
-			if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish_pubrec, qos, stored) == 1) rc = 1;
+			if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish_pubrec, qos, retained) == 1) rc = 1;
 			break;
 	}
 	return rc;
@@ -531,10 +529,14 @@ static int _retain_search(struct _mosquitto_subhier *subhier, struct _sub_token 
 			if(tokens->next){
 				_retain_search(branch, tokens->next, context, sub, sub_qos);
 			}else{
-				_retain_process(branch, context, sub, sub_qos);
+				if(branch->retained){
+					_retain_process(branch->retained, context, sub, sub_qos);
+				}
 			}
 		}else if(!strcmp(branch->topic, "#") && !tokens->next){
-			_retain_process(branch, context, sub, sub_qos);
+			if(branch->retained){
+				_retain_process(branch->retained, context, sub, sub_qos);
+			}
 			_retain_search(branch, tokens, context, sub, sub_qos);
 		}
 		last = branch;
