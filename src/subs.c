@@ -525,19 +525,24 @@ static int _retain_search(struct _mosquitto_subhier *subhier, struct _sub_token 
 
 	branch = subhier->children;
 	while(branch){
-		if(!strcmp(branch->topic, tokens->topic) || !strcmp(branch->topic, "+")){
-			if(tokens->next){
-				_retain_search(branch, tokens->next, context, sub, sub_qos);
-			}else{
+		/* Subscriptions with wildcards in aren't really valid topics to publish to
+		 * so they can't have retained messages.
+		 */
+		if(strcmp(branch->topic, "+") && strcmp(branch->topic, "#")){
+			if(!strcmp(tokens->topic, "#") && !tokens->next){
 				if(branch->retained){
 					_retain_process(branch->retained, context, sub, sub_qos);
 				}
+				_retain_search(branch, tokens, context, sub, sub_qos);
+			}else if(!strcmp(branch->topic, tokens->topic) || !strcmp(branch->topic, "+")){
+				if(tokens->next){
+					_retain_search(branch, tokens->next, context, sub, sub_qos);
+				}else{
+					if(branch->retained){
+						_retain_process(branch->retained, context, sub, sub_qos);
+					}
+				}
 			}
-		}else if(!strcmp(branch->topic, "#") && !tokens->next){
-			if(branch->retained){
-				_retain_process(branch->retained, context, sub, sub_qos);
-			}
-			_retain_search(branch, tokens, context, sub, sub_qos);
 		}
 		last = branch;
 		branch = branch->next;
