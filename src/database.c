@@ -77,7 +77,6 @@ static int max_inflight = 20;
 static int max_queued = 100;
 
 static int _mqtt3_db_cleanup(void);
-static sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query);
 static int _mqtt3_db_version_check(void);
 #if defined(WITH_BROKER) && defined(WITH_DB_UPGRADE)
 static int _mqtt3_db_upgrade(void);
@@ -885,49 +884,6 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	return 0;
 }
 
-int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
-{
-	int rc = 0;
-	static sqlite3_stmt *stmt = NULL;
-	const char *topic;
-	int qos;
-	struct mosquitto_msg_store *stored = NULL;
-	uint16_t mid;
-
-	if(!stmt){
-		stmt = _mqtt3_db_statement_prepare("SELECT message_store.topic,qos,id FROM message_store "
-				"JOIN retain ON message_store.id=retain.store_id WHERE retain.topic=?");
-		if(!stmt) return 1;
-	}
-	if(sqlite3_bind_text(stmt, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-
-	while(sqlite3_step(stmt) == SQLITE_ROW){
-		topic = (const char *)sqlite3_column_text(stmt, 0);
-		qos = sqlite3_column_int(stmt, 1);
-
-		if(qos > sub_qos) qos = sub_qos;
-		if(qos > 0){
-			mid = _mosquitto_mid_generate(&context->core);
-		}else{
-			mid = 0;
-		}
-		switch(qos){
-			case 0:
-				if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish, qos, stored) == 1) rc = 1;
-				break;
-			case 1:
-				if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish_puback, qos, stored) == 1) rc = 1;
-				break;
-			case 2:
-				if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish_pubrec, qos, stored) == 1) rc = 1;
-				break;
-		}
-	}
-	sqlite3_reset(stmt);
-	sqlite3_clear_bindings(stmt);
-	return rc;
-}
-
 void mqtt3_db_store_clean(mosquitto_db *db)
 {
 	/* FIXME - this may not be necessary if checks are made when messages are removed. */
@@ -1000,31 +956,6 @@ void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time)
 		
 		last_update = time(NULL);
 	}
-}
-
-/* Internal function.
- * Prepare a sqlite query.
- * All of the regularly used sqlite queries are prepared as parameterised
- * queries so they only need to be parsed once and to increase security by
- * removing the need to carry out string escaping.
- * Before closing the database, all currently prepared queries must be released.
- * To do this, each function that needs to make a query has a static
- * sqlite3_stmt variable to hold the query statement. _m_d_s_p() prepares the
- * statement and the function stores it in its static variable. _m_d_s_p() also
- * adds the statement to a global static array so that the statements can be
- * released when mosquitto is closing.
- *
- * Returns NULL on failure
- * Returns a valid sqlite3_stmt on success.
- */
-static sqlite3_stmt *_mqtt3_db_statement_prepare(const char *query)
-{
-	sqlite3_stmt *stmt;
-
-	if(sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK){
-		return NULL;
-	}
-	return stmt;
 }
 
 void mqtt3_db_limits_set(int inflight, int queued)

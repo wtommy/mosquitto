@@ -238,7 +238,7 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context);
 int mqtt3_handle_pubrec(mqtt3_context *context);
 int mqtt3_handle_pubrel(mosquitto_db *db, mqtt3_context *context);
 int mqtt3_handle_suback(mqtt3_context *context);
-int mqtt3_handle_subscribe(mqtt3_context *context);
+int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context);
 int mqtt3_handle_unsuback(mqtt3_context *context);
 int mqtt3_handle_unsubscribe(mqtt3_context *context);
 
@@ -265,7 +265,7 @@ int mqtt3_db_messages_queue(mosquitto_db *db, const char *source_id, const char 
 int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source_mid, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, struct mosquitto_msg_store **stored);
 /* Check all messages waiting on a client reply and resend if timeout has been exceeded. */
 int mqtt3_db_message_timeout_check(mosquitto_db *db, unsigned int timeout);
-int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos);
+int mqtt3_retain_queue(mosquitto_db *db, mqtt3_context *context, const char *sub, int sub_qos);
 void mqtt3_db_store_clean(mosquitto_db *db);
 void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time);
 void mqtt3_db_vacuum(void);

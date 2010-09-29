@@ -489,3 +489,103 @@ void mqtt3_sub_tree_print(struct _mosquitto_subhier *root, int level)
 	}
 }
 
+static int _retain_process(struct _mosquitto_subhier *subhier, mqtt3_context *context, const char *sub, int sub_qos)
+{
+	int rc = 0;
+	char *topic;
+	int qos;
+	uint16_t mid;
+	struct mosquitto_msg_store *stored;
+
+	stored = subhier->retained;
+	topic = stored->msg.topic;
+	qos = stored->msg.qos;
+
+	if(qos > sub_qos) qos = sub_qos;
+	if(qos > 0){
+		mid = _mosquitto_mid_generate(&context->core);
+	}else{
+		mid = 0;
+	}
+	switch(qos){
+		case 0:
+			if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish, qos, stored) == 1) rc = 1;
+			break;
+		case 1:
+			if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish_puback, qos, stored) == 1) rc = 1;
+			break;
+		case 2:
+			if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish_pubrec, qos, stored) == 1) rc = 1;
+			break;
+	}
+	return rc;
+}
+
+static int _retain_search(struct _mosquitto_subhier *subhier, struct _sub_token *tokens, mqtt3_context *context, const char *sub, int sub_qos)
+{
+	struct _mosquitto_subhier *branch, *last = NULL;
+
+	branch = subhier->children;
+	while(branch){
+		if(!strcmp(branch->topic, tokens->topic) || !strcmp(branch->topic, "+")){
+			if(tokens->next){
+				_retain_search(branch, tokens->next, context, sub, sub_qos);
+			}else{
+				_retain_process(branch, context, sub, sub_qos);
+			}
+		}else if(!strcmp(branch->topic, "#") && !tokens->next){
+			_retain_process(branch, context, sub, sub_qos);
+			_retain_search(branch, tokens, context, sub, sub_qos);
+		}
+		last = branch;
+		branch = branch->next;
+	}
+	return 0;
+}
+
+int mqtt3_retain_queue(mosquitto_db *db, mqtt3_context *context, const char *sub, int sub_qos)
+{
+	int rc = 0;
+	int tree;
+	struct _mosquitto_subhier *subhier;
+	struct _sub_token *tokens = NULL, *tail;
+
+	assert(db);
+	assert(context);
+	assert(sub);
+
+	if(!strncmp(sub, "$SYS/", 5)){
+		tree = 2;
+		if(_sub_topic_tokenise(sub+5, &tokens)) return 1;
+	}else if(sub[0] == '/'){
+		tree = 1;
+		if(_sub_topic_tokenise(sub+1, &tokens)) return 1;
+	}else{
+		tree = 0;
+		if(_sub_topic_tokenise(sub, &tokens)) return 1;
+	}
+
+	subhier = db->subs.children;
+	while(subhier){
+		if(!strcmp(subhier->topic, "") && tree == 0){
+			rc = _retain_search(subhier, tokens, context, sub, sub_qos);
+			break;
+		}else if(!strcmp(subhier->topic, "/") && tree == 1){
+			rc = _retain_search(subhier, tokens, context, sub, sub_qos);
+			break;
+		}else if(!strcmp(subhier->topic, "$SYS") && tree == 2){
+			rc = _retain_search(subhier, tokens, context, sub, sub_qos);
+			break;
+		}
+		subhier = subhier->next;
+	}
+	while(tokens){
+		tail = tokens->next;
+		_mosquitto_free(tokens->topic);
+		_mosquitto_free(tokens);
+		tokens = tail;
+	}
+
+	return rc;
+}
+
