@@ -593,6 +593,7 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 	msg->direction = dir;
 	msg->state = state;
 	msg->dup = false;
+	msg->qos = qos;
 	tail = context->msgs;
 	while(tail && tail->next){
 		tail = tail->next;
@@ -817,7 +818,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 			retries = tail->dup;
 			retain = tail->store->msg.retain;
 			topic = tail->store->msg.topic;
-			qos = tail->store->msg.qos;
+			qos = tail->qos;
 			payloadlen = tail->store->msg.payloadlen;
 			payload = tail->store->msg.payload;
 

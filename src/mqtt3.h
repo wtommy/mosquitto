@@ -83,6 +83,7 @@ typedef struct _mosquitto_client_msg{
 	struct _mosquitto_client_msg *next;
 	struct mosquitto_msg_store *store;
 	uint16_t mid;
+	int qos;
 	time_t timestamp;
 	enum mosquitto_msg_direction direction;
 	enum mqtt3_msg_state state;
