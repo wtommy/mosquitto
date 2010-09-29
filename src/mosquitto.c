@@ -393,7 +393,7 @@ int main(int argc, char *argv[])
 	int_db.subs.subs = NULL;
 	int_db.subs.topic = "";
 
-	child = malloc(sizeof(struct _mosquitto_subhier));
+	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
 	child->next = NULL;
 	child->topic = strdup("");
 	child->subs = NULL;
@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
 	child->retained = NULL;
 	int_db.subs.children = child;
 
-	child = malloc(sizeof(struct _mosquitto_subhier));
+	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
 	child->next = NULL;
 	child->topic = strdup("/");
 	child->subs = NULL;
@@ -409,7 +409,7 @@ int main(int argc, char *argv[])
 	child->retained = NULL;
 	int_db.subs.children->next = child;
 
-	child = malloc(sizeof(struct _mosquitto_subhier));
+	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
 	child->next = NULL;
 	child->topic = strdup("$SYS");
 	child->subs = NULL;
