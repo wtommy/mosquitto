@@ -398,6 +398,7 @@ int main(int argc, char *argv[])
 	child->topic = strdup("");
 	child->subs = NULL;
 	child->children = NULL;
+	child->retained = NULL;
 	int_db.subs.children = child;
 
 	child = malloc(sizeof(struct _mosquitto_subhier));
@@ -405,6 +406,7 @@ int main(int argc, char *argv[])
 	child->topic = strdup("/");
 	child->subs = NULL;
 	child->children = NULL;
+	child->retained = NULL;
 	int_db.subs.children->next = child;
 
 	child = malloc(sizeof(struct _mosquitto_subhier));
@@ -412,6 +414,7 @@ int main(int argc, char *argv[])
 	child->topic = strdup("$SYS");
 	child->subs = NULL;
 	child->children = NULL;
+	child->retained = NULL;
 	int_db.subs.children->next->next = child;
 
 	if(mqtt3_db_open(&config)){
