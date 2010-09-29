@@ -54,12 +54,12 @@ static int _subs_process(struct _mosquitto_subhier *hier, const char *source_id,
 		if(hier->retained){
 			hier->retained->ref_count--;
 			/* FIXME - it would be nice to be able to remove the message from the store at this point if ref_count == 0 */
-			if(stored->msg.payloadlen){
-				hier->retained = stored;
-				hier->retained->ref_count++;
-			}else{
-				hier->retained = NULL;
-			}
+		}
+		if(stored->msg.payloadlen){
+			hier->retained = stored;
+			hier->retained->ref_count++;
+		}else{
+			hier->retained = NULL;
 		}
 	}
 	while(leaf){
