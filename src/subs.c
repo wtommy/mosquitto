@@ -149,23 +149,25 @@ static int _sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *
 	struct _mosquitto_subleaf *leaf, *last_leaf;
 
 	if(!tokens){
-		leaf = subhier->subs;
-		last_leaf = NULL;
-		while(leaf){
-			last_leaf = leaf;
-			leaf = leaf->next;
-		}
-		leaf = _mosquitto_malloc(sizeof(struct _mosquitto_subleaf));
-		if(!leaf) return 1;
-		leaf->next = NULL;
-		leaf->context = context;
-		leaf->qos = qos;
-		if(last_leaf){
-			last_leaf->next = leaf;
-			leaf->prev = last_leaf;
-		}else{
-			subhier->subs = leaf;
-			leaf->prev = NULL;
+		if(context){
+			leaf = subhier->subs;
+			last_leaf = NULL;
+			while(leaf){
+				last_leaf = leaf;
+				leaf = leaf->next;
+			}
+			leaf = _mosquitto_malloc(sizeof(struct _mosquitto_subleaf));
+			if(!leaf) return 1;
+			leaf->next = NULL;
+			leaf->context = context;
+			leaf->qos = qos;
+			if(last_leaf){
+				last_leaf->next = leaf;
+				leaf->prev = last_leaf;
+			}else{
+				subhier->subs = leaf;
+				leaf->prev = NULL;
+			}
 		}
 		return 0;
 	}
@@ -239,6 +241,7 @@ static int _sub_remove(mqtt3_context *context, struct _mosquitto_subhier *subhie
 static int _sub_search(struct _mosquitto_subhier *subhier, struct _sub_token *tokens, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
 {
 	/* FIXME - need to take into account source_id if the client is a bridge */
+	int sub_found = 0;
 	struct _mosquitto_subhier *branch, *last = NULL;
 
 	branch = subhier->children;
@@ -249,16 +252,27 @@ static int _sub_search(struct _mosquitto_subhier *subhier, struct _sub_token *to
 			if(tokens->next){
 				_sub_search(branch, tokens->next, source_id, topic, qos, retain, stored);
 			}else{
+				if(!strcmp(branch->topic, tokens->topic)){
+					sub_found = 1;
+				}
 				_subs_process(branch, source_id, topic, qos, retain, stored);
 			}
 		}else if(!strcmp(branch->topic, "#") && !branch->children){
 			/* The topic matches due to a # wildcard - process the
 			 * subscriptions and return. */
 			_subs_process(branch, source_id, topic, qos, retain, stored);
-			return 0;
+			break;
 		}
 		last = branch;
 		branch = branch->next;
+	}
+	if(retain && !tokens->next && !sub_found){
+		/* We have a message that needs to be retained, but there aren't any subscriptions
+		 * for its topic. This means we need to construct the remaining subscription tree
+		 * and then rerun this function to add the retained message.
+		 */
+		_sub_add(NULL, 0, subhier, tokens);
+		_sub_search(subhier, tokens, source_id, topic, qos, retain, stored);
 	}
 	return 0;
 }
