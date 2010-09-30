@@ -157,8 +157,9 @@ int mqtt3_db_open(mqtt3_config *config)
 	return rc;
 }
 
-int mqtt3_db_close(void)
+int mqtt3_db_close(mosquitto_db *db)
 {
+	mqtt3_db_store_clean(db);
 	if(db_filepath) _mosquitto_free(db_filepath);
 
 	return MOSQ_ERR_SUCCESS;
