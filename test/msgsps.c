@@ -3,19 +3,19 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <time.h>
+#include <sys/time.h>
 #include <mosquitto.h>
 
 #define MESSAGE_COUNT 20000
 
 static bool run = true;
 static int message_count = 0;
-static time_t start = 0, stop = 0;
+static struct timeval start, stop;
 
 void my_connect_callback(void *obj, int rc)
 {
 	printf("rc: %d\n", rc);
-	start = time(NULL);
+	gettimeofday(&start, NULL);
 }
 
 void my_disconnect_callback(void *obj)
@@ -26,9 +26,9 @@ void my_disconnect_callback(void *obj)
 void my_publish_callback(void *obj, uint16_t mid)
 {
 	message_count++;
-	printf("%d ", message_count);
+	//printf("%d ", message_count);
 	if(message_count == MESSAGE_COUNT){
-		stop = time(NULL);
+		gettimeofday(&stop, NULL);
 		mosquitto_disconnect((struct mosquitto *)obj);
 	}
 }
@@ -37,6 +37,12 @@ int main(int argc, char *argv[])
 {
 	struct mosquitto *mosq;
 	int i;
+	double dstart, dstop, diff;
+
+	start.tv_sec = 0;
+	start.tv_usec = 0;
+	stop.tv_sec = 0;
+	stop.tv_usec = 0;
 
 	mosquitto_lib_init();
 
@@ -52,7 +58,11 @@ int main(int argc, char *argv[])
 
 	while(!mosquitto_loop(mosq, 1) && run){
 	}
-	printf("Start: %ld\nStop: %ld\nDiff: %ld\nMessages/s: %f\n", start, stop, stop-start, (float)MESSAGE_COUNT/(float)(stop-start));
+	dstart = (double)start.tv_sec*1.0e6 + (double)start.tv_usec;
+	dstop = (double)stop.tv_sec*1.0e6 + (double)stop.tv_usec;
+	diff = (dstop-dstart)/1.0e6;
+
+	printf("Start: %g\nStop: %g\nDiff: %g\nMessages/s: %g\n", dstart, dstop, diff, (double)MESSAGE_COUNT/diff);
 
 	mosquitto_destroy(mosq);
 	mosquitto_lib_cleanup();
