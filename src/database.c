@@ -132,9 +132,35 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 	return rc;
 }
 
+static void subhier_clean(struct _mosquitto_subhier *subhier)
+{
+	struct _mosquitto_subhier *next;
+	struct _mosquitto_subleaf *leaf, *nextleaf;
+
+	while(subhier){
+		next = subhier->next;
+		leaf = subhier->subs;
+		while(leaf){
+			nextleaf = leaf->next;
+			_mosquitto_free(leaf);
+			leaf = nextleaf;
+		}
+		if(subhier->retained){
+			subhier->retained->ref_count--;
+		}
+		subhier_clean(subhier->children);
+		if(subhier->topic) _mosquitto_free(subhier->topic);
+
+		_mosquitto_free(subhier);
+		subhier = next;
+	}
+}
+
 int mqtt3_db_close(mosquitto_db *db)
 {
+	subhier_clean(db->subs.children);
 	mqtt3_db_store_clean(db);
+
 	if(db_filepath) _mosquitto_free(db_filepath);
 
 	return MOSQ_ERR_SUCCESS;
