@@ -246,7 +246,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context);
 /* ============================================================
  * Database handling
  * ============================================================ */
-int mqtt3_db_open(mqtt3_config *config);
+int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db);
 int mqtt3_db_close(mosquitto_db *db);
 int mqtt3_db_backup(mosquitto_db *db, bool cleanup);
 int mqtt3_db_client_count(mosquitto_db *db, int *count);

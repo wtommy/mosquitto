@@ -355,7 +355,6 @@ int main(int argc, char *argv[])
 	FILE *pid;
 	int listener_max;
 	int rc;
-	struct _mosquitto_subhier *child;
 
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
@@ -384,40 +383,7 @@ int main(int argc, char *argv[])
 	}
 	if(drop_privileges(&config)) return 1;
 
-	int_db.context_count = 1;
-	int_db.contexts = _mosquitto_malloc(sizeof(mqtt3_context*)*int_db.context_count);
-	if(!int_db.contexts) return MOSQ_ERR_NOMEM;
-	int_db.contexts[0] = NULL;
-
-	int_db.subs.next = NULL;
-	int_db.subs.subs = NULL;
-	int_db.subs.topic = "";
-
-	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
-	child->next = NULL;
-	child->topic = strdup("");
-	child->subs = NULL;
-	child->children = NULL;
-	child->retained = NULL;
-	int_db.subs.children = child;
-
-	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
-	child->next = NULL;
-	child->topic = strdup("/");
-	child->subs = NULL;
-	child->children = NULL;
-	child->retained = NULL;
-	int_db.subs.children->next = child;
-
-	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
-	child->next = NULL;
-	child->topic = strdup("$SYS");
-	child->subs = NULL;
-	child->children = NULL;
-	child->retained = NULL;
-	int_db.subs.children->next->next = child;
-
-	if(mqtt3_db_open(&config)){
+	if(mqtt3_db_open(&config, &int_db)){
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Couldn't open database.");
 		return 1;
 	}
@@ -444,7 +410,7 @@ int main(int argc, char *argv[])
 		}
 		if(listensock[i] == -1){
 			_mosquitto_free(int_db.contexts);
-			mqtt3_db_close();
+			mqtt3_db_close(&int_db);
 			if(config.pid_file){
 				remove(config.pid_file);
 			}
@@ -492,7 +458,7 @@ int main(int argc, char *argv[])
 	if(config.persistence && config.autosave_interval){
 		mqtt3_db_backup(&int_db, true);
 	}
-	mqtt3_db_close();
+	mqtt3_db_close(&int_db);
 
 	if(config.pid_file){
 		remove(config.pid_file);
