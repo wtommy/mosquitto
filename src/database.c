@@ -278,6 +278,7 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 	if(!msg) return 1;
 	msg->next = NULL;
 	msg->store = stored;
+	msg->store->ref_count++;
 	msg->mid = mid;
 	msg->timestamp = time(NULL);
 	msg->direction = dir;
