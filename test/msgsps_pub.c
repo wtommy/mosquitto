@@ -7,6 +7,7 @@
 #include <mosquitto.h>
 
 #define MESSAGE_COUNT 20000
+#define MESSAGE_SIZE 100
 
 static bool run = true;
 static int message_count = 0;
@@ -38,12 +39,12 @@ int create_data(void)
 	int i;
 	FILE *fptr, *rnd;
 	int rc = 0;
-	char buf[100];
+	char buf[MESSAGE_SIZE];
 
 	fptr = fopen("msgsps_pub.dat", "rb");
 	if(fptr){
 		fseek(fptr, 0, SEEK_END);
-		if(ftell(fptr) == 100*MESSAGE_COUNT){
+		if(ftell(fptr) == MESSAGE_SIZE*MESSAGE_COUNT){
 			fclose(fptr);
 			return 0;
 		}
@@ -59,11 +60,11 @@ int create_data(void)
 	}
 
 	for(i=0; i<MESSAGE_COUNT; i++){
-		if(fread(buf, sizeof(char), 100, rnd) != 100){
+		if(fread(buf, sizeof(char), MESSAGE_SIZE, rnd) != MESSAGE_SIZE){
 			rc = 1;
 			break;
 		}
-		if(fwrite(buf, sizeof(char), 100, fptr) != 100){
+		if(fwrite(buf, sizeof(char), MESSAGE_SIZE, fptr) != MESSAGE_SIZE){
 			rc = 1;
 			break;
 		}
@@ -80,7 +81,7 @@ int main(int argc, char *argv[])
 	int i;
 	double dstart, dstop, diff;
 	FILE *fptr;
-	uint8_t buf[100];
+	uint8_t buf[MESSAGE_SIZE];
 
 	start.tv_sec = 0;
 	start.tv_usec = 0;
@@ -105,8 +106,8 @@ int main(int argc, char *argv[])
 
 	mosquitto_connect(mosq, "127.0.0.1", 1885, 600, true);
 	for(i=0; i<MESSAGE_COUNT; i++){
-		fread(buf, sizeof(uint8_t), 100, fptr);
-		mosquitto_publish(mosq, NULL, "perf/test", 100, buf, 0, false);
+		fread(buf, sizeof(uint8_t), MESSAGE_SIZE, fptr);
+		mosquitto_publish(mosq, NULL, "perf/test", MESSAGE_SIZE, buf, 0, false);
 	}
 
 	while(!mosquitto_loop(mosq, 1) && run){
