@@ -33,17 +33,69 @@ void my_publish_callback(void *obj, uint16_t mid)
 	}
 }
 
+int create_data(void)
+{
+	int i;
+	FILE *fptr, *rnd;
+	int rc = 0;
+	char buf[100];
+
+	fptr = fopen("msgsps_pub.dat", "rb");
+	if(fptr){
+		fseek(fptr, 0, SEEK_END);
+		if(ftell(fptr) == 100*MESSAGE_COUNT){
+			fclose(fptr);
+			return 0;
+		}
+		fclose(fptr);
+	}
+
+	fptr = fopen("msgsps_pub.dat", "wb");
+	if(!fptr) return 1;
+	rnd = fopen("/dev/urandom", "rb");
+	if(!rnd){
+		fclose(fptr);
+		return 1;
+	}
+
+	for(i=0; i<MESSAGE_COUNT; i++){
+		if(fread(buf, sizeof(char), 100, rnd) != 100){
+			rc = 1;
+			break;
+		}
+		if(fwrite(buf, sizeof(char), 100, fptr) != 100){
+			rc = 1;
+			break;
+		}
+	}
+	fclose(rnd);
+	fclose(fptr);
+
+	return rc;
+}
+
 int main(int argc, char *argv[])
 {
 	struct mosquitto *mosq;
 	int i;
 	double dstart, dstop, diff;
+	FILE *fptr;
+	uint8_t buf[100];
 
 	start.tv_sec = 0;
 	start.tv_usec = 0;
 	stop.tv_sec = 0;
 	stop.tv_usec = 0;
 
+	if(create_data()){
+		printf("Error: Unable to create random input data.\n");
+		return 1;
+	}
+	fptr = fopen("msgsps_pub.dat", "rb");
+	if(!fptr){
+		printf("Error: Unable to open random input data.\n");
+		return 1;
+	}
 	mosquitto_lib_init();
 
 	mosq = mosquitto_new("perftest", NULL);
@@ -53,7 +105,8 @@ int main(int argc, char *argv[])
 
 	mosquitto_connect(mosq, "127.0.0.1", 1885, 600, true);
 	for(i=0; i<MESSAGE_COUNT; i++){
-		mosquitto_publish(mosq, NULL, "perf/test", 100, "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789", 0, false);
+		fread(buf, sizeof(uint8_t), 100, fptr);
+		mosquitto_publish(mosq, NULL, "perf/test", 100, buf, 0, false);
 	}
 
 	while(!mosquitto_loop(mosq, 1) && run){
@@ -66,6 +119,7 @@ int main(int argc, char *argv[])
 
 	mosquitto_destroy(mosq);
 	mosquitto_lib_cleanup();
+	fclose(fptr);
 
 	return 0;
 }
