@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 	int i;
 	double dstart, dstop, diff;
 	FILE *fptr;
-	uint8_t buf[MESSAGE_SIZE];
+	uint8_t buf[MESSAGE_SIZE*MESSAGE_COUNT];
 
 	start.tv_sec = 0;
 	start.tv_usec = 0;
@@ -97,6 +97,9 @@ int main(int argc, char *argv[])
 		printf("Error: Unable to open random input data.\n");
 		return 1;
 	}
+	fread(buf, sizeof(uint8_t), MESSAGE_SIZE*MESSAGE_COUNT, fptr);
+	fclose(fptr);
+
 	mosquitto_lib_init();
 
 	mosq = mosquitto_new("perftest", NULL);
@@ -106,8 +109,7 @@ int main(int argc, char *argv[])
 
 	mosquitto_connect(mosq, "127.0.0.1", 1885, 600, true);
 	for(i=0; i<MESSAGE_COUNT; i++){
-		fread(buf, sizeof(uint8_t), MESSAGE_SIZE, fptr);
-		mosquitto_publish(mosq, NULL, "perf/test", MESSAGE_SIZE, buf, 0, false);
+		mosquitto_publish(mosq, NULL, "perf/test", MESSAGE_SIZE, &buf[i*MESSAGE_SIZE], 0, false);
 	}
 
 	while(!mosquitto_loop(mosq, 1) && run){
@@ -120,7 +122,6 @@ int main(int argc, char *argv[])
 
 	mosquitto_destroy(mosq);
 	mosquitto_lib_cleanup();
-	fclose(fptr);
 
 	return 0;
 }
