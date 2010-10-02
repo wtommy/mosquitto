@@ -17,7 +17,6 @@ FILE *fptr = NULL;
 void my_connect_callback(void *obj, int rc)
 {
 	printf("rc: %d\n", rc);
-	gettimeofday(&start, NULL);
 }
 
 void my_disconnect_callback(void *obj)
@@ -27,6 +26,9 @@ void my_disconnect_callback(void *obj)
 
 void my_message_callback(void *obj, const struct mosquitto_message *msg)
 {
+	if(message_count == 0){
+		gettimeofday(&start, NULL);
+	}
 	fwrite(msg->payload, sizeof(uint8_t), msg->payloadlen, fptr);
 	message_count++;
 	if(message_count == MESSAGE_COUNT){
