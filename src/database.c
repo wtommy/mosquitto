@@ -58,10 +58,13 @@ POSSIBILITY OF SUCH DAMAGE.
  *	a/b/d
  */
 
+#include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include <config.h>
 #include <mqtt3.h>
@@ -169,15 +172,45 @@ int mqtt3_db_close(mosquitto_db *db)
 int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 {
 	int rc = 0;
+	int db_fd;
+	uint32_t db_version = htonl(MQTT_DB_VERSION);
+	char *buf = NULL;
 
 	if(!db || !db_filepath) return 1;
 	mqtt3_log_printf(MOSQ_LOG_INFO, "Saving in-memory database to %s.", db_filepath);
 	if(cleanup){
 		mqtt3_db_store_clean(db);
 	}
-	/* FIXME - needs implementing */
 
+	db_fd = open(db_filepath, O_WRONLY|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR);
+	if(db_fd < 0){
+		goto error;
+	}
+	if(write(db_fd, "mosquitto db", 12) != 12){
+		goto error;
+	}
+	if(write(db_fd, &db_version, sizeof(uint32_t)) != sizeof(uint32_t)){
+		goto error;
+	}
+	buf = _mosquitto_calloc(1024, sizeof(char));
+	if(!buf){
+		close(db_fd);
+		return 1;
+	}
+	/* Write 1024 empty bytes for future changes. */
+	if(write(db_fd, buf, 1024) != 1024) goto error;
+	_mosquitto_free(buf);
+	buf = NULL;
+
+	/* FIXME - needs implementing */
+	close(db_fd);
 	return rc;
+
+error:
+	mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
+	if(buf) _mosquitto_free(buf);
+	if(db_fd >= 0) close(db_fd);
+	return 1;
 }
 
 /* Called on client death to add a will to the message queue if the will exists.
