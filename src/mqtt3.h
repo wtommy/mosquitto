@@ -241,7 +241,7 @@ int mqtt3_handle_pubrel(mosquitto_db *db, mqtt3_context *context);
 int mqtt3_handle_suback(mqtt3_context *context);
 int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context);
 int mqtt3_handle_unsuback(mqtt3_context *context);
-int mqtt3_handle_unsubscribe(mqtt3_context *context);
+int mqtt3_handle_unsubscribe(mosquitto_db *db, mqtt3_context *context);
 
 /* ============================================================
  * Database handling

@@ -187,7 +187,7 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 				return 1;
 			}
 			mqtt3_log_printf(MOSQ_LOG_DEBUG, "\t%s (QoS %d)", sub, qos);
-			mqtt3_sub_add(context, sub, qos, &int_db.subs);
+			mqtt3_sub_add(context, sub, qos, &db->subs);
 	
 			if(mqtt3_retain_queue(db, context, sub, qos)) rc = 1;
 			_mosquitto_free(sub);
@@ -204,7 +204,7 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 	return rc;
 }
 
-int mqtt3_handle_unsubscribe(mqtt3_context *context)
+int mqtt3_handle_unsubscribe(mosquitto_db *db, mqtt3_context *context)
 {
 	uint16_t mid;
 	char *sub;
@@ -223,7 +223,7 @@ int mqtt3_handle_unsubscribe(mqtt3_context *context)
 
 		if(sub){
 			mqtt3_log_printf(MOSQ_LOG_DEBUG, "\t%s", sub);
-			mqtt3_sub_remove(context, sub, &int_db.subs);
+			mqtt3_sub_remove(context, sub, &db->subs);
 			_mosquitto_free(sub);
 		}
 	}
