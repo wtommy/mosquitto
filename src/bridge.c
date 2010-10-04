@@ -71,10 +71,10 @@ int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge)
 	if(!new_context->core.id){
 		return MOSQ_ERR_NOMEM;
 	}
-	return mqtt3_bridge_connect(new_context);
+	return mqtt3_bridge_connect(db, new_context);
 }
 
-int mqtt3_bridge_connect(mqtt3_context *context)
+int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 {
 	int new_sock = -1;
 	int i;
@@ -110,7 +110,7 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 
 	for(i=0; i<context->bridge->topic_count; i++){
 		if(context->bridge->topics[i].direction == bd_out || context->bridge->topics[i].direction == bd_both){
-			if(mqtt3_sub_add(context, context->bridge->topics[i].topic, 2, &int_db.subs)) return 1;
+			if(mqtt3_sub_add(context, context->bridge->topics[i].topic, 2, &db->subs)) return 1;
 		}
 	}
 

@@ -163,8 +163,6 @@ struct _mqtt3_listener {
 	char *client_prefix;
 };
 
-extern mosquitto_db int_db;
-
 /* ============================================================
  * Utility functions
  * ============================================================ */
@@ -275,7 +273,7 @@ void mqtt3_db_vacuum(void);
  * Context functions
  * ============================================================ */
 mqtt3_context *mqtt3_context_init(int sock);
-void mqtt3_context_cleanup(mqtt3_context *context);
+void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context);
 void mqtt3_context_close_duplicate(int sock);
 
 /* ============================================================
@@ -289,7 +287,7 @@ int mqtt3_log_printf(int level, const char *fmt, ...) __attribute__((format(prin
  * Bridge functions
  * ============================================================ */
 int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge);
-int mqtt3_bridge_connect(mqtt3_context *context);
+int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context);
 void mqtt3_bridge_packet_cleanup(mqtt3_context *context);
 
 #endif

@@ -34,6 +34,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 #include <mqtt3.h>
 
+extern mosquitto_db int_db;
+
 /* Options for logging should be:
  *
  * A combination of:

@@ -98,7 +98,7 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 	}
 
 	db->context_count = 1;
-	db->contexts = _mosquitto_malloc(sizeof(mqtt3_context*)*int_db.context_count);
+	db->contexts = _mosquitto_malloc(sizeof(mqtt3_context*)*db->context_count);
 	if(!db->contexts) return MOSQ_ERR_NOMEM;
 	db->contexts[0] = NULL;
 

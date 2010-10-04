@@ -174,7 +174,7 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 						if(int_db.contexts[i]->bridge){
 							mqtt3_socket_close(int_db.contexts[i]);
 						}else{
-							mqtt3_context_cleanup(int_db.contexts[i]);
+							mqtt3_context_cleanup(&int_db, int_db.contexts[i]);
 							int_db.contexts[i] = NULL;
 						}
 					}
@@ -186,11 +186,11 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 						}else{
 							if(time(NULL) > int_db.contexts[i]->bridge->restart_t){
 								int_db.contexts[i]->bridge->restart_t = 0;
-								mqtt3_bridge_connect(int_db.contexts[i]);
+								mqtt3_bridge_connect(&int_db, int_db.contexts[i]);
 							}
 						}
 					}else{
-						mqtt3_context_cleanup(int_db.contexts[i]);
+						mqtt3_context_cleanup(&int_db, int_db.contexts[i]);
 						int_db.contexts[i] = NULL;
 					}
 				}
@@ -251,7 +251,7 @@ static void loop_handle_errors(void)
 				if(int_db.contexts[i]->bridge){
 					mqtt3_socket_close(int_db.contexts[i]);
 				}else{
-					mqtt3_context_cleanup(int_db.contexts[i]);
+					mqtt3_context_cleanup(&int_db, int_db.contexts[i]);
 					int_db.contexts[i] = NULL;
 				}
 			}
@@ -278,7 +278,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 					if(int_db.contexts[i]->bridge){
 						mqtt3_socket_close(int_db.contexts[i]);
 					}else{
-						mqtt3_context_cleanup(int_db.contexts[i]);
+						mqtt3_context_cleanup(&int_db, int_db.contexts[i]);
 						int_db.contexts[i] = NULL;
 					}
 				}
@@ -298,7 +298,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 					if(int_db.contexts[i]->bridge){
 						mqtt3_socket_close(int_db.contexts[i]);
 					}else{
-						mqtt3_context_cleanup(int_db.contexts[i]);
+						mqtt3_context_cleanup(&int_db, int_db.contexts[i]);
 						int_db.contexts[i] = NULL;
 					}
 				}
@@ -319,7 +319,7 @@ void mqtt3_context_close_duplicate(int sock)
 			if(int_db.contexts[i]->core.sock == sock){
 				int_db.contexts[i]->duplicate = true;
 				mqtt3_db_client_will_queue(&int_db, int_db.contexts[i]);
-				mqtt3_context_cleanup(int_db.contexts[i]);
+				mqtt3_context_cleanup(&int_db, int_db.contexts[i]);
 				int_db.contexts[i] = NULL;
 				return;
 			}
@@ -441,7 +441,7 @@ int main(int argc, char *argv[])
 
 	for(i=0; i<int_db.context_count; i++){
 		if(int_db.contexts[i]){
-			mqtt3_context_cleanup(int_db.contexts[i]);
+			mqtt3_context_cleanup(&int_db, int_db.contexts[i]);
 		}
 	}
 	_mosquitto_free(int_db.contexts);

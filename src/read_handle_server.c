@@ -92,7 +92,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 				/* FIXME - does anything else need to be done here? 
 				 * Subs aren't tied directly to the context struct.
 				 * Messages neither yet. */
-				mqtt3_context_cleanup(db->contexts[i]);
+				mqtt3_context_cleanup(db, db->contexts[i]);
 				db->contexts[i] = NULL;
 			}else{
 				/* Client is already connected, disconnect old version */
