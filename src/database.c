@@ -1288,10 +1288,10 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 				new_status = ms_publish_pubrec;
 				break;
 			case ms_wait_pubrel:
-				new_status = ms_resend_pubrel;
+				new_status = ms_resend_pubrec;
 				break;
 			case ms_wait_pubcomp:
-				new_status = ms_resend_pubcomp;
+				new_status = ms_resend_pubrel;
 				break;
 		}
 		if(new_status != ms_invalid){
@@ -1414,16 +1414,22 @@ int mqtt3_db_message_write(mqtt3_context *context)
 						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_pubrec);
 					}
 					break;
-				
+
+				case ms_resend_pubrec:
+					if(!mqtt3_raw_pubrec(context, mid)){
+						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_pubrel);
+					}
+					break;
+
 				case ms_resend_pubrel:
 					if(!mqtt3_raw_pubrel(context, mid)){
-						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_pubrel);
+						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_pubcomp);
 					}
 					break;
 
 				case ms_resend_pubcomp:
 					if(!mqtt3_raw_pubcomp(context, mid)){
-						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_pubcomp);
+						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_pubrel);
 					}
 					break;
 			}
