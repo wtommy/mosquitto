@@ -467,6 +467,23 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 	return 0;
 }
 
+int mqtt3_db_message_store_find(mosquitto_db *db, const char *source, uint16_t mid, struct mosquitto_msg_store **stored)
+{
+	struct mosquitto_msg_store *tail;
+
+	*stored = NULL;
+	tail = db->msg_store;
+	while(tail){
+		if(tail->source_mid == mid && !strcmp(tail->source_id, source)){
+			*stored = tail;
+			return 0;
+		}
+		tail = tail->next;
+	}
+	
+	return 1;
+}
+
 int mqtt3_db_message_timeout_check(mosquitto_db *db, unsigned int timeout)
 {
 	int i;

@@ -6,6 +6,8 @@
 - Python callback functions now optionally take an extra argument which will
   return the user object passed to the Mosquitto() constructor, or the calling
   python object itself if nothing was given to Mosquitto().
+- Fix QoS 2 protocol compliance - stop sending duplicate messages and handle
+  timeouts correctly. Fixes bug #598290.
 
 0.8.2 - 20100815
 ================
