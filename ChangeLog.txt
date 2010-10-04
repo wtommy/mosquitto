@@ -1,3 +1,9 @@
+0.8.3 - 20101004
+================
+
+- Fix QoS 2 protocol compliance - stop sending duplicate messages and handle
+  timeouts correctly. Fixes bug #598290. (backported from future 0.9 code)
+
 0.8.2 - 20100815
 ================
 

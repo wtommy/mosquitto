@@ -136,7 +136,7 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	int rc = 0;
 	uint8_t header = context->in_packet.command;
 	int64_t store_id = 0;
-	int res;
+	int res = 0;
 
 	dup = (header & 0x08)>>3;
 	qos = (header & 0x06)>>1;
@@ -185,7 +185,9 @@ int mqtt3_handle_publish(mqtt3_context *context)
 			if(mqtt3_raw_puback(context, mid)) rc = 1;
 			break;
 		case 2:
-			res = mqtt3_db_message_insert(context->id, mid, mosq_md_in, ms_wait_pubrec, qos, store_id);
+			if(!dup){
+				res = mqtt3_db_message_insert(context->id, mid, mosq_md_in, ms_wait_pubrec, qos, store_id);
+			}
 			if(!res){
 				if(mqtt3_raw_pubrec(context, mid)) rc = 1;
 			}else if(res == 1){
@@ -225,7 +227,7 @@ int mqtt3_handle_pubrel(mqtt3_context *context)
 	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
 	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREL from %s (Mid: %d)", context->id, mid);
 
-	if(mqtt3_db_message_release(context->id, mid, mosq_md_in)) return 1;
+	mqtt3_db_message_release(context->id, mid, mosq_md_in);
 	if(mqtt3_raw_pubcomp(context, mid)) return 1;
 
 	return 0;
