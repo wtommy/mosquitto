@@ -491,10 +491,10 @@ int mqtt3_db_message_timeout_check(mosquitto_db *db, unsigned int timeout)
 						new_state = ms_publish_pubrec;
 						break;
 					case ms_wait_pubrel:
-						new_state = ms_resend_pubrel;
+						new_state = ms_resend_pubrec;
 						break;
 					case ms_wait_pubcomp:
-						new_state = ms_resend_pubcomp;
+						new_state = ms_resend_pubrel;
 						break;
 					default:
 						break;
@@ -606,9 +606,17 @@ int mqtt3_db_message_write(mqtt3_context *context)
 					tail = tail->next;
 					break;
 				
+				case ms_resend_pubrec:
+					if(!mqtt3_raw_pubrec(context, mid)){
+						tail->state = ms_wait_pubrel;
+					}
+					last = tail;
+					tail = tail->next;
+					break;
+
 				case ms_resend_pubrel:
 					if(!mqtt3_raw_pubrel(context, mid)){
-						tail->state = ms_wait_pubrel;
+						tail->state = ms_wait_pubcomp;
 					}
 					last = tail;
 					tail = tail->next;
@@ -616,7 +624,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 
 				case ms_resend_pubcomp:
 					if(!mqtt3_raw_pubcomp(context, mid)){
-						tail->state = ms_wait_pubcomp;
+						tail->state = ms_wait_pubrel;
 					}
 					last = tail;
 					tail = tail->next;

@@ -67,7 +67,8 @@ enum mqtt3_msg_state {
 	ms_resend_pubrel = 6,
 	ms_wait_pubrel = 7,
 	ms_resend_pubcomp = 8,
-	ms_wait_pubcomp = 9
+	ms_wait_pubcomp = 9,
+	ms_resend_pubrec = 10
 };
 
 struct mosquitto_msg_store{
