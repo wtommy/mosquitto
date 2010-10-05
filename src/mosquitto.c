@@ -97,7 +97,7 @@ int drop_privileges(mqtt3_config *config)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int loop(mqtt3_config *config, int *listensock, int listener_max)
+int loop(mqtt3_config *config, int *listensock, int listensock_count, int listener_max)
 {
 	time_t start_time = time(NULL);
 	time_t last_backup = time(NULL);
@@ -145,7 +145,7 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 
 		memset(pollfds, -1, sizeof(struct pollfd)*pollfd_count);
 
-		for(i=0; i<config->iface_count; i++){
+		for(i=0; i<listensock_count; i++){
 			pollfds[listensock[i]].fd = listensock[i];
 			pollfds[listensock[i]].events = POLLIN | POLLPRI;
 			pollfds[listensock[i]].revents = 0;
@@ -208,7 +208,7 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 		}else{
 			loop_handle_reads_writes(pollfds);
 
-			for(i=0; i<config->iface_count; i++){
+			for(i=0; i<listensock_count; i++){
 				if(pollfds[listensock[i]].revents & (POLLIN | POLLPRI)){
 					new_clients = 1;
 					while(mqtt3_socket_accept(&contexts, &context_count, listensock[i]) != -1){
@@ -349,9 +349,12 @@ void handle_sigusr2(int signal)
 int main(int argc, char *argv[])
 {
 	int *listensock = NULL;
+	int listensock_count = 0;
+	int listensock_index = 0;
+	int *socks, sock_count;
 	mqtt3_config config;
 	char buf[1024];
-	int i;
+	int i, j;
 	FILE *pid;
 	int listener_max;
 	int rc;
@@ -406,14 +409,9 @@ int main(int argc, char *argv[])
 	mqtt3_db_messages_easy_queue("", "$SYS/broker/changeset", 2, strlen(buf), (uint8_t *)buf, 1);
 
 	listener_max = -1;
-	listensock = _mosquitto_malloc(sizeof(int)*config.iface_count);
-	for(i=0; i<config.iface_count; i++){
-		if(config.iface[i].iface){
-			listensock[i] = mqtt3_socket_listen_if(config.iface[i].iface, config.iface[i].port);
-		}else{
-			listensock[i] = mqtt3_socket_listen(config.iface[i].port);
-		}
-		if(listensock[i] == -1){
+	listensock_index = 0;
+	for(i=0; i<config.listener_count; i++){
+		if(mqtt3_socket_listen(config.listeners[i].host, config.listeners[i].port, &socks, &sock_count)){
 			_mosquitto_free(contexts);
 			mqtt3_db_close();
 			if(config.pid_file){
@@ -421,9 +419,32 @@ int main(int argc, char *argv[])
 			}
 			return 1;
 		}
-		if(listensock[i] > listener_max){
-			listener_max = listensock[i];
+		listensock_count += sock_count;
+		listensock = _mosquitto_realloc(listensock, sizeof(int)*listensock_count);
+		if(!listensock){
+			_mosquitto_free(contexts);
+			mqtt3_db_close();
+			if(config.pid_file){
+				remove(config.pid_file);
+			}
+			return 1;
 		}
+		for(j=0; j<sock_count; j++){
+			if(socks[j] < 0){
+				_mosquitto_free(contexts);
+				mqtt3_db_close();
+				if(config.pid_file){
+					remove(config.pid_file);
+				}
+				return 1;
+			}
+			listensock[listensock_index] = socks[j];
+			if(listensock[listensock_index] > listener_max){
+				listener_max = listensock[listensock_index];
+			}
+			listensock_index++;
+		}
+		_mosquitto_free(socks);
 	}
 
 	signal(SIGINT, handle_sigint);
@@ -439,7 +460,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	run = 1;
-	rc = loop(&config, listensock, listener_max);
+	rc = loop(&config, listensock, listensock_count, listener_max);
 
 	mqtt3_log_printf(MOSQ_LOG_INFO, "mosquitto version %s terminating", VERSION);
 	mqtt3_log_close();
@@ -452,7 +473,7 @@ int main(int argc, char *argv[])
 	_mosquitto_free(contexts);
 
 	if(listensock){
-		for(i=0; i<config.iface_count; i++){
+		for(i=0; i<listensock_count; i++){
 			if(listensock[i] != -1){
 				close(listensock[i]);
 			}

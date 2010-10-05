@@ -33,7 +33,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <string.h>
 #ifdef WITH_MEMORY_TRACKING
-#include <malloc.h>
+#  if defined(__linux__) || defined(__CYGWIN__)
+#    include <malloc.h>
+#  else
+#    define malloc_usable_size malloc_good_size
+#  endif
 #endif
 
 #include <memory_mosq.h>

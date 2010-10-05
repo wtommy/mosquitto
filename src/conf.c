@@ -14,13 +14,15 @@ void mqtt3_config_init(mqtt3_config *config)
 	/* Set defaults */
 	config->autosave_interval = 1800;
 	config->daemon = false;
+	config->default_listener.host = NULL;
+	config->default_listener.port = 0;
 #ifdef __CYGWIN__
 	config->ext_sqlite_regex = "./sqlite3-pcre.dll";
 #else
 	config->ext_sqlite_regex = "/usr/lib/sqlite3/pcre.so";
 #endif
-	config->iface = NULL;
-	config->iface_count = 0;
+	config->listeners = NULL;
+	config->listener_count = 0;
 	config->log_dest = MQTT3_LOG_STDERR;
 	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING | MOSQ_LOG_NOTICE | MOSQ_LOG_INFO;
 	config->max_connections = -1;
@@ -40,7 +42,6 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 {
 	int i;
 	int port_tmp;
-	char *str;
 
 	for(i=1; i<argc; i++){
 		if(!strcmp(argv[i], "-c") || !strcmp(argv[i], "--config-file")){
@@ -56,34 +57,6 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 			i++;
 		}else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--daemon")){
 			config->daemon = true;
-		}else if(!strcmp(argv[i], "-i") || !strcmp(argv[i], "--interface")){
-			if(i<argc-1){
-				i++;
-				str = strtok(argv[i], ":");
-				if(str){
-					config->iface_count++;
-					config->iface = _mosquitto_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
-					if(!config->iface){
-						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-						return MOSQ_ERR_NOMEM;
-					}
-					config->iface[config->iface_count-1].iface = _mosquitto_strdup(str);
-					str = strtok(NULL, ":");
-					if(str){
-						port_tmp = atoi(str);
-						if(port_tmp < 1 || port_tmp > 65535){
-							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid port value (%d).", port_tmp);
-							return MOSQ_ERR_INVAL;
-						}
-						config->iface[config->iface_count-1].port = port_tmp;
-					}else{
-						config->iface[config->iface_count-1].port = 1883;
-					}
-				}
-			}else{
-				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: -i argument given, but no interface specifed.");
-				return MOSQ_ERR_INVAL;
-			}
 		}else if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
 			if(i<argc-1){
 				port_tmp = atoi(argv[i+1]);
@@ -91,14 +64,10 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 					mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid port specified (%d).", port_tmp);
 					return MOSQ_ERR_INVAL;
 				}else{
-					config->iface_count++;
-					config->iface = _mosquitto_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
-					if(!config->iface){
-						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-						return MOSQ_ERR_NOMEM;
+					if(config->default_listener.port){
+						mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Default listener port specified multiple times. Only the latest will be used.");
 					}
-					config->iface[config->iface_count-1].iface = NULL;
-					config->iface[config->iface_count-1].port = port_tmp;
+					config->default_listener.port = port_tmp;
 				}
 			}else{
 				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: -p argument given, but no port specified.");
@@ -107,12 +76,26 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 		}
 	}
 
-	if(!config->iface){
-		config->iface = _mosquitto_malloc(sizeof(struct mqtt3_iface));
-		config->iface->iface = NULL;
-		config->iface->port = 1883;
-		config->iface_count = 1;
+	if(config->listener_count == 0 || config->default_listener.host || config->default_listener.port){
+		config->listener_count++;
+		config->listeners = _mosquitto_realloc(config->listeners, sizeof(struct _mqtt3_listener)*config->listener_count);
+		if(!config->listeners){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+			return MOSQ_ERR_NOMEM;
+		}
+		if(config->default_listener.port){
+			config->listeners[config->listener_count-1].port = config->default_listener.port;
+		}else{
+			config->listeners[config->listener_count-1].port = 1883;
+		}
+		if(config->default_listener.host){
+			config->listeners[config->listener_count-1].host = config->default_listener.host;
+		}else{
+			config->listeners[config->listener_count-1].host = NULL;
+		}
+		
 	}
+
 	return MOSQ_ERR_SUCCESS;
 }
 
@@ -169,7 +152,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 							}
 						}
 					}else{
-						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty interface value in configuration.");
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty address value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "autosave_interval")){
@@ -181,6 +164,18 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						config->ext_sqlite_regex = _mosquitto_strdup(token);
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty ext_sqlite_regex value in config.");
+						return MOSQ_ERR_INVAL;
+					}
+				}else if(!strcmp(token, "bind_address")){
+					token = strtok(NULL, " ");
+					if(token){
+						if(config->default_listener.host){
+							mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Default listener bind_address specified multiple times. Only the latest will be used.");
+							_mosquitto_free(config->default_listener.host);
+						}
+						config->default_listener.host = _mosquitto_strdup(token);
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty bind_address value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "cleansession")){
@@ -207,36 +202,10 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						cur_bridge->topics = NULL;
 						cur_bridge->topic_count = 0;
 						cur_bridge->restart_t = 0;
+						cur_bridge->username = NULL;
+						cur_bridge->password = NULL;
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty connection value in configuration.");
-						return MOSQ_ERR_INVAL;
-					}
-				}else if(!strcmp(token, "interface")){
-					token = strtok(NULL, " ");
-					if(token){
-						token = strtok(token, ":");
-						if(token){
-							config->iface_count++;
-							config->iface = _mosquitto_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
-							if(!config->iface){
-								mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-								return MOSQ_ERR_NOMEM;
-							}
-							config->iface[config->iface_count-1].iface = _mosquitto_strdup(token);
-							token = strtok(NULL, ":");
-							if(token){
-								port_tmp = atoi(token);
-								if(port_tmp < 1 || port_tmp > 65535){
-									mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid port value (%d).", port_tmp);
-									return MOSQ_ERR_INVAL;
-								}
-								config->iface[config->iface_count-1].port = port_tmp;
-							}else{
-								config->iface[config->iface_count-1].port = 1883;
-							}
-						}
-					}else{
-						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty interface value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "keepalive_interval")){
@@ -248,6 +217,31 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					if(cur_bridge->keepalive < 5){
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "keepalive interval too low, using 5 seconds.");
 						cur_bridge->keepalive = 5;
+					}
+				}else if(!strcmp(token, "listener")){
+					token = strtok(NULL, " ");
+					if(token){
+						config->listener_count++;
+						config->listeners = _mosquitto_realloc(config->listeners, sizeof(struct _mqtt3_listener)*config->listener_count);
+						if(!config->listeners){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+							return MOSQ_ERR_NOMEM;
+						}
+						port_tmp = atoi(token);
+						if(port_tmp < 1 || port_tmp > 65535){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid port value (%d).", port_tmp);
+							return MOSQ_ERR_INVAL;
+						}
+						config->listeners[config->listener_count-1].port = port_tmp;
+						token = strtok(NULL, " ");
+						if(token){
+							config->listeners[config->listener_count-1].host = _mosquitto_strdup(token);
+						}else{
+							config->listeners[config->listener_count-1].host = NULL;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty listener value in configuration.");
+						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "log_dest")){
 					token = strtok(NULL, " ");
@@ -318,6 +312,26 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty max_queued_messages value in configuration.");
 					}
+				}else if(!strcmp(token, "password")){
+					if(!cur_bridge){
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					token = strtok(NULL, " ");
+					if(token){
+						if(cur_bridge->password){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Duplicate password value in bridge configuration.");
+							return MOSQ_ERR_INVAL;
+						}
+						cur_bridge->password = _mosquitto_strdup(token);
+						if(!cur_bridge->password){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty password value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
 				}else if(!strcmp(token, "persistence")){
 					if(_mqtt3_conf_parse_bool(&token, "persistence", &config->persistence)) return 1;
 				}else if(!strcmp(token, "persistence_file")){
@@ -342,19 +356,15 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						config->pid_file = _mosquitto_strdup(token);
 					}
 				}else if(!strcmp(token, "port")){
+					if(config->default_listener.port){
+						mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Default listener port specified multiple times. Only the latest will be used.");
+					}
 					if(_mqtt3_conf_parse_int(&token, "port", &port_tmp)) return 1;
 					if(port_tmp < 1 || port_tmp > 65535){
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid port value (%d).", port_tmp);
 						return MOSQ_ERR_INVAL;
 					}
-					config->iface_count++;
-					config->iface = _mosquitto_realloc(config->iface, sizeof(struct mqtt3_iface)*config->iface_count);
-					if(!config->iface){
-						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-						return MOSQ_ERR_NOMEM;
-					}
-					config->iface[config->iface_count-1].iface = NULL;
-					config->iface[config->iface_count-1].port = port_tmp;
+					config->default_listener.port = port_tmp;
 				}else if(!strcmp(token, "retry_interval")){
 					if(_mqtt3_conf_parse_int(&token, "retry_interval", &config->retry_interval)) return 1;
 					if(config->retry_interval < 1 || config->retry_interval > 3600){
@@ -418,11 +428,29 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid user value.");
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "username")){
+					if(!cur_bridge){
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					token = strtok(NULL, " ");
+					if(token){
+						if(cur_bridge->username){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Duplicate username value in bridge configuration.");
+							return MOSQ_ERR_INVAL;
+						}
+						cur_bridge->username = _mosquitto_strdup(token);
+						if(!cur_bridge->username){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty username value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
 				}else if(!strcmp(token, "autosave_on_changes")
-						|| !strcmp(token, "bind_address")
 						|| !strcmp(token, "clientid_prefixes")
 						|| !strcmp(token, "connection_messages")
-						|| !strcmp(token, "listener")
 						|| !strcmp(token, "retained_persistence")
 						|| !strcmp(token, "trace_level")
 						|| !strcmp(token, "addresses")
@@ -433,7 +461,14 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						|| !strcmp(token, "start_type")
 						|| !strcmp(token, "threshold")
 						|| !strcmp(token, "try_private")
-						|| !strcmp(token, "mount_point")){
+						|| !strcmp(token, "mount_point")
+						|| !strcmp(token, "clientid")
+						|| !strcmp(token, "acl_file")
+						|| !strcmp(token, "allow_anonymous")
+						|| !strcmp(token, "ffdc_output")
+						|| !strcmp(token, "max_log_entries")
+						|| !strcmp(token, "password_file")
+						|| !strcmp(token, "trace_output")){
 					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Unsupported rsmb configuration option \"%s\".", token);
 				}else{
 					mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unknown configuration variable \"%s\".", token);

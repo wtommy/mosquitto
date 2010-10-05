@@ -1,11 +1,19 @@
 0.9 - 201009xx
 ==============
 
+- Added IPv6 support for mosquitto and the clients.
 - Provide username and password support for the clients and client libraries.
   This is part of the new MQTT v3.1 spec.
 - Python callback functions now optionally take an extra argument which will
   return the user object passed to the Mosquitto() constructor, or the calling
   python object itself if nothing was given to Mosquitto().
+- Remove the mosquitto command line option "-i interface".
+- Remove the mosquitto.conf "interface" variable.
+- Add support for the listener config variable (replaces the interface
+  variable)
+- Add support for the bind_address config variable.
+- Change the port config variable behaviour to match that of rsmb (applies to
+  the default listener only, can be given just once).
 
 0.8.3 - 20101004
 ================

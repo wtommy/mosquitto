@@ -119,7 +119,8 @@ int _mosquitto_socket_connect(const char *host, uint16_t port)
 	if(!host || !port) return INVALID_SOCKET;
 
 	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_INET; /* IPv4 only at the moment. */
+	hints.ai_family = PF_UNSPEC;
+	hints.ai_flags = AI_ADDRCONFIG;
 	hints.ai_socktype = SOCK_STREAM;
 
 	s = getaddrinfo(host, NULL, &hints, &ainfo);
@@ -129,7 +130,14 @@ int _mosquitto_socket_connect(const char *host, uint16_t port)
 		sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 		if(sock == INVALID_SOCKET) continue;
 		
-		((struct sockaddr_in *)rp->ai_addr)->sin_port = htons(port);
+		if(rp->ai_family == PF_INET){
+			((struct sockaddr_in *)rp->ai_addr)->sin_port = htons(port);
+		}else if(rp->ai_family == PF_INET6){
+			((struct sockaddr_in6 *)rp->ai_addr)->sin6_port = htons(port);
+		}else{
+			freeaddrinfo(ainfo);
+			return INVALID_SOCKET;
+		}
 		if(connect(sock, rp->ai_addr, rp->ai_addrlen) != -1){
 			break;
 		}

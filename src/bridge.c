@@ -68,6 +68,9 @@ int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3
 	if(!new_context->core.id){
 		return MOSQ_ERR_NOMEM;
 	}
+	new_context->core.username = new_context->bridge->username;
+	new_context->core.password = new_context->bridge->password;
+
 	if(!mqtt3_db_client_insert(new_context, 0, 0, 0, NULL, NULL)){
 		return mqtt3_bridge_connect(new_context);
 	}

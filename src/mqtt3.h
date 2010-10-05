@@ -74,6 +74,8 @@ struct _mqtt3_bridge{
 	struct _mqtt3_bridge_topic *topics;
 	int topic_count;
 	time_t restart_t;
+	char *username;
+	char *password;
 };
 
 typedef struct _mqtt3_context{
@@ -98,17 +100,21 @@ enum mqtt3_msg_status {
 	ms_resend_pubrec = 10
 };
 
-struct mqtt3_iface {
-	char *iface;
-	int port;
+struct _mqtt3_listener {
+	int fd;
+	char *host;
+	uint16_t port;
+	int max_connections;
+	char *mount_point;
 };
 
 typedef struct {
 	int autosave_interval;
 	bool daemon;
+	struct _mqtt3_listener default_listener;
+	struct _mqtt3_listener *listeners;
 	char *ext_sqlite_regex;
-	struct mqtt3_iface *iface;
-	int iface_count;
+	int listener_count;
 	int log_dest;
 	int log_type;
 	int max_connections;
@@ -123,15 +129,6 @@ typedef struct {
 	struct _mqtt3_bridge *bridges;
 	int bridge_count;
 } mqtt3_config;
-
-struct _mqtt3_listener {
-	int fd;
-	char *iface;
-	uint16_t port;
-	int max_connections;
-	char *mount_point;
-	char *client_prefix;
-};
 
 /* ============================================================
  * Utility functions
@@ -179,8 +176,7 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command);
  * ============================================================ */
 int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int listensock);
 int mqtt3_socket_close(mqtt3_context *context);
-int mqtt3_socket_listen(uint16_t port);
-int mqtt3_socket_listen_if(const char *iface, uint16_t port);
+int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_count);
 
 int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *packet);
 int mqtt3_net_read(mqtt3_context *context);

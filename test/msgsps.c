@@ -26,7 +26,7 @@ void my_disconnect_callback(void *obj)
 void my_publish_callback(void *obj, uint16_t mid)
 {
 	message_count++;
-	printf("%d ", message_count);
+//	printf("%d ", message_count);
 	if(message_count == MESSAGE_COUNT){
 		stop = time(NULL);
 		mosquitto_disconnect((struct mosquitto *)obj);

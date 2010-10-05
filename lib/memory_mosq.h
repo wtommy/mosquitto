@@ -35,7 +35,9 @@ POSSIBILITY OF SUCH DAMAGE.
 void *_mosquitto_calloc(size_t nmemb, size_t size);
 void _mosquitto_free(void *mem);
 void *_mosquitto_malloc(size_t size);
+#ifdef WITH_MEMORY_TRACKING
 unsigned long _mosquitto_memory_used(void);
+#endif
 void *_mosquitto_realloc(void *ptr, size_t size);
 char *_mosquitto_strdup(const char *s);
 
