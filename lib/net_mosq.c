@@ -61,22 +61,22 @@ void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet)
 	packet->pos = 0;
 }
 
-void _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *packet)
+void _mosquitto_packet_queue(struct _mosquitto_core *core, struct _mosquitto_packet *packet)
 {
 	struct _mosquitto_packet *tail;
 
-	assert(mosq);
+	assert(core);
 	assert(packet);
 
 	packet->next = NULL;
-	if(mosq->core.out_packet){
-		tail = mosq->core.out_packet;
+	if(core->out_packet){
+		tail = core->out_packet;
 		while(tail->next){
 			tail = tail->next;
 		}
 		tail->next = packet;
 	}else{
-		mosq->core.out_packet = packet;
+		core->out_packet = packet;
 	}
 }
 
@@ -84,18 +84,18 @@ void _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *p
  * Returns 1 on failure (context is NULL)
  * Returns 0 on success.
  */
-int _mosquitto_socket_close(struct mosquitto *mosq)
+int _mosquitto_socket_close(struct _mosquitto_core *core)
 {
 	int rc = 0;
 
-	assert(mosq);
-	if(mosq->core.sock != INVALID_SOCKET){
+	assert(core);
+	if(core->sock != INVALID_SOCKET){
 #ifndef WIN32
-		rc = close(mosq->core.sock);
+		rc = close(core->sock);
 #else
-		rc = closesocket(mosq->core.sock);
+		rc = closesocket(core->sock);
 #endif
-		mosq->core.sock = INVALID_SOCKET;
+		core->sock = INVALID_SOCKET;
 	}
 
 	return rc;
