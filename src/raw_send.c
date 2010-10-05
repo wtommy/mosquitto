@@ -32,11 +32,13 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <mqtt3_protocol.h>
+#include <memory_mosq.h>
 #include <net_mosq.h>
 
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 {
-	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBACK to %s (Mid: %d)", context->id, mid);
+	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBACK to %s (Mid: %d)", context->core.id, mid);
 	return mqtt3_send_command_with_mid(context, PUBACK, mid);
 }
 
@@ -45,71 +47,61 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 	struct _mosquitto_packet *packet = NULL;
 	int packetlen;
 
-	if(!context || context->sock == -1 || !topic) return 1;
+	if(!context || context->core.sock == -1 || !topic) return 1;
 
-	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBLISH to %s (%d, %d, %d, %d, '%s', ... (%ld bytes))", context->id, dup, qos, retain, mid, topic, (long)payloadlen);
+	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBLISH to %s (%d, %d, %d, %d, '%s', ... (%ld bytes))", context->core.id, dup, qos, retain, mid, topic, (long)payloadlen);
 
 	packetlen = 2+strlen(topic) + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
-	packet = mqtt3_calloc(1, sizeof(struct _mosquitto_packet));
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet){
-		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed allocating packet memory.");
-		return 1;
+		mqtt3_log_printf(MOSQ_LOG_DEBUG, "PUBLISH failed allocating packet memory.");
+		return MOSQ_ERR_NOMEM;
 	}
 
 	packet->command = PUBLISH | ((dup&0x1)<<3) | (qos<<1) | retain;
 	packet->remaining_length = packetlen;
-	packet->payload = mqtt3_malloc(sizeof(uint8_t)*packetlen);
+	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){
-		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed allocating payload memory.");
-		mqtt3_free(packet);
-		return 1;
+		mqtt3_log_printf(MOSQ_LOG_DEBUG, "PUBLISH failed allocating payload memory.");
+		_mosquitto_free(packet);
+		return MOSQ_ERR_NOMEM;
 	}
 	/* Variable header (topic string) */
-	if(_mosquitto_write_string(packet, topic, strlen(topic))){
-		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed writing topic.");
-		mqtt3_free(packet);
-	  	return 1;
-	}
+	_mosquitto_write_string(packet, topic, strlen(topic));
 	if(qos > 0){
-		if(_mosquitto_write_uint16(packet, mid)){
-			mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed writing mid.");
-			mqtt3_free(packet);
-			return 1;
-		}
+		_mosquitto_write_uint16(packet, mid);
 	}
 
 	/* Payload */
-	if(payloadlen && _mosquitto_write_bytes(packet, payload, payloadlen)){
-		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed writing payload.");
-		mqtt3_free(packet);
-		return 1;
+	if(payloadlen){
+		_mosquitto_write_bytes(packet, payload, payloadlen);
 	}
 
 	if(mqtt3_net_packet_queue(context, packet)){
-		mqtt3_log_printf(MQTT3_LOG_DEBUG, "PUBLISH failed queuing packet.");
-		mqtt3_free(packet);
+		mqtt3_log_printf(MOSQ_LOG_DEBUG, "PUBLISH failed queuing packet.");
+		_mosquitto_free(packet);
 		return 1;
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_raw_pubcomp(mqtt3_context *context, uint16_t mid)
 {
-	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBCOMP to %s (Mid: %d)", context->id, mid);
+	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBCOMP to %s (Mid: %d)", context->core.id, mid);
 	return mqtt3_send_command_with_mid(context, PUBCOMP, mid);
 }
 
 int mqtt3_raw_pubrec(mqtt3_context *context, uint16_t mid)
 {
-	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBREC to %s (Mid: %d)", context->id, mid);
+	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBREC to %s (Mid: %d)", context->core.id, mid);
 	return mqtt3_send_command_with_mid(context, PUBREC, mid);
 }
 
 int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid)
 {
-	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PUBREL to %s (Mid: %d)", context->id, mid);
+	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBREL to %s (Mid: %d)", context->core.id, mid);
 	return mqtt3_send_command_with_mid(context, PUBREL, mid);
 }
 
@@ -118,22 +110,22 @@ int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_
 {
 	struct _mosquitto_packet *packet = NULL;
 
-	packet = mqtt3_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packet->command = command;
 	packet->remaining_length = 2;
-	packet->payload = mqtt3_malloc(sizeof(uint8_t)*2);
+	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*2);
 	if(!packet->payload){
-		mqtt3_free(packet);
-		return 1;
+		_mosquitto_free(packet);
+		return MOSQ_ERR_NOMEM;
 	}
 	packet->payload[0] = MOSQ_MSB(mid);
 	packet->payload[1] = MOSQ_LSB(mid);
 
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 /* For DISCONNECT, PINGREQ and PINGRESP */
@@ -141,29 +133,29 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command)
 {
 	struct _mosquitto_packet *packet = NULL;
 
-	packet = mqtt3_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packet->command = command;
 	packet->remaining_length = 0;
 
 	if(mqtt3_net_packet_queue(context, packet)){
-		mqtt3_free(packet);
+		_mosquitto_free(packet);
 		return 1;
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_raw_pingreq(mqtt3_context *context)
 {
-	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PINGREQ to %s", context->id);
+	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PINGREQ to %s", context->core.id);
 	return mqtt3_send_simple_command(context, PINGREQ);
 }
 
 int mqtt3_raw_pingresp(mqtt3_context *context)
 {
-	if(context) mqtt3_log_printf(MQTT3_LOG_DEBUG, "Sending PINGRESP to %s", context->id);
+	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PINGRESP to %s", context->core.id);
 	return mqtt3_send_simple_command(context, PINGRESP);
 }
 

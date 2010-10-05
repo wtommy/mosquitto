@@ -31,6 +31,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <mqtt3_protocol.h>
+#include <memory_mosq.h>
 
 int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, const char *will_msg, uint16_t keepalive, bool clean_session)
 {
@@ -39,8 +41,8 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 
 	if(!context || !client_id) return 1;
 
-	packet = mqtt3_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	payloadlen = 2+strlen(client_id);
 	if(will && will_topic && will_msg){
@@ -51,28 +53,28 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 
 	packet->command = CONNECT;
 	packet->remaining_length = 12+payloadlen;
-	packet->payload = mqtt3_malloc(sizeof(uint8_t)*(12+payloadlen));
+	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*(12+payloadlen));
 	if(!packet->payload){
-		mqtt3_free(packet);
-		return 1;
+		_mosquitto_free(packet);
+		return MOSQ_ERR_NOMEM;
 	}
 
 	/* Variable header */
-	if(_mosquitto_write_string(packet, PROTOCOL_NAME, strlen(PROTOCOL_NAME))) return 1;
-	if(_mosquitto_write_byte(packet, PROTOCOL_VERSION)) return 1;
-	if(_mosquitto_write_byte(packet, ((will_retain&0x1)<<5) | ((will_qos&0x3)<<3) | ((will&0x1)<<2) | ((clean_session&0x1)<<1))) return 1;
-	if(_mosquitto_write_uint16(packet, keepalive)) return 1;
+	_mosquitto_write_string(packet, PROTOCOL_NAME, strlen(PROTOCOL_NAME));
+	_mosquitto_write_byte(packet, PROTOCOL_VERSION);
+	_mosquitto_write_byte(packet, ((will_retain&0x1)<<5) | ((will_qos&0x3)<<3) | ((will&0x1)<<2) | ((clean_session&0x1)<<1));
+	_mosquitto_write_uint16(packet, keepalive);
 
 	/* Payload */
-	if(_mosquitto_write_string(packet, client_id, strlen(client_id))) return 1;
+	_mosquitto_write_string(packet, client_id, strlen(client_id));
 	if(will){
-		if(_mosquitto_write_string(packet, will_topic, strlen(will_topic))) return 1;
-		if(_mosquitto_write_string(packet, will_msg, strlen(will_msg))) return 1;
+		_mosquitto_write_string(packet, will_topic, strlen(will_topic));
+		_mosquitto_write_string(packet, will_msg, strlen(will_msg));
 	}
 
-	context->keepalive = keepalive;
+	context->core.keepalive = keepalive;
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_raw_disconnect(mqtt3_context *context)
@@ -89,29 +91,29 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 
 	if(!context || !topic) return 1;
 
-	packet = mqtt3_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packetlen = 2 + 2+strlen(topic) + 1;
 
 	packet->command = SUBSCRIBE | (dup<<3) | (1<<1);
 	packet->remaining_length = packetlen;
-	packet->payload = mqtt3_malloc(sizeof(uint8_t)*packetlen);
+	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){
-		mqtt3_free(packet);
-		return 1;
+		_mosquitto_free(packet);
+		return MOSQ_ERR_NOMEM;
 	}
 
 	/* Variable header */
-	mid = mqtt3_db_mid_generate(context->id);
-	if(_mosquitto_write_uint16(packet, mid)) return 1;
+	mid = mqtt3_db_mid_generate(context->core.id);
+	_mosquitto_write_uint16(packet, mid);
 
 	/* Payload */
-	if(_mosquitto_write_string(packet, topic, strlen(topic))) return 1;
-	if(_mosquitto_write_byte(packet, topic_qos)) return 1;
+	_mosquitto_write_string(packet, topic, strlen(topic));
+	_mosquitto_write_byte(packet, topic_qos);
 
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 
@@ -124,27 +126,27 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic)
 
 	if(!context || !topic) return 1;
 
-	packet = mqtt3_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packetlen = 2 + 2+strlen(topic);
 
 	packet->command = SUBSCRIBE | (dup<<3) | (1<<1);
 	packet->remaining_length = packetlen;
-	packet->payload = mqtt3_malloc(sizeof(uint8_t)*packetlen);
+	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){
-		mqtt3_free(packet);
-		return 1;
+		_mosquitto_free(packet);
+		return MOSQ_ERR_NOMEM;
 	}
 
 	/* Variable header */
-	mid = mqtt3_db_mid_generate(context->id);
-	if(_mosquitto_write_uint16(packet, mid)) return 1;
+	mid = mqtt3_db_mid_generate(context->core.id);
+	_mosquitto_write_uint16(packet, mid);
 
 	/* Payload */
-	if(_mosquitto_write_string(packet, topic, strlen(topic))) return 1;
+	_mosquitto_write_string(packet, topic, strlen(topic));
 
 	if(mqtt3_net_packet_queue(context, packet)) return 1;
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 

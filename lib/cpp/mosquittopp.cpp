@@ -126,6 +126,11 @@ int mosquittopp::will_set(bool will, const char *topic, uint32_t payloadlen, con
 	return mosquitto_will_set(mosq, will, topic, payloadlen, payload, qos, retain);
 }
 
+int mosquittopp::username_pw_set(const char *username, const char *password)
+{
+	return mosquitto_username_pw_set(mosq, username, password);
+}
+
 int mosquittopp::publish(uint16_t *mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
 	return mosquitto_publish(mosq, mid, topic, payloadlen, payload, qos, retain);

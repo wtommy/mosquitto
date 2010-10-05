@@ -45,8 +45,9 @@ extern "C" {
 #endif
 
 #define LIBMOSQUITTO_MAJOR 0
-#define LIBMOSQUITTO_MINOR 8
-#define LIBMOSQUITTO_REVISION 1
+#define LIBMOSQUITTO_MINOR 9
+#define LIBMOSQUITTO_REVISION 0
+#define LIBMOSQUITTO_VERSION_NUMBER (LIBMOSQUITTO_MAJOR*1000000+LIBMOSQUITTO_MINOR*1000+LIBMOSQUITTO_REVISION)
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -62,6 +63,15 @@ extern "C" {
 #define MOSQ_LOG_WARNING 0x04
 #define MOSQ_LOG_ERR 0x08
 #define MOSQ_LOG_DEBUG 0x10
+
+/* Error values */
+#define MOSQ_ERR_SUCCESS 0
+#define MOSQ_ERR_NOMEM 1
+#define MOSQ_ERR_PROTOCOL 2
+#define MOSQ_ERR_INVAL 3
+#define MOSQ_ERR_NO_CONN 4
+#define MOSQ_ERR_CONN_REFUSED 5
+#define MOSQ_ERR_NOT_FOUND 6
 
 struct mosquitto_message{
 	uint16_t mid;
@@ -147,6 +157,21 @@ mosq_EXPORT int mosquitto_will_set(struct mosquitto *mosq, bool will, const char
  * Returns 0 on success, 1 on failure.
  */
 
+mosq_EXPORT int mosquitto_username_pw_set(struct mosquitto *mosq, const char *username, const char *password);
+/* Configure username and password for a mosquitton instance. This is only
+ * supported by brokers that implement the MQTT spec v3.1. By default, no
+ * username or password will be sent.
+ * If username is NULL, the password argument is ignored.
+ * This must be called before calling mosquitto_connect().
+ *
+ * mosq :     a valid mosquitto instance
+ * username : the username to send. Set to NULL to disable username and
+ *            password.
+ * password : the password to send. Set to NULL when username is valid in order
+ *            to send just a username.
+ *
+ * Returns 0 on success, 1 on failure.
+ */
 
 mosq_EXPORT int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session);
 /* Connect to an MQTT broker.
@@ -222,6 +247,17 @@ mosq_EXPORT int mosquitto_unsubscribe(struct mosquitto *mosq, uint16_t *mid, con
  * Returns 0 on success, 1 on failure.
  */
 
+mosq_EXPORT int mosquitto_message_copy(struct mosquitto_message *dst, const struct mosquitto_message *src);
+/* Copy the contents of a mosquitto message to another message.
+ * Useful for preserving a message received in the on_message() callback.
+ *
+ * Both dst and src must point to valid memory locations.
+ *
+ * Return 0 on success, 1 on failure.
+ */
+
+mosq_EXPORT void mosquitto_message_free(struct mosquitto_message **message);
+/* Completely free a mosquitto message structure. */
 
 mosq_EXPORT int mosquitto_loop(struct mosquitto *mosq, int timeout);
 /* The main network loop for the client. You must call this frequently in order

@@ -1,10 +1,11 @@
 add_subdirectory(cpp)
 
-include_directories(${mosquitto_SOURCE_DIR}/lib)
+include_directories(${mosquitto_SOURCE_DIR} ${mosquitto_SOURCE_DIR}/lib)
 link_directories(${mosquitto_SOURCE_DIR}/lib)
 
-add_library(mosquitto SHARED
+add_library(libmosquitto SHARED
 	logging_mosq.c logging_mosq.h
+	memory_mosq.c memory_mosq.h
 	messages_mosq.c messages_mosq.h
 	mosquitto.c mosquitto.h
 	mqtt3_protocol.h
@@ -15,9 +16,17 @@ add_library(mosquitto SHARED
 	send_mosq.c send_mosq.h
 	util_mosq.c util_mosq.h)
 
-target_link_libraries(mosquitto ws2_32)
+if (WIN32)
+	target_link_libraries(libmosquitto ws2_32)
+endif (WIN32)
 
-install(TARGETS mosquitto RUNTIME DESTINATION ${BINDEST} LIBRARY DESTINATION ${LIBDEST})
+set_target_properties(libmosquitto PROPERTIES
+	OUTPUT_NAME mosquitto
+	VERSION ${VERSION}
+	SOVERSION 0
+)
+
+install(TARGETS libmosquitto RUNTIME DESTINATION ${BINDEST} LIBRARY DESTINATION ${LIBDEST})
 
 if (UNIX)
 	install(CODE "EXEC_PROGRAM(/sbin/ldconfig)")

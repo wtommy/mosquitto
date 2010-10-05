@@ -42,6 +42,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 
 #include <mqtt3.h>
+#include <memory_mosq.h>
 
 static int run;
 #ifdef WITH_WRAP
@@ -76,24 +77,24 @@ int drop_privileges(mqtt3_config *config)
 		if(config->user){
 			pwd = getpwnam(config->user);
 			if(!pwd){
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid user '%s'.", config->user);
+				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid user '%s'.", config->user);
 				return 1;
 			}
 			if(setgid(pwd->pw_gid) == -1){
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s.", strerror(errno));
+				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
 				return 1;
 			}
 			if(setuid(pwd->pw_uid) == -1){
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s.", strerror(errno));
+				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
 				return 1;
 			}
 		}
 		if(geteuid() == 0 || getegid() == 0){
-			mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Mosquitto should not be run as root/administrator.");
+			mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Mosquitto should not be run as root/administrator.");
 		}
 	}
 #endif
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int loop(mqtt3_config *config, int *listensock, int listener_max)
@@ -121,8 +122,8 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 		if(new_clients){
 			client_max = -1;
 			for(i=0; i<context_count; i++){
-				if(contexts[i] && contexts[i]->sock != -1 && contexts[i]->sock > sock_max){
-					client_max = contexts[i]->sock;
+				if(contexts[i] && contexts[i]->core.sock != -1 && contexts[i]->core.sock > sock_max){
+					client_max = contexts[i]->core.sock;
 				}
 			}
 			new_clients = 0;
@@ -135,10 +136,10 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 		}
 		if(sock_max+1 > pollfd_count){
 			pollfd_count = sock_max+1;
-			pollfds = mqtt3_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
+			pollfds = _mosquitto_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
 			if(!pollfds){
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Out of memory.");
-				return 1;
+				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+				return MOSQ_ERR_NOMEM;
 			}
 		}
 
@@ -153,22 +154,22 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 		now = time(NULL);
 		for(i=0; i<context_count; i++){
 			if(contexts[i]){
-				if(contexts[i]->sock != -1){
+				if(contexts[i]->core.sock != -1){
 					if(contexts[i]->bridge){
 						mqtt3_check_keepalive(contexts[i]);
 					}
-					if(!(contexts[i]->keepalive) || now - contexts[i]->last_msg_in < contexts[i]->keepalive*3/2){
+					if(!(contexts[i]->core.keepalive) || now - contexts[i]->core.last_msg_in < contexts[i]->core.keepalive*3/2){
 						if(mqtt3_db_message_write(contexts[i])){
 							// FIXME - do something here.
 						}
-						pollfds[contexts[i]->sock].fd = contexts[i]->sock;
-						pollfds[contexts[i]->sock].events = POLLIN | POLLPRI;
-						pollfds[contexts[i]->sock].revents = 0;
-						if(contexts[i]->out_packet){
-							pollfds[contexts[i]->sock].events |= POLLOUT;
+						pollfds[contexts[i]->core.sock].fd = contexts[i]->core.sock;
+						pollfds[contexts[i]->core.sock].events = POLLIN | POLLPRI;
+						pollfds[contexts[i]->core.sock].revents = 0;
+						if(contexts[i]->core.out_packet){
+							pollfds[contexts[i]->core.sock].events |= POLLOUT;
 						}
 					}else{
-						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", contexts[i]->id);
+						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", contexts[i]->core.id);
 						/* Client has exceeded keepalive*1.5 */
 						mqtt3_db_client_will_queue(contexts[i]);
 						if(contexts[i]->bridge){
@@ -227,8 +228,8 @@ int loop(mqtt3_config *config, int *listensock, int listener_max)
 		}
 	}
 
-	if(pollfds) mqtt3_free(pollfds);
-	return 0;
+	if(pollfds) _mosquitto_free(pollfds);
+	return MOSQ_ERR_SUCCESS;
 }
 
 /* Error ocurred, probably an fd has been closed. 
@@ -240,13 +241,13 @@ static void loop_handle_errors(void)
 	int i;
 
 	for(i=0; i<context_count; i++){
-		if(contexts[i] && fstat(contexts[i]->sock, &statbuf) == -1){
+		if(contexts[i] && fstat(contexts[i]->core.sock, &statbuf) == -1){
 			if(errno == EBADF){
-				if(!contexts[i]->disconnecting){
-					mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket error on client %s, disconnecting.", contexts[i]->id);
+				if(contexts[i]->core.state != mosq_cs_disconnecting){
+					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket error on client %s, disconnecting.", contexts[i]->core.id);
 					mqtt3_db_client_will_queue(contexts[i]);
 				}else{
-					mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
+					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", contexts[i]->core.id);
 				}
 				if(contexts[i]->bridge){
 					mqtt3_socket_close(contexts[i]);
@@ -264,14 +265,14 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 	int i;
 
 	for(i=0; i<context_count; i++){
-		if(contexts[i] && contexts[i]->sock != -1){
-			if(pollfds[contexts[i]->sock].revents & POLLOUT){
+		if(contexts[i] && contexts[i]->core.sock != -1){
+			if(pollfds[contexts[i]->core.sock].revents & POLLOUT){
 				if(mqtt3_net_write(contexts[i])){
-					if(!contexts[i]->disconnecting){
-						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket write error on client %s, disconnecting.", contexts[i]->id);
+					if(contexts[i]->core.state != mosq_cs_disconnecting){
+						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket write error on client %s, disconnecting.", contexts[i]->core.id);
 						mqtt3_db_client_will_queue(contexts[i]);
 					}else{
-						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
+						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", contexts[i]->core.id);
 					}
 					/* Write error or other that means we should disconnect */
 					/* Bridges don't get cleaned up because they will reconnect later. */
@@ -284,14 +285,14 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 				}
 			}
 		}
-		if(contexts[i] && contexts[i]->sock != -1){
-			if(pollfds[contexts[i]->sock].revents & POLLIN){
+		if(contexts[i] && contexts[i]->core.sock != -1){
+			if(pollfds[contexts[i]->core.sock].revents & POLLIN){
 				if(mqtt3_net_read(contexts[i])){
-					if(!contexts[i]->disconnecting){
-						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Socket read error on client %s, disconnecting.", contexts[i]->id);
+					if(contexts[i]->core.state != mosq_cs_disconnecting){
+						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket read error on client %s, disconnecting.", contexts[i]->core.id);
 						mqtt3_db_client_will_queue(contexts[i]);
 					}else{
-						mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client %s disconnected.", contexts[i]->id);
+						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", contexts[i]->core.id);
 					}
 					/* Read error or other that means we should disconnect */
 					/* Bridges don't get cleaned up because they will reconnect later. */
@@ -316,7 +317,7 @@ void mqtt3_context_close_duplicate(int sock)
 
 	for(i=0; i<context_count; i++){
 		if(contexts[i]){
-			if(contexts[i]->sock == sock){
+			if(contexts[i]->core.sock == sock){
 				contexts[i]->duplicate = true;
 				mqtt3_db_client_will_queue(contexts[i]);
 				mqtt3_context_cleanup(contexts[i]);
@@ -363,10 +364,10 @@ int main(int argc, char *argv[])
 			case 0:
 				break;
 			case -1:
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error in fork: %s", strerror(errno));
+				mqtt3_log_printf(MOSQ_LOG_ERR, "Error in fork: %s", strerror(errno));
 				return 1;
 			default:
-				return 0;
+				return MOSQ_ERR_SUCCESS;
 		}
 	}
 
@@ -376,25 +377,25 @@ int main(int argc, char *argv[])
 			fprintf(pid, "%d", getpid());
 			fclose(pid);
 		}else{
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to write pid file.");
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to write pid file.");
 			return 1;
 		}
 	}
 	if(drop_privileges(&config)) return 1;
 
 	context_count = 1;
-	contexts = mqtt3_malloc(sizeof(mqtt3_context*)*context_count);
-	if(!contexts) return 1;
+	contexts = _mosquitto_malloc(sizeof(mqtt3_context*)*context_count);
+	if(!contexts) return MOSQ_ERR_NOMEM;
 	contexts[0] = NULL;
 
 	if(mqtt3_db_open(&config)){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Couldn't open database.");
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Couldn't open database.");
 		return 1;
 	}
 	/* Initialise logging only after initialising the database in case we're
 	 * logging to topics */
 	mqtt3_log_init(config.log_type, config.log_dest);
-	mqtt3_log_printf(MQTT3_LOG_INFO, "mosquitto version %s (build date %s) starting", VERSION, TIMESTAMP);
+	mqtt3_log_printf(MOSQ_LOG_INFO, "mosquitto version %s (build date %s) starting", VERSION, TIMESTAMP);
 
 	/* Set static $SYS messages */
 	snprintf(buf, 1024, "mosquitto version %s", VERSION);
@@ -405,7 +406,7 @@ int main(int argc, char *argv[])
 	mqtt3_db_messages_easy_queue("", "$SYS/broker/changeset", 2, strlen(buf), (uint8_t *)buf, 1);
 
 	listener_max = -1;
-	listensock = mqtt3_malloc(sizeof(int)*config.iface_count);
+	listensock = _mosquitto_malloc(sizeof(int)*config.iface_count);
 	for(i=0; i<config.iface_count; i++){
 		if(config.iface[i].iface){
 			listensock[i] = mqtt3_socket_listen_if(config.iface[i].iface, config.iface[i].port);
@@ -413,7 +414,7 @@ int main(int argc, char *argv[])
 			listensock[i] = mqtt3_socket_listen(config.iface[i].port);
 		}
 		if(listensock[i] == -1){
-			mqtt3_free(contexts);
+			_mosquitto_free(contexts);
 			mqtt3_db_close();
 			if(config.pid_file){
 				remove(config.pid_file);
@@ -433,14 +434,14 @@ int main(int argc, char *argv[])
 
 	for(i=0; i<config.bridge_count; i++){
 		if(mqtt3_bridge_new(contexts, &context_count, &(config.bridges[i]))){
-			mqtt3_log_printf(MQTT3_LOG_WARNING, "Warning: Unable to connect to bridge %s.", 
+			mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Unable to connect to bridge %s.", 
 					config.bridges[i].name);
 		}
 	}
 	run = 1;
 	rc = loop(&config, listensock, listener_max);
 
-	mqtt3_log_printf(MQTT3_LOG_INFO, "mosquitto version %s terminating", VERSION);
+	mqtt3_log_printf(MOSQ_LOG_INFO, "mosquitto version %s terminating", VERSION);
 	mqtt3_log_close();
 
 	for(i=0; i<context_count; i++){
@@ -448,7 +449,7 @@ int main(int argc, char *argv[])
 			mqtt3_context_cleanup(contexts[i]);
 		}
 	}
-	mqtt3_free(contexts);
+	_mosquitto_free(contexts);
 
 	if(listensock){
 		for(i=0; i<config.iface_count; i++){
@@ -456,7 +457,7 @@ int main(int argc, char *argv[])
 				close(listensock[i]);
 			}
 		}
-		mqtt3_free(listensock);
+		_mosquitto_free(listensock);
 	}
 
 	if(config.persistence && config.autosave_interval){

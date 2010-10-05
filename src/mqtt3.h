@@ -42,29 +42,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #define __attribute__(attrib)
 #endif
 
-/* For version 3 of the MQTT protocol */
-
-#define PROTOCOL_NAME "MQIsdp"
-#define PROTOCOL_VERSION 3
-
 /* Database macros */
 #define MQTT_DB_VERSION 2
-
-/* Message types */
-#define CONNECT 0x10
-#define CONNACK 0x20
-#define PUBLISH 0x30
-#define PUBACK 0x40
-#define PUBREC 0x50
-#define PUBREL 0x60
-#define PUBCOMP 0x70
-#define SUBSCRIBE 0x80
-#define SUBACK 0x90
-#define UNSUBSCRIBE 0xA0
-#define UNSUBACK 0xB0
-#define PINGREQ 0xC0
-#define PINGRESP 0xD0
-#define DISCONNECT 0xE0
 
 /* Log destinations */
 #define MQTT3_LOG_NONE 0x00
@@ -74,13 +53,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MQTT3_LOG_STDERR 0x08
 #define MQTT3_LOG_TOPIC 0x10
 #define MQTT3_LOG_ALL 0xFF
-
-/* Log types */
-#define MQTT3_LOG_INFO 0x01
-#define MQTT3_LOG_NOTICE 0x02
-#define MQTT3_LOG_WARNING 0x04
-#define MQTT3_LOG_ERR 0x08
-#define MQTT3_LOG_DEBUG 0x10
 
 enum mqtt3_bridge_direction{
 	bd_out = 0,
@@ -105,18 +77,10 @@ struct _mqtt3_bridge{
 };
 
 typedef struct _mqtt3_context{
-	int sock;
-	time_t last_msg_in;
-	time_t last_msg_out;
-	uint16_t keepalive;
+	struct _mosquitto_core core;
 	bool clean_session;
-	bool connected;
-	bool disconnecting;
 	bool duplicate;
-	char *id;
 	char *address;
-	struct _mosquitto_packet in_packet;
-	struct _mosquitto_packet *out_packet;
 	struct _mqtt3_bridge *bridge;
 } mqtt3_context;
 
@@ -302,16 +266,6 @@ void mqtt3_db_vacuum(void);
 mqtt3_context *mqtt3_context_init(int sock);
 void mqtt3_context_cleanup(mqtt3_context *context);
 void mqtt3_context_close_duplicate(int sock);
-
-/* ============================================================
- * Memory functions
- * ============================================================ */
-void *mqtt3_calloc(size_t nmemb, size_t size);
-void mqtt3_free(void *mem);
-void *mqtt3_malloc(size_t size);
-uint32_t mqtt3_memory_used(void);
-void *mqtt3_realloc(void *ptr, size_t size);
-char *mqtt3_strdup(const char *s);
 
 /* ============================================================
  * Logging functions

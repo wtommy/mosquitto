@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 #include <net_mosq.h>
 #include <mqtt3.h>
+#include <memory_mosq.h>
 
 int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3_bridge *bridge)
 {
@@ -43,7 +44,7 @@ int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3
 
 	new_context = mqtt3_context_init(-1);
 	if(!new_context){
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 	new_context->bridge = bridge;
 	for(i=0; i<(*context_count); i++){
@@ -54,14 +55,19 @@ int mqtt3_bridge_new(mqtt3_context **contexts, int *context_count, struct _mqtt3
 	}
 	if(i==(*context_count)){
 		(*context_count)++;
-		tmp_contexts = mqtt3_realloc(contexts, sizeof(mqtt3_context*)*(*context_count));
+		tmp_contexts = _mosquitto_realloc(contexts, sizeof(mqtt3_context*)*(*context_count));
 		if(tmp_contexts){
 			contexts = tmp_contexts;
 			contexts[(*context_count)-1] = new_context;
+		}else{
+			return MOSQ_ERR_NOMEM;
 		}
 	}
 
-	new_context->id = mqtt3_strdup(bridge->name);
+	new_context->core.id = _mosquitto_strdup(bridge->name);
+	if(!new_context->core.id){
+		return MOSQ_ERR_NOMEM;
+	}
 	if(!mqtt3_db_client_insert(new_context, 0, 0, 0, NULL, NULL)){
 		return mqtt3_bridge_connect(new_context);
 	}
@@ -75,40 +81,37 @@ int mqtt3_bridge_connect(mqtt3_context *context)
 
 	if(!context || !context->bridge) return 1;
 
-	context->connected = false;
-	context->disconnecting = false;
+	context->core.state = mosq_cs_new;
 	context->duplicate = false;
-	context->sock = -1;
-	context->last_msg_in = time(NULL);
-	context->last_msg_out = time(NULL);
-	context->keepalive = context->bridge->keepalive;
+	context->core.sock = -1;
+	context->core.last_msg_in = time(NULL);
+	context->core.last_msg_out = time(NULL);
+	context->core.keepalive = context->bridge->keepalive;
 	context->clean_session = context->bridge->clean_session;
-	context->in_packet.payload = NULL;
+	context->core.in_packet.payload = NULL;
 	mqtt3_bridge_packet_cleanup(context);
 
-	mqtt3_log_printf(MQTT3_LOG_NOTICE, "Connecting bridge %s", context->bridge->name);
+	mqtt3_log_printf(MOSQ_LOG_NOTICE, "Connecting bridge %s", context->bridge->name);
 	new_sock = _mosquitto_socket_connect(context->bridge->address, context->bridge->port);
 	if(new_sock == -1){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error creating bridge.");
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error creating bridge.");
 		return 1;
 	}
 
-	context->sock = new_sock;
+	context->core.sock = new_sock;
 
-	context->connected = false;
-	context->disconnecting = false;
-	context->last_msg_in = time(NULL);
+	context->core.last_msg_in = time(NULL);
 	mqtt3_db_client_update(context, 0, 0, 0, NULL, NULL);
-	if(mqtt3_raw_connect(context, context->id,
+	if(mqtt3_raw_connect(context, context->core.id,
 			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
-			context->keepalive, context->clean_session)){
+			context->core.keepalive, context->clean_session)){
 
 		return 1;
 	}
 
 	for(i=0; i<context->bridge->topic_count; i++){
 		if(context->bridge->topics[i].direction == bd_out || context->bridge->topics[i].direction == bd_both){
-			if(mqtt3_db_sub_insert(context->id, context->bridge->topics[i].topic, 2)) return 1;
+			if(mqtt3_db_sub_insert(context->core.id, context->bridge->topics[i].topic, 2)) return 1;
 		}
 	}
 
@@ -120,12 +123,12 @@ void mqtt3_bridge_packet_cleanup(mqtt3_context *context)
 	struct _mosquitto_packet *packet;
 	if(!context) return;
 
-    while(context->out_packet){
-		_mosquitto_packet_cleanup(context->out_packet);
-		packet = context->out_packet;
-		context->out_packet = context->out_packet->next;
-		mqtt3_free(packet);
+    while(context->core.out_packet){
+		_mosquitto_packet_cleanup(context->core.out_packet);
+		packet = context->core.out_packet;
+		context->core.out_packet = context->core.out_packet->next;
+		_mosquitto_free(packet);
 	}
 
-	_mosquitto_packet_cleanup(&(context->in_packet));
+	_mosquitto_packet_cleanup(&(context->core.in_packet));
 }

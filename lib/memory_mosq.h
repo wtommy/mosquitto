@@ -26,18 +26,17 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef _MESSAGES_MOSQ_H_
-#define _MESSAGES_MOSQ_H_
 
-#include <mosquitto_internal.h>
-#include <mosquitto.h>
+#ifndef _MEMORY_MOSQ_H_
+#define _MEMORY_MOSQ_H_
 
-void _mosquitto_message_cleanup_all(struct mosquitto *mosq);
-void _mosquitto_message_cleanup(struct mosquitto_message_all **message);
-int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir);
-void _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message_all *message);
-int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, struct mosquitto_message_all **message);
-void _mosquitto_message_retry_check(struct mosquitto *mosq);
-int _mosquitto_message_update(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, enum mosquitto_msg_state state);
+#include <sys/types.h>
+
+void *_mosquitto_calloc(size_t nmemb, size_t size);
+void _mosquitto_free(void *mem);
+void *_mosquitto_malloc(size_t size);
+unsigned long _mosquitto_memory_used(void);
+void *_mosquitto_realloc(void *ptr, size_t size);
+char *_mosquitto_strdup(const char *s);
 
 #endif

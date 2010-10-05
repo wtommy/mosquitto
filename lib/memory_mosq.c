@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2010, Roger Light <roger@atchoo.org>
+Copyright (c) 2009,2010, Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,18 +26,84 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef _MESSAGES_MOSQ_H_
-#define _MESSAGES_MOSQ_H_
 
-#include <mosquitto_internal.h>
-#include <mosquitto.h>
+#include <config.h>
 
-void _mosquitto_message_cleanup_all(struct mosquitto *mosq);
-void _mosquitto_message_cleanup(struct mosquitto_message_all **message);
-int _mosquitto_message_delete(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir);
-void _mosquitto_message_queue(struct mosquitto *mosq, struct mosquitto_message_all *message);
-int _mosquitto_message_remove(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, struct mosquitto_message_all **message);
-void _mosquitto_message_retry_check(struct mosquitto *mosq);
-int _mosquitto_message_update(struct mosquitto *mosq, uint16_t mid, enum mosquitto_msg_direction dir, enum mosquitto_msg_state state);
-
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#ifdef WITH_MEMORY_TRACKING
+#include <malloc.h>
 #endif
+
+#include <memory_mosq.h>
+
+#ifdef WITH_MEMORY_TRACKING
+static unsigned long memcount;
+#endif
+
+void *_mosquitto_calloc(size_t nmemb, size_t size)
+{
+	void *mem = calloc(nmemb, size);
+
+#ifdef WITH_MEMORY_TRACKING
+	memcount += malloc_usable_size(mem);
+#endif
+
+	return mem;
+}
+
+void _mosquitto_free(void *mem)
+{
+#ifdef WITH_MEMORY_TRACKING
+	memcount -= malloc_usable_size(mem);
+#endif
+	free(mem);
+}
+
+void *_mosquitto_malloc(size_t size)
+{
+	void *mem = malloc(size);
+
+#ifdef WITH_MEMORY_TRACKING
+	memcount += malloc_usable_size(mem);
+#endif
+
+	return mem;
+}
+
+#ifdef WITH_MEMORY_TRACKING
+unsigned long _mosquitto_memory_used(void)
+{
+	return memcount;
+}
+#endif
+
+void *_mosquitto_realloc(void *ptr, size_t size)
+{
+	void *mem;
+#ifdef WITH_MEMORY_TRACKING
+	if(ptr){
+		memcount -= malloc_usable_size(ptr);
+	}
+#endif
+	mem = realloc(ptr, size);
+
+#ifdef WITH_MEMORY_TRACKING
+	memcount += malloc_usable_size(mem);
+#endif
+
+	return mem;
+}
+
+char *_mosquitto_strdup(const char *s)
+{
+	char *str = strdup(s);
+
+#ifdef WITH_MEMORY_TRACKING
+	memcount += malloc_usable_size(str);
+#endif
+
+	return str;
+}
+

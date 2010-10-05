@@ -35,7 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <time.h>
 #include <mosquitto.h>
 
-class mosquittopp {
+class mosq_EXPORT mosquittopp {
 	private:
 		struct mosquitto *mosq;
 	public:
@@ -48,6 +48,7 @@ class mosquittopp {
 		int socket();
 		int log_init(int priorities, int destinations);
 		int will_set(bool will, const char *topic, uint32_t payloadlen=0, const uint8_t *payload=NULL, int qos=0, bool retain=false);
+		int username_pw_set(const char *username, const char *password);
 		int connect(const char *host, int port=1883, int keepalive=60, bool clean_session=true);
 		int disconnect();
 		int publish(uint16_t *mid, const char *topic, uint32_t payloadlen=0, const uint8_t *payload=NULL, int qos=0, bool retain=false);

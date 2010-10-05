@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import ctypes
 import gnomeapplet
 import gobject
 import gtk
@@ -16,9 +15,8 @@ class CurrentCostMQTT(gnomeapplet.Applet):
 		return True
 
 	def on_message(self, msg):
-		# Message format is "timestamp power"
-		tup = msg.payload.split(" ")
-		self.label.set_text(tup[1]+"W")
+		# Message format is "power"
+		self.label.set_text(msg.payload+"W")
 
 	def set_label(self, val):
 		self.label.set_text(val)

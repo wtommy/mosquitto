@@ -108,6 +108,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <memory_mosq.h>
 
 static sqlite3 *db = NULL;
 static char *db_filepath = NULL;
@@ -155,7 +156,7 @@ int mqtt3_db_open(mqtt3_config *config)
 	}
 
 	if(sqlite3_open_v2(":memory:", &db, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", sqlite3_errmsg(db));
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", sqlite3_errmsg(db));
 		return 1;
 	}
 
@@ -163,11 +164,11 @@ int mqtt3_db_open(mqtt3_config *config)
 		if(_mqtt3_db_tables_create()) return 1;
 	}else{
 		if(config->persistence_location && strlen(config->persistence_location)){
-			db_filepath = mqtt3_malloc(strlen(config->persistence_location) + strlen(config->persistence_file) + 1);
+			db_filepath = _mosquitto_malloc(strlen(config->persistence_location) + strlen(config->persistence_file) + 1);
 			if(!db_filepath) return 1;
 			sprintf(db_filepath, "%s%s", config->persistence_location, config->persistence_file);
 		}else{
-			db_filepath = mqtt3_strdup(config->persistence_file);
+			db_filepath = _mosquitto_strdup(config->persistence_file);
 		}
 		dbrc = sqlite3_open_v2(db_filepath, &restore_db, SQLITE_OPEN_READONLY, NULL);
 		if(dbrc == SQLITE_OK){
@@ -178,16 +179,16 @@ int mqtt3_db_open(mqtt3_config *config)
 				if(_mqtt3_db_version_check()){
 #if defined(WITH_BROKER) && defined(WITH_DB_UPGRADE)
 					if(_mqtt3_db_upgrade()){
-						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to upgrade database.");
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to upgrade database.");
 						return 1;
 					}
 #else
-					mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Invalid database version.");
+					mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid database version.");
 					return 1;
 #endif
 				}
 			}else{
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Couldn't restore database %s (%d).", db_filepath, dbrc);
+				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Couldn't restore database %s (%d).", db_filepath, dbrc);
 				return 1;
 			}
 			sqlite3_close(restore_db);
@@ -198,19 +199,19 @@ int mqtt3_db_open(mqtt3_config *config)
 					case ENOENT:
 						/* File doesn't exist - ok to create */
 						if(_mqtt3_db_tables_create()){
-							mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to populate new database. Try restarting mosquitto.");
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to populate new database. Try restarting mosquitto.");
 							return 1;
 						}
 						break;
 					case EACCES:
-						mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Permission denied trying to restore persistent database %s.", db_filepath);
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Permission denied trying to restore persistent database %s.", db_filepath);
 						return 1;
 					default:
-						mqtt3_log_printf(MQTT3_LOG_ERR, "%s", strerror(errno));
+						mqtt3_log_printf(MOSQ_LOG_ERR, "%s", strerror(errno));
 						return 1;
 				}
 			}else{
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Possibly corrupt database file. Try restarting mosquitto.");
+				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Possibly corrupt database file. Try restarting mosquitto.");
 				fclose(fptr);
 			}
 		}
@@ -220,7 +221,7 @@ int mqtt3_db_open(mqtt3_config *config)
 	sqlite3_enable_load_extension(db, 1);
 	if(sqlite3_load_extension(db, config->ext_sqlite_regex, NULL, &errmsg) != SQLITE_OK){
 		if(errmsg){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", errmsg);
 			sqlite3_free(errmsg);
 		}
 		return 1;
@@ -240,9 +241,9 @@ int mqtt3_db_close(void)
 
 	sqlite3_shutdown();
 
-	if(db_filepath) mqtt3_free(db_filepath);
+	if(db_filepath) _mosquitto_free(db_filepath);
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_db_backup(bool cleanup)
@@ -253,12 +254,12 @@ int mqtt3_db_backup(bool cleanup)
 	sqlite3_backup *backup;
 
 	if(!db || !db_filepath) return 1;
-	mqtt3_log_printf(MQTT3_LOG_INFO, "Saving in-memory database to %s.", db_filepath);
+	mqtt3_log_printf(MOSQ_LOG_INFO, "Saving in-memory database to %s.", db_filepath);
 	if(cleanup){
 		mqtt3_db_store_clean();
 	}
 	if(sqlite3_open(db_filepath, &backup_db) != SQLITE_OK){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to open on-disk database for writing.");
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to open on-disk database for writing.");
 		return 1;
 	}
 	backup = sqlite3_backup_init(backup_db, "main", db, "main");
@@ -266,7 +267,7 @@ int mqtt3_db_backup(bool cleanup)
 		sqlite3_backup_step(backup, -1);
 		sqlite3_backup_finish(backup);
 	}else{
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Unable to save in-memory database to disk.");
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to save in-memory database to disk.");
 		rc = 1;
 	}
 	if(cleanup){
@@ -434,7 +435,7 @@ static int _mqtt3_db_upgrade(void)
 		}
 		switch(version){
 			case 0:
-				mqtt3_log_printf(MQTT3_LOG_ERR, "Error: Upgrading from DB version 0 not supported.");
+				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Upgrading from DB version 0 not supported.");
 				return 1;
 			case 1:
 				if(_mqtt3_db_upgrade_1_2()){
@@ -463,10 +464,10 @@ static int _mqtt3_db_upgrade_1_2(void)
 	old_db = db;
 	db = NULL;
 	
-	mqtt3_log_printf(MQTT3_LOG_NOTICE, "Upgrading database from version 1 to 2.");
+	mqtt3_log_printf(MOSQ_LOG_NOTICE, "Upgrading database from version 1 to 2.");
 
 	if(sqlite3_open_v2(":memory:", &db, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", sqlite3_errmsg(db));
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", sqlite3_errmsg(db));
 		db = old_db;
 		return 1;
 	}
@@ -635,7 +636,7 @@ static void _mqtt3_db_statements_finalize(sqlite3 *fdb)
  * If will=1 then a will will be stored for the client. In this case,
  * will_topic and will_message must not be NULL otherwise this will return
  * failure.
- * Returns 1 on failure (context or context->id is NULL, sqlite error)
+ * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
  * Returns 0 on success.
  */
 int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
@@ -644,15 +645,15 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 	int rc = 0;
 	int oldsock;
 
-	if(!context || !context->id) return 1;
+	if(!context || !context->core.id) return 1;
 	if(will && (!will_topic || !will_message)) return 1;
 
-	if(!mqtt3_db_client_find_socket(context->id, &oldsock)){
+	if(!mqtt3_db_client_find_socket(context->core.id, &oldsock)){
 		if(oldsock == -1){
 			/* Client is reconnecting after a disconnect */
-		}else if(oldsock != context->sock){
+		}else if(oldsock != context->core.sock){
 			/* Client is already connected, disconnect old version */
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Client %s already connected, closing old connection.", context->id);
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Client %s already connected, closing old connection.", context->core.id);
 #ifdef WITH_BROKER
 			mqtt3_context_close_duplicate(oldsock);
 #else
@@ -670,8 +671,8 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
 				return 1;
 			}
 		}
-		if(sqlite3_bind_int(stmt, 1, context->sock) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_text(stmt, 2, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_int(stmt, 1, context->core.sock) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(stmt, 2, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(stmt, 3, context->clean_session) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(stmt, 4, will) != SQLITE_OK) rc = 1;
 		if(sqlite3_bind_int(stmt, 5, will_retain) != SQLITE_OK) rc = 1;
@@ -701,7 +702,7 @@ int mqtt3_db_client_insert(mqtt3_context *context, int will, int will_retain, in
  * If will=1 then a will will be stored for the client. In this case,
  * will_topic and will_message must not be NULL otherwise this will return
  * failure.
- * Returns 1 on failure (context or context->id is NULL, sqlite error)
+ * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
  * Returns 0 on success.
  */
 int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, int will_qos, const char *will_topic, const char *will_message)
@@ -709,7 +710,7 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 
-	if(!context || !context->id) return 1;
+	if(!context || !context->core.id) return 1;
 	if(will && (!will_topic || !will_message)) return 1;
 
 	if(!stmt){
@@ -720,7 +721,7 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 			return 1;
 		}
 	}
-	if(sqlite3_bind_int(stmt, 1, context->sock) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_int(stmt, 1, context->core.sock) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 2, context->clean_session) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 3, will) != SQLITE_OK) rc = 1;
 	if(sqlite3_bind_int(stmt, 4, will_retain) != SQLITE_OK) rc = 1;
@@ -735,7 +736,7 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 	}else{
 		if(sqlite3_bind_text(stmt, 7, "", 0, SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	}
-	if(sqlite3_bind_text(stmt, 8, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 8, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -744,7 +745,7 @@ int mqtt3_db_client_update(mqtt3_context *context, int will, int will_retain, in
 }
 
 /* Called on client death to add a will to the message queue if the will exists.
- * Returns 1 on failure (context or context->id is NULL, sqlite error)
+ * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
  * Returns 0 on success (will queued or will not found)
  */
 int mqtt3_db_client_will_queue(mqtt3_context *context)
@@ -758,7 +759,7 @@ int mqtt3_db_client_will_queue(mqtt3_context *context)
 	int retain;
 	int will;
 
-	if(!context || !context->id) return 1;
+	if(!context || !context->core.id) return 1;
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("SELECT will,will_topic,will_qos,will_message,will_retain FROM clients WHERE id=?");
@@ -766,21 +767,21 @@ int mqtt3_db_client_will_queue(mqtt3_context *context)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 1, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	dbrc = sqlite3_step(stmt);
 	if(dbrc == SQLITE_ROW){
 		will = sqlite3_column_int(stmt, 0);
 		if(!will){
 			sqlite3_reset(stmt);
 			sqlite3_clear_bindings(stmt);
-			return 0;
+			return MOSQ_ERR_SUCCESS;
 		}
 		topic = (const char *)sqlite3_column_text(stmt, 1);
 		qos = sqlite3_column_int(stmt, 2);
 		payload = sqlite3_column_text(stmt, 3);
 		retain = sqlite3_column_int(stmt, 4);
 		if(!rc){
-			if(mqtt3_db_messages_easy_queue(context->id, topic, qos, strlen((const char *)payload), payload, retain)) rc = 1;
+			if(mqtt3_db_messages_easy_queue(context->core.id, topic, qos, strlen((const char *)payload), payload, retain)) rc = 1;
 		}
 	}else if(dbrc != SQLITE_DONE){
 		rc = 1;
@@ -821,7 +822,7 @@ int mqtt3_db_client_count(int *count)
 
 /* Delete a client from the database.
  * Called when clients with clean start enabled disconnect.
- * Returns 1 on failure (context or context->id is NULL, sqlite error)
+ * Returns 1 on failure (context or context->core.id is NULL, sqlite error)
  * Returns 0 on success.
  */
 int mqtt3_db_client_delete(mqtt3_context *context)
@@ -829,7 +830,7 @@ int mqtt3_db_client_delete(mqtt3_context *context)
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
 
-	if(!context || !(context->id)) return 1;
+	if(!context || !(context->core.id)) return 1;
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("DELETE FROM clients WHERE id=?");
@@ -837,7 +838,7 @@ int mqtt3_db_client_delete(mqtt3_context *context)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 1, context->id, strlen(context->id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 	if(sqlite3_step(stmt) != SQLITE_DONE) rc = 1;
 	sqlite3_reset(stmt);
 	sqlite3_clear_bindings(stmt);
@@ -895,7 +896,7 @@ static int _mqtt3_db_cleanup(void)
 		}
 		sqlite3_free(query);
 		if(errmsg){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", errmsg);
 			sqlite3_free(errmsg);
 		}
 	}else{
@@ -910,7 +911,7 @@ static int _mqtt3_db_cleanup(void)
 		}
 		sqlite3_free(query);
 		if(errmsg){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", errmsg);
 			sqlite3_free(errmsg);
 		}
 	}else{
@@ -925,7 +926,7 @@ static int _mqtt3_db_cleanup(void)
 		}
 		sqlite3_free(query);
 		if(errmsg){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", errmsg);
 			sqlite3_free(errmsg);
 		}
 	}else{
@@ -940,7 +941,7 @@ static int _mqtt3_db_cleanup(void)
 		}
 		sqlite3_free(query);
 		if(errmsg){
-			mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", errmsg);
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", errmsg);
 			sqlite3_free(errmsg);
 		}
 	}else{
@@ -1054,27 +1055,27 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, enum mosquitto_
 	/* Warning: Don't start transaction in this function. */
 	int rc = 0;
 	static sqlite3_stmt *stmt = NULL;
-	static sqlite3_stmt *select_stmt = NULL;
+	static sqlite3_stmt *count_stmt = NULL;
 	int count = 0;
 	int sock = -1;
 	int limited = 0;
 
 	if(!client_id || !store_id) return 1;
 
-	if(!select_stmt){
-		select_stmt = _mqtt3_db_statement_prepare("SELECT "
+	if(!count_stmt){
+		count_stmt = _mqtt3_db_statement_prepare("SELECT "
 				"(SELECT COUNT(*) FROM messages WHERE client_id=?),"
 				"(SELECT sock FROM clients WHERE id=?)");
-		if(!select_stmt){
+		if(!count_stmt){
 			return 1;
 		}
 	}
 	if(max_inflight || max_queued){
-		if(sqlite3_bind_text(select_stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_text(select_stmt, 2, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_step(select_stmt) == SQLITE_ROW){
-			count = sqlite3_column_int(select_stmt, 0);
-			sock = sqlite3_column_int(select_stmt, 1);
+		if(sqlite3_bind_text(count_stmt, 1, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_bind_text(count_stmt, 2, client_id, strlen(client_id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
+		if(sqlite3_step(count_stmt) == SQLITE_ROW){
+			count = sqlite3_column_int(count_stmt, 0);
+			sock = sqlite3_column_int(count_stmt, 1);
 
 			if(sock == -1){
 				if(max_queued > 0 && count >= max_queued) limited = 1;
@@ -1082,8 +1083,8 @@ int mqtt3_db_message_insert(const char *client_id, uint16_t mid, enum mosquitto_
 				if(max_inflight > 0 && count >= max_inflight) limited = 1;
 			}
 		}
-		sqlite3_reset(select_stmt);
-		sqlite3_clear_bindings(select_stmt);
+		sqlite3_reset(count_stmt);
+		sqlite3_clear_bindings(count_stmt);
 		if(limited) return 2;
 	}
 
@@ -1306,7 +1307,7 @@ int mqtt3_db_message_timeout_check(unsigned int timeout)
 	sqlite3_reset(stmt_select);
 	sqlite3_clear_bindings(stmt_select);
 	_mqtt3_db_transaction_end();
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_db_message_release(const char *client_id, uint16_t mid, enum mosquitto_msg_direction dir)
@@ -1367,7 +1368,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	uint32_t payloadlen;
 	const uint8_t *payload;
 
-	if(!context || !context->id || context->sock == -1) return 1;
+	if(!context || !context->core.id || context->core.sock == -1) return 1;
 
 	if(!stmt){
 		stmt = _mqtt3_db_statement_prepare("SELECT messages.OID,messages.status,messages.mid,"
@@ -1380,7 +1381,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 			return 1;
 		}
 	}
-	if(sqlite3_bind_text(stmt, 1, context->id, strlen(context->id), SQLITE_STATIC) == SQLITE_OK){
+	if(sqlite3_bind_text(stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) == SQLITE_OK){
 		_mqtt3_db_transaction_begin();
 		while(sqlite3_step(stmt) == SQLITE_ROW){
 			OID = sqlite3_column_int64(stmt, 0);
@@ -1405,31 +1406,31 @@ int mqtt3_db_message_write(mqtt3_context *context)
 
 				case ms_publish_puback:
 					if(!mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload)){
-						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_puback);
+						mqtt3_db_message_update(context->core.id, mid, mosq_md_out, ms_wait_puback);
 					}
 					break;
 
 				case ms_publish_pubrec:
 					if(!mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload)){
-						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_pubrec);
+						mqtt3_db_message_update(context->core.id, mid, mosq_md_out, ms_wait_pubrec);
 					}
 					break;
 
 				case ms_resend_pubrec:
 					if(!mqtt3_raw_pubrec(context, mid)){
-						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_pubrel);
+						mqtt3_db_message_update(context->core.id, mid, mosq_md_out, ms_wait_pubrel);
 					}
 					break;
 
 				case ms_resend_pubrel:
 					if(!mqtt3_raw_pubrel(context, mid)){
-						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_pubcomp);
+						mqtt3_db_message_update(context->core.id, mid, mosq_md_out, ms_wait_pubrel);
 					}
 					break;
 
 				case ms_resend_pubcomp:
 					if(!mqtt3_raw_pubcomp(context, mid)){
-						mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_pubrel);
+						mqtt3_db_message_update(context->core.id, mid, mosq_md_out, ms_wait_pubcomp);
 					}
 					break;
 			}
@@ -1524,10 +1525,10 @@ static int _mqtt3_db_regex_create(const char *topic, char **regex)
 	}
 	hier = 0;
 	if(topic[0] == '/'){
-		local_topic = mqtt3_strdup(topic+1);
+		local_topic = _mosquitto_strdup(topic+1);
 		start_slash = "/";
 	}else{
-		local_topic = mqtt3_strdup(topic);
+		local_topic = _mosquitto_strdup(topic);
 		start_slash = "";
 	}
 	if(!local_topic) return 1;
@@ -1549,7 +1550,7 @@ static int _mqtt3_db_regex_create(const char *topic, char **regex)
 		new_len = strlen(local_topic) + 21;
 	}
 	if(regex_len < new_len){
-		local_regex = mqtt3_realloc(local_regex, new_len);
+		local_regex = _mosquitto_realloc(local_regex, new_len);
 		regex_len = new_len;
 		if(!local_regex) return 1;
 	}
@@ -1587,8 +1588,8 @@ static int _mqtt3_db_regex_create(const char *topic, char **regex)
 		}
 	}
 	*regex = local_regex;
-	mqtt3_free(local_topic);
-	return 0;
+	_mosquitto_free(local_topic);
+	return MOSQ_ERR_SUCCESS;
 }
 
 static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
@@ -1608,14 +1609,14 @@ static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 	if(strncmp(sub, "$SYS", 4)){
 		if(sub[0] == '/'){
 			sys = "^/(?!\\$SYS)";
-			local_sub = mqtt3_strdup(sub+1);
+			local_sub = _mosquitto_strdup(sub+1);
 		}else{
 			sys = "^(?!\\$SYS)";
-			local_sub = mqtt3_strdup(sub);
+			local_sub = _mosquitto_strdup(sub);
 		}
 	}else{
 		sys = "^";
-		local_sub = mqtt3_strdup(sub);
+		local_sub = _mosquitto_strdup(sub);
 	}
 	if(!local_sub) return 1;
 	hier = 0;
@@ -1626,7 +1627,7 @@ static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 		hier++;
 	}
 	regex_len = strlen(sys) + strlen(local_sub) + 5*hier + 2;
-	local_regex = mqtt3_realloc(local_regex, regex_len);
+	local_regex = _mosquitto_realloc(local_regex, regex_len);
 	if(!local_regex) return 1;
 
 	if(hier > 1){
@@ -1674,8 +1675,8 @@ static int _mqtt3_db_retain_regex_create(const char *sub, char **regex)
 		}
 	}
 	*regex = local_regex;
-	mqtt3_free(local_sub);
-	return 0;
+	_mosquitto_free(local_sub);
+	return MOSQ_ERR_SUCCESS;
 }
 #endif
 
@@ -1759,7 +1760,7 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 #endif
 
 #ifdef WITH_REGEX
-	if(sqlite3_bind_text(stmt, 1, regex, strlen(regex), mqtt3_free) != SQLITE_OK) rc = 1;
+	if(sqlite3_bind_text(stmt, 1, regex, strlen(regex), _mosquitto_free) != SQLITE_OK) rc = 1;
 #else
 	if(sqlite3_bind_text(stmt, 1, sub, strlen(sub), SQLITE_STATIC) != SQLITE_OK) rc = 1;
 #endif
@@ -1771,19 +1772,19 @@ int mqtt3_db_retain_queue(mqtt3_context *context, const char *sub, int sub_qos)
 
 		if(qos > sub_qos) qos = sub_qos;
 		if(qos > 0){
-			mid = mqtt3_db_mid_generate(context->id);
+			mid = mqtt3_db_mid_generate(context->core.id);
 		}else{
 			mid = 0;
 		}
 		switch(qos){
 			case 0:
-				if(mqtt3_db_message_insert(context->id, mid, mosq_md_out, ms_publish, qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(context->core.id, mid, mosq_md_out, ms_publish, qos, store_id) == 1) rc = 1;
 				break;
 			case 1:
-				if(mqtt3_db_message_insert(context->id, mid, mosq_md_out, ms_publish_puback, qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(context->core.id, mid, mosq_md_out, ms_publish_puback, qos, store_id) == 1) rc = 1;
 				break;
 			case 2:
-				if(mqtt3_db_message_insert(context->id, mid, mosq_md_out, ms_publish_pubrec, qos, store_id) == 1) rc = 1;
+				if(mqtt3_db_message_insert(context->core.id, mid, mosq_md_out, ms_publish_pubrec, qos, store_id) == 1) rc = 1;
 				break;
 		}
 	}
@@ -2000,7 +2001,7 @@ void mqtt3_db_sys_update(int interval, time_t start_time)
 		}
 
 #ifdef WITH_MEMORY_TRACKING
-		snprintf(buf, 100, "%d", mqtt3_memory_used());
+		snprintf(buf, 100, "%lld", _mosquitto_memory_used()+sqlite3_memory_used());
 		mqtt3_db_messages_easy_queue("", "$SYS/broker/heap/current size", 2, strlen(buf), (uint8_t *)buf, 1);
 #endif
 

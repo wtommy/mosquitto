@@ -27,11 +27,13 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <assert.h>
 #include <stdint.h>
 #include <string.h>
 
 #include <mosquitto.h>
 #include <logging_mosq.h>
+#include <memory_mosq.h>
 #include <mqtt3_protocol.h>
 #include <net_mosq.h>
 #include <send_mosq.h>
@@ -43,22 +45,23 @@ static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t comm
 {
 	struct _mosquitto_packet *packet = NULL;
 
-	packet = calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	assert(mosq);
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packet->command = command;
 	packet->remaining_length = 2;
-	packet->payload = malloc(sizeof(uint8_t)*2);
+	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*2);
 	if(!packet->payload){
-		free(packet);
-		return 1;
+		_mosquitto_free(packet);
+		return MOSQ_ERR_NOMEM;
 	}
 	packet->payload[0] = MOSQ_MSB(mid);
 	packet->payload[1] = MOSQ_LSB(mid);
 
-	if(_mosquitto_packet_queue(mosq, packet)) return 1;
+	_mosquitto_packet_queue(mosq, packet);
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 /* For DISCONNECT, PINGREQ and PINGRESP */
@@ -66,23 +69,22 @@ int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 {
 	struct _mosquitto_packet *packet = NULL;
 
-	packet = calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return 1;
+	assert(mosq);
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
+	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packet->command = command;
 	packet->remaining_length = 0;
 
-	if(_mosquitto_packet_queue(mosq, packet)){
-		free(packet);
-		return 1;
-	}
+	_mosquitto_packet_queue(mosq, packet);
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_send_pingreq(struct mosquitto *mosq)
 {
-	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PINGREQ");
+	assert(mosq);
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PINGREQ");
 	return _mosquitto_send_simple_command(mosq, PINGREQ);
 }
 
@@ -109,56 +111,45 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 	struct _mosquitto_packet *packet = NULL;
 	int packetlen;
 
-	if(!mosq || mosq->sock == -1 || !topic) return 1;
+	assert(mosq);
+	assert(topic);
+
+	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBLISH (%d, %d, %d, %d, '%s', ... (%ld bytes))", dup, qos, retain, mid, topic, (long)payloadlen);
 
 	packetlen = 2+strlen(topic) + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
-	packet = calloc(1, sizeof(struct _mosquitto_packet));
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet){
 		_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "PUBLISH failed allocating packet memory.");
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 
 	packet->mid = mid;
 	packet->command = PUBLISH | ((dup&0x1)<<3) | (qos<<1) | retain;
 	packet->command_saved = PUBLISH | (qos<<1);
 	packet->remaining_length = packetlen;
-	packet->payload = malloc(sizeof(uint8_t)*packetlen);
+	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){
 		_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "PUBLISH failed allocating payload memory.");
-		free(packet);
-		return 1;
+		_mosquitto_free(packet);
+		return MOSQ_ERR_NOMEM;
 	}
 	/* Variable header (topic string) */
-	if(_mosquitto_write_string(packet, topic, strlen(topic))){
-		_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "PUBLISH failed writing topic.");
-		free(packet);
-	  	return 1;
-	}
+	_mosquitto_write_string(packet, topic, strlen(topic));
 	if(qos > 0){
-		if(_mosquitto_write_uint16(packet, mid)){
-			_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "PUBLISH failed writing mid.");
-			free(packet);
-			return 1;
-		}
+		_mosquitto_write_uint16(packet, mid);
 	}
 
 	/* Payload */
-	if(payloadlen && _mosquitto_write_bytes(packet, payload, payloadlen)){
-		_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "PUBLISH failed writing payload.");
-		free(packet);
-		return 1;
+	if(payloadlen){
+		_mosquitto_write_bytes(packet, payload, payloadlen);
 	}
 
-	if(_mosquitto_packet_queue(mosq, packet)){
-		_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "PUBLISH failed queuing packet.");
-		free(packet);
-		return 1;
-	}
+	_mosquitto_packet_queue(mosq, packet);
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_send_pubrec(struct mosquitto *mosq, uint16_t mid)

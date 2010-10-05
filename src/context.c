@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <memory_mosq.h>
 
 mqtt3_context *mqtt3_context_init(int sock)
 {
@@ -40,28 +41,27 @@ mqtt3_context *mqtt3_context_init(int sock)
 	socklen_t addrlen;
 	char address[1024];
 
-	context = mqtt3_malloc(sizeof(mqtt3_context));
+	context = _mosquitto_malloc(sizeof(mqtt3_context));
 	if(!context) return NULL;
 	
-	context->connected = false;
-	context->disconnecting = false;
+	context->core.state = mosq_cs_new;
 	context->duplicate = false;
-	context->sock = sock;
-	context->last_msg_in = time(NULL);
-	context->last_msg_out = time(NULL);
-	context->keepalive = 60; /* Default to 60s */
+	context->core.sock = sock;
+	context->core.last_msg_in = time(NULL);
+	context->core.last_msg_out = time(NULL);
+	context->core.keepalive = 60; /* Default to 60s */
 	context->clean_session = true;
-	context->id = NULL;
+	context->core.id = NULL;
 
-	context->in_packet.payload = NULL;
-	_mosquitto_packet_cleanup(&context->in_packet);
-	context->out_packet = NULL;
+	context->core.in_packet.payload = NULL;
+	_mosquitto_packet_cleanup(&context->core.in_packet);
+	context->core.out_packet = NULL;
 
 	addrlen = sizeof(addr);
 	context->address = NULL;
 	if(!getpeername(sock, &addr, &addrlen)){
 		if(inet_ntop(AF_INET, &((struct sockaddr_in *)&addr)->sin_addr.s_addr, address, 1024)){
-			context->address = mqtt3_strdup(address);
+			context->address = _mosquitto_strdup(address);
 		}
 	}
 	context->bridge = NULL;
@@ -84,23 +84,23 @@ void mqtt3_context_cleanup(mqtt3_context *context)
 	struct _mosquitto_packet *packet;
 	if(!context) return;
 
-	if(context->sock != -1){
+	if(context->core.sock != -1){
 		mqtt3_socket_close(context);
 	}
 	if(context->clean_session && !context->duplicate){
-		mqtt3_db_subs_clean_session(context->id);
-		mqtt3_db_messages_delete(context->id);
+		mqtt3_db_subs_clean_session(context->core.id);
+		mqtt3_db_messages_delete(context->core.id);
 		mqtt3_db_client_delete(context);
 	}
-	if(context->address) mqtt3_free(context->address);
-	if(context->id) mqtt3_free(context->id);
-	_mosquitto_packet_cleanup(&(context->in_packet));
-	while(context->out_packet){
-		_mosquitto_packet_cleanup(context->out_packet);
-		packet = context->out_packet;
-		context->out_packet = context->out_packet->next;
-		mqtt3_free(packet);
+	if(context->address) _mosquitto_free(context->address);
+	if(context->core.id) _mosquitto_free(context->core.id);
+	_mosquitto_packet_cleanup(&(context->core.in_packet));
+	while(context->core.out_packet){
+		_mosquitto_packet_cleanup(context->core.out_packet);
+		packet = context->core.out_packet;
+		context->core.out_packet = context->core.out_packet->next;
+		_mosquitto_free(packet);
 	}
-	mqtt3_free(context);
+	_mosquitto_free(context);
 }
 

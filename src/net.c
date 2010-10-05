@@ -40,6 +40,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 
 #include <mqtt3.h>
+#include <mqtt3_protocol.h>
+#include <memory_mosq.h>
 
 static uint64_t bytes_received = 0;
 static uint64_t bytes_sent = 0;
@@ -85,14 +87,14 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 	fromhost(&wrap_req);
 	if(!hosts_access(&wrap_req)){
 		/* Access is denied */
-		mqtt3_log_printf(MQTT3_LOG_NOTICE, "Client connection denied access by tcpd.");
+		mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client connection denied access by tcpd.");
 		close(new_sock);
 		return -1;
 	}else{
 #endif
 		new_context = mqtt3_context_init(new_sock);
 		if(!new_context) return -1;
-		mqtt3_log_printf(MQTT3_LOG_NOTICE, "New client connected from %s.", new_context->address);
+		mqtt3_log_printf(MOSQ_LOG_NOTICE, "New client connected from %s.", new_context->address);
 		for(i=0; i<(*context_count); i++){
 			if((*contexts)[i] == NULL){
 				(*contexts)[i] = new_context;
@@ -101,7 +103,7 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 		}
 		if(i==(*context_count)){
 			(*context_count)++;
-			tmp_contexts = mqtt3_realloc(*contexts, sizeof(mqtt3_context*)*(*context_count));
+			tmp_contexts = _mosquitto_realloc(*contexts, sizeof(mqtt3_context*)*(*context_count));
 			if(tmp_contexts){
 				*contexts = tmp_contexts;
 				(*contexts)[(*context_count)-1] = new_context;
@@ -122,12 +124,12 @@ int mqtt3_socket_close(mqtt3_context *context)
 	int rc = 0;
 
 	if(!context) return 1;
-	if(context->sock != -1){
-		if(context->id){
-			mqtt3_db_client_invalidate_socket(context->id, context->sock);
+	if(context->core.sock != -1){
+		if(context->core.id){
+			mqtt3_db_client_invalidate_socket(context->core.id, context->core.sock);
 		}
-		rc = close(context->sock);
-		context->sock = -1;
+		rc = close(context->core.sock);
+		context->core.sock = -1;
 	}
 
 	return rc;
@@ -145,11 +147,11 @@ static int _mqtt3_socket_listen(struct sockaddr *addr)
 
 	if(!addr) return -1;
 
-	mqtt3_log_printf(MQTT3_LOG_INFO, "Opening listen socket on port %d.", ntohs(((struct sockaddr_in *)addr)->sin_port));
+	mqtt3_log_printf(MOSQ_LOG_INFO, "Opening listen socket on port %d.", ntohs(((struct sockaddr_in *)addr)->sin_port));
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock == -1){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", strerror(errno));
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
 		return -1;
 	}
 
@@ -161,13 +163,13 @@ static int _mqtt3_socket_listen(struct sockaddr *addr)
 	if(fcntl(sock, F_SETFL, opt | O_NONBLOCK) < 0) return -1;
 
 	if(bind(sock, addr, sizeof(struct sockaddr_in)) == -1){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", strerror(errno));
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
 		close(sock);
 		return -1;
 	}
 
 	if(listen(sock, 100) == -1){
-		mqtt3_log_printf(MQTT3_LOG_ERR, "Error: %s", strerror(errno));
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
 		close(sock);
 		return -1;
 	}
@@ -226,16 +228,16 @@ int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *pac
 	if(!context || !packet) return 1;
 
 	packet->next = NULL;
-	if(context->out_packet){
-		tail = context->out_packet;
+	if(context->core.out_packet){
+		tail = context->core.out_packet;
 		while(tail->next){
 			tail = tail->next;
 		}
 		tail->next = packet;
 	}else{
-		context->out_packet = packet;
+		context->core.out_packet = packet;
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_net_read(mqtt3_context *context)
@@ -244,7 +246,7 @@ int mqtt3_net_read(mqtt3_context *context)
 	ssize_t read_length;
 	int rc = 0;
 
-	if(!context || context->sock == -1) return 1;
+	if(!context || context->core.sock == -1) return 1;
 	/* This gets called if pselect() indicates that there is network data
 	 * available - ie. at least one byte.  What we do depends on what data we
 	 * already have.
@@ -259,70 +261,70 @@ int mqtt3_net_read(mqtt3_context *context)
 	 * After all data is read, send to mqtt3_handle_packet() to deal with.
 	 * Finally, free the memory and reset everything to starting conditions.
 	 */
-	if(!context->in_packet.command){
+	if(!context->core.in_packet.command){
 		/* FIXME - check command and fill in expected length if we know it.
 		 * This means we can check the client is sending valid data some times.
 		 */
-		read_length = read(context->sock, &byte, 1);
+		read_length = _mosquitto_net_read(&context->core, &byte, 1);
 		if(read_length == 1){
 			bytes_received++;
-			context->in_packet.command = byte;
+			context->core.in_packet.command = byte;
 #ifdef WITH_BROKER
 			/* Clients must send CONNECT as their first command. */
-			if(!(context->bridge) && context->connected == false && (byte&0xF0) != CONNECT) return 1;
+			if(!(context->bridge) && context->core.state == mosq_cs_new && (byte&0xF0) != CONNECT) return 1;
 #endif
 		}else{
 			if(read_length == 0) return 1; /* EOF */
 			if(errno == EAGAIN || errno == EWOULDBLOCK){
-				return 0;
+				return MOSQ_ERR_SUCCESS;
 			}else{
 				return 1;
 			}
 		}
 	}
-	if(!context->in_packet.have_remaining){
+	if(!context->core.in_packet.have_remaining){
 		/* Read remaining
 		 * Algorithm for decoding taken from pseudo code at
 		 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
 		 */
 		do{
-			read_length = read(context->sock, &byte, 1);
+			read_length = _mosquitto_net_read(&context->core, &byte, 1);
 			if(read_length == 1){
-				context->in_packet.remaining_count++;
+				context->core.in_packet.remaining_count++;
 				/* Max 4 bytes length for remaining length as defined by protocol.
 				 * Anything more likely means a broken/malicious client.
 				 */
-				if(context->in_packet.remaining_count > 4) return 1;
+				if(context->core.in_packet.remaining_count > 4) return MOSQ_ERR_PROTOCOL;
 
 				bytes_received++;
-				context->in_packet.remaining_length += (byte & 127) * context->in_packet.remaining_mult;
-				context->in_packet.remaining_mult *= 128;
+				context->core.in_packet.remaining_length += (byte & 127) * context->core.in_packet.remaining_mult;
+				context->core.in_packet.remaining_mult *= 128;
 			}else{
 				if(read_length == 0) return 1; /* EOF */
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
-					return 0;
+					return MOSQ_ERR_SUCCESS;
 				}else{
 					return 1;
 				}
 			}
 		}while((byte & 128) != 0);
 
-		if(context->in_packet.remaining_length > 0){
-			context->in_packet.payload = mqtt3_malloc(context->in_packet.remaining_length*sizeof(uint8_t));
-			if(!context->in_packet.payload) return 1;
-			context->in_packet.to_process = context->in_packet.remaining_length;
+		if(context->core.in_packet.remaining_length > 0){
+			context->core.in_packet.payload = _mosquitto_malloc(context->core.in_packet.remaining_length*sizeof(uint8_t));
+			if(!context->core.in_packet.payload) return MOSQ_ERR_NOMEM;
+			context->core.in_packet.to_process = context->core.in_packet.remaining_length;
 		}
-		context->in_packet.have_remaining = 1;
+		context->core.in_packet.have_remaining = 1;
 	}
-	while(context->in_packet.to_process>0){
-		read_length = read(context->sock, &(context->in_packet.payload[context->in_packet.pos]), context->in_packet.to_process);
+	while(context->core.in_packet.to_process>0){
+		read_length = _mosquitto_net_read(&context->core, &(context->core.in_packet.payload[context->core.in_packet.pos]), context->core.in_packet.to_process);
 		if(read_length > 0){
 			bytes_received += read_length;
-			context->in_packet.to_process -= read_length;
-			context->in_packet.pos += read_length;
+			context->core.in_packet.to_process -= read_length;
+			context->core.in_packet.pos += read_length;
 		}else{
 			if(errno == EAGAIN || errno == EWOULDBLOCK){
-				return 0;
+				return MOSQ_ERR_SUCCESS;
 			}else{
 				return 1;
 			}
@@ -331,13 +333,13 @@ int mqtt3_net_read(mqtt3_context *context)
 
 	msgs_received++;
 	/* All data for this packet is read. */
-	context->in_packet.pos = 0;
+	context->core.in_packet.pos = 0;
 	rc = mqtt3_packet_handle(context);
 
 	/* Free data and reset values */
-	_mosquitto_packet_cleanup(&context->in_packet);
+	_mosquitto_packet_cleanup(&context->core.in_packet);
 
-	context->last_msg_in = time(NULL);
+	context->core.last_msg_in = time(NULL);
 	return rc;
 }
 
@@ -347,24 +349,24 @@ int mqtt3_net_write(mqtt3_context *context)
 	ssize_t write_length;
 	struct _mosquitto_packet *packet;
 
-	if(!context || context->sock == -1) return 1;
+	if(!context || context->core.sock == -1) return 1;
 
-	while(context->out_packet){
-		packet = context->out_packet;
+	while(context->core.out_packet){
+		packet = context->core.out_packet;
 
 		if(packet->command){
 			/* Assign to_proces here before remaining_length changes. */
 			packet->to_process = packet->remaining_length;
 			packet->pos = 0;
 
-			write_length = write(context->sock, &packet->command, 1);
+			write_length = _mosquitto_net_write(&context->core, &packet->command, 1);
 			if(write_length == 1){
 				bytes_sent++;
 				packet->command = 0;
 			}else{
 				if(write_length == 0) return 1; /* EOF */
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
-					return 0;
+					return MOSQ_ERR_SUCCESS;
 				}else{
 					return 1;
 				}
@@ -382,17 +384,17 @@ int mqtt3_net_write(mqtt3_context *context)
 				if(packet->remaining_length>0){
 					byte = byte | 0x80;
 				}
-				write_length = write(context->sock, &byte, 1);
+				write_length = _mosquitto_net_write(&context->core, &byte, 1);
 				if(write_length == 1){
 					packet->remaining_count++;
 					/* Max 4 bytes length for remaining length as defined by protocol. */
-					if(packet->remaining_count > 4) return 1;
+					if(packet->remaining_count > 4) return MOSQ_ERR_PROTOCOL;
 	
 					bytes_sent++;
 				}else{
 					if(write_length == 0) return 1; /* EOF */
 					if(errno == EAGAIN || errno == EWOULDBLOCK){
-						return 0;
+						return MOSQ_ERR_SUCCESS;
 					}else{
 						return 1;
 					}
@@ -401,14 +403,14 @@ int mqtt3_net_write(mqtt3_context *context)
 			packet->have_remaining = 1;
 		}
 		while(packet->to_process > 0){
-			write_length = write(context->sock, &(packet->payload[packet->pos]), packet->to_process);
+			write_length = _mosquitto_net_write(&context->core, &(packet->payload[packet->pos]), packet->to_process);
 			if(write_length > 0){
 				bytes_sent += write_length;
 				packet->to_process -= write_length;
 				packet->pos += write_length;
 			}else{
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
-					return 0;
+					return MOSQ_ERR_SUCCESS;
 				}else{
 					return 1;
 				}
@@ -418,13 +420,13 @@ int mqtt3_net_write(mqtt3_context *context)
 		msgs_sent++;
 
 		/* Free data and reset values */
-		context->out_packet = packet->next;
+		context->core.out_packet = packet->next;
 		_mosquitto_packet_cleanup(packet);
-		mqtt3_free(packet);
+		_mosquitto_free(packet);
 
-		context->last_msg_out = time(NULL);
+		context->core.last_msg_out = time(NULL);
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 uint64_t mqtt3_net_bytes_total_received(void)

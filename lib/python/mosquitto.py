@@ -44,111 +44,38 @@ class Mosquitto:
 	"""MQTT version 3 client class"""
 
 	def __init__(self, id, obj=None):
-		#==================================================
-		# Library loading
-		#==================================================
-		self._libmosq = cdll.LoadLibrary(find_library("mosquitto"))
-		self._mosquitto_new = self._libmosq.mosquitto_new
-		self._mosquitto_new.argtypes = [c_char_p, c_void_p]
-		self._mosquitto_new.restype = c_void_p
+		if obj==None:
+			self.obj = self
+		else:
+			self.obj = obj
 
-		self._mosquitto_destroy = self._libmosq.mosquitto_destroy
-		self._mosquitto_destroy.argtypes = [c_void_p]
-		self._mosquitto_destroy.restype = None
-
-		self._mosquitto_connect = self._libmosq.mosquitto_connect
-		self._mosquitto_connect.argtypes = [c_void_p, c_char_p, c_int, c_int, c_bool]
-		self._mosquitto_connect.restype = c_int
-
-		self._mosquitto_disconnect = self._libmosq.mosquitto_disconnect
-		self._mosquitto_disconnect.argtypes = [c_void_p]
-		self._mosquitto_disconnect.restype = c_int
-
-		self._mosquitto_publish = self._libmosq.mosquitto_publish
-		self._mosquitto_publish.argtypes = [c_void_p, POINTER(c_uint16), c_char_p, c_uint32, POINTER(c_uint8), c_int, c_bool]
-		self._mosquitto_publish.restype = c_int
-
-		self._mosquitto_subscribe = self._libmosq.mosquitto_subscribe
-		self._mosquitto_subscribe.argtypes = [c_void_p, POINTER(c_uint16), c_char_p, c_int]
-		self._mosquitto_subscribe.restype = c_int
-
-		self._mosquitto_unsubscribe = self._libmosq.mosquitto_unsubscribe
-		self._mosquitto_unsubscribe.argtypes = [c_void_p, POINTER(c_uint16), c_char_p]
-		self._mosquitto_unsubscribe.restype = c_int
-
-		self._mosquitto_loop = self._libmosq.mosquitto_loop
-		self._mosquitto_loop.argtypes = [c_void_p, c_int]
-		self._mosquitto_loop.restype = c_int
-
-		self._mosquitto_will_set = self._libmosq.mosquitto_will_set
-		self._mosquitto_will_set.argtypes = [c_void_p, c_bool, c_char_p, c_uint32, POINTER(c_uint8), c_int, c_bool]
-		self._mosquitto_will_set.restype = c_int
-
-		self._mosquitto_log_init = self._libmosq.mosquitto_log_init
-		self._mosquitto_log_init.argtypes = [c_void_p, c_int, c_int]
-		self._mosquitto_log_init.restype = c_int
-
-		self._mosquitto_connect_callback_set = self._libmosq.mosquitto_connect_callback_set
-		#self._mosquitto_connect_callback_set.argtypes = [c_void_p, c_void_p]
-		self._mosquitto_connect_callback_set.restype = None
-
-		self._mosquitto_disconnect_callback_set = self._libmosq.mosquitto_disconnect_callback_set
-		#self._mosquitto_disconnect_callback_set.argtypes = [c_void_p, c_void_p]
-		self._mosquitto_disconnect_callback_set.restype = None
-
-		self._mosquitto_publish_callback_set = self._libmosq.mosquitto_publish_callback_set
-		#self._mosquitto_publish_callback_set.argtypes = [c_void_p, c_void_p]
-		self._mosquitto_publish_callback_set.restype = None
-
-		self._mosquitto_message_callback_set = self._libmosq.mosquitto_message_callback_set
-		#self._mosquitto_message_callback_set.argtypes = [c_void_p, c_void_p]
-		self._mosquitto_message_callback_set.restype = None
-
-		self._mosquitto_subscribe_callback_set = self._libmosq.mosquitto_subscribe_callback_set
-		#self._mosquitto_subscribe_callback_set.argtypes = [c_void_p, c_void_p]
-		self._mosquitto_subscribe_callback_set.restype = None
-
-		self._mosquitto_unsubscribe_callback_set = self._libmosq.mosquitto_unsubscribe_callback_set
-		#self._mosquitto_unsubscribe_callback_set.argtypes = [c_void_p, c_void_p]
-		self._mosquitto_unsubscribe_callback_set.restype = None
-
-		self._MOSQ_CONNECT_FUNC = CFUNCTYPE(None, c_void_p, c_int)
-		self._MOSQ_DISCONNECT_FUNC = CFUNCTYPE(None, c_void_p)
-		self._MOSQ_PUBLISH_FUNC = CFUNCTYPE(None, c_void_p, c_uint16)
-		self._MOSQ_MESSAGE_FUNC = CFUNCTYPE(None, c_void_p, POINTER(c_MosquittoMessage))
-		self._MOSQ_SUBSCRIBE_FUNC = CFUNCTYPE(None, c_void_p, c_uint16, c_int, POINTER(c_uint8))
-		self._MOSQ_UNSUBSCRIBE_FUNC = CFUNCTYPE(None, c_void_p, c_uint16)
-		#==================================================
-		# End library loading
-		#==================================================
-		
-		self._mosq = self._mosquitto_new(id, obj)
+		self._mosq = _mosquitto_new(id, None)
 
 		#==================================================
 		# Configure callbacks
 		#==================================================
-		self._internal_on_connect_cast = self._MOSQ_CONNECT_FUNC(self._internal_on_connect)
-		self._mosquitto_connect_callback_set(self._mosq, self._internal_on_connect_cast)
+		self._internal_on_connect_cast = _MOSQ_CONNECT_FUNC(self._internal_on_connect)
+		_mosquitto_connect_callback_set(self._mosq, self._internal_on_connect_cast)
 		self._on_connect = None
 	
-		self._internal_on_disconnect_cast = self._MOSQ_DISCONNECT_FUNC(self._internal_on_disconnect)
-		self._mosquitto_disconnect_callback_set(self._mosq, self._internal_on_disconnect_cast)
+		self._internal_on_disconnect_cast = _MOSQ_DISCONNECT_FUNC(self._internal_on_disconnect)
+		_mosquitto_disconnect_callback_set(self._mosq, self._internal_on_disconnect_cast)
 		self._on_disconnect = None
 	
-		self._internal_on_message_cast = self._MOSQ_MESSAGE_FUNC(self._internal_on_message)
-		self._mosquitto_message_callback_set(self._mosq, self._internal_on_message_cast)
+		self._internal_on_message_cast = _MOSQ_MESSAGE_FUNC(self._internal_on_message)
+		_mosquitto_message_callback_set(self._mosq, self._internal_on_message_cast)
 		self.on_message = None
 
-		self._internal_on_publish_cast = self._MOSQ_PUBLISH_FUNC(self._internal_on_publish)
-		self._mosquitto_publish_callback_set(self._mosq, self._internal_on_publish_cast)
+		self._internal_on_publish_cast = _MOSQ_PUBLISH_FUNC(self._internal_on_publish)
+		_mosquitto_publish_callback_set(self._mosq, self._internal_on_publish_cast)
 		self.on_publish = None
 	
-		self._internal_on_subscribe_cast = self._MOSQ_SUBSCRIBE_FUNC(self._internal_on_subscribe)
-		self._mosquitto_subscribe_callback_set(self._mosq, self._internal_on_subscribe_cast)
+		self._internal_on_subscribe_cast = _MOSQ_SUBSCRIBE_FUNC(self._internal_on_subscribe)
+		_mosquitto_subscribe_callback_set(self._mosq, self._internal_on_subscribe_cast)
 		self.on_subscribe = None
 	
-		self._internal_on_unsubscribe_cast = self._MOSQ_UNSUBSCRIBE_FUNC(self._internal_on_unsubscribe)
-		self._mosquitto_unsubscribe_callback_set(self._mosq, self._internal_on_unsubscribe_cast)
+		self._internal_on_unsubscribe_cast = _MOSQ_UNSUBSCRIBE_FUNC(self._internal_on_unsubscribe)
+		_mosquitto_unsubscribe_callback_set(self._mosq, self._internal_on_unsubscribe_cast)
 		self.on_unsubscribe = None
 		#==================================================
 		# End configure callbacks
@@ -156,39 +83,58 @@ class Mosquitto:
 
 	def __del__(self):
 		if self._mosq:
-			self._mosquitto_destroy(self._mosq)
+			_mosquitto_destroy(self._mosq)
 
 	def connect(self, hostname="127.0.0.1", port=1883, keepalive=60, clean_session=True):
-		return self._mosquitto_connect(self._mosq, hostname, port, keepalive, clean_session)
+		return _mosquitto_connect(self._mosq, hostname, port, keepalive, clean_session)
 
 	def disconnect(self):
-		return self._mosquitto_disconnect(self._mosq)
+		return _mosquitto_disconnect(self._mosq)
 
 	def log_init(self, priorities, destinations):
-		return self._mosquitto_log_init(self._mosq, priorities, destinations)
+		return _mosquitto_log_init(self._mosq, priorities, destinations)
 
 	def loop(self, timeout=-1):
-		return self._mosquitto_loop(self._mosq, timeout)
+		return _mosquitto_loop(self._mosq, timeout)
 
 	def subscribe(self, sub, qos):
-		return self._mosquitto_subscribe(self._mosq, None, sub, qos)
+		return _mosquitto_subscribe(self._mosq, None, sub, qos)
 
 	def unsubscribe(self, sub):
-		return self._mosquitto_unsubscribe(self._mosq, None, sub)
+		return _mosquitto_unsubscribe(self._mosq, None, sub)
 
 	def publish(self, topic, payload, qos=0, retain=False):
-		return self._mosquitto_publish(self._mosq, None, topic, len(payload), cast(payload, POINTER(c_uint8)), qos, retain)
+		return _mosquitto_publish(self._mosq, None, topic, len(payload), cast(payload, POINTER(c_uint8)), qos, retain)
 
 	def will_set(self, will, topic, payloadlen, payload, qos=0, retain=False):
-		return self._mosquitto_will_set(self._mosq, will, topic, payloadlen, payload, qos, retain)
+		return _mosquitto_will_set(self._mosq, will, topic, payloadlen, payload, qos, retain)
+
+	def username_pw_set(self, username, password=None):
+		return _mosquitto_username_pw_set(self._mosq, username, password)
 
 	def _internal_on_connect(self, obj, rc):
 		if self.on_connect:
-			self.on_connect(rc)
+			try:
+				argcount = self.on_connect.fun_code.co_argcount
+			except RuntimeError:
+				argcount = 2
 
-	def _internal_on_disconnect(self):
+			if arggcount == 1:
+				self.on_connect(rc)
+			elif argcount == 2:
+				self.on_connect(self.obj, rc)
+
+	def _internal_on_disconnect(self, obj):
 		if self.on_disconnect:
-			self.on_disconnect()
+			try:
+				argcount = self.on_disconnect.fun_code.co_argcount
+			except RuntimeError:
+				argcount = 1
+
+			if argcount == 0:
+				self.on_disconnect()
+			elif argcount == 1:
+				self.on_disconnect(self.obj)
 
 	def _internal_on_message(self, obj, message):
 		if self.on_message:
@@ -197,22 +143,54 @@ class Mosquitto:
 			qos = message.contents.qos
 			retain = message.contents.retain
 			msg = MosquittoMessage(topic, payload, qos, retain)
-			self.on_message(msg)
+			try:
+				argcount = self.on_message.fun_code.co_argcount
+			except RuntimeError:
+				argcount = 2
+
+			if argcount == 1:
+				self.on_message(msg)
+			elif argcount == 2:
+				self.on_message(self.obj, msg)
 
 	def _internal_on_publish(self, obj, mid):
 		if self.on_publish:
-			self.on_publish(mid)
+			try:
+				argcount = self.on_publish.fun_code.co_argcount
+			except RuntimeError:
+				argcount = 2
+
+			if argcount == 1:
+				self.on_publish(mid)
+			elif argcount == 2:
+				self.on_publish(self.obj, mid)
 
 	def _internal_on_subscribe(self, obj, mid, qos_count, granted_qos):
 		if self.on_subscribe:
 			qos_list = []
 			for i in range(qos_count):
 				qos_list.append(granted_qos[i])
-			self.on_subscribe(mid, qos_list)
+			try:
+				argcount = self.on_subscribe.fun_code.co_argcount
+			except RuntimeError:
+				argcount = 3
+
+			if argcount == 2:
+				self.on_subscribe(mid, qos_list)
+			elif argcount == 3:
+				self.on_subscribe(self.obj, mid, qos_list)
 
 	def _internal_on_unsubscribe(self, obj, mid):
 		if self.on_unsubscribe:
-			self.on_unsubscribe(mid)
+			try:
+				argcount = self.on_unsubscribe.fun_code.co_argcount
+			except RuntimeError:
+				argcount = 2
+
+			if argcount == 1:
+				self.on_unsubscribe(mid)
+			elif argcount == 2:
+				self.on_unsubscribe(self.obj, mid)
 
 class c_MosquittoMessage(Structure):
 	_fields_ = [("mid", c_uint16),
@@ -229,4 +207,82 @@ class MosquittoMessage:
 		self.payload = payload
 		self.qos = qos
 		self.retain = retain
+
+#==================================================
+# Library loading
+#==================================================
+_libmosq = cdll.LoadLibrary(find_library("mosquitto"))
+_mosquitto_new = _libmosq.mosquitto_new
+_mosquitto_new.argtypes = [c_char_p, c_void_p]
+_mosquitto_new.restype = c_void_p
+
+_mosquitto_destroy = _libmosq.mosquitto_destroy
+_mosquitto_destroy.argtypes = [c_void_p]
+_mosquitto_destroy.restype = None
+
+_mosquitto_connect = _libmosq.mosquitto_connect
+_mosquitto_connect.argtypes = [c_void_p, c_char_p, c_int, c_int, c_bool]
+_mosquitto_connect.restype = c_int
+
+_mosquitto_disconnect = _libmosq.mosquitto_disconnect
+_mosquitto_disconnect.argtypes = [c_void_p]
+_mosquitto_disconnect.restype = c_int
+
+_mosquitto_publish = _libmosq.mosquitto_publish
+_mosquitto_publish.argtypes = [c_void_p, POINTER(c_uint16), c_char_p, c_uint32, POINTER(c_uint8), c_int, c_bool]
+_mosquitto_publish.restype = c_int
+
+_mosquitto_subscribe = _libmosq.mosquitto_subscribe
+_mosquitto_subscribe.argtypes = [c_void_p, POINTER(c_uint16), c_char_p, c_int]
+_mosquitto_subscribe.restype = c_int
+
+_mosquitto_unsubscribe = _libmosq.mosquitto_unsubscribe
+_mosquitto_unsubscribe.argtypes = [c_void_p, POINTER(c_uint16), c_char_p]
+_mosquitto_unsubscribe.restype = c_int
+
+_mosquitto_loop = _libmosq.mosquitto_loop
+_mosquitto_loop.argtypes = [c_void_p, c_int]
+_mosquitto_loop.restype = c_int
+
+_mosquitto_will_set = _libmosq.mosquitto_will_set
+_mosquitto_will_set.argtypes = [c_void_p, c_bool, c_char_p, c_uint32, POINTER(c_uint8), c_int, c_bool]
+_mosquitto_will_set.restype = c_int
+
+_mosquitto_log_init = _libmosq.mosquitto_log_init
+_mosquitto_log_init.argtypes = [c_void_p, c_int, c_int]
+_mosquitto_log_init.restype = c_int
+
+_mosquitto_connect_callback_set = _libmosq.mosquitto_connect_callback_set
+#_mosquitto_connect_callback_set.argtypes = [c_void_p, c_void_p]
+_mosquitto_connect_callback_set.restype = None
+
+_mosquitto_disconnect_callback_set = _libmosq.mosquitto_disconnect_callback_set
+#_mosquitto_disconnect_callback_set.argtypes = [c_void_p, c_void_p]
+_mosquitto_disconnect_callback_set.restype = None
+
+_mosquitto_publish_callback_set = _libmosq.mosquitto_publish_callback_set
+#_mosquitto_publish_callback_set.argtypes = [c_void_p, c_void_p]
+_mosquitto_publish_callback_set.restype = None
+
+_mosquitto_message_callback_set = _libmosq.mosquitto_message_callback_set
+#_mosquitto_message_callback_set.argtypes = [c_void_p, c_void_p]
+_mosquitto_message_callback_set.restype = None
+
+_mosquitto_subscribe_callback_set = _libmosq.mosquitto_subscribe_callback_set
+#_mosquitto_subscribe_callback_set.argtypes = [c_void_p, c_void_p]
+_mosquitto_subscribe_callback_set.restype = None
+
+_mosquitto_unsubscribe_callback_set = _libmosq.mosquitto_unsubscribe_callback_set
+#_mosquitto_unsubscribe_callback_set.argtypes = [c_void_p, c_void_p]
+_mosquitto_unsubscribe_callback_set.restype = None
+
+_MOSQ_CONNECT_FUNC = CFUNCTYPE(None, c_void_p, c_int)
+_MOSQ_DISCONNECT_FUNC = CFUNCTYPE(None, c_void_p)
+_MOSQ_PUBLISH_FUNC = CFUNCTYPE(None, c_void_p, c_uint16)
+_MOSQ_MESSAGE_FUNC = CFUNCTYPE(None, c_void_p, POINTER(c_MosquittoMessage))
+_MOSQ_SUBSCRIBE_FUNC = CFUNCTYPE(None, c_void_p, c_uint16, c_int, POINTER(c_uint8))
+_MOSQ_UNSUBSCRIBE_FUNC = CFUNCTYPE(None, c_void_p, c_uint16)
+#==================================================
+# End library loading
+#==================================================
 

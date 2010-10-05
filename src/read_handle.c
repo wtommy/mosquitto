@@ -31,13 +31,15 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <mqtt3.h>
+#include <mqtt3_protocol.h>
+#include <memory_mosq.h>
 #include <util_mosq.h>
 
 int mqtt3_packet_handle(mqtt3_context *context)
 {
 	if(!context) return 1;
 
-	switch((context->in_packet.command)&0xF0){
+	switch((context->core.in_packet.command)&0xF0){
 		case PINGREQ:
 			return mqtt3_handle_pingreq(context);
 		case PINGRESP:
@@ -72,7 +74,7 @@ int mqtt3_packet_handle(mqtt3_context *context)
 #endif
 		default:
 			/* If we don't recognise the command, return an error straight away. */
-			return 1;
+			return MOSQ_ERR_PROTOCOL;
 	}
 }
 
@@ -80,50 +82,62 @@ int mqtt3_handle_puback(mqtt3_context *context)
 {
 	uint16_t mid;
 
-	if(!context || context->in_packet.remaining_length != 2){
+	if(!context){
 		return 1;
 	}
-	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBACK from %s (Mid: %d)", context->id, mid);
+	if(context->core.in_packet.remaining_length != 2){
+		return MOSQ_ERR_PROTOCOL;
+	}
+	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;
+	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received PUBACK from %s (Mid: %d)", context->core.id, mid);
 
 	if(mid){
-		if(mqtt3_db_message_delete(context->id, mid, mosq_md_out)) return 1;
+		if(mqtt3_db_message_delete(context->core.id, mid, mosq_md_out)) return 1;
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_handle_pingreq(mqtt3_context *context)
 {
-	if(!context || context->in_packet.remaining_length != 0){
+	if(!context){
 		return 1;
 	}
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGREQ from %s", context->id);
+	if(context->core.in_packet.remaining_length != 0){
+		return MOSQ_ERR_PROTOCOL;
+	}
+	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received PINGREQ from %s", context->core.id);
 	return mqtt3_raw_pingresp(context);
 }
 
 int mqtt3_handle_pingresp(mqtt3_context *context)
 {
-	if(!context || context->in_packet.remaining_length != 0){
+	if(!context){
 		return 1;
 	}
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PINGRESP from %s", context->id);
-	return 0;
+	if(context->core.in_packet.remaining_length != 0){
+		return MOSQ_ERR_PROTOCOL;
+	}
+	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received PINGRESP from %s", context->core.id);
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_handle_pubcomp(mqtt3_context *context)
 {
 	uint16_t mid;
 
-	if(!context || context->in_packet.remaining_length != 2){
+	if(!context){
 		return 1;
 	}
-	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBCOMP from %s (Mid: %d)", context->id, mid);
+	if(context->core.in_packet.remaining_length != 2){
+		return MOSQ_ERR_PROTOCOL;
+	}
+	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;
+	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received PUBCOMP from %s (Mid: %d)", context->core.id, mid);
 
 	if(mid){
-		if(mqtt3_db_message_delete(context->id, mid, mosq_md_out)) return 1;
+		if(mqtt3_db_message_delete(context->core.id, mid, mosq_md_out)) return 1;
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_handle_publish(mqtt3_context *context)
@@ -134,7 +148,7 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	uint8_t dup, qos, retain;
 	uint16_t mid = 0;
 	int rc = 0;
-	uint8_t header = context->in_packet.command;
+	uint8_t header = context->core.in_packet.command;
 	int64_t store_id = 0;
 	int res = 0;
 
@@ -142,25 +156,25 @@ int mqtt3_handle_publish(mqtt3_context *context)
 	qos = (header & 0x06)>>1;
 	retain = (header & 0x01);
 
-	if(_mosquitto_read_string(&context->in_packet, &topic)) return 1;
+	if(_mosquitto_read_string(&context->core.in_packet, &topic)) return 1;
 	if(_mosquitto_fix_sub_topic(&topic)) return 1;
 	if(!strlen(topic)){
 		return 1;
 	}
 
 	if(qos > 0){
-		if(_mosquitto_read_uint16(&context->in_packet, &mid)){
-			mqtt3_free(topic);
+		if(_mosquitto_read_uint16(&context->core.in_packet, &mid)){
+			_mosquitto_free(topic);
 			return 1;
 		}
 	}
 
-	payloadlen = context->in_packet.remaining_length - context->in_packet.pos;
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBLISH from %s (%d, %d, %d, %d, '%s', ... (%ld bytes))", context->id, dup, qos, retain, mid, topic, (long)payloadlen);
+	payloadlen = context->core.in_packet.remaining_length - context->core.in_packet.pos;
+	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received PUBLISH from %s (%d, %d, %d, %d, '%s', ... (%ld bytes))", context->core.id, dup, qos, retain, mid, topic, (long)payloadlen);
 	if(payloadlen){
-		payload = mqtt3_calloc(payloadlen+1, sizeof(uint8_t));
-		if(_mosquitto_read_bytes(&context->in_packet, payload, payloadlen)){
-			mqtt3_free(topic);
+		payload = _mosquitto_calloc(payloadlen+1, sizeof(uint8_t));
+		if(_mosquitto_read_bytes(&context->core.in_packet, payload, payloadlen)){
+			_mosquitto_free(topic);
 			return 1;
 		}
 	}else{
@@ -171,22 +185,22 @@ int mqtt3_handle_publish(mqtt3_context *context)
 		}
 	}
 
-	if(mqtt3_db_message_store(context->id, topic, qos, payloadlen, payload, retain, &store_id)){
-		mqtt3_free(topic);
-		if(payload) mqtt3_free(payload);
+	if(mqtt3_db_message_store(context->core.id, topic, qos, payloadlen, payload, retain, &store_id)){
+		_mosquitto_free(topic);
+		if(payload) _mosquitto_free(payload);
 		return 1;
 	}
 	switch(qos){
 		case 0:
-			if(mqtt3_db_messages_queue(context->id, topic, qos, retain, store_id)) rc = 1;
+			if(mqtt3_db_messages_queue(context->core.id, topic, qos, retain, store_id)) rc = 1;
 			break;
 		case 1:
-			if(mqtt3_db_messages_queue(context->id, topic, qos, retain, store_id)) rc = 1;
+			if(mqtt3_db_messages_queue(context->core.id, topic, qos, retain, store_id)) rc = 1;
 			if(mqtt3_raw_puback(context, mid)) rc = 1;
 			break;
 		case 2:
 			if(!dup){
-				res = mqtt3_db_message_insert(context->id, mid, mosq_md_in, ms_wait_pubrec, qos, store_id);
+				res = mqtt3_db_message_insert(context->core.id, mid, mosq_md_in, ms_wait_pubrec, qos, store_id);
 			}
 			if(!res){
 				if(mqtt3_raw_pubrec(context, mid)) rc = 1;
@@ -195,8 +209,8 @@ int mqtt3_handle_publish(mqtt3_context *context)
 			}
 			break;
 	}
-	mqtt3_free(topic);
-	if(payload) mqtt3_free(payload);
+	_mosquitto_free(topic);
+	if(payload) _mosquitto_free(payload);
 
 	return rc;
 }
@@ -205,31 +219,37 @@ int mqtt3_handle_pubrec(mqtt3_context *context)
 {
 	uint16_t mid;
 
-	if(!context || context->in_packet.remaining_length != 2){
+	if(!context){
 		return 1;
 	}
-	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREC from %s (Mid: %d)", context->id, mid);
+	if(context->core.in_packet.remaining_length != 2){
+		return MOSQ_ERR_NOMEM;
+	}
+	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;
+	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received PUBREC from %s (Mid: %d)", context->core.id, mid);
 
-	if(mqtt3_db_message_update(context->id, mid, mosq_md_out, ms_wait_pubcomp)) return 1;
+	if(mqtt3_db_message_update(context->core.id, mid, mosq_md_out, ms_wait_pubcomp)) return 1;
 	if(mqtt3_raw_pubrel(context, mid)) return 1;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_handle_pubrel(mqtt3_context *context)
 {
 	uint16_t mid;
 
-	if(!context || context->in_packet.remaining_length != 2){
+	if(!context){
 		return 1;
 	}
-	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
-	mqtt3_log_printf(MQTT3_LOG_DEBUG, "Received PUBREL from %s (Mid: %d)", context->id, mid);
+	if(context->core.in_packet.remaining_length != 2){
+		return MOSQ_ERR_NOMEM;
+	}
+	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;
+	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received PUBREL from %s (Mid: %d)", context->core.id, mid);
 
-	mqtt3_db_message_release(context->id, mid, mosq_md_in);
+	mqtt3_db_message_release(context->core.id, mid, mosq_md_in);
 	if(mqtt3_raw_pubcomp(context, mid)) return 1;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 

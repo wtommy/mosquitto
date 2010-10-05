@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 #include <mqtt3.h>
+#include <mqtt3_protocol.h>
 
 /* Convert mqtt command (as defined in mqtt3.h) to corresponding string. */
 const char *mqtt3_command_to_string(uint8_t command)
@@ -71,8 +72,8 @@ const char *mqtt3_command_to_string(uint8_t command)
 
 void mqtt3_check_keepalive(mqtt3_context *context)
 {
-	if(context && context->sock != -1 && time(NULL) - context->last_msg_out >= context->keepalive){
-		if(context->connected){
+	if(context && context->core.sock != -1 && time(NULL) - context->core.last_msg_out >= context->core.keepalive){
+		if(context->core.state == mosq_cs_connected){
 			mqtt3_raw_pingreq(context);
 		}else{
 			mqtt3_socket_close(context);

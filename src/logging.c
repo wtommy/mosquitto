@@ -47,7 +47,7 @@ POSSIBILITY OF SUCH DAMAGE.
  * Logging pid.
  */
 static int log_destinations = MQTT3_LOG_STDERR;
-static int log_priorities = MQTT3_LOG_ERR | MQTT3_LOG_WARNING | MQTT3_LOG_NOTICE | MQTT3_LOG_INFO;
+static int log_priorities = MOSQ_LOG_ERR | MOSQ_LOG_WARNING | MOSQ_LOG_NOTICE | MOSQ_LOG_INFO;
 
 int mqtt3_log_init(int priorities, int destinations)
 {
@@ -70,7 +70,7 @@ int mqtt3_log_close(void)
 	}
 	/* FIXME - do something for all destinations! */
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_log_printf(int priority, const char *fmt, ...)
@@ -82,23 +82,23 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 
 	if((log_priorities & priority) && log_destinations != MQTT3_LOG_NONE){
 		switch(priority){
-			case MQTT3_LOG_DEBUG:
+			case MOSQ_LOG_DEBUG:
 				topic = "$SYS/broker/log/D";
 				syslog_priority = LOG_DEBUG;
 				break;
-			case MQTT3_LOG_ERR:
+			case MOSQ_LOG_ERR:
 				topic = "$SYS/broker/log/E";
 				syslog_priority = LOG_ERR;
 				break;
-			case MQTT3_LOG_WARNING:
+			case MOSQ_LOG_WARNING:
 				topic = "$SYS/broker/log/W";
 				syslog_priority = LOG_WARNING;
 				break;
-			case MQTT3_LOG_NOTICE:
+			case MOSQ_LOG_NOTICE:
 				topic = "$SYS/broker/log/N";
 				syslog_priority = LOG_NOTICE;
 				break;
-			case MQTT3_LOG_INFO:
+			case MOSQ_LOG_INFO:
 				topic = "$SYS/broker/log/I";
 				syslog_priority = LOG_INFO;
 				break;
@@ -121,11 +121,11 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 		if(log_destinations & MQTT3_LOG_SYSLOG){
 			syslog(syslog_priority, "%s", s);
 		}
-		if(log_destinations & MQTT3_LOG_TOPIC && priority != MQTT3_LOG_DEBUG){
+		if(log_destinations & MQTT3_LOG_TOPIC && priority != MOSQ_LOG_DEBUG){
 			mqtt3_db_messages_easy_queue("", topic, 2, strlen(s), (uint8_t *)s, 0);
 		}
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 

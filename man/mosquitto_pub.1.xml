@@ -10,7 +10,7 @@
 
 	<refnamediv>
 		<refname>mosquitto_pub</refname>
-		<refpurpose>an mqtt version 3 client for publishing simple messages</refpurpose>
+		<refpurpose>an mqtt version 3.1 client for publishing simple messages</refpurpose>
 	</refnamediv>
 
 	<refsynopsisdiv>
@@ -44,6 +44,16 @@
 				</group>
 				<arg><option>-n</option></arg>
 				<arg><option>-s</option></arg>
+			</group>
+			<group choice='opt'>
+				<arg>
+					<group choice='plain'>
+						<arg><option>-u</option> <replaceable>username</replaceable></arg>
+					</group>
+					<group choice='opt'>
+						<arg><option>--pw</option> <replaceable>password</replaceable></arg>
+					</group>
+				</arg>
 			</group>
 			<group choice='opt'>
 				<arg>
@@ -132,6 +142,15 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>--pw</option></term>
+				<listitem>
+					<para>Provide a password to be used for authenticating with
+					the broker. Using this argument without also specifying a
+					username is invalid. This requires a broker that supports
+					MQTT v3.1.  See also the --username option.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>-q</option></term>
 				<term><option>--qos</option></term>
 				<listitem>
@@ -157,6 +176,15 @@
 				<term><option>--topic</option></term>
 				<listitem>
 					<para>The mqtt topic on which to publish the message. See <citerefentry><refentrytitle>mqtt</refentrytitle><manvolnum>7</manvolnum></citerefentry> for more information on mqtt topics.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-u</option></term>
+				<term><option>--username</option></term>
+				<listitem>
+					<para>Provide a username to be used for authenticating with
+					the broker. This requires a broker that supports MQTT v3.1.
+					See also the --pw argument.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

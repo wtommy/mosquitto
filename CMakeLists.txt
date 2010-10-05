@@ -5,8 +5,19 @@
 
 project(mosquitto)
 
-cmake_minimum_required(VERSION 2.4)
-cmake_policy(SET CMP0003 NEW)
+cmake_minimum_required(VERSION 2.6)
+
+set (VERSION 0.8.2)
+
+if (WIN32)
+	execute_process(COMMAND echo "%DATE% %TIME%" OUTPUT_VARIABLE TIMESTAMP
+			OUTPUT_STRIP_TRAILING_WHITESPACE)
+else (WIN32)
+	execute_process(COMMAND date "+%F %T%z" OUTPUT_VARIABLE TIMESTAMP
+			OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif (WIN32)
+
+add_definitions (-DVERSION=\"${VERSION}\" -DTIMESTAMP=\"${TIMESTAMP}\")
 
 if (WIN32)
     set (BINDEST .)
@@ -21,3 +32,6 @@ endif (WIN32)
 add_subdirectory(lib)
 add_subdirectory(client)
 
+if (NOT WIN32)
+	add_subdirectory(src)
+endif (NOT WIN32)
