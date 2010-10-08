@@ -108,7 +108,7 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 
 	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
 	child->next = NULL;
-	child->topic = strdup("");
+	child->topic = _mosquitto_strdup("");
 	child->subs = NULL;
 	child->children = NULL;
 	child->retained = NULL;
@@ -116,7 +116,7 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 
 	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
 	child->next = NULL;
-	child->topic = strdup("/");
+	child->topic = _mosquitto_strdup("/");
 	child->subs = NULL;
 	child->children = NULL;
 	child->retained = NULL;
@@ -124,7 +124,7 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 
 	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
 	child->next = NULL;
-	child->topic = strdup("$SYS");
+	child->topic = _mosquitto_strdup("$SYS");
 	child->subs = NULL;
 	child->children = NULL;
 	child->retained = NULL;
@@ -447,7 +447,7 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 	temp->msg.topic = _mosquitto_strdup(topic);
 	temp->msg.payloadlen = payloadlen;
 	if(payloadlen){
-		temp->msg.payload = malloc(sizeof(uint8_t)*payloadlen);
+		temp->msg.payload = _mosquitto_malloc(sizeof(uint8_t)*payloadlen);
 		memcpy(temp->msg.payload, payload, sizeof(uint8_t)*payloadlen);
 	}else{
 		temp->msg.payload = NULL;
