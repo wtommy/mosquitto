@@ -71,6 +71,9 @@ int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge)
 	if(!new_context->core.id){
 		return MOSQ_ERR_NOMEM;
 	}
+	new_context->core.username = new_context->bridge->username;
+	new_context->core.password = new_context->bridge->password;
+
 	return mqtt3_bridge_connect(db, new_context);
 }
 

@@ -59,7 +59,7 @@ static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t comm
 	packet->payload[0] = MOSQ_MSB(mid);
 	packet->payload[1] = MOSQ_LSB(mid);
 
-	_mosquitto_packet_queue(mosq, packet);
+	_mosquitto_packet_queue(&mosq->core, packet);
 
 	return MOSQ_ERR_SUCCESS;
 }
@@ -76,7 +76,7 @@ int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 	packet->command = command;
 	packet->remaining_length = 0;
 
-	_mosquitto_packet_queue(mosq, packet);
+	_mosquitto_packet_queue(&mosq->core, packet);
 
 	return MOSQ_ERR_SUCCESS;
 }
@@ -147,7 +147,7 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 		_mosquitto_write_bytes(packet, payload, payloadlen);
 	}
 
-	_mosquitto_packet_queue(mosq, packet);
+	_mosquitto_packet_queue(&mosq->core, packet);
 
 	return MOSQ_ERR_SUCCESS;
 }

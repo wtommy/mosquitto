@@ -131,6 +131,7 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 	if(context->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
 	}
+
 	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received PUBCOMP from %s (Mid: %d)", context->core.id, mid);
 

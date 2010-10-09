@@ -38,7 +38,7 @@ POSSIBILITY OF SUCH DAMAGE.
 mqtt3_context *mqtt3_context_init(int sock)
 {
 	mqtt3_context *context;
-	struct sockaddr addr;
+	struct sockaddr_storage addr;
 	socklen_t addrlen;
 	char address[1024];
 
@@ -55,6 +55,8 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context->core.id = NULL;
 	context->core.last_mid = 0;
 	context->core.will = NULL;
+	context->core.username = NULL;
+	context->core.password = NULL;
 
 	context->core.in_packet.payload = NULL;
 	_mosquitto_packet_cleanup(&context->core.in_packet);
@@ -62,9 +64,15 @@ mqtt3_context *mqtt3_context_init(int sock)
 
 	addrlen = sizeof(addr);
 	context->address = NULL;
-	if(!getpeername(sock, &addr, &addrlen)){
-		if(inet_ntop(AF_INET, &((struct sockaddr_in *)&addr)->sin_addr.s_addr, address, 1024)){
-			context->address = _mosquitto_strdup(address);
+	if(!getpeername(sock, (struct sockaddr *)&addr, &addrlen)){
+		if(addr.ss_family == AF_INET){
+			if(inet_ntop(AF_INET, &((struct sockaddr_in *)&addr)->sin_addr.s_addr, address, 1024)){
+				context->address = _mosquitto_strdup(address);
+			}
+		}else if(addr.ss_family == AF_INET6){
+			if(inet_ntop(AF_INET6, &((struct sockaddr_in6 *)&addr)->sin6_addr.s6_addr, address, 1024)){
+				context->address = _mosquitto_strdup(address);
+			}
 		}
 	}
 	context->bridge = NULL;
