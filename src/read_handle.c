@@ -200,7 +200,7 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 			break;
 		case 2:
 			if(!dup){
-				res = mqtt3_db_message_insert(context, mid, mosq_md_in, ms_wait_pubrec, qos, stored);
+				res = mqtt3_db_message_insert(context, mid, mosq_md_in, ms_wait_pubrec, qos, false, stored);
 			}else{
 				res = 0;
 			}

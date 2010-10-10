@@ -295,7 +295,7 @@ int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid, enum mosquitto
 	return 0;
 }
 
-int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_state state, int qos, struct mosquitto_msg_store *stored)
+int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_state state, int qos, bool retain, struct mosquitto_msg_store *stored)
 {
 	mosquitto_client_msg *msg, *tail;
 	int count = 0;
@@ -344,6 +344,7 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 	msg->state = state;
 	msg->dup = false;
 	msg->qos = qos;
+	msg->retain = retain;
 	tail = context->msgs;
 	while(tail && tail->next){
 		tail = tail->next;
@@ -544,7 +545,7 @@ int mqtt3_db_message_release(mosquitto_db *db, mqtt3_context *context, uint16_t 
 		if(tail->mid == mid && tail->direction == dir){
 			qos = tail->store->msg.qos;
 			topic = tail->store->msg.topic;
-			retain = tail->store->msg.retain;
+			retain = tail->retain;
 			source_id = tail->store->source_id;
 
 			if(!mqtt3_db_messages_queue(db, source_id, topic, qos, retain, tail->store)){
@@ -584,7 +585,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 		if(tail->direction == mosq_md_out){
 			mid = tail->mid;
 			retries = tail->dup;
-			retain = tail->store->msg.retain;
+			retain = tail->retain;
 			topic = tail->store->msg.topic;
 			qos = tail->qos;
 			payloadlen = tail->store->msg.payloadlen;
