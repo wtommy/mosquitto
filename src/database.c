@@ -174,7 +174,9 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 	int rc = 0;
 	int db_fd;
 	uint32_t db_version = htonl(MQTT_DB_VERSION);
+	uint32_t crc = 0;
 	char *buf = NULL;
+	unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','t','o',' ','d','b'};
 
 	if(!db || !db_filepath) return 1;
 	mqtt3_log_printf(MOSQ_LOG_INFO, "Saving in-memory database to %s.", db_filepath);
@@ -186,7 +188,10 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 	if(db_fd < 0){
 		goto error;
 	}
-	if(write(db_fd, "mosquitto db", 12) != 12){
+	if(write(db_fd, magic, 15) != 15){
+		goto error;
+	}
+	if(write(db_fd, &crc, sizeof(uint32_t)) != sizeof(uint32_t)){
 		goto error;
 	}
 	if(write(db_fd, &db_version, sizeof(uint32_t)) != sizeof(uint32_t)){
@@ -481,7 +486,7 @@ int mqtt3_db_message_store_find(mosquitto_db *db, const char *source, uint16_t m
 		}
 		tail = tail->next;
 	}
-	
+
 	return 1;
 }
 
