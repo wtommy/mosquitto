@@ -297,6 +297,30 @@ int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 	return 0;
 }
 
+int mqtt3_db_client_write(mosquitto_db *db, int db_fd)
+{
+	int i;
+	uint32_t length;
+	uint64_t i64temp;
+	uint32_t i32temp;
+	uint16_t i16temp;
+	uint8_t i8temp;
+	mqtt3_context *context;
+
+	assert(db);
+	assert(db_fd >= 0);
+
+#define write_e(a, b, c) if(write(a, b, c) != c){ return 1; }
+
+	for(i=0; i<db->context_count; i++){
+		context = db->contexts[i];
+		if(context){
+			if(mqtt3_db_client_messages_write(db, db_fd, context)) return 1;
+		}
+	}
+	return 0;
+}
+
 int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 {
 	int rc = 0;
