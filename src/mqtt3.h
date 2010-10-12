@@ -93,6 +93,7 @@ typedef struct _mosquitto_client_msg{
 } mosquitto_client_msg;
 
 typedef struct _mosquitto_db{
+	uint64_t last_mid;
 	struct _mosquitto_subhier subs;
 	struct _mqtt3_context **contexts;
 	int context_count;

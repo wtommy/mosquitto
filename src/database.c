@@ -60,6 +60,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <arpa/inet.h>
 #include <assert.h>
+#include <endian.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -101,6 +102,8 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 			db_filepath = _mosquitto_strdup(config->persistence_file);
 		}
 	}
+
+	db->last_mid = 0;
 
 	db->context_count = 1;
 	db->contexts = _mosquitto_malloc(sizeof(mqtt3_context*)*db->context_count);
@@ -180,7 +183,9 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 	int db_fd;
 	uint32_t db_version = htonl(MQTT_DB_VERSION);
 	uint32_t crc = htonl(0);
-	uint32_t itemp;
+	uint64_t i64temp;
+	uint32_t i32temp;
+	uint16_t i16temp;
 
 	if(!db || !db_filepath) return 1;
 	mqtt3_log_printf(MOSQ_LOG_INFO, "Saving in-memory database to %s.", db_filepath);
@@ -195,9 +200,21 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 
 #define write_e(a, b, c) if(write(a, b, c) != c){ goto error; }
 
+	/* Header */
 	write_e(db_fd, magic, 15);
 	write_e(db_fd, &crc, sizeof(uint32_t));
 	write_e(db_fd, &db_version, sizeof(uint32_t));
+
+	/* FIXME - what more config is needed? */
+	/* DB config */
+	i16temp = htons(DB_CHUNK_CFG);
+	write_e(db_fd, &i16temp, sizeof(uint16_t));
+	/* chunk size */
+	i16temp = htons(sizeof(uint16_t)); // FIXME
+	write_e(db_fd, &i16temp, sizeof(uint16_t));
+	/* last db mid */
+	i64temp = htobe64(db->last_mid);
+	write_e(db_fd, &i64temp, sizeof(uint64_t));
 
 #undef write_e
 
@@ -206,7 +223,6 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 	return rc;
 error:
 	mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
-	if(buf) _mosquitto_free(buf);
 	if(db_fd >= 0) close(db_fd);
 	return 1;
 }
