@@ -72,6 +72,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <subs.h>
 #include <util_mosq.h>
 
+/* DB read/write */
+const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','t','o',' ','d','b'};
+#define DB_CHUNK_CFG 1
+/* End DB read/write */
+
 static char *db_filepath = NULL;
 
 static int max_inflight = 20;
@@ -174,9 +179,8 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 	int rc = 0;
 	int db_fd;
 	uint32_t db_version = htonl(MQTT_DB_VERSION);
-	uint32_t crc = 0;
-	char *buf = NULL;
-	unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','t','o',' ','d','b'};
+	uint32_t crc = htonl(0);
+	uint32_t itemp;
 
 	if(!db || !db_filepath) return 1;
 	mqtt3_log_printf(MOSQ_LOG_INFO, "Saving in-memory database to %s.", db_filepath);
@@ -188,29 +192,18 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 	if(db_fd < 0){
 		goto error;
 	}
-	if(write(db_fd, magic, 15) != 15){
-		goto error;
-	}
-	if(write(db_fd, &crc, sizeof(uint32_t)) != sizeof(uint32_t)){
-		goto error;
-	}
-	if(write(db_fd, &db_version, sizeof(uint32_t)) != sizeof(uint32_t)){
-		goto error;
-	}
-	buf = _mosquitto_calloc(1024, sizeof(char));
-	if(!buf){
-		close(db_fd);
-		return 1;
-	}
-	/* Write 1024 empty bytes for future changes. */
-	if(write(db_fd, buf, 1024) != 1024) goto error;
-	_mosquitto_free(buf);
-	buf = NULL;
+
+#define write_e(a, b, c) if(write(a, b, c) != c){ goto error; }
+
+	write_e(db_fd, magic, 15);
+	write_e(db_fd, &crc, sizeof(uint32_t));
+	write_e(db_fd, &db_version, sizeof(uint32_t));
+
+#undef write_e
 
 	/* FIXME - needs implementing */
 	close(db_fd);
 	return rc;
-
 error:
 	mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
 	if(buf) _mosquitto_free(buf);
