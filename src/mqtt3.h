@@ -73,6 +73,7 @@ enum mqtt3_msg_state {
 
 struct mosquitto_msg_store{
 	struct mosquitto_msg_store *next;
+	uint64_t db_id;
 	time_t timestamp;
 	int ref_count;
 	char *source_id;
@@ -93,7 +94,7 @@ typedef struct _mosquitto_client_msg{
 } mosquitto_client_msg;
 
 typedef struct _mosquitto_db{
-	uint64_t last_mid;
+	uint64_t last_db_id;
 	struct _mosquitto_subhier subs;
 	struct _mqtt3_context **contexts;
 	int context_count;

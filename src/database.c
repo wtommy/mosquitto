@@ -103,7 +103,7 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 		}
 	}
 
-	db->last_mid = 0;
+	db->last_db_id = 0;
 
 	db->context_count = 1;
 	db->contexts = _mosquitto_malloc(sizeof(mqtt3_context*)*db->context_count);
@@ -213,7 +213,7 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 	i16temp = htons(sizeof(uint16_t)); // FIXME
 	write_e(db_fd, &i16temp, sizeof(uint16_t));
 	/* last db mid */
-	i64temp = htobe64(db->last_mid);
+	i64temp = htobe64(db->last_db_id);
 	write_e(db_fd, &i64temp, sizeof(uint64_t));
 
 #undef write_e
@@ -478,6 +478,8 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 	db->msg_store_count++;
 	db->msg_store = temp;
 	(*stored) = temp;
+
+	temp->db_id = ++db->last_db_id;
 
 	return 0;
 }
