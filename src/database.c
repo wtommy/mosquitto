@@ -252,7 +252,7 @@ int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 		length = htonl(sizeof(uint64_t) + 2+strlen(stored->source_id) +
 				sizeof(uint16_t) + sizeof(uint16_t) +
 				2+strlen(stored->msg.topic) + sizeof(uint32_t) +
-				stored->msg.payloadlen + sizeof(int) + sizeof(int));
+				stored->msg.payloadlen + sizeof(uint8_t) + sizeof(uint8_t));
 
 		i16temp = htons(DB_CHUNK_MSG_STORE);
 		write_e(db_fd, &i16temp, sizeof(uint16_t));
@@ -267,7 +267,8 @@ int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 			write_e(db_fd, stored->source_id, strlen(stored->source_id));
 		}
 
-		write_e(db_fd, &stored->source_mid, sizeof(uint16_t));
+		i16temp = htons(stored->source_mid);
+		write_e(db_fd, &i16temp, sizeof(uint16_t));
 
 		i16temp = htons(stored->msg.mid);
 		write_e(db_fd, &i16temp, sizeof(uint16_t));
@@ -328,7 +329,7 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 	/* DB config */
 	i16temp = htons(DB_CHUNK_CFG);
 	write_e(db_fd, &i16temp, sizeof(uint16_t));
-	/* chunk size */
+	/* chunk length */
 	i16temp = htons(sizeof(uint16_t)); // FIXME
 	write_e(db_fd, &i16temp, sizeof(uint16_t));
 	/* last db mid */
