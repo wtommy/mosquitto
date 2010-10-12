@@ -76,6 +76,7 @@ POSSIBILITY OF SUCH DAMAGE.
 /* DB read/write */
 const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','t','o',' ','d','b'};
 #define DB_CHUNK_CFG 1
+#define DB_CHUNK_MSG_STORE 2
 /* End DB read/write */
 
 static char *db_filepath = NULL;
@@ -177,6 +178,69 @@ int mqtt3_db_close(mosquitto_db *db)
 	return MOSQ_ERR_SUCCESS;
 }
 
+int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
+{
+	uint32_t length;
+	uint64_t i64temp;
+	uint32_t i32temp;
+	uint16_t i16temp;
+	uint8_t i8temp;
+	struct mosquitto_msg_store *stored;
+
+	assert(db);
+	assert(db_fd >= 0);
+
+#define write_e(a, b, c) if(write(a, b, c) != c){ return 1; }
+
+	stored = db->msg_store;
+	while(stored){
+		length = htonl(sizeof(uint64_t) + 2+strlen(stored->source_id) +
+				sizeof(uint16_t) + sizeof(uint16_t) +
+				2+strlen(stored->msg.topic) + sizeof(uint32_t) +
+				stored->msg.payloadlen + sizeof(int) + sizeof(int));
+
+		i16temp = htons(DB_CHUNK_MSG_STORE);
+		write_e(db_fd, &i16temp, sizeof(uint16_t));
+		write_e(db_fd, &length, sizeof(uint32_t));
+
+		i64temp = htobe64(stored->db_id);
+		write_e(db_fd, &i64temp, sizeof(uint64_t));
+
+		i16temp = htons(strlen(stored->source_id));
+		write_e(db_fd, &i16temp, sizeof(uint16_t));
+		if(i16temp){
+			write_e(db_fd, stored->source_id, strlen(stored->source_id));
+		}
+
+		write_e(db_fd, &stored->source_mid, sizeof(uint16_t));
+
+		i16temp = htons(stored->msg.mid);
+		write_e(db_fd, &i16temp, sizeof(uint16_t));
+
+		i16temp = htons(strlen(stored->msg.topic));
+		write_e(db_fd, &i16temp, sizeof(uint16_t));
+		write_e(db_fd, stored->msg.topic, strlen(stored->msg.topic));
+
+		i8temp = (uint8_t )stored->msg.qos;
+		write_e(db_fd, &i8temp, sizeof(uint8_t));
+
+		i8temp = (uint8_t )stored->msg.retain;
+		write_e(db_fd, &i8temp, sizeof(uint8_t));
+
+		i32temp = htonl(stored->msg.payloadlen);
+		write_e(db_fd, &i32temp, sizeof(uint32_t));
+		if(stored->msg.payloadlen){
+			write_e(db_fd, stored->msg.payload, stored->msg.payloadlen);
+		}
+
+		stored = stored->next;
+	}
+
+#undef write_e
+
+	return 0;
+}
+
 int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 {
 	int rc = 0;
@@ -216,6 +280,9 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 	i64temp = htobe64(db->last_db_id);
 	write_e(db_fd, &i64temp, sizeof(uint64_t));
 
+	if(mqtt3_db_message_store_write(db, db_fd)){
+		goto error;
+	}
 #undef write_e
 
 	/* FIXME - needs implementing */
