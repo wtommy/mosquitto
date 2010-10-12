@@ -77,6 +77,7 @@ POSSIBILITY OF SUCH DAMAGE.
 const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','t','o',' ','d','b'};
 #define DB_CHUNK_CFG 1
 #define DB_CHUNK_MSG_STORE 2
+#define DB_CHUNK_CLIENT_MSG 3
 /* End DB read/write */
 
 static char *db_filepath = NULL;
@@ -177,6 +178,60 @@ int mqtt3_db_close(mosquitto_db *db)
 
 	return MOSQ_ERR_SUCCESS;
 }
+
+int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_context *context)
+{
+	uint32_t length;
+	uint64_t i64temp;
+	uint16_t i16temp;
+	uint8_t i8temp;
+	mosquitto_client_msg *cmsg;
+
+	assert(db);
+	assert(db_fd >= 0);
+	assert(context);
+
+#define write_e(a, b, c) if(write(a, b, c) != c){ return 1; }
+
+	cmsg = context->msgs;
+	while(cmsg){
+		length = htonl(sizeof(uint64_t) + sizeof(uint16_t) + sizeof(uint8_t) +
+				sizeof(uint8_t) + sizeof(uint8_t) + sizeof(uint8_t) +
+				sizeof(uint8_t));
+
+		i16temp = htons(DB_CHUNK_CLIENT_MSG);
+		write_e(db_fd, &i16temp, sizeof(uint16_t));
+		write_e(db_fd, &length, sizeof(uint32_t));
+
+		i64temp = htobe64(cmsg->store->db_id);
+		write_e(db_fd, &i64temp, sizeof(uint64_t));
+
+		i16temp = htons(cmsg->mid);
+		write_e(db_fd, &i16temp, sizeof(uint16_t));
+
+		i8temp = (uint8_t )cmsg->qos;
+		write_e(db_fd, &i8temp, sizeof(uint16_t));
+
+		i8temp = (uint8_t )cmsg->retain;
+		write_e(db_fd, &i8temp, sizeof(uint16_t));
+
+		i8temp = (uint8_t )cmsg->direction;
+		write_e(db_fd, &i8temp, sizeof(uint16_t));
+
+		i8temp = (uint8_t )cmsg->state;
+		write_e(db_fd, &i8temp, sizeof(uint16_t));
+
+		i8temp = (uint8_t )cmsg->dup;
+		write_e(db_fd, &i8temp, sizeof(uint16_t));
+
+		cmsg = cmsg->next;
+	}
+
+#undef write_e
+
+	return 0;
+}
+
 
 int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 {
