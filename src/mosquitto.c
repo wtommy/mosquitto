@@ -460,12 +460,18 @@ int main(int argc, char *argv[])
 	mqtt3_log_printf(MOSQ_LOG_INFO, "mosquitto version %s terminating", VERSION);
 	mqtt3_log_close();
 
+	if(config.persistence && config.autosave_interval){
+		mqtt3_db_backup(&int_db, true);
+	}
+
 	for(i=0; i<int_db.context_count; i++){
 		if(int_db.contexts[i]){
 			mqtt3_context_cleanup(&int_db, int_db.contexts[i]);
 		}
 	}
 	_mosquitto_free(int_db.contexts);
+	int_db.contexts = NULL;
+	mqtt3_db_close(&int_db);
 
 	if(listensock){
 		for(i=0; i<listensock_count; i++){
@@ -476,10 +482,6 @@ int main(int argc, char *argv[])
 		_mosquitto_free(listensock);
 	}
 
-	if(config.persistence && config.autosave_interval){
-		mqtt3_db_backup(&int_db, true);
-	}
-	mqtt3_db_close(&int_db);
 
 	if(config.pid_file){
 		remove(config.pid_file);
