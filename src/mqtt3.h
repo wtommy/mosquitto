@@ -100,6 +100,7 @@ typedef struct _mosquitto_db{
 	int context_count;
 	struct mosquitto_msg_store *msg_store;
 	int msg_store_count;
+	char *filepath;
 } mosquitto_db;
 
 enum mqtt3_bridge_direction{
