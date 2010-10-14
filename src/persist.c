@@ -221,8 +221,8 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 	i16temp = htons(DB_CHUNK_CFG);
 	write_e(db_fd, &i16temp, sizeof(uint16_t));
 	/* chunk length */
-	i16temp = htons(sizeof(uint16_t)); // FIXME
-	write_e(db_fd, &i16temp, sizeof(uint16_t));
+	i32temp = htons(sizeof(uint16_t)); // FIXME
+	write_e(db_fd, &i32temp, sizeof(uint32_t));
 	/* last db mid */
 	i64temp = htobe64(db->last_db_id);
 	write_e(db_fd, &i64temp, sizeof(uint64_t));
