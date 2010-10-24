@@ -1,0 +1,420 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2010-10-24 09:57+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: mosquitto.8.xml:7(refentrytitle) mosquitto.8.xml:12(refname) mosquitto.8.xml:18(command)
+msgid "mosquitto"
+msgstr ""
+
+#: mosquitto.8.xml:8(manvolnum)
+msgid "8"
+msgstr ""
+
+#: mosquitto.8.xml:13(refpurpose)
+msgid "an mqtt broker"
+msgstr ""
+
+#: mosquitto.8.xml:20(option) mosquitto.8.xml:42(option)
+msgid "-c"
+msgstr ""
+
+#: mosquitto.8.xml:20(replaceable)
+msgid "config file"
+msgstr ""
+
+#: mosquitto.8.xml:23(option) mosquitto.8.xml:49(option)
+msgid "-d"
+msgstr ""
+
+#: mosquitto.8.xml:24(option) mosquitto.8.xml:50(option)
+msgid "--daemon"
+msgstr ""
+
+#: mosquitto.8.xml:27(option) mosquitto.8.xml:56(option)
+msgid "-p"
+msgstr ""
+
+#: mosquitto.8.xml:27(replaceable)
+msgid "port number"
+msgstr ""
+
+#: mosquitto.8.xml:33(title)
+msgid "Description"
+msgstr ""
+
+#: mosquitto.8.xml:34(para)
+msgid "<command>mosquitto</command> is a broker for the mqtt protocol version 3."
+msgstr ""
+
+#: mosquitto.8.xml:35(para)
+msgid "It is intended to be a drop in replacement for rsmb, but it's a long way off yet."
+msgstr ""
+
+#: mosquitto.8.xml:39(title)
+msgid "Options"
+msgstr ""
+
+#: mosquitto.8.xml:43(option)
+msgid "--config-file"
+msgstr ""
+
+#: mosquitto.8.xml:45(para)
+msgid "Load configuration from a file. If not given, the default values as described in <citerefentry><refentrytitle>mosquitto.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> are used."
+msgstr ""
+
+#: mosquitto.8.xml:52(para)
+msgid "Run <command>mosquitto</command> in the background as a daemon. All other behaviour remains the same."
+msgstr ""
+
+#: mosquitto.8.xml:57(option)
+msgid "--port"
+msgstr ""
+
+#: mosquitto.8.xml:59(para)
+msgid "Listen on the port specified instead of the default 1883. This acts in addition to the port setting in the config file. May be specified multiple times to open multiple sockets listening on different ports. This socket will be bound to all network interfaces."
+msgstr ""
+
+#: mosquitto.8.xml:66(title)
+msgid "Limitations"
+msgstr ""
+
+#: mosquitto.8.xml:67(para)
+msgid "<command>mosquitto</command> implements all of the mqtt protocol version 3, but there are some significant limitations compared to rsmb."
+msgstr ""
+
+#: mosquitto.8.xml:69(para)
+msgid "There is only basic bridge support."
+msgstr ""
+
+#: mosquitto.8.xml:70(para)
+msgid "There are vastly fewer configuration options."
+msgstr ""
+
+#: mosquitto.8.xml:71(para)
+msgid "There is less logging information."
+msgstr ""
+
+#: mosquitto.8.xml:72(para)
+msgid "The $SYS hierarchy is smaller."
+msgstr ""
+
+#: mosquitto.8.xml:73(para)
+msgid "It isn't as well tested or documented..."
+msgstr ""
+
+#: mosquitto.8.xml:75(para)
+msgid "It should be noted that all of the above limitations should have \"currently\" included in them. They will all be fixed at some point."
+msgstr ""
+
+#: mosquitto.8.xml:79(title)
+msgid "Broker Status"
+msgstr ""
+
+#: mosquitto.8.xml:80(para)
+msgid "Clients can find information about the broker by subscribing to topics in the $SYS hierarchy as follows. Topics marked as static are only sent once per client on subscription. All other topics are updated every <option>sys_interval</option> seconds. If <option>sys_interval</option> is 0, then updates are not sent."
+msgstr ""
+
+#: mosquitto.8.xml:83(option)
+msgid "$SYS/broker/bytes/received"
+msgstr ""
+
+#: mosquitto.8.xml:85(para)
+msgid "The total number of bytes received since the broker started."
+msgstr ""
+
+#: mosquitto.8.xml:89(option)
+msgid "$SYS/broker/bytes/sent"
+msgstr ""
+
+#: mosquitto.8.xml:91(para)
+msgid "The total number of bytes sent since the broker started."
+msgstr ""
+
+#: mosquitto.8.xml:95(option)
+msgid "$SYS/broker/changeset"
+msgstr ""
+
+#: mosquitto.8.xml:97(para)
+msgid "The repository changeset (revision) associated with this build."
+msgstr ""
+
+#: mosquitto.8.xml:101(option)
+msgid "$SYS/broker/clients/total"
+msgstr ""
+
+#: mosquitto.8.xml:103(para)
+msgid "The total number of clients currently either connected to the broker or disconnected but with clean session not set."
+msgstr ""
+
+#: mosquitto.8.xml:107(option)
+msgid "$SYS/broker/heap/current size"
+msgstr ""
+
+#: mosquitto.8.xml:109(para)
+msgid "The current size of the heap memory in use by mosquitto. Note that this topic may be unavailable depending on compile time options."
+msgstr ""
+
+#: mosquitto.8.xml:115(option)
+msgid "$SYS/broker/messages/inflight"
+msgstr ""
+
+#: mosquitto.8.xml:117(para)
+msgid "The number of messages currently in flight."
+msgstr ""
+
+#: mosquitto.8.xml:121(option)
+msgid "$SYS/broker/messages/received"
+msgstr ""
+
+#: mosquitto.8.xml:123(para)
+msgid "The total number of messages received since the broker started."
+msgstr ""
+
+#: mosquitto.8.xml:127(option)
+msgid "$SYS/broker/messages/sent"
+msgstr ""
+
+#: mosquitto.8.xml:129(para)
+msgid "The total number of messages sent since the broker started."
+msgstr ""
+
+#: mosquitto.8.xml:133(option)
+msgid "$SYS/broker/timestamp"
+msgstr ""
+
+#: mosquitto.8.xml:135(para)
+msgid "The timestamp at which this particular build of the broker was made. Static."
+msgstr ""
+
+#: mosquitto.8.xml:139(option)
+msgid "$SYS/broker/uptime"
+msgstr ""
+
+#: mosquitto.8.xml:141(para)
+msgid "The amount of time in seconds the broker has been online."
+msgstr ""
+
+#: mosquitto.8.xml:145(option)
+msgid "$SYS/broker/version"
+msgstr ""
+
+#: mosquitto.8.xml:147(para)
+msgid "The version of the broker. Static."
+msgstr ""
+
+#: mosquitto.8.xml:154(title)
+msgid "Wildcard Topic Subscriptions"
+msgstr ""
+
+#: mosquitto.8.xml:155(para)
+msgid "In addition to allowing clients to subscribe to specific topics, mosquitto also allows the use of two wildcards in subscriptions. <option>+</option> is the wildcard used to match a single level of hierarchy. For example, for a topic of \"a/b/c/d\", the following example subscriptions will match:"
+msgstr ""
+
+#: mosquitto.8.xml:161(para) mosquitto.8.xml:177(para)
+msgid "a/b/c/d"
+msgstr ""
+
+#: mosquitto.8.xml:162(para)
+msgid "+/b/c/d"
+msgstr ""
+
+#: mosquitto.8.xml:163(para)
+msgid "a/+/c/d"
+msgstr ""
+
+#: mosquitto.8.xml:164(para)
+msgid "a/+/+/d"
+msgstr ""
+
+#: mosquitto.8.xml:165(para)
+msgid "+/+/+/+"
+msgstr ""
+
+#: mosquitto.8.xml:167(para)
+msgid "The following subscriptions will not match:"
+msgstr ""
+
+#: mosquitto.8.xml:169(para)
+msgid "a/b/c"
+msgstr ""
+
+#: mosquitto.8.xml:170(para)
+msgid "b/+/c/d"
+msgstr ""
+
+#: mosquitto.8.xml:171(para)
+msgid "+/+/+"
+msgstr ""
+
+#: mosquitto.8.xml:173(para)
+msgid "The second wildcard is <option>#</option> and is used to match all subsequent levels of hierarchy. With a topic of \"a/b/c/d\", the following example subscriptions will match:"
+msgstr ""
+
+#: mosquitto.8.xml:178(para)
+msgid "#"
+msgstr ""
+
+#: mosquitto.8.xml:179(para)
+msgid "a/#"
+msgstr ""
+
+#: mosquitto.8.xml:180(para)
+msgid "a/b/#"
+msgstr ""
+
+#: mosquitto.8.xml:181(para)
+msgid "a/b/c/#"
+msgstr ""
+
+#: mosquitto.8.xml:182(para)
+msgid "+/b/c/#"
+msgstr ""
+
+#: mosquitto.8.xml:184(para)
+msgid "The $SYS hierarchy does not match a subscription of \"#\". If you want to observe the entire $SYS hierarchy, subscribe to $SYS/#."
+msgstr ""
+
+#: mosquitto.8.xml:187(para)
+msgid "Note that the wildcards must be only ever used on their own, so a subscription of \"a/b+/c\" is not valid use of a wildcard. The <option>#</option> wildcard must only ever be used as the final character of a subscription."
+msgstr ""
+
+#: mosquitto.8.xml:194(title)
+msgid "Bridges"
+msgstr ""
+
+#: mosquitto.8.xml:195(para)
+msgid "Multiple brokers can be connected together with the bridging functionality. This is useful where it is desirable to share information between locations, but where not all of the information needs to be shared. An example could be where a number of users are running a broker to help record power usage and for a number of other reasons. The power usage could be shared through bridging all of the user brokers to a common broker, allowing the power usage of all users to be collected and compared. The other information would remain local to each broker."
+msgstr ""
+
+#: mosquitto.8.xml:205(para)
+msgid "For information on configuring bridges, see <citerefentry><refentrytitle>mosquitto.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>."
+msgstr ""
+
+#: mosquitto.8.xml:210(title)
+msgid "Signals"
+msgstr ""
+
+#: mosquitto.8.xml:213(term)
+msgid "SIGUSR1"
+msgstr ""
+
+#: mosquitto.8.xml:215(para)
+msgid "Upon receiving the SIGUSR1 signal, mosquitto will write the persistence database to disk. This signal is only acted upon if persistence is enabled."
+msgstr ""
+
+#: mosquitto.8.xml:219(term)
+msgid "SIGUSR2"
+msgstr ""
+
+#: mosquitto.8.xml:221(para)
+msgid "The SIGUSR2 signal causes mosquitto to run VACUUM on the in-memory database. This frees currently unused memory associated with the database."
+msgstr ""
+
+#: mosquitto.8.xml:230(title)
+msgid "Files"
+msgstr ""
+
+#: mosquitto.8.xml:233(filename)
+msgid "/etc/mosquitto.conf"
+msgstr ""
+
+#: mosquitto.8.xml:235(para)
+msgid "Configuration file. See <citerefentry><refentrytitle>mosquitto.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>."
+msgstr ""
+
+#: mosquitto.8.xml:239(filename)
+msgid "/var/lib/mosquitto/mosquitto.db"
+msgstr ""
+
+#: mosquitto.8.xml:241(para)
+msgid "Persistent message data storage location if persist enabled."
+msgstr ""
+
+#: mosquitto.8.xml:245(filename)
+msgid "/etc/hosts.allow"
+msgstr ""
+
+#: mosquitto.8.xml:246(filename)
+msgid "/etc/hosts.deny"
+msgstr ""
+
+#: mosquitto.8.xml:248(para)
+msgid "Host access control via tcp-wrappers as described in <citerefentry><refentrytitle>hosts_access</refentrytitle><manvolnum>5</manvolnum></citerefentry>."
+msgstr ""
+
+#: mosquitto.8.xml:255(title)
+msgid "Bugs"
+msgstr ""
+
+#: mosquitto.8.xml:256(para)
+msgid "<command>mosquitto</command> bug information can be found at <uri type=\"webpage\">http://launchpad.net/mosquitto</uri>."
+msgstr ""
+
+#: mosquitto.8.xml:260(title)
+msgid "See Also"
+msgstr ""
+
+#: mosquitto.8.xml:263(refentrytitle)
+msgid "mosquitto.conf"
+msgstr ""
+
+#: mosquitto.8.xml:264(manvolnum) mosquitto.8.xml:268(manvolnum)
+msgid "5"
+msgstr ""
+
+#: mosquitto.8.xml:267(refentrytitle)
+msgid "hosts_access"
+msgstr ""
+
+#: mosquitto.8.xml:271(refentrytitle)
+msgid "mosquitto_pub"
+msgstr ""
+
+#: mosquitto.8.xml:272(manvolnum) mosquitto.8.xml:276(manvolnum)
+msgid "1"
+msgstr ""
+
+#: mosquitto.8.xml:275(refentrytitle)
+msgid "mosquitto_sub"
+msgstr ""
+
+#: mosquitto.8.xml:279(refentrytitle)
+msgid "libmosquitto"
+msgstr ""
+
+#: mosquitto.8.xml:280(manvolnum)
+msgid "3"
+msgstr ""
+
+#: mosquitto.8.xml:286(title)
+msgid "Thanks"
+msgstr ""
+
+#: mosquitto.8.xml:287(para)
+msgid "Thanks to Andy Stanford-Clark for being one of the people who came up with MQTT in the first place and providing clarifications of the protocol."
+msgstr ""
+
+#: mosquitto.8.xml:288(para)
+msgid "Thanks also to everybody at the Ubuntu UK Podcast and Linux Outlaws for organising OggCamp, where Andy gave a talk that inspired mosquitto."
+msgstr ""
+
+#: mosquitto.8.xml:292(title)
+msgid "Author"
+msgstr ""
+
+#: mosquitto.8.xml:293(para)
+msgid "Roger Light <email>roger@atchoo.org</email>"
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2
+#: mosquitto.8.xml:0(None)
+msgid "translator-credits"
+msgstr ""
+

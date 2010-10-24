@@ -52,5 +52,13 @@ mqtt.7 : mqtt.7.xml
 libmosquitto.3 : libmosquitto.3.xml
 	$(DOCBOOK2MAN) $^
 
+potgen :
+	 xml2po -o po/mosquitto/mosquitto.8.pot mosquitto.8.xml
+	 xml2po -o po/mosquitto.conf/mosquitto.conf.5.pot mosquitto.conf.5.xml
+	 xml2po -o po/mosquitto_pub/mosquitto_pub.1.pot mosquitto_pub.1.xml
+	 xml2po -o po/mosquitto_sub/mosquitto_sub.1.pot mosquitto_sub.1.xml
+	 xml2po -o po/mqtt/mqtt.7.pot mqtt.7.xml
+	 xml2po -o po/libmosquitto/libmosquitto.3.pot libmosquitto.3.xml
+
 # To merge new translations do:
 # /usr/bin/xml2po -p de.po chapter1.xml > chapter1.de.xml
