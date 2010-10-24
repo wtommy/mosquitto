@@ -32,6 +32,7 @@ uninstall :
 	-rm -f ${DESTDIR}${mandir}/man1/mosquitto_pub.1
 	-rm -f ${DESTDIR}${mandir}/man1/mosquitto_sub.1
 	-rm -f ${DESTDIR}${mandir}/man7/mqtt.7
+	-rm -f ${DESTDIR}${mandir}/man3/libmosquitto.3
 
 mosquitto.8 : mosquitto.8.xml
 	$(DOCBOOK2MAN) mosquitto.8.xml
