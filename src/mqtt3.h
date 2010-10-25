@@ -248,6 +248,7 @@ int mqtt3_handle_unsubscribe(mosquitto_db *db, mqtt3_context *context);
 int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db);
 int mqtt3_db_close(mosquitto_db *db);
 int mqtt3_db_backup(mosquitto_db *db, bool cleanup);
+int mqtt3_db_restore(mosquitto_db *db);
 int mqtt3_db_client_count(mosquitto_db *db, int *count);
 /* Add the will of the client in context to the queue of clients subscribed to the appropriate topic. */
 int mqtt3_db_client_will_queue(mosquitto_db *db, mqtt3_context *context);

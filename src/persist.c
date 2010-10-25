@@ -241,3 +241,31 @@ error:
 	return 1;
 }
 
+int mqtt3_db_restore(mosquitto_db *db)
+{
+	int fd;
+	char header[15];
+	int rc = 0;
+
+	assert(db);
+	assert(db->filepath);
+
+	fd = open(db->filepath, O_RDONLY);
+	if(fd < 0) return 1;
+	if(read(fd, &header, 15) != 15){
+		close(fd);
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Database file header incorrect, not loading.");
+		return 1;
+	}
+	if(!memcmp(header, magic, 15)){
+		// Restore DB as normal
+	}else if(!memcmp(header, "SQLite format 3", 15)){
+		// Restore old sqlite format DB
+	}else{
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to restore persistent database. Unrecognised file format.");
+		rc = 1;
+	}
+
+	return rc;
+}
+
