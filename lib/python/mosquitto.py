@@ -106,8 +106,8 @@ class Mosquitto:
 	def publish(self, topic, payload, qos=0, retain=False):
 		return _mosquitto_publish(self._mosq, None, topic, len(payload), cast(payload, POINTER(c_uint8)), qos, retain)
 
-	def will_set(self, will, topic, payloadlen, payload, qos=0, retain=False):
-		return _mosquitto_will_set(self._mosq, will, topic, payloadlen, payload, qos, retain)
+	def will_set(self, will, topic, payload, qos=0, retain=False):
+		return _mosquitto_will_set(self._mosq, will, topic, len(payloadlen), cast(payload, POINTER(c_uint8)), qos, retain)
 
 	def username_pw_set(self, username, password=None):
 		return _mosquitto_username_pw_set(self._mosq, username, password)
@@ -118,8 +118,10 @@ class Mosquitto:
 				argcount = self.on_connect.fun_code.co_argcount
 			except RuntimeError:
 				argcount = 2
+			except AttributeError:
+				argcount = 2
 
-			if arggcount == 1:
+			if argcount == 1:
 				self.on_connect(rc)
 			elif argcount == 2:
 				self.on_connect(self.obj, rc)
@@ -129,6 +131,8 @@ class Mosquitto:
 			try:
 				argcount = self.on_disconnect.fun_code.co_argcount
 			except RuntimeError:
+				argcount = 1
+			except AttributeError:
 				argcount = 1
 
 			if argcount == 0:
@@ -147,6 +151,8 @@ class Mosquitto:
 				argcount = self.on_message.fun_code.co_argcount
 			except RuntimeError:
 				argcount = 2
+			except AttributeError:
+				argcount = 2
 
 			if argcount == 1:
 				self.on_message(msg)
@@ -158,6 +164,8 @@ class Mosquitto:
 			try:
 				argcount = self.on_publish.fun_code.co_argcount
 			except RuntimeError:
+				argcount = 2
+			except AttributeError:
 				argcount = 2
 
 			if argcount == 1:
@@ -174,6 +182,8 @@ class Mosquitto:
 				argcount = self.on_subscribe.fun_code.co_argcount
 			except RuntimeError:
 				argcount = 3
+			except AttributeError:
+				argcount = 3
 
 			if argcount == 2:
 				self.on_subscribe(mid, qos_list)
@@ -185,6 +195,8 @@ class Mosquitto:
 			try:
 				argcount = self.on_unsubscribe.fun_code.co_argcount
 			except RuntimeError:
+				argcount = 2
+			except AttributeError:
 				argcount = 2
 
 			if argcount == 1:
