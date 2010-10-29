@@ -86,16 +86,6 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 
 	if(!config) return 1;
 
-	if(config->persistence){
-		if(config->persistence_location && strlen(config->persistence_location)){
-			db->filepath = _mosquitto_malloc(strlen(config->persistence_location) + strlen(config->persistence_file) + 1);
-			if(!db->filepath) return 1;
-			sprintf(db->filepath, "%s%s", config->persistence_location, config->persistence_file);
-		}else{
-			db->filepath = _mosquitto_strdup(config->persistence_file);
-		}
-	}
-
 	db->last_db_id = 0;
 
 	db->context_count = 1;
@@ -130,6 +120,16 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 	child->children = NULL;
 	child->retained = NULL;
 	db->subs.children->next->next = child;
+
+	if(config->persistence){
+		if(config->persistence_location && strlen(config->persistence_location)){
+			db->filepath = _mosquitto_malloc(strlen(config->persistence_location) + strlen(config->persistence_file) + 1);
+			if(!db->filepath) return 1;
+			sprintf(db->filepath, "%s%s", config->persistence_location, config->persistence_file);
+		}else{
+			db->filepath = _mosquitto_strdup(config->persistence_file);
+		}
+	}
 
 	if(_mqtt3_db_cleanup(db)) return 1;
 
