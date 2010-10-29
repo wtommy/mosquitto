@@ -35,6 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sys/stat.h>
 
 #include <config.h>
+#include <memory_mosq.h>
 #include <mqtt3.h>
 
 /* DB read/write */
@@ -48,6 +49,7 @@ const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','
 #include <sqlite3.h>
 static int mqtt3_db_sqlite_restore(mosquitto_db *db);
 #endif
+static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *sub, int qos);
 
 
 static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_context *context)
@@ -282,12 +284,53 @@ int mqtt3_db_restore(mosquitto_db *db)
 	return rc;
 }
 
+static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *sub, int qos)
+{
+	mqtt3_context *context;
+	mqtt3_context **tmp_contexts;
+	int i;
+
+	assert(db);
+	assert(client_id);
+	assert(sub);
+
+	context = NULL;
+	for(i=0; i<db->context_count; i++){
+		if(db->contexts[i] && !strcmp(db->contexts[i]->core.id, client_id)){
+			context = db->contexts[i];
+			break;
+		}
+	}
+	if(!context){
+		context = mqtt3_context_init(-1);
+
+		for(i=0; i<db->context_count; i++){
+			if(!db->contexts[i]){
+				db->contexts[i] = context;
+				break;
+			}
+		}
+		if(i==db->context_count){
+			db->context_count++;
+			tmp_contexts = _mosquitto_realloc(db->contexts, sizeof(mqtt3_context*)*db->context_count);
+			if(tmp_contexts){
+				db->contexts = tmp_contexts;
+				db->contexts[db->context_count-1] = context;
+			}else{
+				return 1;
+			}
+		}
+		context->core.id = _mosquitto_strdup(client_id);
+	}
+	return mqtt3_sub_add(context, sub, qos, &db->subs);
+}
+
 #ifdef WITH_SQLITE_UPGRADE
 static int mqtt3_db_sqlite_restore(mosquitto_db *db)
 {
 	sqlite3 *sql_db;
 	sqlite3_stmt *stmt = NULL;
-	const char *topic, *source_id;
+	const char *topic, *source_id, *sub, *client_id;
 	int qos;
 	int payloadlen;
 	const uint8_t *payload;
@@ -342,19 +385,16 @@ static int mqtt3_db_sqlite_restore(mosquitto_db *db)
 		return 1;
 	}
 
-	if(sqlite3_prepare_v2(sql_db, "SELECT retain.topic, message_store.qos,"
-			"message_store.payloadlen, message_store.payload, message_store.source_id "
-			"FROM retain JOIN message_store on retain.topic=message_store.topic", -1, &stmt, NULL) == SQLITE_OK){
+	if(sqlite3_prepare_v2(sql_db, "SELECT client_id, sub, qos FROM subs "
+			"JOIN clients ON subs.client_id=clients.id WHERE clients.clean_session=0",
+			-1, &stmt, NULL) == SQLITE_OK){
 
 		while(sqlite3_step(stmt) == SQLITE_ROW){
-			topic = (const char *)sqlite3_column_text(stmt, 0);
-			qos = sqlite3_column_int(stmt, 1);
-			payloadlen = sqlite3_column_int(stmt, 2);
-			payload = sqlite3_column_blob(stmt, 3);
-			source_id = (const char *)sqlite3_column_text(stmt, 4);
+			client_id = (const char *)sqlite3_column_text(stmt, 0);
+			sub = (const char *)sqlite3_column_text(stmt, 1);
+			qos = sqlite3_column_int(stmt, 2);
 
-			mqtt3_db_message_store(db, source_id, 0, topic, qos, payloadlen, payload, 1, &stored);
-			mqtt3_sub_search(&db->subs, source_id, topic, qos, 1, stored);
+			_db_restore_sub(db, client_id, sub, qos);
 		}
 		sqlite3_finalize(stmt);
 	}else{
