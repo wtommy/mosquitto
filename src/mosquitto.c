@@ -307,26 +307,6 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 	}
 }
 
-/* Close and cleanup a client based on its sock number. Assumes that the client
- * is a duplicate, so mqtt3_context_cleanup() won't remove details from the DB.
- */
-void mqtt3_context_close_duplicate(int sock)
-{
-	int i;
-
-	for(i=0; i<int_db.context_count; i++){
-		if(int_db.contexts[i]){
-			if(int_db.contexts[i]->core.sock == sock){
-				int_db.contexts[i]->duplicate = true;
-				mqtt3_db_client_will_queue(&int_db, int_db.contexts[i]);
-				mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
-				int_db.contexts[i] = NULL;
-				return;
-			}
-		}
-	}
-}
-
 /* Signal handler for SIGINT and SIGTERM - just stop gracefully. */
 void handle_sigint(int signal)
 {

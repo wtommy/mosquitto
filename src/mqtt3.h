@@ -277,7 +277,6 @@ void mqtt3_db_vacuum(void);
  * ============================================================ */
 mqtt3_context *mqtt3_context_init(int sock);
 void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_free);
-void mqtt3_context_close_duplicate(int sock);
 
 /* ============================================================
  * Logging functions
