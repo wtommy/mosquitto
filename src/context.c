@@ -87,7 +87,7 @@ mqtt3_context *mqtt3_context_init(int sock)
  * but it will mean that CONNACK messages will never get sent for bad protocol
  * versions for example.
  */
-void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context)
+void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_free)
 {
 	struct _mosquitto_packet *packet;
 	mosquitto_client_msg *msg, *next;
@@ -112,6 +112,7 @@ void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context)
 	if(context->core.will){
 		if(context->core.will->topic) _mosquitto_free(context->core.will->topic);
 		if(context->core.will->payload) _mosquitto_free(context->core.will->payload);
+		_mosquitto_free(context->core.will);
 	}
 	msg = context->msgs;
 	while(msg){
@@ -120,7 +121,8 @@ void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context)
 		_mosquitto_free(msg);
 		msg = next;
 	}
-	_mosquitto_free(context->core.will);
-	_mosquitto_free(context);
+	if(do_free){
+		_mosquitto_free(context);
+	}
 }
 

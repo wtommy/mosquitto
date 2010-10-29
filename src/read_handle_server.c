@@ -87,19 +87,20 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	for(i=0; i<db->context_count; i++){
 		if(db->contexts[i] && db->contexts[i]->core.id && !strcmp(db->contexts[i]->core.id, client_id)){
 			/* Client does match. */
+			db->contexts[i]->core.state = mosq_cs_disconnecting;
 			if(db->contexts[i]->core.sock == -1){
 				/* Client is reconnecting after a disconnect */
-				/* FIXME - does anything else need to be done here? 
-				 * Subs aren't tied directly to the context struct.
-				 * Messages neither yet. */
-				mqtt3_context_cleanup(db, db->contexts[i]);
-				db->contexts[i] = NULL;
+				/* FIXME - does anything else need to be done here? */
 			}else{
 				/* Client is already connected, disconnect old version */
 				mqtt3_log_printf(MOSQ_LOG_ERR, "Client %s already connected, closing old connection.", context->core.id);
-				db->contexts[i]->core.state = mosq_cs_disconnecting;
-				mqtt3_socket_close(db->contexts[i]);
 			}
+			mqtt3_context_cleanup(db, db->contexts[i], false);
+			db->contexts[i]->address = _mosquitto_strdup(context->address);
+			db->contexts[i]->core.sock = context->core.sock;
+			context->core.sock = -1;
+			context->core.state = mosq_cs_disconnecting;
+			context = db->contexts[i];
 			break;
 		}
 	}
