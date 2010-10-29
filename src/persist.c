@@ -35,6 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sys/stat.h>
 
 #include <config.h>
+#include <memory_mosq.h>
 #include <mqtt3.h>
 
 /* DB read/write */
@@ -43,6 +44,13 @@ const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','
 #define DB_CHUNK_MSG_STORE 2
 #define DB_CHUNK_CLIENT_MSG 3
 /* End DB read/write */
+
+#ifdef WITH_SQLITE_UPGRADE
+#include <sqlite3.h>
+static int mqtt3_db_sqlite_restore(mosquitto_db *db);
+#endif
+static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *sub, int qos);
+
 
 static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_context *context)
 {
@@ -241,3 +249,158 @@ error:
 	return 1;
 }
 
+int mqtt3_db_restore(mosquitto_db *db)
+{
+	int fd;
+	char header[15];
+	int rc = 0;
+
+	assert(db);
+	assert(db->filepath);
+
+	fd = open(db->filepath, O_RDONLY);
+	if(fd < 0) return 1;
+	if(read(fd, &header, 15) != 15){
+		close(fd);
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Database file header incorrect, not loading.");
+		return 1;
+	}
+	if(!memcmp(header, magic, 15)){
+		// Restore DB as normal
+	}else if(!memcmp(header, "SQLite format 3", 15)){
+		// Restore old sqlite format DB
+#ifdef WITH_SQLITE_UPGRADE
+		close(fd);
+		return mqtt3_db_sqlite_restore(db);
+#else
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Upgrading from sqlite databases not supported. Remove database file manually or compile with sqlite support.");
+		rc = 1;
+#endif
+	}else{
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to restore persistent database. Unrecognised file format.");
+		rc = 1;
+	}
+
+	return rc;
+}
+
+static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *sub, int qos)
+{
+	mqtt3_context *context;
+	mqtt3_context **tmp_contexts;
+	int i;
+
+	assert(db);
+	assert(client_id);
+	assert(sub);
+
+	context = NULL;
+	for(i=0; i<db->context_count; i++){
+		if(db->contexts[i] && !strcmp(db->contexts[i]->core.id, client_id)){
+			context = db->contexts[i];
+			break;
+		}
+	}
+	if(!context){
+		context = mqtt3_context_init(-1);
+
+		for(i=0; i<db->context_count; i++){
+			if(!db->contexts[i]){
+				db->contexts[i] = context;
+				break;
+			}
+		}
+		if(i==db->context_count){
+			db->context_count++;
+			tmp_contexts = _mosquitto_realloc(db->contexts, sizeof(mqtt3_context*)*db->context_count);
+			if(tmp_contexts){
+				db->contexts = tmp_contexts;
+				db->contexts[db->context_count-1] = context;
+			}else{
+				return 1;
+			}
+		}
+		context->core.id = _mosquitto_strdup(client_id);
+	}
+	return mqtt3_sub_add(context, sub, qos, &db->subs);
+}
+
+#ifdef WITH_SQLITE_UPGRADE
+static int mqtt3_db_sqlite_restore(mosquitto_db *db)
+{
+	sqlite3 *sql_db;
+	sqlite3_stmt *stmt = NULL;
+	const char *topic, *source_id, *sub, *client_id;
+	int qos;
+	int payloadlen;
+	const uint8_t *payload;
+	struct mosquitto_msg_store *stored;
+	int version;
+
+	assert(db);
+
+	if(sqlite3_open_v2(db->filepath, &sql_db, SQLITE_OPEN_READONLY, NULL) != SQLITE_OK){
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to open sqlite database located at %s for upgrading.", db->filepath);
+		return 1;
+	}
+
+	if(sqlite3_prepare_v2(sql_db, "SELECT value FROM config WHERE key='version'", -1, &stmt, NULL) == SQLITE_OK){
+		if(sqlite3_step(stmt) == SQLITE_ROW){
+			version = sqlite3_column_int(stmt, 0);
+			if(version != 2){
+				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to upgrade from sqlite database version %d.", version);
+				sqlite3_finalize(stmt);
+				sqlite3_close(sql_db);
+				return 1;
+			}
+		}else{
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to upgrade from this sqlite database, it appears to be corrupted.");
+			sqlite3_finalize(stmt);
+			sqlite3_close(sql_db);
+			return 1;
+		}
+		sqlite3_finalize(stmt);
+	}else{
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Problem communicating with sqlite.");
+		return 1;
+	}
+
+	if(sqlite3_prepare_v2(sql_db, "SELECT retain.topic, message_store.qos,"
+			"message_store.payloadlen, message_store.payload, message_store.source_id "
+			"FROM retain JOIN message_store on retain.topic=message_store.topic", -1, &stmt, NULL) == SQLITE_OK){
+
+		while(sqlite3_step(stmt) == SQLITE_ROW){
+			topic = (const char *)sqlite3_column_text(stmt, 0);
+			qos = sqlite3_column_int(stmt, 1);
+			payloadlen = sqlite3_column_int(stmt, 2);
+			payload = sqlite3_column_blob(stmt, 3);
+			source_id = (const char *)sqlite3_column_text(stmt, 4);
+
+			mqtt3_db_message_store(db, source_id, 0, topic, qos, payloadlen, payload, 1, &stored);
+			mqtt3_sub_search(&db->subs, source_id, topic, qos, 1, stored);
+		}
+		sqlite3_finalize(stmt);
+	}else{
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Problem communicating with sqlite.");
+		return 1;
+	}
+
+	if(sqlite3_prepare_v2(sql_db, "SELECT client_id, sub, qos FROM subs "
+			"JOIN clients ON subs.client_id=clients.id WHERE clients.clean_session=0",
+			-1, &stmt, NULL) == SQLITE_OK){
+
+		while(sqlite3_step(stmt) == SQLITE_ROW){
+			client_id = (const char *)sqlite3_column_text(stmt, 0);
+			sub = (const char *)sqlite3_column_text(stmt, 1);
+			qos = sqlite3_column_int(stmt, 2);
+
+			_db_restore_sub(db, client_id, sub, qos);
+		}
+		sqlite3_finalize(stmt);
+	}else{
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Problem communicating with sqlite.");
+		return 1;
+	}
+	return 0;
+}
+#endif
