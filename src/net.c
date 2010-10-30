@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netdb.h>
@@ -114,20 +115,17 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 }
 
 /* Close a socket associated with a context and set it to -1.
- * Returns 1 on failure (context is NULL)
- * Returns 0 on success.
  */
-int mqtt3_socket_close(mqtt3_context *context)
+void mqtt3_socket_close(mqtt3_context *context)
 {
 	int rc = 0;
 
-	if(!context) return 1;
+	assert(context);
+
 	if(context->core.sock != -1){
 		rc = close(context->core.sock);
 		context->core.sock = -1;
 	}
-
-	return rc;
 }
 
 /* Creates a socket and listens on port 'port'.
