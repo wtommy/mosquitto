@@ -196,7 +196,7 @@ static int mqtt3_db_client_write(mosquitto_db *db, int db_fd)
 	return 0;
 }
 
-int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
+int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 {
 	int rc = 0;
 	int db_fd;
@@ -205,6 +205,7 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 	uint64_t i64temp;
 	uint32_t i32temp;
 	uint16_t i16temp;
+	uint8_t i8temp;
 
 	if(!db || !db->filepath) return 1;
 	mqtt3_log_printf(MOSQ_LOG_INFO, "Saving in-memory database to %s.", db->filepath);
@@ -229,8 +230,11 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup)
 	i16temp = htons(DB_CHUNK_CFG);
 	write_e(db_fd, &i16temp, sizeof(uint16_t));
 	/* chunk length */
-	i32temp = htons(sizeof(uint16_t)); // FIXME
+	i32temp = htons(sizeof(uint16_t) + sizeof(uint8_t)); // FIXME
 	write_e(db_fd, &i32temp, sizeof(uint32_t));
+	/* db written at broker shutdown or not */
+	i8temp = shutdown;
+	write_e(db_fd, &i8temp, sizeof(uint8_t));
 	/* last db mid */
 	i64temp = htobe64(db->last_db_id);
 	write_e(db_fd, &i64temp, sizeof(uint64_t));

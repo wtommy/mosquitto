@@ -217,7 +217,7 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 		}
 		if(config->persistence && config->autosave_interval){
 			if(last_backup + config->autosave_interval < now){
-				mqtt3_db_backup(&int_db, false);
+				mqtt3_db_backup(&int_db, false, false);
 				last_backup = time(NULL);
 			}
 		}
@@ -316,7 +316,7 @@ void handle_sigint(int signal)
 /* Signal handler for SIGUSR1 - backup the db. */
 void handle_sigusr1(int signal)
 {
-	mqtt3_db_backup(&int_db, false);
+	mqtt3_db_backup(&int_db, false, false);
 }
 
 /* Signal handler for SIGUSR2 - vacuum the db. */
@@ -441,7 +441,7 @@ int main(int argc, char *argv[])
 	mqtt3_log_close();
 
 	if(config.persistence && config.autosave_interval){
-		mqtt3_db_backup(&int_db, true);
+		mqtt3_db_backup(&int_db, true, true);
 	}
 
 	for(i=0; i<int_db.context_count; i++){
