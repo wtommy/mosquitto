@@ -295,7 +295,7 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 	i16temp = htons(DB_CHUNK_CFG);
 	write_e(db_fd, &i16temp, sizeof(uint16_t));
 	/* chunk length */
-	i32temp = htons(sizeof(uint16_t) + sizeof(uint8_t)); // FIXME
+	i32temp = htonl(sizeof(uint16_t) + sizeof(uint8_t)); // FIXME
 	write_e(db_fd, &i32temp, sizeof(uint32_t));
 	/* db written at broker shutdown or not */
 	i8temp = shutdown;
