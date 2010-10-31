@@ -32,7 +32,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 #include <net_mosq.h>
-#include <subs.h>
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -55,8 +54,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MQTT3_LOG_TOPIC 0x10
 #define MQTT3_LOG_ALL 0xFF
 
-struct _mqtt3_context;
-
 enum mqtt3_msg_state {
 	ms_invalid = 0,
 	ms_publish = 1,
@@ -69,6 +66,21 @@ enum mqtt3_msg_state {
 	ms_resend_pubcomp = 8,
 	ms_wait_pubcomp = 9,
 	ms_resend_pubrec = 10
+};
+
+struct _mosquitto_subleaf {
+	struct _mosquitto_subleaf *prev;
+	struct _mosquitto_subleaf *next;
+	struct _mqtt3_context *context;
+	int qos;
+};
+
+struct _mosquitto_subhier {
+	struct _mosquitto_subhier *children;
+	struct _mosquitto_subhier *next;
+	struct _mosquitto_subleaf *subs;
+	char *topic;
+	struct mosquitto_msg_store *retained;
 };
 
 struct mosquitto_msg_store{
@@ -271,6 +283,15 @@ int mqtt3_retain_queue(mosquitto_db *db, mqtt3_context *context, const char *sub
 void mqtt3_db_store_clean(mosquitto_db *db);
 void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time);
 void mqtt3_db_vacuum(void);
+
+/* ============================================================
+ * Subscription functions
+ * ============================================================ */
+int mqtt3_sub_add(struct _mqtt3_context *context, const char *sub, int qos, struct _mosquitto_subhier *root);
+int mqtt3_sub_remove(struct _mqtt3_context *context, const char *sub, struct _mosquitto_subhier *root);
+int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored);
+void mqtt3_sub_tree_print(struct _mosquitto_subhier *root, int level);
+int mqtt3_subs_clean_session(struct _mqtt3_context *context, struct _mosquitto_subhier *root);
 
 /* ============================================================
  * Context functions

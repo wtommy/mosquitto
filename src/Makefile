@@ -57,7 +57,7 @@ read_handle_client.o : read_handle_client.c mqtt3.h
 read_handle_server.o : read_handle_server.c mqtt3.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
-subs.o : subs.c subs.h mqtt3.h
+subs.o : subs.c mqtt3.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 util.o : util.c mqtt3.h

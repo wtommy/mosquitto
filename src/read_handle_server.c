@@ -33,7 +33,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
 #include <memory_mosq.h>
-#include <subs.h>
 #include <util_mosq.h>
 
 int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)

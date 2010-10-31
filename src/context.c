@@ -33,7 +33,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 #include <mqtt3.h>
 #include <memory_mosq.h>
-#include <subs.h>
 
 mqtt3_context *mqtt3_context_init(int sock)
 {

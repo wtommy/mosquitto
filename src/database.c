@@ -70,7 +70,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 #include <mqtt3.h>
 #include <memory_mosq.h>
-#include <subs.h>
 #include <util_mosq.h>
 
 static int max_inflight = 20;
