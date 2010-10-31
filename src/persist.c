@@ -31,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 
@@ -43,6 +44,8 @@ const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','
 #define DB_CHUNK_CFG 1
 #define DB_CHUNK_MSG_STORE 2
 #define DB_CHUNK_CLIENT_MSG 3
+#define DB_CHUNK_RETAIN 4
+#define DB_CHUNK_SUB 5
 /* End DB read/write */
 
 #ifdef WITH_SQLITE_UPGRADE
@@ -196,6 +199,68 @@ static int mqtt3_db_client_write(mosquitto_db *db, int db_fd)
 	return 0;
 }
 
+static int _db_subs_write(mosquitto_db *db, int db_fd, struct _mosquitto_subhier *node, const char *topic)
+{
+	struct _mosquitto_subhier *subhier;
+	struct _mosquitto_subleaf *sub;
+	char *thistopic;
+	uint32_t length;
+	uint16_t i16temp;
+	int slen;
+
+	slen = strlen(topic) + strlen(node->topic) + 1;
+	thistopic = _mosquitto_malloc(sizeof(char)*slen);
+	if(!thistopic) return 1;
+	snprintf(thistopic, slen, "%s/%s", topic, node->topic);
+
+#define write_e(a, b, c) if(write(a, b, c) != c){ return 1; }
+	sub = node->subs;
+	while(sub){
+		if(sub->context->clean_session == false){
+			length = htonl(2+strlen(sub->context->core.id) + 2+strlen(thistopic) + sizeof(uint8_t));
+
+			i16temp = htons(DB_CHUNK_SUB);
+			write_e(db_fd, &i16temp, sizeof(uint16_t));
+			write_e(db_fd, &length, sizeof(uint32_t));
+
+			slen = strlen(sub->context->core.id);
+			i16temp = htons(slen);
+			write_e(db_fd, &i16temp, sizeof(uint16_t));
+			write_e(db_fd, sub->context->core.id, slen);
+
+			slen = strlen(thistopic);
+			i16temp = htons(slen);
+			write_e(db_fd, &i16temp, sizeof(uint16_t));
+			write_e(db_fd, thistopic, slen);
+
+			write_e(db_fd, &sub->qos, sizeof(uint8_t));
+		}
+		sub = sub->next;
+	}
+#undef write_e
+
+	subhier = node->children;
+	while(subhier){
+		_db_subs_write(db, db_fd, subhier, thistopic);
+		subhier = subhier->next;
+	}
+	_mosquitto_free(thistopic);
+	return 0;
+}
+
+static int mqtt3_db_subs_write(mosquitto_db *db, int db_fd)
+{
+	struct _mosquitto_subhier *subhier;
+
+	subhier = db->subs.children;
+	while(subhier){
+		_db_subs_write(db, db_fd, subhier, subhier->topic);
+		subhier = subhier->next;
+	}
+	
+	return 0;
+}
+
 int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 {
 	int rc = 0;
@@ -243,6 +308,8 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 		goto error;
 	}
 #undef write_e
+
+	mqtt3_db_subs_write(db, db_fd);
 
 	/* FIXME - needs implementing */
 	close(db_fd);
