@@ -208,10 +208,15 @@ static int _db_subs_write(mosquitto_db *db, int db_fd, struct _mosquitto_subhier
 	uint16_t i16temp;
 	int slen;
 
-	slen = strlen(topic) + strlen(node->topic) + 1;
+	slen = strlen(topic) + strlen(node->topic) + 2;
 	thistopic = _mosquitto_malloc(sizeof(char)*slen);
 	if(!thistopic) return 1;
-	snprintf(thistopic, slen, "%s/%s", topic, node->topic);
+	if(strlen(topic)){
+		snprintf(thistopic, slen, "%s/%s", topic, node->topic);
+	}else{
+		snprintf(thistopic, slen, "%s", node->topic);
+	}
+	printf("tt: %s, %s, %s\n", thistopic, topic, node->topic);
 
 #define write_e(a, b, c) if(write(a, b, c) != c){ return 1; }
 	sub = node->subs;
@@ -254,7 +259,7 @@ static int mqtt3_db_subs_write(mosquitto_db *db, int db_fd)
 
 	subhier = db->subs.children;
 	while(subhier){
-		_db_subs_write(db, db_fd, subhier, subhier->topic);
+		_db_subs_write(db, db_fd, subhier, "");
 		subhier = subhier->next;
 	}
 	
