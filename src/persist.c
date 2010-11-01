@@ -216,7 +216,6 @@ static int _db_subs_write(mosquitto_db *db, int db_fd, struct _mosquitto_subhier
 	}else{
 		snprintf(thistopic, slen, "%s", node->topic);
 	}
-	printf("tt: %s, %s, %s\n", thistopic, topic, node->topic);
 
 #define write_e(a, b, c) if(write(a, b, c) != c){ return 1; }
 	sub = node->subs;
