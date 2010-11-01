@@ -186,15 +186,12 @@ static int mqtt3_db_client_write(mosquitto_db *db, int db_fd)
 	assert(db);
 	assert(db_fd >= 0);
 
-#define write_e(a, b, c) if(write(a, b, c) != c){ return 1; }
-
 	for(i=0; i<db->context_count; i++){
 		context = db->contexts[i];
 		if(context){
 			if(mqtt3_db_client_messages_write(db, db_fd, context)) return 1;
 		}
 	}
-#undef write_e
 
 	return 0;
 }
@@ -288,7 +285,6 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 	}
 
 #define write_e(a, b, c) if(write(a, b, c) != c){ goto error; }
-
 	/* Header */
 	write_e(db_fd, magic, 15);
 	write_e(db_fd, &crc, sizeof(uint32_t));
@@ -307,11 +303,11 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 	/* last db mid */
 	i64temp = htobe64(db->last_db_id);
 	write_e(db_fd, &i64temp, sizeof(uint64_t));
+#undef write_e
 
 	if(mqtt3_db_message_store_write(db, db_fd)){
 		goto error;
 	}
-#undef write_e
 
 	mqtt3_db_subs_write(db, db_fd);
 
