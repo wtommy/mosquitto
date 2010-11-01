@@ -277,7 +277,7 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 {
 	int rc = 0;
 	int db_fd;
-	uint32_t db_version = htonl(MQTT_DB_VERSION);
+	uint32_t db_version = htonl(MOSQ_DB_VERSION);
 	uint32_t crc = htonl(0);
 	uint64_t i64temp;
 	uint32_t i32temp;
@@ -332,24 +332,53 @@ error:
 	return 1;
 }
 
+
+
 int mqtt3_db_restore(mosquitto_db *db)
 {
 	int fd;
 	char header[15];
 	int rc = 0;
+	uint32_t crc, db_version;
+	uint64_t i64temp;
+	uint32_t i32temp, length;
+	uint16_t i16temp, chunk;
+	uint8_t i8temp;
 
 	assert(db);
 	assert(db->filepath);
 
+#define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
 	fd = open(db->filepath, O_RDONLY);
 	if(fd < 0) return 1;
-	if(read(fd, &header, 15) != 15){
-		close(fd);
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Database file header incorrect, not loading.");
-		return 1;
-	}
+	read_e(fd, &header, 15);
 	if(!memcmp(header, magic, 15)){
 		// Restore DB as normal
+		read_e(fd, &crc, sizeof(uint32_t));
+		read_e(fd, &db_version, sizeof(uint32_t));
+		if(db_version != MOSQ_DB_VERSION){
+			close(fd);
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unsupported persistent database format version %d (need version %d).", db_version, MOSQ_DB_VERSION);
+			return 1;
+		}
+
+		read_e(fd, &i16temp, sizeof(uint16_t));
+		chunk = ntohs(i16temp);
+		read_e(fd, &i32temp, sizeof(uint32_t));
+		length = ntohs(i32temp);
+		switch(chunk){
+			case DB_CHUNK_CFG:
+				read_e(fd, &i8temp, sizeof(uint8_t)); // shutdown
+				read_e(fd, &i64temp, sizeof(uint64_t));
+				db->last_db_id = be64toh(i64temp);
+				break;
+
+
+			default:
+				mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Unsupported chunk \"%d\" in persistent database file. Ignoring.", chunk);
+				lseek(fd, SEEK_CUR, length);
+				break;
+		}
 	}else if(!memcmp(header, "SQLite format 3", 15)){
 		// Restore old sqlite format DB
 #ifdef WITH_SQLITE_UPGRADE
@@ -363,8 +392,13 @@ int mqtt3_db_restore(mosquitto_db *db)
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to restore persistent database. Unrecognised file format.");
 		rc = 1;
 	}
+#undef read_e
 
 	return rc;
+error:
+	mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
+	if(fd >= 0) close(fd);
+	return 1;
 }
 
 static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *sub, int qos)
