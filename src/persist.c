@@ -188,7 +188,7 @@ static int mqtt3_db_client_write(mosquitto_db *db, int db_fd)
 
 	for(i=0; i<db->context_count; i++){
 		context = db->contexts[i];
-		if(context){
+		if(context && context->clean_session == false){
 			if(mqtt3_db_client_messages_write(db, db_fd, context)) return 1;
 		}
 	}
