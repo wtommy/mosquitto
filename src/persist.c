@@ -196,13 +196,14 @@ static int mqtt3_db_client_write(mosquitto_db *db, int db_fd)
 	return 0;
 }
 
-static int _db_subs_write(mosquitto_db *db, int db_fd, struct _mosquitto_subhier *node, const char *topic)
+static int _db_subs_retain_write(mosquitto_db *db, int db_fd, struct _mosquitto_subhier *node, const char *topic)
 {
 	struct _mosquitto_subhier *subhier;
 	struct _mosquitto_subleaf *sub;
 	char *thistopic;
 	uint32_t length;
 	uint16_t i16temp;
+	uint64_t i64temp;
 	int slen;
 
 	slen = strlen(topic) + strlen(node->topic) + 2;
@@ -238,24 +239,34 @@ static int _db_subs_write(mosquitto_db *db, int db_fd, struct _mosquitto_subhier
 		}
 		sub = sub->next;
 	}
+	if(node->retained){
+		length = htonl(sizeof(uint64_t));
+
+		i16temp = htons(DB_CHUNK_RETAIN);
+		write_e(db_fd, &i16temp, sizeof(uint16_t));
+		write_e(db_fd, &length, sizeof(uint32_t));
+
+		i64temp = htobe64(node->retained->db_id);
+		write_e(db_fd, &i64temp, sizeof(uint64_t));
+	}
 #undef write_e
 
 	subhier = node->children;
 	while(subhier){
-		_db_subs_write(db, db_fd, subhier, thistopic);
+		_db_subs_retain_write(db, db_fd, subhier, thistopic);
 		subhier = subhier->next;
 	}
 	_mosquitto_free(thistopic);
 	return 0;
 }
 
-static int mqtt3_db_subs_write(mosquitto_db *db, int db_fd)
+static int mqtt3_db_subs_retain_write(mosquitto_db *db, int db_fd)
 {
 	struct _mosquitto_subhier *subhier;
 
 	subhier = db->subs.children;
 	while(subhier){
-		_db_subs_write(db, db_fd, subhier, "");
+		_db_subs_retain_write(db, db_fd, subhier, "");
 		subhier = subhier->next;
 	}
 	
@@ -309,7 +320,8 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 		goto error;
 	}
 
-	mqtt3_db_subs_write(db, db_fd);
+	mqtt3_db_client_write(db, db_fd);
+	mqtt3_db_subs_retain_write(db, db_fd);
 
 	/* FIXME - needs implementing */
 	close(db_fd);
