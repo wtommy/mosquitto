@@ -456,6 +456,7 @@ static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
 	}
 	tail->next = cmsg;
 	cmsg->next = NULL;
+	_mosquitto_free(client_id);
 
 	return 0;
 error:
