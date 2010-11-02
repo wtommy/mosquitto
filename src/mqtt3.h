@@ -86,7 +86,6 @@ struct _mosquitto_subhier {
 struct mosquitto_msg_store{
 	struct mosquitto_msg_store *next;
 	uint64_t db_id;
-	time_t timestamp;
 	int ref_count;
 	char *source_id;
 	uint16_t source_mid;
