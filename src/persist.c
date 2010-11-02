@@ -351,7 +351,8 @@ int mqtt3_db_restore(mosquitto_db *db)
 	if(!memcmp(header, magic, 15)){
 		// Restore DB as normal
 		read_e(fd, &crc, sizeof(uint32_t));
-		read_e(fd, &db_version, sizeof(uint32_t));
+		read_e(fd, &i32temp, sizeof(uint32_t));
+		db_version = ntohl(i32temp);
 		if(db_version != MOSQ_DB_VERSION){
 			close(fd);
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unsupported persistent database format version %d (need version %d).", db_version, MOSQ_DB_VERSION);
