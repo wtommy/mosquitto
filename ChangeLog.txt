@@ -9,6 +9,8 @@
 - Added IPv6 support for mosquitto and the clients.
 - Provide username and password support for the clients and client libraries.
   This is part of the new MQTT v3.1 spec.
+- The broker supports the username and password connection flags, but will not
+  do anything with the username and password.
 - Python callback functions now optionally take an extra argument which will
   return the user object passed to the Mosquitto() constructor, or the calling
   python object itself if nothing was given to Mosquitto().

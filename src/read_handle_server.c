@@ -43,7 +43,10 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	char *client_id;
 	char *will_topic = NULL, *will_message = NULL;
 	uint8_t will, will_retain, will_qos, clean_session;
+	uint8_t username_flag, password_flag;
+	char *username, *password;
 	int i;
+	int rc;
 	
 	/* Don't accept multiple CONNECT commands. */
 	if(context->core.state != mosq_cs_new) return MOSQ_ERR_PROTOCOL;
@@ -77,6 +80,8 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	will = connect_flags & 0x04;
 	will_qos = (connect_flags & 0x18) >> 3;
 	will_retain = connect_flags & 0x20;
+	username_flag = connect_flags & 0x40;
+	password_flag = connect_flags & 0x80;
 
 	if(_mosquitto_read_uint16(&context->core.in_packet, &(context->core.keepalive))) return 1;
 
@@ -123,6 +128,25 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 		context->core.will->retain = will_retain;
 	}
 
+	if(username_flag){
+		rc = _mosquitto_read_string(&context->core.in_packet, &username);
+		if(rc == MOSQ_ERR_SUCCESS){
+			if(password_flag){
+				rc = _mosquitto_read_string(&context->core.in_packet, &password);
+				if(rc == MOSQ_ERR_NOMEM){
+					return MOSQ_ERR_NOMEM;
+				}else if(rc == MOSQ_ERR_PROTOCOL){
+					/* Password flag given, but no password. Ignore. */
+					password_flag = 0;
+				}
+			}
+		}else if(rc == MOSQ_ERR_NOMEM){
+			return MOSQ_ERR_NOMEM;
+		}else{
+			/* Username flag given, but no username. Ignore. */
+			username_flag = 0;
+		}
+	}
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
 	context->core.id = client_id;
 	context->clean_session = clean_session;
