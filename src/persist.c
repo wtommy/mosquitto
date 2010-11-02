@@ -114,7 +114,7 @@ static int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 	uint32_t length;
 	uint64_t i64temp;
 	uint32_t i32temp;
-	uint16_t i16temp;
+	uint16_t i16temp, slen;
 	uint8_t i8temp;
 	struct mosquitto_msg_store *stored;
 
@@ -137,10 +137,11 @@ static int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 		i64temp = htobe64(stored->db_id);
 		write_e(db_fd, &i64temp, sizeof(uint64_t));
 
-		i16temp = htons(strlen(stored->source_id));
+		slen = strlen(stored->source_id);
+		i16temp = htons(slen);
 		write_e(db_fd, &i16temp, sizeof(uint16_t));
-		if(i16temp){
-			write_e(db_fd, stored->source_id, strlen(stored->source_id));
+		if(slen){
+			write_e(db_fd, stored->source_id, slen);
 		}
 
 		i16temp = htons(stored->source_mid);
@@ -149,9 +150,10 @@ static int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 		i16temp = htons(stored->msg.mid);
 		write_e(db_fd, &i16temp, sizeof(uint16_t));
 
-		i16temp = htons(strlen(stored->msg.topic));
+		slen = strlen(stored->msg.topic);
+		i16temp = htons(slen);
 		write_e(db_fd, &i16temp, sizeof(uint16_t));
-		write_e(db_fd, stored->msg.topic, strlen(stored->msg.topic));
+		write_e(db_fd, stored->msg.topic, slen);
 
 		i8temp = (uint8_t )stored->msg.qos;
 		write_e(db_fd, &i8temp, sizeof(uint8_t));
