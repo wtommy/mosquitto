@@ -451,7 +451,7 @@ int mqtt3_db_restore(mosquitto_db *db)
 
 				default:
 					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Unsupported chunk \"%d\" in persistent database file. Ignoring.", chunk);
-					lseek(fd, SEEK_CUR, length);
+					lseek(fd, length, SEEK_CUR);
 					break;
 			}
 		}
