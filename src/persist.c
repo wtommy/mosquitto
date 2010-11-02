@@ -59,7 +59,7 @@ static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_con
 {
 	uint32_t length;
 	uint64_t i64temp;
-	uint16_t i16temp;
+	uint16_t i16temp, slen;
 	uint8_t i8temp;
 	mosquitto_client_msg *cmsg;
 
@@ -71,13 +71,19 @@ static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_con
 
 	cmsg = context->msgs;
 	while(cmsg){
+		slen = strlen(context->core.id);
+
 		length = htonl(sizeof(uint64_t) + sizeof(uint16_t) + sizeof(uint8_t) +
 				sizeof(uint8_t) + sizeof(uint8_t) + sizeof(uint8_t) +
-				sizeof(uint8_t));
+				sizeof(uint8_t) + 2+slen);
 
 		i16temp = htons(DB_CHUNK_CLIENT_MSG);
 		write_e(db_fd, &i16temp, sizeof(uint16_t));
 		write_e(db_fd, &length, sizeof(uint32_t));
+
+		i16temp = htons(slen);
+		write_e(db_fd, &i16temp, sizeof(uint16_t));
+		write_e(db_fd, context->core.id, slen);
 
 		i64temp = htobe64(cmsg->store->db_id);
 		write_e(db_fd, &i64temp, sizeof(uint64_t));
