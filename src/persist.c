@@ -411,7 +411,7 @@ int mqtt3_db_restore(mosquitto_db *db)
 
 #define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
 	fd = open(db->filepath, O_RDONLY);
-	if(fd < 0) return 1;
+	if(fd < 0) return 0;
 	read_e(fd, &header, 15);
 	if(!memcmp(header, magic, 15)){
 		// Restore DB as normal
