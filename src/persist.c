@@ -574,7 +574,7 @@ static int mqtt3_db_sqlite_restore(mosquitto_db *db)
 			payload = sqlite3_column_blob(stmt, 3);
 			source_id = (const char *)sqlite3_column_text(stmt, 4);
 
-			mqtt3_db_message_store(db, source_id, 0, topic, qos, payloadlen, payload, 1, &stored);
+			mqtt3_db_message_store(db, source_id, 0, topic, qos, payloadlen, payload, 1, &stored, 0);
 			mqtt3_sub_search(&db->subs, NULL, topic, qos, 1, stored);
 		}
 		sqlite3_finalize(stmt);

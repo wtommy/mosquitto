@@ -365,7 +365,7 @@ int mqtt3_db_messages_easy_queue(mosquitto_db *db, mqtt3_context *context, const
 	}else{
 		source_id = "";
 	}
-	if(mqtt3_db_message_store(db, source_id, 0, topic, qos, payloadlen, payload, retain, &stored)) return 1;
+	if(mqtt3_db_message_store(db, source_id, 0, topic, qos, payloadlen, payload, retain, &stored, 0)) return 1;
 
 	return mqtt3_db_messages_queue(db, source_id, topic, qos, retain, stored);
 }
@@ -384,7 +384,7 @@ int mqtt3_db_messages_queue(mosquitto_db *db, const char *source_id, const char 
 	return rc;
 }
 
-int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source_mid, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, struct mosquitto_msg_store **stored)
+int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source_mid, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, struct mosquitto_msg_store **stored, uint64_t store_id)
 {
 	struct mosquitto_msg_store *temp;
 
@@ -423,7 +423,11 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 	db->msg_store = temp;
 	(*stored) = temp;
 
-	temp->db_id = ++db->last_db_id;
+	if(!store_id){
+		temp->db_id = ++db->last_db_id;
+	}else{
+		temp->db_id = store_id;
+	}
 
 	return 0;
 }
