@@ -340,6 +340,7 @@ int mqtt3_db_restore(mosquitto_db *db)
 	uint16_t i16temp, chunk, slen;
 	uint8_t i8temp, qos;
 	char *client_id, *topic;
+	ssize_t rlen;
 
 	assert(db);
 	assert(db->filepath);
@@ -359,56 +360,58 @@ int mqtt3_db_restore(mosquitto_db *db)
 			return 1;
 		}
 
-		read_e(fd, &i16temp, sizeof(uint16_t));
-		chunk = ntohs(i16temp);
-		read_e(fd, &i32temp, sizeof(uint32_t));
-		length = ntohs(i32temp);
-		switch(chunk){
-			case DB_CHUNK_CFG:
-				read_e(fd, &i8temp, sizeof(uint8_t)); // shutdown
-				read_e(fd, &i64temp, sizeof(uint64_t));
-				db->last_db_id = be64toh(i64temp);
-				break;
+		while(rlen = read(fd, &i16temp, sizeof(uint16_t)), rlen == sizeof(uint16_t)){
+			chunk = ntohs(i16temp);
+			read_e(fd, &i32temp, sizeof(uint32_t));
+			length = ntohs(i32temp);
+			switch(chunk){
+				case DB_CHUNK_CFG:
+					read_e(fd, &i8temp, sizeof(uint8_t)); // shutdown
+					read_e(fd, &i64temp, sizeof(uint64_t));
+					db->last_db_id = be64toh(i64temp);
+					break;
 
-			case DB_CHUNK_MSG_STORE:
-				break;
+				case DB_CHUNK_MSG_STORE:
+					break;
 
-			case DB_CHUNK_CLIENT_MSG:
-				break;
+				case DB_CHUNK_CLIENT_MSG:
+					break;
 
-			case DB_CHUNK_RETAIN:
-				break;
+				case DB_CHUNK_RETAIN:
+					break;
 
-			case DB_CHUNK_SUB:
-				read_e(fd, &i16temp, sizeof(uint16_t));
-				slen = ntohs(i16temp);
-				client_id = _mosquitto_malloc(slen);
-				if(!client_id){
-					close(fd);
-					mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-					return 1;
-				}
-				read_e(fd, &client_id, slen);
-				read_e(fd, &i16temp, sizeof(uint16_t));
-				slen = ntohs(i16temp);
-				topic = _mosquitto_malloc(slen);
-				if(!topic){
-					close(fd);
-					mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-					return 1;
-				}
-				read_e(fd, &topic, slen);
-				read_e(fd, &qos, sizeof(uint8_t));
-				if(_db_restore_sub(db, client_id, topic, qos)){
-					return 1;
-				}
-				break;
+				case DB_CHUNK_SUB:
+					read_e(fd, &i16temp, sizeof(uint16_t));
+					slen = ntohs(i16temp);
+					client_id = _mosquitto_malloc(slen);
+					if(!client_id){
+						close(fd);
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+						return 1;
+					}
+					read_e(fd, &client_id, slen);
+					read_e(fd, &i16temp, sizeof(uint16_t));
+					slen = ntohs(i16temp);
+					topic = _mosquitto_malloc(slen);
+					if(!topic){
+						close(fd);
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+						return 1;
+					}
+					read_e(fd, &topic, slen);
+					read_e(fd, &qos, sizeof(uint8_t));
+					if(_db_restore_sub(db, client_id, topic, qos)){
+						return 1;
+					}
+					break;
 
-			default:
-				mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Unsupported chunk \"%d\" in persistent database file. Ignoring.", chunk);
-				lseek(fd, SEEK_CUR, length);
-				break;
+				default:
+					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Unsupported chunk \"%d\" in persistent database file. Ignoring.", chunk);
+					lseek(fd, SEEK_CUR, length);
+					break;
+			}
 		}
+		if(rlen < 0) goto error;
 	}else if(!memcmp(header, "SQLite format 3", 15)){
 		// Restore old sqlite format DB
 #ifdef WITH_SQLITE_UPGRADE
