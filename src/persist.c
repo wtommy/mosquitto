@@ -372,6 +372,99 @@ error:
 }
 
 
+static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
+{
+	uint64_t i64temp, store_id;
+	uint16_t i16temp, slen, mid;
+	uint8_t qos, retain, direction, state, dup;
+	char *client_id = NULL;
+	mosquitto_client_msg *cmsg, *tail;
+	struct mosquitto_msg_store *store;
+	mqtt3_context *context;
+
+#define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
+	read_e(db_fd, &i16temp, sizeof(uint16_t));
+	slen = ntohs(i16temp);
+	if(!slen){
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Corrupt persistent database.");
+		close(db_fd);
+		return 1;
+	}
+	client_id = _mosquitto_calloc(slen+1, sizeof(char));
+	if(!client_id){
+		close(db_fd);
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+		return 1;
+	}
+	read_e(db_fd, client_id, slen);
+
+	read_e(db_fd, &i64temp, sizeof(uint64_t));
+	store_id = be64toh(i64temp);
+
+	read_e(db_fd, &i16temp, sizeof(uint16_t));
+	mid = ntohs(i16temp);
+
+	read_e(db_fd, &qos, sizeof(uint8_t));
+	read_e(db_fd, &retain, sizeof(uint8_t));
+	read_e(db_fd, &direction, sizeof(uint8_t));
+	read_e(db_fd, &state, sizeof(uint8_t));
+	read_e(db_fd, &dup, sizeof(uint8_t));
+#undef read_e
+
+	cmsg = _mosquitto_calloc(1, sizeof(mosquitto_client_msg));
+	if(!cmsg){
+		close(db_fd);
+		_mosquitto_free(client_id);
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+		return 1;
+	}
+
+	cmsg->store = NULL;
+	cmsg->mid = mid;
+	cmsg->qos = qos;
+	cmsg->retain = retain;
+	cmsg->direction = direction;
+	cmsg->state = state;
+	cmsg->dup = dup;
+
+	store = db->msg_store;
+	while(store){
+		if(store->db_id == store_id){
+			cmsg->store = store;
+			break;
+		}
+		store = store->next;
+	}
+	if(!cmsg->store){
+		close(db_fd);
+		_mosquitto_free(cmsg);
+		_mosquitto_free(client_id);
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error restoring persistent database, message store corrupt.");
+		return 1;
+	}
+	context = _db_find_or_add_context(db, client_id);
+	if(!context){
+		close(db_fd);
+		_mosquitto_free(cmsg);
+		_mosquitto_free(client_id);
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error restoring persistent database, message store corrupt.");
+		return 1;
+	}
+	tail = context->msgs;
+	while(tail->next){
+		tail = tail->next;
+	}
+	tail->next = cmsg;
+	cmsg->next = NULL;
+
+	return 0;
+error:
+	mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
+	if(db_fd >= 0) close(db_fd);
+	if(client_id) _mosquitto_free(client_id);
+	return 1;
+}
+
 static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 {
 	uint64_t i64temp, store_id;
@@ -588,6 +681,7 @@ int mqtt3_db_restore(mosquitto_db *db)
 					break;
 
 				case DB_CHUNK_CLIENT_MSG:
+					if(_db_client_msg_chunk_restore(db, fd)) return 1;
 					break;
 
 				case DB_CHUNK_RETAIN:
