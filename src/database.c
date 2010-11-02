@@ -125,8 +125,10 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 			db->filepath = _mosquitto_malloc(strlen(config->persistence_location) + strlen(config->persistence_file) + 1);
 			if(!db->filepath) return 1;
 			sprintf(db->filepath, "%s%s", config->persistence_location, config->persistence_file);
+			if(mqtt3_db_restore(db)) return 1;
 		}else{
 			db->filepath = _mosquitto_strdup(config->persistence_file);
+			if(mqtt3_db_restore(db)) return 1;
 		}
 	}
 
