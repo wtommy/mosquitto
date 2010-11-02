@@ -328,6 +328,32 @@ error:
 }
 
 
+static int _db_retain_chunk_restore(mosquitto_db *db, int db_fd)
+{
+	uint64_t i64temp, store_id;
+	struct mosquitto_msg_store *store;
+
+	if(read(db_fd, &i64temp, sizeof(uint64_t)) != sizeof(uint64_t)){
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
+		close(db_fd);
+		return 1;
+	}
+	store_id = be64toh(i64temp);
+	store = db->msg_store;
+	while(store){
+		if(store->db_id == store_id){
+			mqtt3_sub_search(&db->subs, NULL, store->msg.topic, store->msg.qos, store->msg.retain, store);
+			break;
+		}
+		store = store->next;
+	}
+	if(!store){
+		close(db_fd);
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error restoring persistent database, message store corrupt.");
+		return 1;
+	}
+	return 0;
+}
 
 int mqtt3_db_restore(mosquitto_db *db)
 {
@@ -378,6 +404,7 @@ int mqtt3_db_restore(mosquitto_db *db)
 					break;
 
 				case DB_CHUNK_RETAIN:
+					if(_db_retain_chunk_restore(db, fd)) return 1;
 					break;
 
 				case DB_CHUNK_SUB:
