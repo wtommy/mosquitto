@@ -355,6 +355,45 @@ static int _db_retain_chunk_restore(mosquitto_db *db, int db_fd)
 	return 0;
 }
 
+static int _db_sub_chunk_restore(mosquitto_db *db, int db_fd)
+{
+	uint16_t i16temp, slen;
+	uint8_t qos;
+	char *client_id;
+	char *topic;
+
+#define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
+	read_e(db_fd, &i16temp, sizeof(uint16_t));
+	slen = ntohs(i16temp);
+	client_id = _mosquitto_malloc(slen);
+	if(!client_id){
+		close(db_fd);
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+		return 1;
+	}
+	read_e(db_fd, &client_id, slen);
+	read_e(db_fd, &i16temp, sizeof(uint16_t));
+	slen = ntohs(i16temp);
+	topic = _mosquitto_malloc(slen);
+	if(!topic){
+		close(db_fd);
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+		return 1;
+	}
+	read_e(db_fd, &topic, slen);
+	read_e(db_fd, &qos, sizeof(uint8_t));
+	if(_db_restore_sub(db, client_id, topic, qos)){
+		return 1;
+	}
+#undef read_e
+
+	return 0;
+error:
+	mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
+	if(db_fd >= 0) close(db_fd);
+	return 1;
+}
+
 int mqtt3_db_restore(mosquitto_db *db)
 {
 	int fd;
@@ -363,9 +402,8 @@ int mqtt3_db_restore(mosquitto_db *db)
 	uint32_t crc, db_version;
 	uint64_t i64temp;
 	uint32_t i32temp, length;
-	uint16_t i16temp, chunk, slen;
-	uint8_t i8temp, qos;
-	char *client_id, *topic;
+	uint16_t i16temp, chunk;
+	uint8_t i8temp;
 	ssize_t rlen;
 
 	assert(db);
@@ -408,28 +446,7 @@ int mqtt3_db_restore(mosquitto_db *db)
 					break;
 
 				case DB_CHUNK_SUB:
-					read_e(fd, &i16temp, sizeof(uint16_t));
-					slen = ntohs(i16temp);
-					client_id = _mosquitto_malloc(slen);
-					if(!client_id){
-						close(fd);
-						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-						return 1;
-					}
-					read_e(fd, &client_id, slen);
-					read_e(fd, &i16temp, sizeof(uint16_t));
-					slen = ntohs(i16temp);
-					topic = _mosquitto_malloc(slen);
-					if(!topic){
-						close(fd);
-						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-						return 1;
-					}
-					read_e(fd, &topic, slen);
-					read_e(fd, &qos, sizeof(uint8_t));
-					if(_db_restore_sub(db, client_id, topic, qos)){
-						return 1;
-					}
+					if(_db_sub_chunk_restore(db, fd)) return 1;
 					break;
 
 				default:
