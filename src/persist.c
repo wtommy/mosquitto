@@ -176,11 +176,6 @@ static int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 static int mqtt3_db_client_write(mosquitto_db *db, int db_fd)
 {
 	int i;
-	uint32_t length;
-	uint64_t i64temp;
-	uint32_t i32temp;
-	uint16_t i16temp;
-	uint8_t i8temp;
 	mqtt3_context *context;
 
 	assert(db);
