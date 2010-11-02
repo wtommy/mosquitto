@@ -354,7 +354,7 @@ static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 	read_e(db_fd, &i16temp, sizeof(uint16_t));
 	slen = ntohs(i16temp);
 	if(slen){
-		source_id = _mosquitto_calloc(slen, sizeof(char));
+		source_id = _mosquitto_calloc(slen+1, sizeof(char));
 		if(!source_id){
 			close(db_fd);
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
