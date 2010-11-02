@@ -54,6 +54,42 @@ static int mqtt3_db_sqlite_restore(mosquitto_db *db);
 #endif
 static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *sub, int qos);
 
+static mqtt3_context *_db_find_or_add_context(mosquitto_db *db, const char *client_id)
+{
+	mqtt3_context *context;
+	mqtt3_context **tmp_contexts;
+	int i;
+
+	context = NULL;
+	for(i=0; i<db->context_count; i++){
+		if(db->contexts[i] && !strcmp(db->contexts[i]->core.id, client_id)){
+			context = db->contexts[i];
+			break;
+		}
+	}
+	if(!context){
+		context = mqtt3_context_init(-1);
+
+		for(i=0; i<db->context_count; i++){
+			if(!db->contexts[i]){
+				db->contexts[i] = context;
+				break;
+			}
+		}
+		if(i==db->context_count){
+			db->context_count++;
+			tmp_contexts = _mosquitto_realloc(db->contexts, sizeof(mqtt3_context*)*db->context_count);
+			if(tmp_contexts){
+				db->contexts = tmp_contexts;
+				db->contexts[db->context_count-1] = context;
+			}else{
+				return NULL;
+			}
+		}
+		context->core.id = _mosquitto_strdup(client_id);
+	}
+	return context;
+}
 
 static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_context *context)
 {
@@ -594,41 +630,13 @@ error:
 static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *sub, int qos)
 {
 	mqtt3_context *context;
-	mqtt3_context **tmp_contexts;
-	int i;
 
 	assert(db);
 	assert(client_id);
 	assert(sub);
 
-	context = NULL;
-	for(i=0; i<db->context_count; i++){
-		if(db->contexts[i] && !strcmp(db->contexts[i]->core.id, client_id)){
-			context = db->contexts[i];
-			break;
-		}
-	}
-	if(!context){
-		context = mqtt3_context_init(-1);
-
-		for(i=0; i<db->context_count; i++){
-			if(!db->contexts[i]){
-				db->contexts[i] = context;
-				break;
-			}
-		}
-		if(i==db->context_count){
-			db->context_count++;
-			tmp_contexts = _mosquitto_realloc(db->contexts, sizeof(mqtt3_context*)*db->context_count);
-			if(tmp_contexts){
-				db->contexts = tmp_contexts;
-				db->contexts[db->context_count-1] = context;
-			}else{
-				return 1;
-			}
-		}
-		context->core.id = _mosquitto_strdup(client_id);
-	}
+	context = _db_find_or_add_context(db, client_id);
+	if(!context) return 1;
 	return mqtt3_sub_add(context, sub, qos, &db->subs);
 }
 
