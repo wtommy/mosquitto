@@ -399,7 +399,11 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 	temp->next = db->msg_store;
 	temp->timestamp = time(NULL);
 	temp->ref_count = 0;
-	temp->source_id = _mosquitto_strdup(source);
+	if(source){
+		temp->source_id = _mosquitto_strdup(source);
+	}else{
+		temp->source_id = _mosquitto_strdup("");
+	}
 	temp->source_mid = source_mid;
 	temp->msg.qos = qos;
 	temp->msg.retain = retain;
