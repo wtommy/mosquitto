@@ -61,7 +61,7 @@ static int _subs_process(struct _mosquitto_subhier *hier, const char *source_id,
 			hier->retained = NULL;
 		}
 	}
-	while(leaf){
+	while(source_id && leaf){
 		if(leaf->context->bridge && !strcmp(leaf->context->core.id, source_id)){
 			leaf = leaf->next;
 			continue;
