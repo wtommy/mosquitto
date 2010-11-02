@@ -366,23 +366,23 @@ static int _db_sub_chunk_restore(mosquitto_db *db, int db_fd)
 #define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
 	read_e(db_fd, &i16temp, sizeof(uint16_t));
 	slen = ntohs(i16temp);
-	client_id = _mosquitto_malloc(slen);
+	client_id = _mosquitto_calloc(slen+1, sizeof(char));
 	if(!client_id){
 		close(db_fd);
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
 		return 1;
 	}
-	read_e(db_fd, &client_id, slen);
+	read_e(db_fd, client_id, slen);
 	read_e(db_fd, &i16temp, sizeof(uint16_t));
 	slen = ntohs(i16temp);
-	topic = _mosquitto_malloc(slen);
+	topic = _mosquitto_calloc(slen+1, sizeof(char));
 	if(!topic){
 		close(db_fd);
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
 		_mosquitto_free(client_id);
 		return 1;
 	}
-	read_e(db_fd, &topic, slen);
+	read_e(db_fd, topic, slen);
 	read_e(db_fd, &qos, sizeof(uint8_t));
 	if(_db_restore_sub(db, client_id, topic, qos)){
 		rc = 1;
