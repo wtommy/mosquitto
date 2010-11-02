@@ -1,6 +1,11 @@
 0.9 - 201009xx
 ==============
 
+- Client and message data is now stored in memory with custom routines rather
+  than a sqlite database. This removes the dependencies on sqlite, pcre and
+  sqlite3-pcre. It also means that the persistent database format has had to
+  be reimplemented in a custom format. Optional support for importing old
+  sqlite databases is provided.
 - Added IPv6 support for mosquitto and the clients.
 - Provide username and password support for the clients and client libraries.
   This is part of the new MQTT v3.1 spec.
