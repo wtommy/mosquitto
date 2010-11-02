@@ -427,7 +427,7 @@ int mqtt3_db_restore(mosquitto_db *db)
 		while(rlen = read(fd, &i16temp, sizeof(uint16_t)), rlen == sizeof(uint16_t)){
 			chunk = ntohs(i16temp);
 			read_e(fd, &i32temp, sizeof(uint32_t));
-			length = ntohs(i32temp);
+			length = ntohl(i32temp);
 			switch(chunk){
 				case DB_CHUNK_CFG:
 					read_e(fd, &i8temp, sizeof(uint8_t)); // shutdown
