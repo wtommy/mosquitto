@@ -541,7 +541,7 @@ static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
 			return 1;
 		}
-		if(read(db_fd, &payload, payloadlen) != payloadlen){
+		if(read(db_fd, payload, payloadlen) != payloadlen){
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
 			close(db_fd);
 			_mosquitto_free(source_id);
