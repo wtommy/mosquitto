@@ -157,7 +157,7 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 					if(int_db.contexts[i]->bridge){
 						mqtt3_check_keepalive(int_db.contexts[i]);
 					}
-					if(!(int_db.contexts[i]->core.keepalive) || now - int_db.contexts[i]->core.last_msg_in < int_db.contexts[i]->core.keepalive*3/2){
+					if(!(int_db.contexts[i]->core.keepalive) || now - int_db.contexts[i]->core.last_msg_in < (time_t)(int_db.contexts[i]->core.keepalive)*3/2){
 						if(mqtt3_db_message_write(int_db.contexts[i])){
 							// FIXME - do something here.
 						}
