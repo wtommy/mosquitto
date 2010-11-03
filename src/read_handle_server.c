@@ -202,6 +202,13 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 				if(payload) _mosquitto_free(payload);
 				return 1;
 			}
+			if(qos > 2){
+				mqtt3_log_printf(MOSQ_LOG_INFO, "Invalid QoS in subscription command from %s, disconnecting.",
+					context->address);
+				_mosquitto_free(sub);
+				if(payload) _mosquitto_free(payload);
+				return 1;
+			}
 			if(_mosquitto_fix_sub_topic(&sub)){
 				_mosquitto_free(sub);
 				if(payload) _mosquitto_free(payload);
