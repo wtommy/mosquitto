@@ -448,7 +448,7 @@ static int _subs_clean_session(mqtt3_context *context, struct _mosquitto_subhier
 	child = root->children;
 	while(child){
 		_subs_clean_session(context, child);
-		if(!child->children && !child->subs){
+		if(!child->children && !child->subs && !child->retained){
 			if(last){
 				last->next = child->next;
 			}else{
