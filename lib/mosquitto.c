@@ -358,8 +358,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	fdcount = select(mosq->core.sock+1, &readfds, &writefds, NULL, &local_timeout);
 #endif
 	if(fdcount == -1){
-		_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Error in pselect: %s\n", strerror(errno));
-		return 1;
+		return 1; // FIXME what error to return?
 	}else{
 		if(FD_ISSET(mosq->core.sock, &readfds)){
 			rc = mosquitto_loop_read(mosq);
@@ -371,7 +370,6 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 					}
 					return MOSQ_ERR_SUCCESS;
 				}else{
-					_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Error in network read.\n");
 					return rc;
 				}
 			}
@@ -386,7 +384,6 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 					}
 					return MOSQ_ERR_SUCCESS;
 				}else{
-					_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Error in network write.\n");
 					return rc;
 				}
 			}
