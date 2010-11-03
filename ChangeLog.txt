@@ -18,6 +18,7 @@
   timeouts correctly. Fixes bug #598290.
 - Set retain flag correctly for outgoing messages. It should only be set for
   messages sent in response to a subscribe command (ie. stale data).
+- Fix bug in returning correct CONNACK result to on_connect client callback.
 
 0.8.3 - 20101004
 ================

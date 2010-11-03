@@ -51,7 +51,7 @@ int _mosquitto_handle_connack(struct mosquitto *mosq)
 	rc = _mosquitto_read_byte(&mosq->core.in_packet, &result);
 	if(rc) return rc;
 	if(mosq->on_connect){
-		mosq->on_connect(mosq->obj, rc);
+		mosq->on_connect(mosq->obj, result);
 	}
 	switch(result){
 		case 0:
