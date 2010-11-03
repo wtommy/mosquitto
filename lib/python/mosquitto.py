@@ -97,7 +97,7 @@ class Mosquitto:
 	def loop(self, timeout=-1):
 		return _mosquitto_loop(self._mosq, timeout)
 
-	def subscribe(self, sub, qos):
+	def subscribe(self, sub, qos=0):
 		return _mosquitto_subscribe(self._mosq, None, sub, qos)
 
 	def unsubscribe(self, sub):
@@ -106,7 +106,7 @@ class Mosquitto:
 	def publish(self, topic, payload, qos=0, retain=False):
 		return _mosquitto_publish(self._mosq, None, topic, len(payload), cast(payload, POINTER(c_uint8)), qos, retain)
 
-	def will_set(self, will, topic, payload, qos=0, retain=False):
+	def will_set(self, will, topic, payload=None, qos=0, retain=False):
 		return _mosquitto_will_set(self._mosq, will, topic, len(payloadlen), cast(payload, POINTER(c_uint8)), qos, retain)
 
 	def username_pw_set(self, username, password=None):
