@@ -164,7 +164,7 @@ int _mosquitto_send_unsubscribe(struct mosquitto *mosq, uint16_t *mid, bool dup,
 
 	packetlen = 2 + 2+strlen(topic);
 
-	packet->command = SUBSCRIBE | (dup<<3) | (1<<1);
+	packet->command = UNSUBSCRIBE | (dup<<3) | (1<<1);
 	packet->remaining_length = packetlen;
 	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
 	if(!packet->payload){

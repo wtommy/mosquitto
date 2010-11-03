@@ -28,6 +28,8 @@
 - Fix bug in returning correct CONNACK result to on_connect client callback.
 - Don't send client will if it is disconnected for exceeding its keepalive
   timer.
+- Fix client library unsubscribe function incorrectly sending a SUBSCRIBE
+  command when it should be UNSUBSCRIBE. 
 
 0.8.3 - 20101004
 ================
