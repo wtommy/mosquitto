@@ -80,9 +80,9 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 		byte = byte | ((mosq->core.will->retain&0x1)<<5) | ((mosq->core.will->qos&0x3)<<3) | ((will&0x1)<<2);
 	}
 	if(mosq->core.username){
-		byte = byte | 0x1<<6;
+		byte = byte | 0x1<<7;
 		if(mosq->core.password){
-			byte = byte | 0x1<<7;
+			byte = byte | 0x1<<6;
 		}
 	}
 	_mosquitto_write_byte(packet, byte);
