@@ -180,15 +180,16 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 		}
 	}
 
-	if(dup){
-		mqtt3_db_message_store_find(db, context->core.id, mid, &stored);
-	}
+	mqtt3_db_message_store_find(db, context->core.id, mid, &stored);
 	if(!stored){
+		dup = 0;
 		if(mqtt3_db_message_store(db, context->core.id, mid, topic, qos, payloadlen, payload, retain, &stored, 0)){
 			_mosquitto_free(topic);
 			if(payload) _mosquitto_free(payload);
 			return 1;
 		}
+	}else{
+		dup = 1;
 	}
 	switch(qos){
 		case 0:
