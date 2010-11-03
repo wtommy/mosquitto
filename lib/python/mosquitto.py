@@ -103,7 +103,7 @@ class Mosquitto:
 	def unsubscribe(self, sub):
 		return _mosquitto_unsubscribe(self._mosq, None, sub)
 
-	def publish(self, topic, payload, qos=0, retain=False):
+	def publish(self, topic, payload=None, qos=0, retain=False):
 		return _mosquitto_publish(self._mosq, None, topic, len(payload), cast(payload, POINTER(c_uint8)), qos, retain)
 
 	def will_set(self, topic, payload=None, qos=0, retain=False):
