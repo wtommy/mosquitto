@@ -180,7 +180,9 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 		}
 	}
 
-	mqtt3_db_message_store_find(db, context->core.id, mid, &stored);
+	if(qos > 0){
+		mqtt3_db_message_store_find(db, context->core.id, mid, &stored);
+	}
 	if(!stored){
 		dup = 0;
 		if(mqtt3_db_message_store(db, context->core.id, mid, topic, qos, payloadlen, payload, retain, &stored, 0)){
