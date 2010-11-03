@@ -170,7 +170,6 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", int_db.contexts[i]->core.id);
 						/* Client has exceeded keepalive*1.5 */
-						mqtt3_db_client_will_queue(&int_db, int_db.contexts[i]);
 						if(int_db.contexts[i]->bridge || int_db.contexts[i]->clean_session == false){
 							mqtt3_socket_close(int_db.contexts[i]);
 						}else{

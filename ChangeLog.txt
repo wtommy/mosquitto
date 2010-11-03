@@ -26,6 +26,8 @@
 - Set retain flag correctly for outgoing messages. It should only be set for
   messages sent in response to a subscribe command (ie. stale data).
 - Fix bug in returning correct CONNACK result to on_connect client callback.
+- Don't send client will if it is disconnected for exceeding its keepalive
+  timer.
 
 0.8.3 - 20101004
 ================
