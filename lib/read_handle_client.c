@@ -58,19 +58,10 @@ int _mosquitto_handle_connack(struct mosquitto *mosq)
 			mosq->core.state = mosq_cs_connected;
 			return MOSQ_ERR_SUCCESS;
 		case 1:
-			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Connection Refused: unacceptable protocol version");
-			return MOSQ_ERR_CONN_REFUSED;
 		case 2:
-			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Connection Refused: identifier rejected");
-			return MOSQ_ERR_CONN_REFUSED;
 		case 3:
-			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Connection Refused: broker unavailable");
-			return MOSQ_ERR_CONN_REFUSED;
 		case 4:
-			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Connection Refused: bad user name or password");
-			return MOSQ_ERR_CONN_REFUSED;
 		case 5:
-			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Connection Refused: not authorised");
 			return MOSQ_ERR_CONN_REFUSED;
 		default:
 			return MOSQ_ERR_PROTOCOL;
