@@ -106,8 +106,11 @@ class Mosquitto:
 	def publish(self, topic, payload, qos=0, retain=False):
 		return _mosquitto_publish(self._mosq, None, topic, len(payload), cast(payload, POINTER(c_uint8)), qos, retain)
 
-	def will_set(self, will, topic, payload=None, qos=0, retain=False):
-		return _mosquitto_will_set(self._mosq, will, topic, len(payloadlen), cast(payload, POINTER(c_uint8)), qos, retain)
+	def will_set(self, topic, payload=None, qos=0, retain=False):
+		return _mosquitto_will_set(self._mosq, true, topic, len(payloadlen), cast(payload, POINTER(c_uint8)), qos, retain)
+
+	def will_clear(self):
+		return _mosquitto_will_set(self._mosq, false, "", 0, cast(None, POINTER(c_uint8)), 0, 0)
 
 	def username_pw_set(self, username, password=None):
 		return _mosquitto_username_pw_set(self._mosq, username, password)
