@@ -80,7 +80,6 @@ static int _mqtt3_db_cleanup(mosquitto_db *db);
 int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 {
 	int rc = 0;
-	FILE *fptr;
 	struct _mosquitto_subhier *child;
 
 	if(!config) return 1;
