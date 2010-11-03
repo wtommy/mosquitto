@@ -397,7 +397,6 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 	if(!temp) return 1;
 
 	temp->next = db->msg_store;
-	temp->timestamp = time(NULL);
 	temp->ref_count = 0;
 	if(source){
 		temp->source_id = _mosquitto_strdup(source);
