@@ -439,7 +439,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 		if(read_length == 1){
 			mosq->core.in_packet.command = byte;
 		}else{
-			if(read_length == 0) return 1; /* EOF */
+			if(read_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */
 #ifndef WIN32
 			if(errno == EAGAIN || errno == EWOULDBLOCK){
 #else
@@ -468,7 +468,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 				mosq->core.in_packet.remaining_length += (byte & 127) * mosq->core.in_packet.remaining_mult;
 				mosq->core.in_packet.remaining_mult *= 128;
 			}else{
-				if(read_length == 0) return 1; /* EOF */
+				if(read_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */
 #ifndef WIN32
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
 #else
@@ -538,7 +538,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 			if(write_length == 1){
 				packet->command = 0;
 			}else{
-				if(write_length == 0) return 1; /* EOF */
+				if(write_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */
 #ifndef WIN32
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
 #else
@@ -569,7 +569,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 					if(packet->remaining_count > 4) return MOSQ_ERR_PROTOCOL;
 	
 				}else{
-					if(write_length == 0) return 1; /* EOF */
+					if(write_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */
 #ifndef WIN32
 					if(errno == EAGAIN || errno == EWOULDBLOCK){
 #else
