@@ -91,7 +91,6 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	for(i=0; i<db->context_count; i++){
 		if(db->contexts[i] && db->contexts[i]->core.id && !strcmp(db->contexts[i]->core.id, client_id)){
 			/* Client does match. */
-			db->contexts[i]->core.state = mosq_cs_disconnecting;
 			if(db->contexts[i]->core.sock == -1){
 				/* Client is reconnecting after a disconnect */
 				/* FIXME - does anything else need to be done here? */
@@ -103,6 +102,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 				db->contexts[i]->clean_session = true;
 			}
 			mqtt3_context_cleanup(db, db->contexts[i], false);
+			db->contexts[i]->core.state = mosq_cs_connected;
 			db->contexts[i]->address = _mosquitto_strdup(context->address);
 			db->contexts[i]->core.sock = context->core.sock;
 			context->core.sock = -1;
