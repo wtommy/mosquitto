@@ -27,8 +27,6 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifdef WITH_PERSISTENCE
-
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -40,6 +38,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 #include <memory_mosq.h>
 #include <mqtt3.h>
+
+#ifdef WITH_PERSISTENCE
 
 /* DB read/write */
 const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','t','o',' ','d','b'};
