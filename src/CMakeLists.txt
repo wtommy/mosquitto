@@ -12,8 +12,10 @@ add_executable(mosquitto
 	mqtt3.h
 	net.c
 	../lib/net_mosq.c ../lib/net_mosq.h
+	persist.c
 	raw_send.c raw_send_client.c raw_send_server.c
 	read_handle.c read_handle_client.c read_handle_server.c
+	subs.c
 	util.c
 	../lib/util_mosq.c ../lib/util_mosq.h)
 
