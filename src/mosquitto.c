@@ -216,12 +216,14 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 				}
 			}
 		}
+#ifdef WITH_PERSISTENCE
 		if(config->persistence && config->autosave_interval){
 			if(last_backup + config->autosave_interval < now){
 				mqtt3_db_backup(&int_db, false, false);
 				last_backup = time(NULL);
 			}
 		}
+#endif
 		if(!config->store_clean_interval || last_store_clean + config->store_clean_interval < now){
 			mqtt3_db_store_clean(&int_db);
 			last_store_clean = time(NULL);
@@ -317,7 +319,9 @@ void handle_sigint(int signal)
 /* Signal handler for SIGUSR1 - backup the db. */
 void handle_sigusr1(int signal)
 {
+#ifdef WITH_PERSISTENCE
 	mqtt3_db_backup(&int_db, false, false);
+#endif
 }
 
 /* Signal handler for SIGUSR2 - vacuum the db. */
@@ -441,9 +445,11 @@ int main(int argc, char *argv[])
 	mqtt3_log_printf(MOSQ_LOG_INFO, "mosquitto version %s terminating", VERSION);
 	mqtt3_log_close();
 
+#ifdef WITH_PERSISTENCE
 	if(config.persistence && config.autosave_interval){
 		mqtt3_db_backup(&int_db, true, true);
 	}
+#endif
 
 	for(i=0; i<int_db.context_count; i++){
 		if(int_db.contexts[i]){

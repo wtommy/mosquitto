@@ -27,6 +27,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifdef WITH_PERSISTENCE
+
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -813,4 +815,6 @@ static int mqtt3_db_sqlite_restore(mosquitto_db *db)
 	}
 	return 0;
 }
+#endif
+
 #endif

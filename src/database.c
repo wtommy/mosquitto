@@ -119,6 +119,7 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 	child->retained = NULL;
 	db->subs.children->next->next = child;
 
+#ifdef WITH_PERSISTENCE
 	if(config->persistence){
 		if(config->persistence_location && strlen(config->persistence_location)){
 			db->filepath = _mosquitto_malloc(strlen(config->persistence_location) + strlen(config->persistence_file) + 1);
@@ -130,6 +131,7 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 			if(mqtt3_db_restore(db)) return 1;
 		}
 	}
+#endif
 
 	if(_mqtt3_db_cleanup(db)) return 1;
 
