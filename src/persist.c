@@ -96,7 +96,7 @@ static mqtt3_context *_db_find_or_add_context(mosquitto_db *db, const char *clie
 static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_context *context)
 {
 	uint32_t length;
-	uint64_t i64temp;
+	dbid_t i64temp;
 	uint16_t i16temp, slen;
 	uint8_t i8temp;
 	mosquitto_client_msg *cmsg;
@@ -111,7 +111,7 @@ static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_con
 	while(cmsg){
 		slen = strlen(context->core.id);
 
-		length = htonl(sizeof(uint64_t) + sizeof(uint16_t) + sizeof(uint8_t) +
+		length = htonl(sizeof(dbid_t) + sizeof(uint16_t) + sizeof(uint8_t) +
 				sizeof(uint8_t) + sizeof(uint8_t) + sizeof(uint8_t) +
 				sizeof(uint8_t) + 2+slen);
 
@@ -124,7 +124,7 @@ static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_con
 		write_e(db_fd, context->core.id, slen);
 
 		i64temp = htobe64(cmsg->store->db_id);
-		write_e(db_fd, &i64temp, sizeof(uint64_t));
+		write_e(db_fd, &i64temp, sizeof(dbid_t));
 
 		i16temp = htons(cmsg->mid);
 		write_e(db_fd, &i16temp, sizeof(uint16_t));
@@ -156,7 +156,7 @@ static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_con
 static int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 {
 	uint32_t length;
-	uint64_t i64temp;
+	dbid_t i64temp;
 	uint32_t i32temp;
 	uint16_t i16temp, slen;
 	uint8_t i8temp;
@@ -169,7 +169,7 @@ static int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 
 	stored = db->msg_store;
 	while(stored){
-		length = htonl(sizeof(uint64_t) + 2+strlen(stored->source_id) +
+		length = htonl(sizeof(dbid_t) + 2+strlen(stored->source_id) +
 				sizeof(uint16_t) + sizeof(uint16_t) +
 				2+strlen(stored->msg.topic) + sizeof(uint32_t) +
 				stored->msg.payloadlen + sizeof(uint8_t) + sizeof(uint8_t));
@@ -179,7 +179,7 @@ static int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 		write_e(db_fd, &length, sizeof(uint32_t));
 
 		i64temp = htobe64(stored->db_id);
-		write_e(db_fd, &i64temp, sizeof(uint64_t));
+		write_e(db_fd, &i64temp, sizeof(dbid_t));
 
 		slen = strlen(stored->source_id);
 		i16temp = htons(slen);
@@ -244,7 +244,7 @@ static int _db_subs_retain_write(mosquitto_db *db, int db_fd, struct _mosquitto_
 	char *thistopic;
 	uint32_t length;
 	uint16_t i16temp;
-	uint64_t i64temp;
+	dbid_t i64temp;
 	int slen;
 
 	slen = strlen(topic) + strlen(node->topic) + 2;
@@ -281,14 +281,14 @@ static int _db_subs_retain_write(mosquitto_db *db, int db_fd, struct _mosquitto_
 		sub = sub->next;
 	}
 	if(node->retained){
-		length = htonl(sizeof(uint64_t));
+		length = htonl(sizeof(dbid_t));
 
 		i16temp = htons(DB_CHUNK_RETAIN);
 		write_e(db_fd, &i16temp, sizeof(uint16_t));
 		write_e(db_fd, &length, sizeof(uint32_t));
 
 		i64temp = htobe64(node->retained->db_id);
-		write_e(db_fd, &i64temp, sizeof(uint64_t));
+		write_e(db_fd, &i64temp, sizeof(dbid_t));
 	}
 #undef write_e
 
@@ -320,7 +320,7 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 	int db_fd;
 	uint32_t db_version = htonl(MOSQ_DB_VERSION);
 	uint32_t crc = htonl(0);
-	uint64_t i64temp;
+	dbid_t i64temp;
 	uint32_t i32temp;
 	uint16_t i16temp;
 	uint8_t i8temp;
@@ -347,14 +347,16 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 	i16temp = htons(DB_CHUNK_CFG);
 	write_e(db_fd, &i16temp, sizeof(uint16_t));
 	/* chunk length */
-	i32temp = htonl(sizeof(uint64_t) + sizeof(uint8_t)); // FIXME
+	i32temp = htonl(sizeof(dbid_t) + sizeof(uint8_t) + sizeof(uint8_t));
 	write_e(db_fd, &i32temp, sizeof(uint32_t));
 	/* db written at broker shutdown or not */
 	i8temp = shutdown;
 	write_e(db_fd, &i8temp, sizeof(uint8_t));
+	i8temp = sizeof(dbid_t);
+	write_e(db_fd, &i8temp, sizeof(uint8_t));
 	/* last db mid */
 	i64temp = htobe64(db->last_db_id);
-	write_e(db_fd, &i64temp, sizeof(uint64_t));
+	write_e(db_fd, &i64temp, sizeof(dbid_t));
 #undef write_e
 
 	if(mqtt3_db_message_store_write(db, db_fd)){
@@ -376,7 +378,7 @@ error:
 
 static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
 {
-	uint64_t i64temp, store_id;
+	dbid_t i64temp, store_id;
 	uint16_t i16temp, slen, mid;
 	uint8_t qos, retain, direction, state, dup;
 	char *client_id = NULL;
@@ -400,7 +402,7 @@ static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
 	}
 	read_e(db_fd, client_id, slen);
 
-	read_e(db_fd, &i64temp, sizeof(uint64_t));
+	read_e(db_fd, &i64temp, sizeof(dbid_t));
 	store_id = be64toh(i64temp);
 
 	read_e(db_fd, &i16temp, sizeof(uint16_t));
@@ -470,7 +472,7 @@ error:
 
 static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 {
-	uint64_t i64temp, store_id;
+	dbid_t i64temp, store_id;
 	uint32_t i32temp, payloadlen;
 	uint16_t i16temp, slen, source_mid, mid;
 	uint8_t qos, retain, *payload = NULL;
@@ -480,7 +482,7 @@ static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 	struct mosquitto_msg_store *stored = NULL;
 
 #define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
-	read_e(db_fd, &i64temp, sizeof(uint64_t));
+	read_e(db_fd, &i64temp, sizeof(dbid_t));
 	store_id = be64toh(i64temp);
 
 	read_e(db_fd, &i16temp, sizeof(uint16_t));
@@ -570,10 +572,10 @@ error:
 
 static int _db_retain_chunk_restore(mosquitto_db *db, int db_fd)
 {
-	uint64_t i64temp, store_id;
+	dbid_t i64temp, store_id;
 	struct mosquitto_msg_store *store;
 
-	if(read(db_fd, &i64temp, sizeof(uint64_t)) != sizeof(uint64_t)){
+	if(read(db_fd, &i64temp, sizeof(dbid_t)) != sizeof(dbid_t)){
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
 		close(db_fd);
 		return 1;
@@ -644,7 +646,7 @@ int mqtt3_db_restore(mosquitto_db *db)
 	char header[15];
 	int rc = 0;
 	uint32_t crc, db_version;
-	uint64_t i64temp;
+	dbid_t i64temp;
 	uint32_t i32temp, length;
 	uint16_t i16temp, chunk;
 	uint8_t i8temp;
@@ -675,7 +677,14 @@ int mqtt3_db_restore(mosquitto_db *db)
 			switch(chunk){
 				case DB_CHUNK_CFG:
 					read_e(fd, &i8temp, sizeof(uint8_t)); // shutdown
-					read_e(fd, &i64temp, sizeof(uint64_t));
+					read_e(fd, &i8temp, sizeof(uint8_t)); // sizeof(dbid_t)
+					if(i8temp != sizeof(dbid_t)){
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Incompatible database configuration (dbid size is %d bytes, expected %d)",
+								i8temp, sizeof(dbid_t));
+						close(fd);
+						return 1;
+					}
+					read_e(fd, &i64temp, sizeof(dbid_t));
 					db->last_db_id = be64toh(i64temp);
 					break;
 

@@ -54,6 +54,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MQTT3_LOG_TOPIC 0x10
 #define MQTT3_LOG_ALL 0xFF
 
+typedef uint64_t dbid_t;
+
 enum mqtt3_msg_state {
 	ms_invalid = 0,
 	ms_publish = 1,
@@ -85,7 +87,7 @@ struct _mosquitto_subhier {
 
 struct mosquitto_msg_store{
 	struct mosquitto_msg_store *next;
-	uint64_t db_id;
+	dbid_t db_id;
 	int ref_count;
 	char *source_id;
 	uint16_t source_mid;
@@ -105,7 +107,7 @@ typedef struct _mosquitto_client_msg{
 } mosquitto_client_msg;
 
 typedef struct _mosquitto_db{
-	uint64_t last_db_id;
+	dbid_t last_db_id;
 	struct _mosquitto_subhier subs;
 	struct _mqtt3_context **contexts;
 	int context_count;
@@ -276,7 +278,7 @@ int mqtt3_db_message_write(mqtt3_context *context);
 int mqtt3_db_messages_delete(mqtt3_context *context);
 int mqtt3_db_messages_easy_queue(mosquitto_db *db, mqtt3_context *context, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain);
 int mqtt3_db_messages_queue(mosquitto_db *db, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored);
-int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source_mid, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, struct mosquitto_msg_store **stored, uint64_t store_id);
+int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source_mid, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, struct mosquitto_msg_store **stored, dbid_t store_id);
 int mqtt3_db_message_store_find(mosquitto_db *db, const char *source, uint16_t mid, struct mosquitto_msg_store **stored);
 /* Check all messages waiting on a client reply and resend if timeout has been exceeded. */
 int mqtt3_db_message_timeout_check(mosquitto_db *db, unsigned int timeout);
