@@ -117,12 +117,7 @@ class Mosquitto:
 
 	def _internal_on_connect(self, obj, rc):
 		if self.on_connect:
-			try:
-				argcount = self.on_connect.fun_code.co_argcount
-			except RuntimeError:
-				argcount = 2
-			except AttributeError:
-				argcount = 2
+			argcount = self.on_connect.func_code.co_argcount
 
 			if argcount == 1:
 				self.on_connect(rc)
@@ -131,12 +126,7 @@ class Mosquitto:
 
 	def _internal_on_disconnect(self, obj):
 		if self.on_disconnect:
-			try:
-				argcount = self.on_disconnect.fun_code.co_argcount
-			except RuntimeError:
-				argcount = 1
-			except AttributeError:
-				argcount = 1
+			argcount = self.on_disconnect.func_code.co_argcount
 
 			if argcount == 0:
 				self.on_disconnect()
@@ -150,12 +140,7 @@ class Mosquitto:
 			qos = message.contents.qos
 			retain = message.contents.retain
 			msg = MosquittoMessage(topic, payload, qos, retain)
-			try:
-				argcount = self.on_message.fun_code.co_argcount
-			except RuntimeError:
-				argcount = 2
-			except AttributeError:
-				argcount = 2
+			argcount = self.on_message.func_code.co_argcount
 
 			if argcount == 1:
 				self.on_message(msg)
@@ -164,12 +149,7 @@ class Mosquitto:
 
 	def _internal_on_publish(self, obj, mid):
 		if self.on_publish:
-			try:
-				argcount = self.on_publish.fun_code.co_argcount
-			except RuntimeError:
-				argcount = 2
-			except AttributeError:
-				argcount = 2
+			argcount = self.on_publish.func_code.co_argcount
 
 			if argcount == 1:
 				self.on_publish(mid)
@@ -181,12 +161,7 @@ class Mosquitto:
 			qos_list = []
 			for i in range(qos_count):
 				qos_list.append(granted_qos[i])
-			try:
-				argcount = self.on_subscribe.fun_code.co_argcount
-			except RuntimeError:
-				argcount = 3
-			except AttributeError:
-				argcount = 3
+			argcount = self.on_subscribe.func_code.co_argcount
 
 			if argcount == 2:
 				self.on_subscribe(mid, qos_list)
@@ -195,12 +170,7 @@ class Mosquitto:
 
 	def _internal_on_unsubscribe(self, obj, mid):
 		if self.on_unsubscribe:
-			try:
-				argcount = self.on_unsubscribe.fun_code.co_argcount
-			except RuntimeError:
-				argcount = 2
-			except AttributeError:
-				argcount = 2
+			argcount = self.on_unsubscribe.func_code.co_argcount
 
 			if argcount == 1:
 				self.on_unsubscribe(mid)
