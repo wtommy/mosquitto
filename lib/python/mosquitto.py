@@ -41,7 +41,7 @@ MOSQ_LOG_ERR=0x08
 MOSQ_LOG_DEBUG=0x10
 
 class Mosquitto:
-	"""MQTT version 3 client class"""
+	"""MQTT version 3.1 client class."""
 
 	def __init__(self, id, obj=None):
 		if obj==None:
@@ -86,33 +86,52 @@ class Mosquitto:
 			_mosquitto_destroy(self._mosq)
 
 	def connect(self, hostname="127.0.0.1", port=1883, keepalive=60, clean_session=True):
+		"""Connect the client to an MQTT broker."""
 		return _mosquitto_connect(self._mosq, hostname, port, keepalive, clean_session)
 
 	def disconnect(self):
+		"""Disconnect a connected client from the broker."""
 		return _mosquitto_disconnect(self._mosq)
 
 	def log_init(self, priorities, destinations):
+		"""Set the logging preferences for this client."""
 		return _mosquitto_log_init(self._mosq, priorities, destinations)
 
 	def loop(self, timeout=-1):
+		"""Process network events.
+		
+		This function must be called regularly to ensure communication with the broker is carried out."""
 		return _mosquitto_loop(self._mosq, timeout)
 
 	def subscribe(self, sub, qos=0):
+		"""Subscribe the client to a topic."""
 		return _mosquitto_subscribe(self._mosq, None, sub, qos)
 
 	def unsubscribe(self, sub):
+		"""Unsubscribe the client from a topic."""
 		return _mosquitto_unsubscribe(self._mosq, None, sub)
 
 	def publish(self, topic, payload=None, qos=0, retain=False):
+		"""Publish a message on a topic."""
 		return _mosquitto_publish(self._mosq, None, topic, len(payload), cast(payload, POINTER(c_uint8)), qos, retain)
 
 	def will_set(self, topic, payload=None, qos=0, retain=False):
+		"""Set a Will to be sent by the broker in case the client disconnects unexpectedly.
+
+		This must be called before connect() to have any effect."""
 		return _mosquitto_will_set(self._mosq, true, topic, len(payloadlen), cast(payload, POINTER(c_uint8)), qos, retain)
 
 	def will_clear(self):
+		"""Clear a Will that was previously set with the will_set() call.
+
+		This must be called before connect() to have any effect."""
 		return _mosquitto_will_set(self._mosq, false, "", 0, cast(None, POINTER(c_uint8)), 0, 0)
 
 	def username_pw_set(self, username, password=None):
+		"""Set a username and optionally a password for broker authentication.
+
+		Must be called before connect() to have any effect.
+		Requires a broker that supports MQTT v3.1."""
 		return _mosquitto_username_pw_set(self._mosq, username, password)
 
 	def _internal_on_connect(self, obj, rc):
