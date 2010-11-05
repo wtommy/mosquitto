@@ -78,17 +78,7 @@ static int _subs_process(struct _mosquitto_subhier *hier, const char *source_id,
 		}else{
 			mid = 0;
 		}
-		switch(msg_qos){
-			case 0:
-				if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, ms_publish, msg_qos, false, stored) == 1) rc = 1;
-				break;
-			case 1:
-				if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, ms_publish_puback, msg_qos, false, stored) == 1) rc = 1;
-				break;
-			case 2:
-				if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, ms_publish_pubrec, msg_qos, false, stored) == 1) rc = 1;
-				break;
-		}
+		if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, msg_qos, false, stored) == 1) rc = 1;
 		leaf = leaf->next;
 	}
 	return 0;
@@ -527,17 +517,7 @@ static int _retain_process(struct mosquitto_msg_store *retained, mqtt3_context *
 	}else{
 		mid = 0;
 	}
-	switch(qos){
-		case 0:
-			if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish, qos, true, retained) == 1) rc = 1;
-			break;
-		case 1:
-			if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish_puback, qos, true, retained) == 1) rc = 1;
-			break;
-		case 2:
-			if(mqtt3_db_message_insert(context, mid, mosq_md_out, ms_publish_pubrec, qos, true, retained) == 1) rc = 1;
-			break;
-	}
+	if(mqtt3_db_message_insert(context, mid, mosq_md_out, qos, true, retained) == 1) rc = 1;
 	return rc;
 }
 

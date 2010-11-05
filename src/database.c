@@ -254,12 +254,13 @@ int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid, enum mosquitto
 	return 0;
 }
 
-int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_state state, int qos, bool retain, struct mosquitto_msg_store *stored)
+int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, int qos, bool retain, struct mosquitto_msg_store *stored)
 {
 	mosquitto_client_msg *msg, *tail;
 	int count = 0;
 	int sock = -1;
 	int limited = 0;
+	enum mqtt3_msg_state state = ms_invalid;
 
 	assert(stored);
 	if(!context) return 1;
@@ -292,6 +293,27 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 		if(limited) return 2;
 	}
 #endif
+	if(dir == mosq_md_out){
+		switch(qos){
+			case 0:
+				state = ms_publish;
+				break;
+			case 1:
+				state = ms_publish_puback;
+				break;
+			case 2:
+				state = ms_publish_pubrec;
+				break;
+		}
+	}else{
+		if(qos == 2){
+			state = ms_wait_pubrec;
+		}else{
+			return 1;
+		}
+	}
+	assert(state != ms_invalid);
+
 	msg = _mosquitto_malloc(sizeof(mosquitto_client_msg));
 	if(!msg) return 1;
 	msg->next = NULL;
