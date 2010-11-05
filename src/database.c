@@ -231,13 +231,36 @@ static int _mqtt3_db_cleanup(mosquitto_db *db)
 int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir)
 {
 	mosquitto_client_msg *tail, *last = NULL;
+	int msg_index = 0;
+	bool deleted = false;
 
 	if(!context) return 1;
 
 	tail = context->msgs;
 	while(tail){
+		msg_index++;
+		if(tail->state == ms_queued && msg_index <= max_inflight){
+			if(tail->direction == mosq_md_out){
+				switch(tail->qos){
+					case 0:
+						tail->state = ms_publish;
+						break;
+					case 1:
+						tail->state = ms_publish_puback;
+						break;
+					case 2:
+						tail->state = ms_publish_pubrec;
+						break;
+				}
+			}else{
+				if(tail->qos == 2){
+					tail->state = ms_wait_pubrec;
+				}
+			}
+		}
 		if(tail->mid == mid && tail->direction == dir){
-			/* FIXME - it would be nice to be able to remove the stored message here if rec_count==0 */
+			msg_index--;
+			/* FIXME - it would be nice to be able to remove the stored message here if ref_count==0 */
 			tail->store->ref_count--;
 			if(last){
 				last->next = tail->next;
@@ -245,10 +268,19 @@ int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid, enum mosquitto
 				context->msgs = tail->next;
 			}
 			_mosquitto_free(tail);
+			if(last){
+				tail = last->next;
+			}else{
+				tail = context->msgs;
+			}
+			deleted = true;
+		}else{
+			last = tail;
+			tail = tail->next;
+		}
+		if(msg_index > max_inflight && deleted){
 			return 0;
 		}
-		last = tail;
-		tail = tail->next;
 	}
 
 	return 0;
@@ -257,60 +289,46 @@ int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid, enum mosquitto
 int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, int qos, bool retain, struct mosquitto_msg_store *stored)
 {
 	mosquitto_client_msg *msg, *tail;
-	int count = 0;
-	int sock = -1;
-	int limited = 0;
 	enum mqtt3_msg_state state = ms_invalid;
+	int msg_count = 0;
 
 	assert(stored);
 	if(!context) return 1;
 
-#if 0
-// FIXME - reimplement for new database
-	if(!count_stmt){
-		count_stmt = _mqtt3_db_statement_prepare("SELECT "
-				"(SELECT COUNT(*) FROM messages WHERE client_id=?),"
-				"(SELECT sock FROM clients WHERE id=?)");
-		if(!count_stmt){
-			return 1;
+	tail = context->msgs;
+	while(tail && tail->next){
+		tail = tail->next;
+		if(tail->qos > 0){
+			msg_count++;
 		}
 	}
-	if(max_inflight || max_queued){
-		if(sqlite3_bind_text(count_stmt, 1, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_bind_text(count_stmt, 2, context->core.id, strlen(context->core.id), SQLITE_STATIC) != SQLITE_OK) rc = 1;
-		if(sqlite3_step(count_stmt) == SQLITE_ROW){
-			count = sqlite3_column_int(count_stmt, 0);
-			sock = sqlite3_column_int(count_stmt, 1);
 
-			if(sock == -1){
-				if(max_queued > 0 && count >= max_queued) limited = 1;
+	if(qos == 0 || max_inflight == 0 || msg_count <= max_inflight){
+		if(dir == mosq_md_out){
+			switch(qos){
+				case 0:
+					state = ms_publish;
+					break;
+				case 1:
+					state = ms_publish_puback;
+					break;
+				case 2:
+					state = ms_publish_pubrec;
+					break;
+			}
+		}else{
+			if(qos == 2){
+				state = ms_wait_pubrec;
 			}else{
-				if(max_inflight > 0 && count >= max_inflight) limited = 1;
+				return 1;
 			}
 		}
-		sqlite3_reset(count_stmt);
-		sqlite3_clear_bindings(count_stmt);
-		if(limited) return 2;
-	}
-#endif
-	if(dir == mosq_md_out){
-		switch(qos){
-			case 0:
-				state = ms_publish;
-				break;
-			case 1:
-				state = ms_publish_puback;
-				break;
-			case 2:
-				state = ms_publish_pubrec;
-				break;
-		}
+	}else if(max_queued == 0 || msg_count-max_inflight <= max_queued){
+		state = ms_queued;
 	}else{
-		if(qos == 2){
-			state = ms_wait_pubrec;
-		}else{
-			return 1;
-		}
+		/* Dropping message due to full queue.
+		 * FIXME - should this be logged? */
+		return 0;
 	}
 	assert(state != ms_invalid);
 
@@ -326,10 +344,6 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 	msg->dup = false;
 	msg->qos = qos;
 	msg->retain = retain;
-	tail = context->msgs;
-	while(tail && tail->next){
-		tail = tail->next;
-	}
 	if(tail){
 		tail->next = msg;
 	}else{
@@ -572,7 +586,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 
 	tail = context->msgs;
 	while(tail){
-		if(tail->direction == mosq_md_out){
+		if(tail->direction == mosq_md_out && tail->state != ms_queued){
 			mid = tail->mid;
 			retries = tail->dup;
 			retain = tail->retain;

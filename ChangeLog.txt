@@ -30,6 +30,9 @@
   timer.
 - Fix client library unsubscribe function incorrectly sending a SUBSCRIBE
   command when it should be UNSUBSCRIBE. 
+- Fix max_inflight_messages and max_queued_messages operation. These
+  parameters now apply only to QoS 1 and 2 messages and are used regardless of
+  the client connection state.
 
 0.8.3 - 20101004
 ================
