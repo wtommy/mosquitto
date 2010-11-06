@@ -60,7 +60,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <arpa/inet.h>
 #include <assert.h>
-#include <endian.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>

@@ -41,6 +41,14 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef WITH_PERSISTENCE
 
+#ifdef __APPLE__
+#include <libkern/OSByteOrder.h>
+#define htobe64(a) OSSwapHostToBigInt64(a)
+#define be64toh(a) OSSwapBigToHostInt64(a)
+#else
+#include <endian.h>
+#endif
+
 /* DB read/write */
 const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','t','o',' ','d','b'};
 #define DB_CHUNK_CFG 1
