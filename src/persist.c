@@ -383,6 +383,54 @@ error:
 	return 1;
 }
 
+static int _db_client_msg_restore(mosquitto_db *db, const char *client_id, uint16_t mid, uint8_t qos, uint8_t retain, uint8_t direction, uint8_t state, uint8_t dup, uint64_t store_id)
+{
+	mosquitto_client_msg *cmsg, *tail;
+	struct mosquitto_msg_store *store;
+	mqtt3_context *context;
+
+	cmsg = _mosquitto_calloc(1, sizeof(mosquitto_client_msg));
+	if(!cmsg){
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+		return 1;
+	}
+
+	cmsg->store = NULL;
+	cmsg->mid = mid;
+	cmsg->qos = qos;
+	cmsg->retain = retain;
+	cmsg->direction = direction;
+	cmsg->state = state;
+	cmsg->dup = dup;
+
+	store = db->msg_store;
+	while(store){
+		if(store->db_id == store_id){
+			cmsg->store = store;
+			break;
+		}
+		store = store->next;
+	}
+	if(!cmsg->store){
+		_mosquitto_free(cmsg);
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error restoring persistent database, message store corrupt.");
+		return 1;
+	}
+	context = _db_find_or_add_context(db, client_id);
+	if(!context){
+		_mosquitto_free(cmsg);
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error restoring persistent database, message store corrupt.");
+		return 1;
+	}
+	tail = context->msgs;
+	while(tail->next){
+		tail = tail->next;
+	}
+	tail->next = cmsg;
+	cmsg->next = NULL;
+
+	return 0;
+}
 
 static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
 {
@@ -390,9 +438,7 @@ static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
 	uint16_t i16temp, slen, mid;
 	uint8_t qos, retain, direction, state, dup;
 	char *client_id = NULL;
-	mosquitto_client_msg *cmsg, *tail;
-	struct mosquitto_msg_store *store;
-	mqtt3_context *context;
+	int rc;
 
 #define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
 	read_e(db_fd, &i16temp, sizeof(uint16_t));
@@ -423,54 +469,11 @@ static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
 	read_e(db_fd, &dup, sizeof(uint8_t));
 #undef read_e
 
-	cmsg = _mosquitto_calloc(1, sizeof(mosquitto_client_msg));
-	if(!cmsg){
-		close(db_fd);
-		_mosquitto_free(client_id);
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-		return 1;
-	}
-
-	cmsg->store = NULL;
-	cmsg->mid = mid;
-	cmsg->qos = qos;
-	cmsg->retain = retain;
-	cmsg->direction = direction;
-	cmsg->state = state;
-	cmsg->dup = dup;
-
-	store = db->msg_store;
-	while(store){
-		if(store->db_id == store_id){
-			cmsg->store = store;
-			break;
-		}
-		store = store->next;
-	}
-	if(!cmsg->store){
-		close(db_fd);
-		_mosquitto_free(cmsg);
-		_mosquitto_free(client_id);
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error restoring persistent database, message store corrupt.");
-		return 1;
-	}
-	context = _db_find_or_add_context(db, client_id);
-	if(!context){
-		close(db_fd);
-		_mosquitto_free(cmsg);
-		_mosquitto_free(client_id);
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error restoring persistent database, message store corrupt.");
-		return 1;
-	}
-	tail = context->msgs;
-	while(tail->next){
-		tail = tail->next;
-	}
-	tail->next = cmsg;
-	cmsg->next = NULL;
+	close(db_fd);
+	rc = _db_client_msg_restore(db, client_id, mid, qos, retain, direction, state, dup, store_id);
 	_mosquitto_free(client_id);
 
-	return 0;
+	return rc;
 error:
 	mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
 	if(db_fd >= 0) close(db_fd);
@@ -765,6 +768,10 @@ static int mqtt3_db_sqlite_restore(mosquitto_db *db)
 	const uint8_t *payload;
 	struct mosquitto_msg_store *stored;
 	int version;
+	uint8_t direction, state, retries;
+	uint16_t mid;
+	uint64_t store_id;
+	int rc = 0;
 
 	assert(db);
 
@@ -791,6 +798,7 @@ static int mqtt3_db_sqlite_restore(mosquitto_db *db)
 		sqlite3_finalize(stmt);
 	}else{
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Problem communicating with sqlite.");
+		sqlite3_close(sql_db);
 		return 1;
 	}
 
@@ -811,6 +819,7 @@ static int mqtt3_db_sqlite_restore(mosquitto_db *db)
 		sqlite3_finalize(stmt);
 	}else{
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Problem communicating with sqlite.");
+		sqlite3_close(sql_db);
 		return 1;
 	}
 
@@ -828,9 +837,31 @@ static int mqtt3_db_sqlite_restore(mosquitto_db *db)
 		sqlite3_finalize(stmt);
 	}else{
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Problem communicating with sqlite.");
+		sqlite3_close(sql_db);
 		return 1;
 	}
-	return 0;
+
+	if(sqlite3_prepare_v2(sql_db, "SELECT client_id, direction, status, mid, retries, qos, store_id "
+			"FROM messages JOIN clients ON messages.client_id=clients.id "
+			"WHERE clients.clean_session=0", -1, &stmt, NULL) == SQLITE_OK){
+
+		while(sqlite3_step(stmt) == SQLITE_ROW){
+			client_id = (const char *)sqlite3_column_text(stmt, 0);
+			direction = sqlite3_column_int(stmt, 1);
+			state = sqlite3_column_int(stmt, 2);
+			mid = sqlite3_column_int(stmt, 3);
+			retries = sqlite3_column_int(stmt, 4);
+			qos = sqlite3_column_int(stmt, 5);
+			store_id = sqlite3_column_int64(stmt, 6);
+			
+			if(_db_client_msg_restore(db, client_id, mid, qos, 0, direction, state, retries, store_id)){
+				rc = 1;
+			}
+		}
+		sqlite3_finalize(stmt);
+	}
+	sqlite3_close(sql_db);
+	return rc;
 }
 #endif
 
