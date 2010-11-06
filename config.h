@@ -1,3 +1,10 @@
+/* ============================================================
+ * Control compile time options.
+ *
+ * Largely, these are options that are designed to make mosquitto run more
+ * easily in restrictive environments by removing features.
+ * ============================================================ */
+
 /* Uncomment to compile with tcpd/libwrap support. */
 //#define WITH_WRAP
 
