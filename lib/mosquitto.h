@@ -63,6 +63,7 @@ extern "C" {
 #define MOSQ_LOG_WARNING 0x04
 #define MOSQ_LOG_ERR 0x08
 #define MOSQ_LOG_DEBUG 0x10
+#define MOSQ_LOG_ALL 0xFF
 
 /* Error values */
 #define MOSQ_ERR_SUCCESS 0
