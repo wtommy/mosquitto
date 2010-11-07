@@ -422,11 +422,15 @@ static int _db_client_msg_restore(mosquitto_db *db, const char *client_id, uint1
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error restoring persistent database, message store corrupt.");
 		return 1;
 	}
-	tail = context->msgs;
-	while(tail->next){
-		tail = tail->next;
+	if(context->msgs){
+		tail = context->msgs;
+		while(tail->next){
+			tail = tail->next;
+		}
+		tail->next = cmsg;
+	}else{
+		context->msgs = cmsg;
 	}
-	tail->next = cmsg;
 	cmsg->next = NULL;
 
 	return 0;
