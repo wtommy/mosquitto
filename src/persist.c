@@ -772,7 +772,7 @@ static int mqtt3_db_sqlite_restore(mosquitto_db *db)
 	const uint8_t *payload;
 	struct mosquitto_msg_store *stored;
 	int version;
-	uint8_t direction, state, retries;
+	uint8_t direction, state, retries, retain;
 	uint16_t mid;
 	uint64_t store_id;
 	int rc = 0;
@@ -845,6 +845,31 @@ static int mqtt3_db_sqlite_restore(mosquitto_db *db)
 		return 1;
 	}
 
+	if(sqlite3_prepare_v2(sql_db, "SELECT id, qos, retain, topic, payloadlen, payload, source_id FROM message_store",
+				-1, &stmt, NULL) == SQLITE_OK){
+
+		while(sqlite3_step(stmt) == SQLITE_ROW){
+			store_id = sqlite3_column_int64(stmt, 0);
+			qos = sqlite3_column_int(stmt, 1);
+			retain = sqlite3_column_int(stmt, 2);
+			topic = (const char *)sqlite3_column_text(stmt, 3);
+			payloadlen = sqlite3_column_int(stmt, 4);
+			if(payloadlen){
+				payload = sqlite3_column_blob(stmt, 5);
+			}else{
+				payload = NULL;
+			}
+			source_id = (const char *)sqlite3_column_text(stmt, 6);
+			if(mqtt3_db_message_store(db, source_id, 0, topic, qos, payloadlen, payload, retain, &stored, store_id)){
+				rc = 1;
+			}
+		}
+	}else{
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Problem communicating with sqlite.");
+		sqlite3_close(sql_db);
+		return 1;
+	}
+
 	if(sqlite3_prepare_v2(sql_db, "SELECT client_id, direction, status, mid, retries, qos, store_id "
 			"FROM messages JOIN clients ON messages.client_id=clients.id "
 			"WHERE clients.clean_session=0", -1, &stmt, NULL) == SQLITE_OK){
@@ -863,6 +888,10 @@ static int mqtt3_db_sqlite_restore(mosquitto_db *db)
 			}
 		}
 		sqlite3_finalize(stmt);
+	}else{
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Problem communicating with sqlite.");
+		sqlite3_close(sql_db);
+		return 1;
 	}
 	sqlite3_close(sql_db);
 	return rc;
