@@ -137,6 +137,7 @@ int main(int argc, char *argv[])
 	mosquitto_lib_init();
 
 	mosq = mosquitto_new("qos-test", NULL);
+	mosquitto_log_init(mosq, MOSQ_LOG_ALL, MOSQ_LOG_STDOUT);
 	mosquitto_message_callback_set(mosq, on_message);
 	mosquitto_publish_callback_set(mosq, on_publish);
 	mosquitto_subscribe_callback_set(mosq, on_subscribe);
@@ -156,7 +157,7 @@ int main(int argc, char *argv[])
 	mosquitto_subscribe(mosq, &subs[1].mid, subs[1].topic, subs[1].qos);
 	mosquitto_subscribe(mosq, &subs[2].mid, subs[2].topic, subs[2].qos);
 
-	for(i=0; i<100; i++){
+	for(i=0; i<1; i++){
 		rand_publish(mosq, "qos-test/0", 0);
 		rand_publish(mosq, "qos-test/0", 1);
 		rand_publish(mosq, "qos-test/0", 2);
@@ -169,7 +170,7 @@ int main(int argc, char *argv[])
 	}
 	start = time(NULL);
 	while(!mosquitto_loop(mosq, -1)){
-		if(time(NULL)-start > 60){
+		if(time(NULL)-start > 20){
 			mosquitto_disconnect(mosq);
 		}
 	}

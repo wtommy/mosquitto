@@ -19,8 +19,8 @@ reallyclean :
 
 install : mosquitto
 	@for d in ${DIRS}; do $(MAKE) -C $${d} install; done
-	$(INSTALL) -d ${DESTDIR}/etc
-	$(INSTALL) -m 644 mosquitto.conf ${DESTDIR}/etc/mosquitto.conf
+	$(INSTALL) -d ${DESTDIR}/etc/mosquitto
+	$(INSTALL) -m 644 mosquitto.conf ${DESTDIR}/etc/mosquitto/mosquitto.conf
 
 uninstall :
 	@for d in ${DIRS}; do $(MAKE) -C $${d} uninstall; done

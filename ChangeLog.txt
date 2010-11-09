@@ -33,6 +33,9 @@
 - Fix max_inflight_messages and max_queued_messages operation. These
   parameters now apply only to QoS 1 and 2 messages and are used regardless of
   the client connection state.
+- mosquitto.conf now installed to /etc/mosquitto/mosquitto.conf instead of
+  /etc/mosquitto.conf. The /etc/mosquitto/ directory will be used for password
+  and access control files in the future.
 
 0.8.3 - 20101004
 ================
