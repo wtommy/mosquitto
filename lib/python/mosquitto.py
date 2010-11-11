@@ -149,8 +149,27 @@ class Mosquitto:
 		if self._mosq:
 			_mosquitto_destroy(self._mosq)
 
-	def connect(self, hostname="127.0.0.1", port=1883, keepalive=60, clean_session=True):
-		"""Connect the client to an MQTT broker."""
+	def connect(self, hostname="localhost", port=1883, keepalive=60, clean_session=True):
+		"""Connect the client to an MQTT broker.
+		
+		hostname: The hostname or ip address of the broker. Defaults to localhost.
+		port: The network port of the server host to connect to. Defaults to 1883.
+		keepalive: Maximum period in seconds between communications with the
+		  broker. If no other messages are being exchanged, this controls the
+		  rate at which the client will send ping messages to the broker.
+		clean_session: If set to True, the broker will clean any previous
+		  information about this client on connection, and will also not store
+		  anything after disconnect. If set to False, the broker will store all
+		  of the client subscriptions even after the client disconnects, and
+		  will also queue messages with QoS 1 and 2 until the client
+		  reconnects.
+
+		Returns 0 on success (note that this just means a network connection
+		  has been established between the broker and client, and the
+		  connection request sent. To monitor the success of the connection
+		  request, use the on_connect() callback)
+		Returns >0 on failure.
+		"""
 		return _mosquitto_connect(self._mosq, hostname, port, keepalive, clean_session)
 
 	def disconnect(self):
@@ -158,7 +177,22 @@ class Mosquitto:
 		return _mosquitto_disconnect(self._mosq)
 
 	def log_init(self, priorities, destinations):
-		"""Set the logging preferences for this client."""
+		"""Set the logging preferences for this client.
+		
+		Set priorities to a logically OR'd combination of:
+
+		MOSQ_LOG_INFO
+		MOSQ_LOG_NOTICE
+		MOSQ_LOG_WARNING
+		MOSQ_LOG_ERR
+		MOSQ_LOG_DEBUG
+		
+		Set destinations to either MOSQ_LOG_NONE or a logically OR'd
+		combination of:
+
+		MOSQ_LOG_STDOUT=0x04
+		MOSQ_LOG_STDERR=0x08
+		"""
 		return _mosquitto_log_init(self._mosq, priorities, destinations)
 
 	def loop(self, timeout=-1):
