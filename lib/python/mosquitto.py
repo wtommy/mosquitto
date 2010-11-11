@@ -93,6 +93,18 @@ class Mosquitto:
 	on_unsubscribe(obj, mid): called when the broker responds to an unsubscribe
 	  request. The mid variable matches the mid variable returned from the
 	  corresponding unsubscribe() call.
+
+	Example:
+
+	def on_connect(rc):
+		if rc == 0:
+			print "Connected ok"
+	
+	client = mosquitto.Mosquitto("id")
+	client.on_connect = on_connect
+	...
+
+
 	"""
 
 	def __init__(self, id, obj=None):
