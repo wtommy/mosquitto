@@ -41,7 +41,59 @@ MOSQ_LOG_ERR=0x08
 MOSQ_LOG_DEBUG=0x10
 
 class Mosquitto:
-	"""MQTT version 3.1 client class."""
+	"""MQTT version 3.1 client class.
+	
+	Callbacks
+	=========
+
+	A number of callback functions are available to receive data back from the
+	broker. To use a callback, define a function and then assign it to the
+	client. The callback function may be a class member if desired. All of the
+	callbacks as described below have an "obj" argument. This variable
+	corresponds directly to the obj argument passed when creating the client
+	instance. It is however optional when defining the callback functions, so
+	the on connect callback function can be defined as on_connect(obj, rc) or
+	on_connect(rc) for example.
+
+	The callbacks:
+
+	on_connect(obj, rc): called when the broker responds to our connection
+	  request. The value of rc determines success or not:
+	  0: Connection successful
+	  1: Connection refused - incorrect protocol version
+	  2: Connection refused - invalid client identifier
+	  3: Connection refused - server unavailable
+	  4: Connection refused - bad username or password
+	  5: Connection refused - not authorised
+	  6-255: Currently unused.
+
+	on_disconnect(obj): called when the client disconnects from the broker, but
+	  only after having sent a disconnection message to the broker. This will
+	  not be called if the client is disconnected unexpectedly.
+
+	on_message(obj, message): called when a message has been received on a
+	  topic that the client subscribes to. The message variable is a
+	  MosquittoMessage that describs all of the message parameters.
+
+	on_publish(obj, mid): called when a message that was to be sent using the
+	  publish() call has completed transmission to the broker. For messages
+	  with QoS levels 1 and 2, this means that the appropriate handshakes have
+	  completed. For QoS 0, this simply means that the message has left the
+	  client. The mid variable matches the mid variable returned from the
+	  corresponding publish() call, to allow outgoing messages to be tracked.
+	  This callback is important because even if the publish() call returns
+	  success, it does not means that the message has been sent.
+
+	on_subscribe(obj, mid, granted_qos): called when the broker responds to a
+	  subscribe request. The mid variable matches the mid variable returned
+	  from the corresponding subscribe() call. The granted_qos variable is a
+	  list of integers that give the QoS level the broker has granted for each
+	  of the different subscription requests.
+
+	on_unsubscribe(obj, mid): called when the broker responds to an unsubscribe
+	  request. The mid variable matches the mid variable returned from the
+	  corresponding unsubscribe() call.
+	"""
 
 	def __init__(self, id, obj=None):
 		if obj==None:
@@ -197,6 +249,9 @@ class Mosquitto:
 				self.on_unsubscribe(self.obj, mid)
 
 class c_MosquittoMessage(Structure):
+	"""Internal message class used for communicating with C library.
+
+	Don't use."""
 	_fields_ = [("mid", c_uint16),
 				("topic", c_char_p),
 				("payload", c_char_p),
