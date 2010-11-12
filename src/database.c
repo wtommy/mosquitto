@@ -600,8 +600,8 @@ int mqtt3_db_message_write(mqtt3_context *context)
 						if(last){
 							last->next = tail->next;
 							tail->store->ref_count--;
-							tail = last->next;
 							_mosquitto_free(tail);
+							tail = last->next;
 						}else{
 							context->msgs = tail->next;
 							tail->store->ref_count--;
