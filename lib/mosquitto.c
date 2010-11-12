@@ -444,7 +444,12 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 #endif
 				return MOSQ_ERR_SUCCESS;
 			}else{
-				return 1;
+				switch(errno){
+					case ECONNRESET:
+						return MOSQ_ERR_CONN_LOST;
+					default:
+						return 1;
+				}
 			}
 		}
 	}
@@ -473,7 +478,12 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 #endif
 					return MOSQ_ERR_SUCCESS;
 				}else{
-					return 1;
+					switch(errno){
+						case ECONNRESET:
+							return MOSQ_ERR_CONN_LOST;
+						default:
+							return 1;
+					}
 				}
 			}
 		}while((byte & 128) != 0);
@@ -498,7 +508,12 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 #endif
 				return MOSQ_ERR_SUCCESS;
 			}else{
-				return 1;
+				switch(errno){
+					case ECONNRESET:
+						return MOSQ_ERR_CONN_LOST;
+					default:
+						return 1;
+				}
 			}
 		}
 	}
@@ -543,7 +558,12 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 #endif
 					return MOSQ_ERR_SUCCESS;
 				}else{
-					return 1;
+					switch(errno){
+						case ECONNRESET:
+							return MOSQ_ERR_CONN_LOST;
+						default:
+							return 1;
+					}
 				}
 			}
 		}
@@ -574,7 +594,12 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 #endif
 						return MOSQ_ERR_SUCCESS;
 					}else{
-						return 1;
+						switch(errno){
+							case ECONNRESET:
+								return MOSQ_ERR_CONN_LOST;
+							default:
+								return 1;
+						}
 					}
 				}
 			}while(packet->remaining_length > 0);
@@ -593,7 +618,12 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 #endif
 					return MOSQ_ERR_SUCCESS;
 				}else{
-					return 1;
+					switch(errno){
+						case ECONNRESET:
+							return MOSQ_ERR_CONN_LOST;
+						default:
+							return 1;
+					}
 				}
 			}
 		}
