@@ -236,18 +236,28 @@ class Mosquitto:
 		sub: The subscription topic to subscribe to.
 		qos: The desired quality of service level for the subscription.
 
-		Returns 0 on success.
-		Returns >1 on error."""
-		return _mosquitto_subscribe(self._mosq, None, sub, qos)
+		Returns a tuple (result, mid), where result being 0 indicates success
+		  and mid is the message ID for the subscribe request. The mid value
+		  can be used to track the subscribe request by checking against the
+		  mid argument in the on_subscribe() callback if it is defined."""
+
+		mid = c_uint16(0)
+		result = _mosquitto_subscribe(self._mosq, mid, sub, qos)
+		return result, mid.value
 
 	def unsubscribe(self, sub):
 		"""Unsubscribe the client from a topic.
 		
 		sub: The subscription topic to unsubscribe from.
 
-		Returns 0 on success.
-		Returns >1 on error."""
-		return _mosquitto_unsubscribe(self._mosq, None, sub)
+		Returns a tuple (result, mid), where result being 0 indicates success
+		  and mid is the message ID for the unsubscribe request. The mid value
+		  can be used to track the unsubscribe request by checking against the
+		  mid argument in the on_unsubscribe() callback if it is defined."""
+
+		mid = c_uint16(0)
+		result = _mosquitto_unsubscribe(self._mosq, mid, sub)
+		return result, mid.value
 
 	def publish(self, topic, payload=None, qos=0, retain=False):
 		"""Publish a message on a topic.
@@ -262,9 +272,14 @@ class Mosquitto:
 		retain: If set to true, the message will be set as the "last known
 		  good"/retained message for the topic.
 
-		Returns 0 on success.
-		Returns >1 on error."""
-		return _mosquitto_publish(self._mosq, None, topic, len(payload), cast(payload, POINTER(c_uint8)), qos, retain)
+		Returns a tuple (result, mid), where result being 0 indicates success
+		  and mid is the message ID for the publish request. The mid value
+		  can be used to track the publish request by checking against the
+		  mid argument in the on_publish() callback if it is defined."""
+
+		mid = c_uint16(0)
+		result = _mosquitto_publish(self._mosq, mid, topic, len(payload), cast(payload, POINTER(c_uint8)), qos, retain)
+		return result, mid.value
 
 	def will_set(self, topic, payload=None, qos=0, retain=False):
 		"""Set a Will to be sent by the broker in case the client disconnects unexpectedly.
