@@ -27,3 +27,13 @@
  * shutdown. This is usually desirable (and is suggested by the MQTT spec), but
  * it can be disabled by commenting out this define if required. */
 #define WITH_PERSISTENCE
+
+/* Compile with 32-bit integer database IDs instead of 64-bit integers. May be
+ * useful in embedded systems or where be64toh()/htobe64() aren't available.
+ * There is the potential for bad things to happen after the IDs wrap around.
+ * This is especially likely if there are old retained messages. Note that at a
+ * sustained rate of 10,000 messages/s, the database ID would overflow every 5
+ * days. It is also worth noting that a broker compiled with 64-bit DB IDs will
+ * not load a persistent database file saved from a 32-bit DB ID broker and
+ * vice versa. */
+//#define WITH_32BIT_DBID

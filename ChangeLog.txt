@@ -36,6 +36,9 @@
 - mosquitto.conf now installed to /etc/mosquitto/mosquitto.conf instead of
   /etc/mosquitto.conf. The /etc/mosquitto/ directory will be used for password
   and access control files in the future.
+- Give the compile time option of using 32-bit integers for the database IDs
+  instead of 64-bit integers. This is useful where htobe64()/be64toh() are not
+  available or for embedded systems for example.
 
 0.8.3 - 20101004
 ================

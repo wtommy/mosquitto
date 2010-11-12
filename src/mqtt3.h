@@ -54,7 +54,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MQTT3_LOG_TOPIC 0x10
 #define MQTT3_LOG_ALL 0xFF
 
+#ifdef WITH_32BIT_DBID
+typedef uint32_t dbid_t;
+#else
 typedef uint64_t dbid_t;
+#endif
 
 enum mqtt3_msg_state {
 	ms_invalid = 0,
