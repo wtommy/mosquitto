@@ -43,6 +43,19 @@ MOSQ_LOG_DEBUG=0x10
 class Mosquitto:
 	"""MQTT version 3.1 client class.
 	
+	This is the main class for use communicating with an MQTT broker.
+
+	General usage flow:
+
+	* Use connect() to connect to a broker
+	* Call loop() frequently to maintain network traffic flow with the broker
+	* Use subscribe() to subscribe to a topic and receive messages
+	* Use publish() to send messages
+	* Use disconnect() to disconnect from the broker
+
+	Data returned from the broker is made available with the use of callback
+	functions as described below.
+
 	Callbacks
 	=========
 
@@ -104,10 +117,18 @@ class Mosquitto:
 	client.on_connect = on_connect
 	...
 
-
 	"""
 
 	def __init__(self, id, obj=None):
+		"""Constructor
+
+		id: The 23 character or less client id used to identify this client to
+		  the broker. This must be unique on the broker.
+		obj: An optional object of any type that will be passed to any of the
+		  callback function when they are called. If not set, or set to None,
+		  this instance of the Mosquitto class will be passed to the callback
+		  functions.
+		"""
 		if obj==None:
 			self.obj = self
 		else:
@@ -168,7 +189,7 @@ class Mosquitto:
 		  has been established between the broker and client, and the
 		  connection request sent. To monitor the success of the connection
 		  request, use the on_connect() callback)
-		Returns >0 on failure.
+		Returns >0 on error.
 		"""
 		return _mosquitto_connect(self._mosq, hostname, port, keepalive, clean_session)
 
@@ -198,25 +219,68 @@ class Mosquitto:
 	def loop(self, timeout=-1):
 		"""Process network events.
 		
-		This function must be called regularly to ensure communication with the broker is carried out."""
+		This function must be called regularly to ensure communication with the broker is carried out.
+		
+		timeout: The time in milliseconds to wait for incoming/outgoing network
+		  traffic before timing out and returning. If set to -1 or not given,
+		  the default value of 1000 (1 second) will be used.
+
+		Returns 0 on success.
+		Returns >0 on error."""
+
 		return _mosquitto_loop(self._mosq, timeout)
 
 	def subscribe(self, sub, qos=0):
-		"""Subscribe the client to a topic."""
+		"""Subscribe the client to a topic.
+		
+		sub: The subscription topic to subscribe to.
+		qos: The desired quality of service level for the subscription.
+
+		Returns 0 on success.
+		Returns >1 on error."""
 		return _mosquitto_subscribe(self._mosq, None, sub, qos)
 
 	def unsubscribe(self, sub):
-		"""Unsubscribe the client from a topic."""
+		"""Unsubscribe the client from a topic.
+		
+		sub: The subscription topic to unsubscribe from.
+
+		Returns 0 on success.
+		Returns >1 on error."""
 		return _mosquitto_unsubscribe(self._mosq, None, sub)
 
 	def publish(self, topic, payload=None, qos=0, retain=False):
-		"""Publish a message on a topic."""
+		"""Publish a message on a topic.
+		
+		This causes a message to be sent to the broker and subsequently from
+		the broker to any clients subscribing to matching topics.
+		
+		topic: The topic that the message should be published on.
+		payload: The actual message to send. If not given, or set to None a
+		  zero length message will be used.
+		qos: The quality of service level to use.
+		retain: If set to true, the message will be set as the "last known
+		  good"/retained message for the topic.
+
+		Returns 0 on success.
+		Returns >1 on error."""
 		return _mosquitto_publish(self._mosq, None, topic, len(payload), cast(payload, POINTER(c_uint8)), qos, retain)
 
 	def will_set(self, topic, payload=None, qos=0, retain=False):
 		"""Set a Will to be sent by the broker in case the client disconnects unexpectedly.
 
-		This must be called before connect() to have any effect."""
+		This must be called before connect() to have any effect.
+
+		topic: The topic that the will message should be published on.
+		payload: The message to send as a will. If not given, or set to None a
+		  zero length message will be used as the will.
+		qos: The quality of service level to use for the will.
+		retain: If set to true, the will message will be set as the "last known
+		  good"/retained message for the topic.
+
+		Returns 0 on success.
+		Returns >1 on error."""
+
 		return _mosquitto_will_set(self._mosq, true, topic, len(payloadlen), cast(payload, POINTER(c_uint8)), qos, retain)
 
 	def will_clear(self):
@@ -229,7 +293,13 @@ class Mosquitto:
 		"""Set a username and optionally a password for broker authentication.
 
 		Must be called before connect() to have any effect.
-		Requires a broker that supports MQTT v3.1."""
+		Requires a broker that supports MQTT v3.1.
+		
+		username: The username to authenticate with. Need have no relationship to the client id.
+		password: The password to authenticate with. Optional.
+		
+		Returns 0 on success.
+		Returns >0 on error."""
 		return _mosquitto_username_pw_set(self._mosq, username, password)
 
 	def _internal_on_connect(self, obj, rc):
