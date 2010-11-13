@@ -239,6 +239,7 @@ int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid, enum mosquitto
 	while(tail){
 		msg_index++;
 		if(tail->state == ms_queued && msg_index <= max_inflight){
+			tail->timestamp = time(NULL);
 			if(tail->direction == mosq_md_out){
 				switch(tail->qos){
 					case 0:
@@ -508,7 +509,7 @@ int mqtt3_db_message_timeout_check(mosquitto_db *db, unsigned int timeout)
 
 		msg = context->msgs;
 		while(msg){
-			if(msg->timestamp < threshold){
+			if(msg->timestamp < threshold && msg->state != ms_queued){
 				switch(msg->state){
 					case ms_wait_puback:
 						new_state = ms_publish_puback;
