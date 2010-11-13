@@ -290,6 +290,7 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 	mosquitto_client_msg *msg, *tail;
 	enum mqtt3_msg_state state = ms_invalid;
 	int msg_count = 0;
+	int rc = 0;
 
 	assert(stored);
 	if(!context) return 1;
@@ -324,10 +325,11 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 		}
 	}else if(max_queued == 0 || msg_count-max_inflight <= max_queued){
 		state = ms_queued;
+		rc = 2;
 	}else{
 		/* Dropping message due to full queue.
 		 * FIXME - should this be logged? */
-		return 0;
+		return 2;
 	}
 	assert(state != ms_invalid);
 
@@ -349,7 +351,7 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 		context->msgs = msg;
 	}
 
-	return 0;
+	return rc;
 }
 
 int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_state state)
