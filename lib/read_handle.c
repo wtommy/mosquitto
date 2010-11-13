@@ -129,7 +129,6 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 
 	header = mosq->core.in_packet.command;
 
-	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBLISH");
 	message->direction = mosq_md_in;
 	message->dup = (header & 0x08)>>3;
 	message->msg.qos = (header & 0x06)>>1;
@@ -167,6 +166,10 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 			return rc;
 		}
 	}
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG,
+			"Received PUBLISH (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))",
+			message->dup, message->msg.qos, message->msg.retain, message->msg.mid,
+			message->msg.topic, (long)message->msg.payloadlen);
 
 	message->timestamp = time(NULL);
 	switch(message->msg.qos){
