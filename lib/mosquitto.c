@@ -48,6 +48,10 @@ typedef int ssize_t;
 #include <send_mosq.h>
 #include <util_mosq.h>
 
+#ifndef ECONNRESET
+#define ECONNRESET 104
+#endif
+
 void mosquitto_lib_version(int *major, int *minor, int *revision)
 {
 	if(major) *major = LIBMOSQUITTO_MAJOR;
