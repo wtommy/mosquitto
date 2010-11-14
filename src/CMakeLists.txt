@@ -28,7 +28,11 @@ option(INC_MEMTRACK
 	"Include memory tracking support?" ON)
 
 add_definitions (-DWITH_BROKER -DWITH_BRIDGE)
-target_link_libraries(mosquitto sqlite3)
+if (NOT WIN32)
+	target_link_libraries(mosquitto sqlite3)
+else (NOT WIN32)
+	target_link_libraries(mosquitto ws2_32)
+endif (NOT WIN32)
 set_target_properties(mosquitto PROPERTIES
 	VERSION ${VERSION})
 
