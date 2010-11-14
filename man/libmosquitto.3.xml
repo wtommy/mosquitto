@@ -10,7 +10,7 @@
 
 	<refnamediv>
 		<refname>libmosquitto</refname>
-		<refpurpose>MQTT version 3 client library</refpurpose>
+		<refpurpose>MQTT version 3.1 client library</refpurpose>
 	</refnamediv>
 
 	<refsect1>
@@ -39,6 +39,23 @@
 
 	<refsect1>
 		<title>Functions</title>
+
+		<refsect2>
+			<title>Library version</title>
+
+			<para>
+			<funcsynopsis><funcprototype><funcdef>unsigned long <function>mosquitto_lib_version</function></funcdef>
+			<paramdef><parameter>int *major</parameter></paramdef>
+			<paramdef><parameter>int *minor</parameter></paramdef>
+			<paramdef><parameter>int *revision</parameter></paramdef>
+			</funcprototype></funcsynopsis>
+			</para>
+			<para>Obtain version information about the library. If any of
+			major, minor or revision are not NULL they will return the
+			corresponding version numbers. The return value is an integer
+			representation of the complete version number (e.g. 9000 for 0.9)
+			that can be used for comparisons.</para>
+		</refsect2>
 
 		<refsect2>
 			<title>Library initialisation and cleanup</title>
