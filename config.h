@@ -37,3 +37,14 @@
  * not load a persistent database file saved from a 32-bit DB ID broker and
  * vice versa. */
 //#define WITH_32BIT_DBID
+
+
+/* ============================================================
+ * Compatibility defines
+ *
+ * Generally for Windows native support.
+ * ============================================================ */
+#ifdef WIN32
+#define snprintf sprintf_s
+#define strcasecmp strcmpi
+#endif
