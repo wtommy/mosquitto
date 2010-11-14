@@ -234,7 +234,7 @@ int mqtt3_handle_pubrec(mqtt3_context *context)
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received PUBREC from %s (Mid: %d)", context->core.id, mid);
 
 	if(mqtt3_db_message_update(context, mid, mosq_md_out, ms_wait_pubcomp)) return 1;
-	if(mqtt3_raw_pubrel(context, mid)) return 1;
+	if(mqtt3_raw_pubrel(context, mid, false)) return 1;
 
 	return MOSQ_ERR_SUCCESS;
 }

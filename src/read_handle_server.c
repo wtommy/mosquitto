@@ -263,7 +263,7 @@ int mqtt3_handle_unsubscribe(mosquitto_db *db, mqtt3_context *context)
 		}
 	}
 
-	if(mqtt3_send_command_with_mid(context, UNSUBACK, mid)) return 1;
+	if(mqtt3_send_command_with_mid(context, UNSUBACK, mid, false)) return 1;
 
 	return MOSQ_ERR_SUCCESS;
 }

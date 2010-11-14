@@ -208,7 +208,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename);
 /* Generic function for sending a command to a client where there is no payload, just a mid.
  * Returns 0 on success, 1 on error.
  */
-int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid);
+int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid, bool dup);
 int mqtt3_raw_connack(mqtt3_context *context, uint8_t result);
 int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, uint8_t will_qos, bool will_retain, const char *will_topic, const char *will_msg, uint16_t keepalive, bool clean_session);
 int mqtt3_raw_disconnect(mqtt3_context *context);
@@ -218,7 +218,7 @@ int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid);
 int mqtt3_raw_pubcomp(mqtt3_context *context, uint16_t mid);
 int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload);
 int mqtt3_raw_pubrec(mqtt3_context *context, uint16_t mid);
-int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid);
+int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid, bool dup);
 int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload);
 int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uint8_t topic_qos);
 int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic);

@@ -38,10 +38,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <net_mosq.h>
 #include <send_mosq.h>
 
-static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid);
+static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid, bool dup);
 
 /* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
-static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid)
+static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid, bool dup)
 {
 	struct _mosquitto_packet *packet = NULL;
 
@@ -50,6 +50,9 @@ static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t comm
 	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packet->command = command;
+	if(dup){
+		packet->command |= 8;
+	}
 	packet->remaining_length = 2;
 	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*2);
 	if(!packet->payload){
@@ -97,13 +100,13 @@ int _mosquitto_send_pingresp(struct mosquitto *mosq)
 int _mosquitto_send_puback(struct mosquitto *mosq, uint16_t mid)
 {
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBACK (Mid: %d)", mid);
-	return _mosquitto_send_command_with_mid(mosq, PUBACK, mid);
+	return _mosquitto_send_command_with_mid(mosq, PUBACK, mid, false);
 }
 
 int _mosquitto_send_pubcomp(struct mosquitto *mosq, uint16_t mid)
 {
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBCOMP (Mid: %d)", mid);
-	return _mosquitto_send_command_with_mid(mosq, PUBCOMP, mid);
+	return _mosquitto_send_command_with_mid(mosq, PUBCOMP, mid, false);
 }
 
 int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain, bool dup)
@@ -155,12 +158,12 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 int _mosquitto_send_pubrec(struct mosquitto *mosq, uint16_t mid)
 {
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBREC (Mid: %d)", mid);
-	return _mosquitto_send_command_with_mid(mosq, PUBREC, mid);
+	return _mosquitto_send_command_with_mid(mosq, PUBREC, mid, false);
 }
 
-int _mosquitto_send_pubrel(struct mosquitto *mosq, uint16_t mid)
+int _mosquitto_send_pubrel(struct mosquitto *mosq, uint16_t mid, bool dup)
 {
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBREL (Mid: %d)", mid);
-	return _mosquitto_send_command_with_mid(mosq, PUBREL, mid);
+	return _mosquitto_send_command_with_mid(mosq, PUBREL, mid, dup);
 }
 

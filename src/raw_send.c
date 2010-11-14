@@ -39,7 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBACK to %s (Mid: %d)", context->core.id, mid);
-	return mqtt3_send_command_with_mid(context, PUBACK, mid);
+	return mqtt3_send_command_with_mid(context, PUBACK, mid, false);
 }
 
 int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload)
@@ -90,23 +90,23 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 int mqtt3_raw_pubcomp(mqtt3_context *context, uint16_t mid)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBCOMP to %s (Mid: %d)", context->core.id, mid);
-	return mqtt3_send_command_with_mid(context, PUBCOMP, mid);
+	return mqtt3_send_command_with_mid(context, PUBCOMP, mid, false);
 }
 
 int mqtt3_raw_pubrec(mqtt3_context *context, uint16_t mid)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBREC to %s (Mid: %d)", context->core.id, mid);
-	return mqtt3_send_command_with_mid(context, PUBREC, mid);
+	return mqtt3_send_command_with_mid(context, PUBREC, mid, false);
 }
 
-int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid)
+int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid, bool dup)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBREL to %s (Mid: %d)", context->core.id, mid);
-	return mqtt3_send_command_with_mid(context, PUBREL, mid);
+	return mqtt3_send_command_with_mid(context, PUBREL, mid, dup);
 }
 
 /* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
-int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid)
+int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid, bool dup)
 {
 	struct _mosquitto_packet *packet = NULL;
 
@@ -114,6 +114,9 @@ int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_
 	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packet->command = command;
+	if(dup){
+		packet->command |= 8;
+	}
 	packet->remaining_length = 2;
 	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*2);
 	if(!packet->payload){

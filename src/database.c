@@ -642,7 +642,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 					break;
 
 				case ms_resend_pubrel:
-					if(!mqtt3_raw_pubrel(context, mid)){
+					if(!mqtt3_raw_pubrel(context, mid, true)){
 						tail->state = ms_wait_pubcomp;
 					}
 					last = tail;
