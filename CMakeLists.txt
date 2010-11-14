@@ -29,6 +29,25 @@ else (WIN32)
     set (SHAREDEST share/mosquitto)
 endif (WIN32)
 
+# ========================================
+# Check for required compatibility headers
+# ========================================
+include (CheckIncludeFile)
+
+check_include_file(stdbool.h HAVE_STDBOOL_H)
+if (HAVE_STDBOOL_H)
+	set (STDBOOL_H_PATH ${mosquitto_SOURCE_DIR}/compat/stdbool)
+endif (HAVE_STDBOOL_H)
+
+check_include_file(stdint.h HAVE_STDINT_H)
+if (HAVE_STDINT_H)
+	set (STDINT_H_PATH ${mosquitto_SOURCE_DIR}/compat/stdint)
+endif (HAVE_STDINT_H)
+
+# ========================================
+# Include projects
+# ========================================
+
 add_subdirectory(lib)
 add_subdirectory(client)
 
