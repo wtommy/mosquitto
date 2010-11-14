@@ -1,4 +1,4 @@
-0.9 - 201009xx
+0.9 - 20101114
 ==============
 
 - Client and message data is now stored in memory with custom routines rather
