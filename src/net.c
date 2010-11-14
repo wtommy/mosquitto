@@ -29,16 +29,22 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 
+#ifndef WIN32
+#include <netdb.h>
+#include <unistd.h>
+#else
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
+
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <netdb.h>
 #include <stdio.h>
 #include <string.h>
 #ifdef WITH_WRAP
 #include <tcpd.h>
 #endif
-#include <unistd.h>
 
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
@@ -61,7 +67,7 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 	int new_sock = -1;
 	mqtt3_context **tmp_contexts = NULL;
 	mqtt3_context *new_context;
-	int opt;
+	int opt = 1;
 #ifdef WITH_WRAP
 	struct request_info wrap_req;
 #endif
@@ -70,9 +76,14 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 	if(new_sock < 0) return -1;
 
 	if(max_connections > 0 && (*context_count) >= max_connections){
+#ifndef WIN32
 		close(new_sock);
+#else
+		closesocket(new_sock);
+#endif
 		return -1;
 	}
+#ifndef WIN32
 	/* Set non-blocking */
 	opt = fcntl(new_sock, F_GETFL, 0);
 	if(opt == -1 || fcntl(new_sock, F_SETFL, opt | O_NONBLOCK) == -1){
@@ -80,6 +91,13 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 		close(new_sock);
 		return -1;
 	}
+#else
+	if(ioctlsocket(new_sock, FIONBIO, &opt)){
+		closesocket(new_sock);
+		return INVALID_SOCKET;
+	}
+#endif
+
 #ifdef WITH_WRAP
 	/* Use tcpd / libwrap to determine whether a connection is allowed. */
 	request_init(&wrap_req, RQ_FILE, new_sock, RQ_DAEMON, "mosquitto", 0);
@@ -87,7 +105,11 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 	if(!hosts_access(&wrap_req)){
 		/* Access is denied */
 		mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client connection denied access by tcpd.");
+#ifndef WIN32
 		close(new_sock);
+#else
+		closesocket(new_sock);
+#endif
 		return -1;
 	}else{
 #endif
@@ -123,7 +145,11 @@ void mqtt3_socket_close(mqtt3_context *context)
 	assert(context);
 
 	if(context->core.sock != -1){
+#ifndef WIN32
 		rc = close(context->core.sock);
+#else
+		rc = closesocket(context->core.sock);
+#endif
 		context->core.sock = -1;
 	}
 }
@@ -138,7 +164,12 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 	struct addrinfo hints;
 	struct addrinfo *ainfo, *rp;
 	char service[10];
-	int opt;
+	int opt = 1;
+#ifndef WIN32
+	int ss_opt = 1;
+#else
+	char ss_opt = 1;
+#endif
 
 	snprintf(service, 10, "%d", port);
 	memset(&hints, 0, sizeof(struct addrinfo));
@@ -169,25 +200,44 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 		*socks = _mosquitto_realloc(*socks, sizeof(int)*(*sock_count));
 		(*socks)[(*sock_count)-1] = sock;
 
-		opt = 1;
-		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-		opt = 1;
-		setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt, sizeof(opt));
+		ss_opt = 1;
+		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &ss_opt, sizeof(ss_opt));
+		ss_opt = 1;
+		setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &ss_opt, sizeof(ss_opt));
 
+
+#ifndef WIN32
 		/* Set non-blocking */
 		opt = fcntl(sock, F_GETFL, 0);
-		if(opt < 0) return -1;
-		if(fcntl(sock, F_SETFL, opt | O_NONBLOCK) < 0) return 1;
+		if(opt == -1 || fcntl(sock, F_SETFL, opt | O_NONBLOCK) == -1){
+			/* If either fcntl fails, don't want to allow this client to connect. */
+			close(sock);
+			return 1;
+		}
+#else
+		if(ioctlsocket(sock, FIONBIO, &opt)){
+			closesocket(sock);
+			return 1;
+		}
+#endif
 
 		if(bind(sock, rp->ai_addr, rp->ai_addrlen) == -1){
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
+#ifndef WIN32
 			close(sock);
+#else
+			closesocket(sock);
+#endif
 			return 1;
 		}
 
 		if(listen(sock, 100) == -1){
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
+#ifndef WIN32
 			close(sock);
+#else
+			closesocket(sock);
+#endif
 			return 1;
 		}
 	}
@@ -250,7 +300,11 @@ int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context)
 #endif
 		}else{
 			if(read_length == 0) return 1; /* EOF */
+#ifndef WIN32
 			if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+			if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
 				return MOSQ_ERR_SUCCESS;
 			}else{
 				return 1;
@@ -276,7 +330,11 @@ int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context)
 				context->core.in_packet.remaining_mult *= 128;
 			}else{
 				if(read_length == 0) return 1; /* EOF */
+#ifndef WIN32
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+				if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
 					return MOSQ_ERR_SUCCESS;
 				}else{
 					return 1;
@@ -298,7 +356,11 @@ int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context)
 			context->core.in_packet.to_process -= read_length;
 			context->core.in_packet.pos += read_length;
 		}else{
+#ifndef WIN32
 			if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+			if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
 				return MOSQ_ERR_SUCCESS;
 			}else{
 				return 1;
@@ -340,7 +402,11 @@ int mqtt3_net_write(mqtt3_context *context)
 				packet->command = 0;
 			}else{
 				if(write_length == 0) return 1; /* EOF */
+#ifndef WIN32
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+				if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
 					return MOSQ_ERR_SUCCESS;
 				}else{
 					return 1;
@@ -368,7 +434,11 @@ int mqtt3_net_write(mqtt3_context *context)
 					bytes_sent++;
 				}else{
 					if(write_length == 0) return 1; /* EOF */
+#ifndef WIN32
 					if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+					if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
 						return MOSQ_ERR_SUCCESS;
 					}else{
 						return 1;
@@ -384,7 +454,11 @@ int mqtt3_net_write(mqtt3_context *context)
 				packet->to_process -= write_length;
 				packet->pos += write_length;
 			}else{
+#ifndef WIN32
 				if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+				if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
 					return MOSQ_ERR_SUCCESS;
 				}else{
 					return 1;
