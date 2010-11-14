@@ -2,7 +2,7 @@ include_directories(${mosquitto_SOURCE_DIR} ${mosquitto_SOURCE_DIR}/src
 		${mosquitto_SOURCE_DIR}/lib
 		${STDBOOL_H_PATH} ${STDINT_H_PATH})
 
-add_executable(mosquitto 
+add_executable(mosquitto WIN32
 	bridge.c
 	conf.c
 	context.c

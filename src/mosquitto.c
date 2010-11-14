@@ -515,8 +515,9 @@ int main(int argc, char *argv[])
 }
 
 #ifdef WIN32
-int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	return main(1, "mosquitto");
+	char *argv = "mosquitto";
+	return main(1, &argv);
 }
 #endif
