@@ -93,7 +93,9 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 {
 	va_list va;
 	char s[500];
+#ifdef WIN32
 	char *sp;
+#endif
 	const char *topic;
 	int syslog_priority;
 
