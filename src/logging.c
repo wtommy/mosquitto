@@ -29,7 +29,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#ifndef WIN32
 #include <syslog.h>
+#endif
 
 #include <config.h>
 #include <mqtt3.h>
@@ -58,18 +60,22 @@ int mqtt3_log_init(int priorities, int destinations)
 	log_priorities = priorities;
 	log_destinations = destinations;
 
+#ifndef WIN32
 	if(log_destinations & MQTT3_LOG_SYSLOG){
 		openlog("mosquitto", LOG_PID, LOG_DAEMON);
 	}
+#endif
 
 	return rc;
 }
 
 int mqtt3_log_close(void)
 {
+#ifndef WIN32
 	if(log_destinations & MQTT3_LOG_SYSLOG){
 		closelog();
 	}
+#endif
 	/* FIXME - do something for all destinations! */
 
 	return MOSQ_ERR_SUCCESS;
@@ -80,33 +86,47 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 	va_list va;
 	char s[500];
 	const char *topic;
+#ifndef WIN32
 	int syslog_priority;
+#endif
 
 	if((log_priorities & priority) && log_destinations != MQTT3_LOG_NONE){
 		switch(priority){
 			case MOSQ_LOG_DEBUG:
 				topic = "$SYS/broker/log/D";
+#ifndef WIN32
 				syslog_priority = LOG_DEBUG;
+#endif
 				break;
 			case MOSQ_LOG_ERR:
 				topic = "$SYS/broker/log/E";
+#ifndef WIN32
 				syslog_priority = LOG_ERR;
+#endif
 				break;
 			case MOSQ_LOG_WARNING:
 				topic = "$SYS/broker/log/W";
+#ifndef WIN32
 				syslog_priority = LOG_WARNING;
+#endif
 				break;
 			case MOSQ_LOG_NOTICE:
 				topic = "$SYS/broker/log/N";
+#ifndef WIN32
 				syslog_priority = LOG_NOTICE;
+#endif
 				break;
 			case MOSQ_LOG_INFO:
 				topic = "$SYS/broker/log/I";
+#ifndef WIN32
 				syslog_priority = LOG_INFO;
+#endif
 				break;
 			default:
 				topic = "$SYS/broker/log/E";
+#ifndef WIN32
 				syslog_priority = LOG_ERR;
+#endif
 		}
 		va_start(va, fmt);
 		vsnprintf(s, 500, fmt, va);
@@ -120,9 +140,11 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 			fprintf(stderr, "%s\n", s);
 			fflush(stderr);
 		}
+#ifndef WIN32
 		if(log_destinations & MQTT3_LOG_SYSLOG){
 			syslog(syslog_priority, "%s", s);
 		}
+#endif
 		if(log_destinations & MQTT3_LOG_TOPIC && priority != MOSQ_LOG_DEBUG){
 			mqtt3_db_messages_easy_queue(&int_db, NULL, topic, 2, strlen(s), (uint8_t *)s, 0);
 		}
