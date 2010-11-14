@@ -50,7 +50,4 @@ endif (NOT HAVE_STDINT_H)
 
 add_subdirectory(lib)
 add_subdirectory(client)
-
-if (NOT WIN32)
-	add_subdirectory(src)
-endif (NOT WIN32)
+add_subdirectory(src)
