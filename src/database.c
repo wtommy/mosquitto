@@ -724,7 +724,7 @@ void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time)
 			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/clients/total", 2, strlen(buf), (uint8_t *)buf, 1);
 		}
 
-#ifdef WITH_MEMORY_TRACKING
+#ifdef REAL_WITH_MEMORY_TRACKING
 		snprintf(buf, 100, "%ld", _mosquitto_memory_used());
 		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/heap/current size", 2, strlen(buf), (uint8_t *)buf, 1);
 #endif
