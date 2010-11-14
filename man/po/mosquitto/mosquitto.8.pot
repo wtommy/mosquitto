@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2010-10-24 09:57+0100\n"
+"POT-Creation-Date: 2010-11-14 20:53+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -54,7 +54,7 @@ msgid "<command>mosquitto</command> is a broker for the mqtt protocol version 3.
 msgstr ""
 
 #: mosquitto.8.xml:35(para)
-msgid "It is intended to be a drop in replacement for rsmb, but it's a long way off yet."
+msgid "It is intended to be a drop in replacement for rsmb, but it's a little way off yet."
 msgstr ""
 
 #: mosquitto.8.xml:39(title)
@@ -94,7 +94,7 @@ msgid "There is only basic bridge support."
 msgstr ""
 
 #: mosquitto.8.xml:70(para)
-msgid "There are vastly fewer configuration options."
+msgid "There are fewer configuration options."
 msgstr ""
 
 #: mosquitto.8.xml:71(para)
@@ -162,11 +162,11 @@ msgid "The current size of the heap memory in use by mosquitto. Note that this t
 msgstr ""
 
 #: mosquitto.8.xml:115(option)
-msgid "$SYS/broker/messages/inflight"
+msgid "$SYS/broker/messages/stored"
 msgstr ""
 
 #: mosquitto.8.xml:117(para)
-msgid "The number of messages currently in flight."
+msgid "The number of messages currently held in the message store."
 msgstr ""
 
 #: mosquitto.8.xml:121(option)
