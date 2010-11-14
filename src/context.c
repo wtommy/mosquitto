@@ -27,8 +27,12 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef WIN32
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#else
+#include <ws2tcpip.h>
+#endif
 
 #include <config.h>
 #include <mqtt3.h>
