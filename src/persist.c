@@ -27,6 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <config.h>
 #ifdef WITH_PERSISTENCE
 
 #include <arpa/inet.h>
@@ -37,7 +38,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <sys/stat.h>
 
-#include <config.h>
 #include <memory_mosq.h>
 #include <mqtt3.h>
 
