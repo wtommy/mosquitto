@@ -32,10 +32,14 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <sys/types.h>
 
+#if defined(WITH_MEMORY_TRACKING) && !defined(WIN32)
+#define REAL_WITH_MEMORY_TRACKING
+#endif
+
 void *_mosquitto_calloc(size_t nmemb, size_t size);
 void _mosquitto_free(void *mem);
 void *_mosquitto_malloc(size_t size);
-#ifdef WITH_MEMORY_TRACKING
+#ifdef REAL_WITH_MEMORY_TRACKING
 unsigned long _mosquitto_memory_used(void);
 #endif
 void *_mosquitto_realloc(void *ptr, size_t size);
