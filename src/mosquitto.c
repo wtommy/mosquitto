@@ -29,9 +29,17 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 
-#include <errno.h>
+#ifndef WIN32
 #include <poll.h>
 #include <pwd.h>
+#include <unistd.h>
+#else
+#include <process.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
+
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
@@ -39,7 +47,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifdef WITH_WRAP
 #include <tcpd.h>
 #endif
-#include <unistd.h>
 
 #include <mqtt3.h>
 #include <memory_mosq.h>
@@ -69,7 +76,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds);
  */
 int drop_privileges(mqtt3_config *config)
 {
-#ifndef __CYGWIN__
+#if !defined(__CYGWIN__) && !defined(WIN32)
 	struct passwd *pwd;
 
 	if(geteuid() == 0){
@@ -103,17 +110,20 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 	time_t last_store_clean = time(NULL);
 	time_t now;
 	int fdcount;
+#ifndef WIN32
 	sigset_t sigblock, origsig;
+#endif
 	int i;
 	struct pollfd *pollfds = NULL;
-	int pollfd_count = 0;
+	unsigned int pollfd_count = 0;
 	int new_clients = 1;
 	int client_max = 0;
-	int sock_max = 0;
+	unsigned int sock_max = 0;
 
-
+#ifndef WIN32
 	sigemptyset(&sigblock);
 	sigaddset(&sigblock, SIGINT);
+#endif
 
 	while(run){
 		mqtt3_db_sys_update(&int_db, config->sys_interval, start_time);
@@ -146,7 +156,7 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 
 		for(i=0; i<listensock_count; i++){
 			pollfds[listensock[i]].fd = listensock[i];
-			pollfds[listensock[i]].events = POLLIN | POLLPRI;
+			pollfds[listensock[i]].events = POLLIN;
 			pollfds[listensock[i]].revents = 0;
 		}
 
@@ -162,7 +172,7 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 							// FIXME - do something here.
 						}
 						pollfds[int_db.contexts[i]->core.sock].fd = int_db.contexts[i]->core.sock;
-						pollfds[int_db.contexts[i]->core.sock].events = POLLIN | POLLPRI;
+						pollfds[int_db.contexts[i]->core.sock].events = POLLIN;
 						pollfds[int_db.contexts[i]->core.sock].revents = 0;
 						if(int_db.contexts[i]->core.out_packet){
 							pollfds[int_db.contexts[i]->core.sock].events |= POLLOUT;
@@ -200,9 +210,13 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 
 		mqtt3_db_message_timeout_check(&int_db, config->retry_interval);
 
+#ifndef WIN32
 		sigprocmask(SIG_SETMASK, &sigblock, &origsig);
 		fdcount = poll(pollfds, pollfd_count, 1000);
 		sigprocmask(SIG_SETMASK, &origsig, NULL);
+#else
+		fdcount = WSAPoll(pollfds, pollfd_count, 1000);
+#endif
 		if(fdcount == -1){
 			loop_handle_errors();
 		}else{
@@ -242,6 +256,7 @@ static void loop_handle_errors(void)
 	struct stat statbuf;
 	int i;
 
+#ifndef WIN32
 	for(i=0; i<int_db.context_count; i++){
 		if(int_db.contexts[i] && fstat(int_db.contexts[i]->core.sock, &statbuf) == -1){
 			if(errno == EBADF){
@@ -260,6 +275,7 @@ static void loop_handle_errors(void)
 			}
 		}
 	}
+#endif
 }
 
 static void loop_handle_reads_writes(struct pollfd *pollfds)
@@ -344,10 +360,16 @@ int main(int argc, char *argv[])
 	int listener_max;
 	int rc;
 
+#ifdef WIN32
+	WSADATA wsaData;
+	WSAStartup(MAKEWORD(2,2), &wsaData);
+#endif
+
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
 
 	if(config.daemon){
+#ifndef WIN32
 		switch(fork()){
 			case 0:
 				break;
@@ -357,6 +379,9 @@ int main(int argc, char *argv[])
 			default:
 				return MOSQ_ERR_SUCCESS;
 		}
+#else
+		mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Can't start in daemon mode in Windows.");
+#endif
 	}
 
 	if(config.daemon && config.pid_file){
@@ -431,9 +456,11 @@ int main(int argc, char *argv[])
 
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
+#ifndef WIN32
 	signal(SIGUSR1, handle_sigusr1);
 	signal(SIGUSR2, handle_sigusr2);
 	signal(SIGPIPE, SIG_IGN);
+#endif
 
 	for(i=0; i<config.bridge_count; i++){
 		if(mqtt3_bridge_new(&int_db, &(config.bridges[i]))){
@@ -465,7 +492,11 @@ int main(int argc, char *argv[])
 	if(listensock){
 		for(i=0; i<listensock_count; i++){
 			if(listensock[i] != -1){
+#ifndef WIN32
 				close(listensock[i]);
+#else
+				closesocket(listensock[i]);
+#endif
 			}
 		}
 		_mosquitto_free(listensock);
@@ -476,6 +507,16 @@ int main(int argc, char *argv[])
 		remove(config.pid_file);
 	}
 
+#ifdef WIN32
+	WSACleanup();
+#endif
+
 	return rc;
 }
 
+#ifdef WIN32
+int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+	return main(1, "mosquitto");
+}
+#endif
