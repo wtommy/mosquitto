@@ -35,14 +35,14 @@ endif (WIN32)
 include (CheckIncludeFile)
 
 check_include_file(stdbool.h HAVE_STDBOOL_H)
-if (HAVE_STDBOOL_H)
+if (NOT HAVE_STDBOOL_H)
 	set (STDBOOL_H_PATH ${mosquitto_SOURCE_DIR}/compat/stdbool)
-endif (HAVE_STDBOOL_H)
+endif (NOT HAVE_STDBOOL_H)
 
 check_include_file(stdint.h HAVE_STDINT_H)
-if (HAVE_STDINT_H)
+if (NOT HAVE_STDINT_H)
 	set (STDINT_H_PATH ${mosquitto_SOURCE_DIR}/compat/stdint)
-endif (HAVE_STDINT_H)
+endif (NOT HAVE_STDINT_H)
 
 # ========================================
 # Include projects
