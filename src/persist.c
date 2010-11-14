@@ -27,6 +27,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifdef WITH_PERSISTENCE
+
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -39,7 +41,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <mqtt3.h>
 
-#ifdef WITH_PERSISTENCE
 
 #ifdef WITH_32BIT_DBID
 #  define DBID_HTON(a) htonl(a)
