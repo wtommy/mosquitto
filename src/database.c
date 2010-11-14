@@ -717,7 +717,7 @@ void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time)
 		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/uptime", 2, strlen(buf), (uint8_t *)buf, 1);
 
 		snprintf(buf, 100, "%d", db->msg_store_count);
-		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/inflight", 2, strlen(buf), (uint8_t *)buf, 1);
+		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/stored", 2, strlen(buf), (uint8_t *)buf, 1);
 
 		if(!mqtt3_db_client_count(db, &count)){
 			snprintf(buf, 100, "%d", count);

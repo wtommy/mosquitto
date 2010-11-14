@@ -112,9 +112,9 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>$SYS/broker/messages/inflight</option></term>
+				<term><option>$SYS/broker/messages/stored</option></term>
 				<listitem>
-					<para>The number of messages currently in flight.</para>
+					<para>The number of messages currently held in the message store.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
