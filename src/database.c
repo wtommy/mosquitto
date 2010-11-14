@@ -692,6 +692,7 @@ void mqtt3_db_store_clean(mosquitto_db *db)
 				_mosquitto_free(tail);
 				tail = db->msg_store;
 			}
+			db->msg_store_count--;
 		}else{
 			last = tail;
 			tail = tail->next;
