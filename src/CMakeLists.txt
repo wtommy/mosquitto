@@ -26,7 +26,7 @@ option(INC_DB_UPGRADE
 option(INC_MEMTRACK
 	"Include memory tracking support?" ON)
 
-add_definitions (-DWITH_BROKER)
+add_definitions (-DWITH_BROKER -DWITH_BRIDGE)
 target_link_libraries(mosquitto sqlite3)
 set_target_properties(mosquitto PROPERTIES
 	VERSION ${VERSION})
