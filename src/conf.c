@@ -18,8 +18,13 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->default_listener.port = 0;
 	config->listeners = NULL;
 	config->listener_count = 0;
+#ifndef WIN32
 	config->log_dest = MQTT3_LOG_STDERR;
 	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING | MOSQ_LOG_NOTICE | MOSQ_LOG_INFO;
+#else
+	config->log_dest = MQTT3_LOG_SYSLOG;
+	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING;
+#endif
 	config->max_connections = -1;
 	config->persistence = false;
 	config->persistence_location = NULL;

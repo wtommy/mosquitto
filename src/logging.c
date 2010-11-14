@@ -38,6 +38,10 @@ POSSIBILITY OF SUCH DAMAGE.
 
 extern mosquitto_db int_db;
 
+#ifdef WIN32
+HANDLE syslog_h;
+#endif
+
 /* Options for logging should be:
  *
  * A combination of:
@@ -60,22 +64,26 @@ int mqtt3_log_init(int priorities, int destinations)
 	log_priorities = priorities;
 	log_destinations = destinations;
 
-#ifndef WIN32
 	if(log_destinations & MQTT3_LOG_SYSLOG){
+#ifndef WIN32
 		openlog("mosquitto", LOG_PID, LOG_DAEMON);
-	}
+#else
+		syslog_h = OpenEventLog(NULL, "mosquitto");
 #endif
+	}
 
 	return rc;
 }
 
 int mqtt3_log_close(void)
 {
-#ifndef WIN32
 	if(log_destinations & MQTT3_LOG_SYSLOG){
+#ifndef WIN32
 		closelog();
-	}
+#else
+		CloseEventLog(syslog_h);
 #endif
+	}
 	/* FIXME - do something for all destinations! */
 
 	return MOSQ_ERR_SUCCESS;
@@ -85,10 +93,9 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 {
 	va_list va;
 	char s[500];
+	char *sp;
 	const char *topic;
-#ifndef WIN32
 	int syslog_priority;
-#endif
 
 	if((log_priorities & priority) && log_destinations != MQTT3_LOG_NONE){
 		switch(priority){
@@ -96,36 +103,48 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 				topic = "$SYS/broker/log/D";
 #ifndef WIN32
 				syslog_priority = LOG_DEBUG;
+#else
+				syslog_priority = EVENTLOG_INFORMATION_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_ERR:
 				topic = "$SYS/broker/log/E";
 #ifndef WIN32
 				syslog_priority = LOG_ERR;
+#else
+				syslog_priority = EVENTLOG_ERROR_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_WARNING:
 				topic = "$SYS/broker/log/W";
 #ifndef WIN32
 				syslog_priority = LOG_WARNING;
+#else
+				syslog_priority = EVENTLOG_WARNING_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_NOTICE:
 				topic = "$SYS/broker/log/N";
 #ifndef WIN32
 				syslog_priority = LOG_NOTICE;
+#else
+				syslog_priority = EVENTLOG_INFORMATION_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_INFO:
 				topic = "$SYS/broker/log/I";
 #ifndef WIN32
 				syslog_priority = LOG_INFO;
+#else
+				syslog_priority = EVENTLOG_INFORMATION_TYPE;
 #endif
 				break;
 			default:
 				topic = "$SYS/broker/log/E";
 #ifndef WIN32
 				syslog_priority = LOG_ERR;
+#else
+				syslog_priority = EVENTLOG_ERROR_TYPE;
 #endif
 		}
 		va_start(va, fmt);
@@ -140,11 +159,14 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 			fprintf(stderr, "%s\n", s);
 			fflush(stderr);
 		}
-#ifndef WIN32
 		if(log_destinations & MQTT3_LOG_SYSLOG){
+#ifndef WIN32
 			syslog(syslog_priority, "%s", s);
-		}
+#else
+			sp = (char *)s;
+			ReportEvent(syslog_h, syslog_priority, 0, 0, NULL, 1, 0, &sp, NULL);
 #endif
+		}
 		if(log_destinations & MQTT3_LOG_TOPIC && priority != MOSQ_LOG_DEBUG){
 			mqtt3_db_messages_easy_queue(&int_db, NULL, topic, 2, strlen(s), (uint8_t *)s, 0);
 		}
