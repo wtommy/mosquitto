@@ -40,6 +40,9 @@
   instead of 64-bit integers. This is useful where htobe64()/be64toh() are not
   available or for embedded systems for example.
 - The DUP bit is now set correctly when resending PUBREL messages.
+- A port to Windows native has been partially completed. This currently drops a
+  number of features, including the ability to change configuration parameters
+  and persistent storage.
 
 0.8.3 - 20101004
 ================
