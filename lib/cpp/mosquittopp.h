@@ -30,12 +30,22 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef _MOSQUITTOPP_H_
 #define _MOSQUITTOPP_H_
 
+#ifdef _WIN32
+#ifdef mosquittopp_EXPORTS
+#define mosqpp_EXPORT  __declspec(dllexport)
+#else
+#define mosqpp_EXPORT  __declspec(dllimport)
+#endif
+#else
+#define mosqpp_EXPORT
+#endif
+
 #include <stdint.h>
 #include <cstdlib>
 #include <time.h>
 #include <mosquitto.h>
 
-class mosq_EXPORT mosquittopp {
+class mosqpp_EXPORT mosquittopp {
 	private:
 		struct mosquitto *mosq;
 	public:
