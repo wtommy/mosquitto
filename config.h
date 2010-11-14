@@ -19,14 +19,22 @@
 
 /* Compile with the ability to upgrade from old style sqlite persistent
  * databases to the new mosquitto format. This means a dependency on sqlite. It
- * isn't needed for new installations. */
+ * isn't needed for new installations.
+ * Not available on Windows.
+ */
+#ifndef WIN32
 #define WITH_SQLITE_UPGRADE
+#endif
 
 /* Compile with persistent database support. This allows the broker to store
  * retained messages and durable subscriptions to a file periodically and on
  * shutdown. This is usually desirable (and is suggested by the MQTT spec), but
- * it can be disabled by commenting out this define if required. */
+ * it can be disabled by commenting out this define if required.
+ * Not available on Windows.
+ */
+#ifndef WIN32
 #define WITH_PERSISTENCE
+#endif
 
 /* Compile with 32-bit integer database IDs instead of 64-bit integers. May be
  * useful in embedded systems or where be64toh()/htobe64() aren't available.
@@ -35,7 +43,8 @@
  * sustained rate of 10,000 messages/s, the database ID would overflow every 5
  * days. It is also worth noting that a broker compiled with 64-bit DB IDs will
  * not load a persistent database file saved from a 32-bit DB ID broker and
- * vice versa. */
+ * vice versa.
+ */
 //#define WITH_32BIT_DBID
 
 
