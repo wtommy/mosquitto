@@ -63,7 +63,7 @@ int drop_privileges(mqtt3_config *config);
 void handle_sigint(int signal);
 void handle_sigusr1(int signal);
 void handle_sigusr2(int signal);
-static void loop_handle_errors(void);
+static void loop_handle_errors(struct pollfd *pollfds);
 static void loop_handle_reads_writes(struct pollfd *pollfds);
 
 /* mosquitto shouldn't run as root.
@@ -218,7 +218,7 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 		fdcount = WSAPoll(pollfds, pollfd_count, 1000);
 #endif
 		if(fdcount == -1){
-			loop_handle_errors();
+			loop_handle_errors(pollfds);
 		}else{
 			loop_handle_reads_writes(pollfds);
 
@@ -251,15 +251,13 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 /* Error ocurred, probably an fd has been closed. 
  * Loop through and check them all.
  */
-static void loop_handle_errors(void)
+static void loop_handle_errors(struct pollfd *pollfds)
 {
-	struct stat statbuf;
 	int i;
 
-#ifndef WIN32
 	for(i=0; i<int_db.context_count; i++){
-		if(int_db.contexts[i] && fstat(int_db.contexts[i]->core.sock, &statbuf) == -1){
-			if(errno == EBADF){
+		if(int_db.contexts[i] && int_db.contexts[i]->core.sock != -1){
+			if(pollfds[int_db.contexts[i]->core.sock].revents & POLLHUP){
 				if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
 					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket error on client %s, disconnecting.", int_db.contexts[i]->core.id);
 					mqtt3_db_client_will_queue(&int_db, int_db.contexts[i]);
@@ -275,7 +273,6 @@ static void loop_handle_errors(void)
 			}
 		}
 	}
-#endif
 }
 
 static void loop_handle_reads_writes(struct pollfd *pollfds)
