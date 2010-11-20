@@ -27,6 +27,7 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING;
 #endif
 	config->max_connections = -1;
+	config->password_file = NULL;
 	config->persistence = false;
 	config->persistence_location = NULL;
 	config->persistence_file = "mosquitto.db";
@@ -315,6 +316,14 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						}
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty password value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+				}else if(!strcmp(token, "password_file")){
+					token = strtok(NULL, " ");
+					if(token){
+						config->password_file = _mosquitto_strdup(token);
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty password_file value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "persistence")){
