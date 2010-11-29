@@ -21,7 +21,7 @@ clean :
 	make -C python clean
 
 libmosquitto.so.0 : mosquitto.o logging_mosq.o memory_mosq.o messages_mosq.o net_mosq.o read_handle.o read_handle_client.o send_mosq.o send_client_mosq.o util_mosq.o
-	$(CC) -shared -Wl,--as-needed -Wl,-soname,libmosquitto.so.0 $^ -o $@ 
+	$(CC) -shared -Wl,--as-needed -Wl,--version-script=linker.version -Wl,-soname,libmosquitto.so.0 $^ -o $@ 
 
 mosquitto.o : mosquitto.c mosquitto.h
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@

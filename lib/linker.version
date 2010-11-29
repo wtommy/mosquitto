@@ -1,0 +1,35 @@
+/* Linker version script - currently used here primarily to control which
+ * symbols are exported.
+ */
+
+VERS_0.9 {
+	global:
+		mosquitto_lib_version;
+		mosquitto_lib_init;
+		mosquitto_lib_cleanup;
+		mosquitto_new;
+		mosquitto_destroy;
+		mosquitto_log_init;
+		mosquitto_will_set;
+		mosquitto_username_pw_set;
+		mosquitto_connect;
+		mosquitto_disconnect;
+		mosquitto_publish;
+		mosquitto_subscribe;
+		mosquitto_unsubscribe;
+		mosquitto_message_copy;
+		mosquitto_message_free;
+		mosquitto_loop;
+		mosquitto_socket;
+		mosquitto_loop_read;
+		mosquitto_loop_write;
+		mosquitto_loop_misc;
+		mosquitto_connect_callback_set;
+		mosquitto_disconnect_callback_set;
+		mosquitto_publish_callback_set;
+		mosquitto_message_callback_set;
+		mosquitto_subscribe_callback_set;
+		mosquitto_unsubscribe_callback_set;
+		mosquitto_message_retry_set;
+	local: *;
+};
