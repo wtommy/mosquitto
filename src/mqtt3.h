@@ -162,6 +162,7 @@ struct _mqtt3_listener {
 };
 
 typedef struct {
+	bool allow_anonymous;
 	int autosave_interval;
 	bool daemon;
 	struct _mqtt3_listener default_listener;
@@ -170,6 +171,7 @@ typedef struct {
 	int log_dest;
 	int log_type;
 	int max_connections;
+	char *password_file;
 	bool persistence;
 	char *persistence_location;
 	char *persistence_file;

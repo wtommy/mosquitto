@@ -12,6 +12,7 @@ static int _mqtt3_conf_parse_int(char **token, const char *name, int *value);
 void mqtt3_config_init(mqtt3_config *config)
 {
 	/* Set defaults */
+	config->allow_anonymous = false;
 	config->autosave_interval = 1800;
 	config->daemon = false;
 	config->default_listener.host = NULL;
@@ -26,6 +27,7 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING;
 #endif
 	config->max_connections = -1;
+	config->password_file = NULL;
 	config->persistence = false;
 	config->persistence_location = NULL;
 	config->persistence_file = "mosquitto.db";
@@ -155,6 +157,8 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty address value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "allow_anonymous")){
+					if(_mqtt3_conf_parse_bool(&token, "allow_anonymous", &config->allow_anonymous)) return 1;
 				}else if(!strcmp(token, "autosave_interval")){
 					if(_mqtt3_conf_parse_int(&token, "autosave_interval", &config->autosave_interval)) return 1;
 					if(config->autosave_interval < 0) config->autosave_interval = 0;
@@ -314,6 +318,14 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty password value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "password_file")){
+					token = strtok(NULL, " ");
+					if(token){
+						config->password_file = _mosquitto_strdup(token);
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty password_file value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
 				}else if(!strcmp(token, "persistence")){
 					if(_mqtt3_conf_parse_bool(&token, "persistence", &config->persistence)) return 1;
 				}else if(!strcmp(token, "persistence_file")){
@@ -446,7 +458,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						|| !strcmp(token, "mount_point")
 						|| !strcmp(token, "clientid")
 						|| !strcmp(token, "acl_file")
-						|| !strcmp(token, "allow_anonymous")
 						|| !strcmp(token, "ffdc_output")
 						|| !strcmp(token, "max_log_entries")
 						|| !strcmp(token, "password_file")
