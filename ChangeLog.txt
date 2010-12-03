@@ -1,3 +1,10 @@
+0.9.1 - 20101203
+================
+
+- Add missing code for parsing the "bind_address" configuration option.
+- Fix missing include when compiling with tcp-wrappers support.
+- Add linker version script for C library to control exported functions.
+
 0.9 - 20101114
 ==============
 

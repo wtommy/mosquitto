@@ -1,5 +1,5 @@
 # Also bump lib/mosquitto.h, lib/python/setup.py
-VERSION=0.9
+VERSION=0.9.1
 TIMESTAMP:=$(shell date "+%F %T%z")
 
 #MANCOUNTRIES=en_GB
