@@ -158,6 +158,18 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "autosave_interval")){
 					if(_mqtt3_conf_parse_int(&token, "autosave_interval", &config->autosave_interval)) return 1;
 					if(config->autosave_interval < 0) config->autosave_interval = 0;
+				}else if(!strcmp(token, "bind_address")){
+					token = strtok(NULL, " ");
+					if(token){
+						if(config->default_listener.host){
+							mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Default listener bind_address specified multiple times. Only the latest will be used.");
+							_mosquitto_free(config->default_listener.host);
+						}
+						config->default_listener.host = _mosquitto_strdup(token);
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty bind_address value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
 				}else if(!strcmp(token, "ext_sqlite_regex")){
 					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: ext_sqlite_regex variable no longer in use.");
 				}else if(!strcmp(token, "cleansession")){
