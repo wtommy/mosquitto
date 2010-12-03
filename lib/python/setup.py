@@ -1,7 +1,7 @@
 from distutils.core import setup
 setup(name='mosquitto',
-	version='0.9',
-	description='MQTT version 3 client class',
+	version='0.9.1',
+	description='MQTT version 3.1 client class',
 	author='Roger Light',
 	author_email='roger@atchoo.org',
 	url='http://mosquitto.org/',
