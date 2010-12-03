@@ -53,6 +53,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 static int run;
 #ifdef WITH_WRAP
+#include <syslog.h>
 int allow_severity = LOG_INFO;
 int deny_severity = LOG_INFO;
 #endif
