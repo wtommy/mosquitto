@@ -80,7 +80,10 @@ mqtt3_context *mqtt3_context_init(int sock)
 	}
 	context->bridge = NULL;
 	context->msgs = NULL;
-	
+#ifdef WITH_SSL
+	context->core.ssl = NULL;
+#endif
+
 	return context;
 }
 
