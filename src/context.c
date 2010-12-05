@@ -100,7 +100,7 @@ void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_fre
 	if(!context) return;
 
 	if(context->core.sock != -1){
-		mqtt3_socket_close(context);
+		_mosquitto_socket_close(&context->core);
 	}
 	if(context->clean_session && !context->duplicate){
 		mqtt3_subs_clean_session(context, &db->subs);

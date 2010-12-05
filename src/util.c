@@ -76,7 +76,7 @@ void mqtt3_check_keepalive(mqtt3_context *context)
 		if(context->core.state == mosq_cs_connected){
 			mqtt3_raw_pingreq(context);
 		}else{
-			mqtt3_socket_close(context);
+			_mosquitto_socket_close(&context->core);
 		}
 	}
 }

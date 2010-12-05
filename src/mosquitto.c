@@ -182,7 +182,7 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", int_db.contexts[i]->core.id);
 						/* Client has exceeded keepalive*1.5 */
 						if(int_db.contexts[i]->bridge || int_db.contexts[i]->clean_session == false){
-							mqtt3_socket_close(int_db.contexts[i]);
+							_mosquitto_socket_close(&int_db.contexts[i]->core);
 						}else{
 							mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
 							int_db.contexts[i] = NULL;
@@ -266,7 +266,7 @@ static void loop_handle_errors(struct pollfd *pollfds)
 					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", int_db.contexts[i]->core.id);
 				}
 				if(int_db.contexts[i]->bridge || int_db.contexts[i]->clean_session == false){
-					mqtt3_socket_close(int_db.contexts[i]);
+					_mosquitto_socket_close(&int_db.contexts[i]->core);
 				}else{
 					mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
 					int_db.contexts[i] = NULL;
@@ -293,7 +293,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 					/* Write error or other that means we should disconnect */
 					/* Bridges don't get cleaned up because they will reconnect later. */
 					if(int_db.contexts[i]->bridge || int_db.contexts[i]->clean_session == false){
-						mqtt3_socket_close(int_db.contexts[i]);
+						_mosquitto_socket_close(&int_db.contexts[i]->core);
 					}else{
 						mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
 						int_db.contexts[i] = NULL;
@@ -313,7 +313,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 					/* Read error or other that means we should disconnect */
 					/* Bridges don't get cleaned up because they will reconnect later. */
 					if(int_db.contexts[i]->bridge || int_db.contexts[i]->clean_session == false){
-						mqtt3_socket_close(int_db.contexts[i]);
+						_mosquitto_socket_close(&int_db.contexts[i]->core);
 					}else{
 						mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
 						int_db.contexts[i] = NULL;

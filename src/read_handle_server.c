@@ -53,14 +53,14 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 
 	if(_mosquitto_read_string(&context->core.in_packet, &protocol_name)) return 1;
 	if(!protocol_name){
-		mqtt3_socket_close(context);
+		_mosquitto_socket_close(&context->core);
 		return 3;
 	}
 	if(strcmp(protocol_name, PROTOCOL_NAME)){
 		mqtt3_log_printf(MOSQ_LOG_INFO, "Invalid protocol \"%s\" in CONNECT from %s.",
 				protocol_name, context->address);
 		_mosquitto_free(protocol_name);
-		mqtt3_socket_close(context);
+		_mosquitto_socket_close(&context->core);
 		return MOSQ_ERR_PROTOCOL;
 	}
 	if(_mosquitto_read_byte(&context->core.in_packet, &protocol_version)) return 1;
@@ -69,7 +69,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 				protocol_version, context->address);
 		_mosquitto_free(protocol_name);
 		mqtt3_raw_connack(context, 1);
-		mqtt3_socket_close(context);
+		_mosquitto_socket_close(&context->core);
 		return MOSQ_ERR_PROTOCOL;
 	}
 
@@ -168,7 +168,7 @@ int mqtt3_handle_disconnect(mqtt3_context *context)
 	}
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received DISCONNECT from %s", context->core.id);
 	context->core.state = mosq_cs_disconnecting;
-	mqtt3_socket_close(context);
+	_mosquitto_socket_close(&context->core);
 	return 0;
 }
 
