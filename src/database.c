@@ -117,6 +117,8 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 	child->retained = NULL;
 	db->subs.children->next->next = child;
 
+	db->unpwd = NULL;
+
 #ifdef WITH_PERSISTENCE
 	if(config->persistence){
 		if(config->persistence_location && strlen(config->persistence_location)){
