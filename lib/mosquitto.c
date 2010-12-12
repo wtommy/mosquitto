@@ -61,19 +61,14 @@ void mosquitto_lib_version(int *major, int *minor, int *revision)
 
 int mosquitto_lib_init(void)
 {
-#ifdef WIN32
-	WSADATA wsaData;
-	WSAStartup(MAKEWORD(2,2), &wsaData);
-#endif
+	_mosquitto_net_init();
 
 	return MOSQ_ERR_SUCCESS;
 }
 
 int mosquitto_lib_cleanup(void)
 {
-#ifdef WIN32
-	WSACleanup();
-#endif
+	_mosquitto_net_cleanup();
 
 	return MOSQ_ERR_SUCCESS;
 }

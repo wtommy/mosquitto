@@ -358,10 +358,7 @@ int main(int argc, char *argv[])
 	int listener_max;
 	int rc;
 
-#ifdef WIN32
-	WSADATA wsaData;
-	WSAStartup(MAKEWORD(2,2), &wsaData);
-#endif
+	_mosquitto_net_init();
 
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
@@ -505,9 +502,7 @@ int main(int argc, char *argv[])
 		remove(config.pid_file);
 	}
 
-#ifdef WIN32
-	WSACleanup();
-#endif
+	_mosquitto_net_cleanup();
 
 	return rc;
 }

@@ -45,6 +45,21 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <net_mosq.h>
 
+void _mosquitto_net_init(void)
+{
+#ifdef WIN32
+	WSADATA wsaData;
+	WSAStartup(MAKEWORD(2,2), &wsaData);
+#endif
+}
+
+void _mosquitto_net_cleanup(void)
+{
+#ifdef WIN32
+	WSACleanup();
+#endif
+}
+
 void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet)
 {
 	if(!packet) return;
