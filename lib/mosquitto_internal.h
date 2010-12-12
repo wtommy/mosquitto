@@ -87,6 +87,15 @@ struct mosquitto_message_all{
 	struct mosquitto_message msg;
 };
 
+#ifdef WITH_SSL
+struct _mosquitto_ssl{
+	SSL *ssl;
+	BIO *bio;
+	bool want_read;
+	bool want_write;
+};
+#endif
+
 struct _mosquitto_core
 {
 #ifndef WIN32
@@ -106,7 +115,7 @@ struct _mosquitto_core
 	struct _mosquitto_packet *out_packet;
 	struct mosquitto_message *will;
 #ifdef WITH_SSL
-	SSL *ssl;
+	struct _mosquitto_ssl *ssl;
 #endif
 };
 
