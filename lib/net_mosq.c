@@ -45,16 +45,30 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <net_mosq.h>
 
+#ifdef WITH_SSL
+static SSL_CTX *ssl_ctx = NULL;
+#endif
+
 void _mosquitto_net_init(void)
 {
 #ifdef WIN32
 	WSADATA wsaData;
 	WSAStartup(MAKEWORD(2,2), &wsaData);
 #endif
+
+#ifdef WITH_SSL
+	if(!ssl_ctx){
+		ssl_ctx = SSL_CTX_new(TLSv1_method());
+	}
+#endif
 }
 
 void _mosquitto_net_cleanup(void)
 {
+#ifdef WITH_SSL
+	SSL_CTX_free(ssl_ctx);
+#endif
+
 #ifdef WIN32
 	WSACleanup();
 #endif
