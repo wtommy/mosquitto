@@ -47,6 +47,8 @@
  */
 //#define WITH_32BIT_DBID
 
+/* Compile with SSL support */
+#define WITH_SSL
 
 /* ============================================================
  * Compatibility defines
