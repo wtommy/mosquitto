@@ -68,6 +68,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 #include <mqtt3.h>
 #include <memory_mosq.h>
+#include <mosquitto.h>
 #include <util_mosq.h>
 
 static int max_inflight = 20;
@@ -80,7 +81,7 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 	int rc = 0;
 	struct _mosquitto_subhier *child;
 
-	if(!config) return 1;
+	if(!config || !db) return MOSQ_ERR_INVAL;
 
 	db->last_db_id = 0;
 
@@ -201,7 +202,7 @@ int mqtt3_db_close(mosquitto_db *db)
  */
 int mqtt3_db_client_will_queue(mosquitto_db *db, mqtt3_context *context)
 {
-	if(!context || !context->core.id) return 1;
+	if(!context || !context->core.id) return MOSQ_ERR_INVAL;
 	if(!context->core.will) return 0;
 
 	return mqtt3_db_messages_easy_queue(db, context, context->core.will->topic, context->core.will->qos, context->core.will->payloadlen, context->core.will->payload, context->core.will->retain);
@@ -216,7 +217,7 @@ int mqtt3_db_client_count(mosquitto_db *db, int *count)
 {
 	int i;
 
-	if(!db || !count) return 1;
+	if(!db || !count) return MOSQ_ERR_INVAL;
 
 	*count = 0;
 	for(i=0; i<db->context_count; i++){
@@ -236,7 +237,7 @@ static int _mqtt3_db_cleanup(mosquitto_db *db)
 {
 	int rc = 0;
 
-	if(!db) return 1;
+	if(!db) return MOSQ_ERR_INVAL;
 
 // FIXME - reimplement for new db
 #if 0
@@ -257,7 +258,7 @@ int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid, enum mosquitto
 	int msg_index = 0;
 	bool deleted = false;
 
-	if(!context) return 1;
+	if(!context) return MOSQ_ERR_INVAL;
 
 	tail = context->msgs;
 	while(tail){
@@ -318,7 +319,7 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 	int rc = 0;
 
 	assert(stored);
-	if(!context) return 1;
+	if(!context) return MOSQ_ERR_INVAL;
 
 	if(context->msgs){
 		tail = context->msgs;
@@ -402,7 +403,7 @@ int mqtt3_db_messages_delete(mqtt3_context *context)
 {
 	mosquitto_client_msg *tail, *next;
 
-	if(!context) return 1;
+	if(!context) return MOSQ_ERR_INVAL;
 
 	tail = context->msgs;
 	while(tail){
@@ -424,7 +425,7 @@ int mqtt3_db_messages_easy_queue(mosquitto_db *db, mqtt3_context *context, const
 
 	assert(db);
 
-	if(!topic) return 1;
+	if(!topic) return MOSQ_ERR_INVAL;
 
 	if(context){
 		source_id = context->core.id;
@@ -444,7 +445,7 @@ int mqtt3_db_messages_queue(mosquitto_db *db, const char *source_id, const char 
 	assert(stored);
 
 	/* Find all clients that subscribe to topic and put messages into the db for them. */
-	if(!source_id || !topic) return 1;
+	if(!source_id || !topic) return MOSQ_ERR_INVAL;
 
 	mqtt3_sub_search(&db->subs, source_id, topic, qos, retain, stored);
 	return rc;
@@ -457,7 +458,7 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 	assert(db);
 	assert(stored);
 
-	if(!topic) return 1;
+	if(!topic) return MOSQ_ERR_INVAL;
 
 	temp = _mosquitto_malloc(sizeof(struct mosquitto_msg_store));
 	if(!temp) return MOSQ_ERR_NOMEM;
@@ -589,7 +590,7 @@ int mqtt3_db_message_release(mosquitto_db *db, mqtt3_context *context, uint16_t 
 	char *topic;
 	char *source_id;
 
-	if(!context) return 1;
+	if(!context) return MOSQ_ERR_INVAL;
 
 	tail = context->msgs;
 	while(tail){
@@ -629,7 +630,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	uint32_t payloadlen;
 	const uint8_t *payload;
 
-	if(!context || !context->core.id || context->core.sock == -1) return 1;
+	if(!context || !context->core.id || context->core.sock == -1) return MOSQ_ERR_INVAL;
 
 	tail = context->msgs;
 	while(tail){

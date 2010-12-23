@@ -94,7 +94,7 @@ static int _sub_topic_tokenise(const char *subtopic, struct _sub_token **topics)
 	assert(topics);
 
 	local_subtopic = _mosquitto_strdup(subtopic);
-	if(!local_subtopic) return 1;
+	if(!local_subtopic) return MOSQ_ERR_NOMEM;
 
 	token = strtok(local_subtopic, "/");
 	while(token){
@@ -146,7 +146,7 @@ static int _sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *
 				leaf = leaf->next;
 			}
 			leaf = _mosquitto_malloc(sizeof(struct _mosquitto_subleaf));
-			if(!leaf) return 1;
+			if(!leaf) return MOSQ_ERR_NOMEM;
 			leaf->next = NULL;
 			leaf->context = context;
 			leaf->qos = qos;
@@ -171,13 +171,17 @@ static int _sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *
 	}
 	/* Not found */
 	branch = _mosquitto_calloc(1, sizeof(struct _mosquitto_subhier));
-	if(!branch) return 1;
+	if(!branch) return MOSQ_ERR_NOMEM;
 	if(!last){
 		subhier->children = branch;
 	}else{
 		last->next = branch;
 	}
 	branch->topic = _mosquitto_strdup(tokens->topic);
+	if(!branch->topic){
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+		return MOSQ_ERR_NOMEM;
+	}
 	return _sub_add(context, qos, branch, tokens->next);
 }
 

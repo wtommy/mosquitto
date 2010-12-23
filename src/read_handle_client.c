@@ -39,7 +39,7 @@ int mqtt3_handle_connack(mqtt3_context *context)
 	int i;
 
 	if(!context){
-		return 1;
+		return MOSQ_ERR_INVAL;
 	}
 	if(context->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
@@ -97,7 +97,7 @@ int mqtt3_handle_unsuback(mqtt3_context *context)
 	uint16_t mid;
 
 	if(!context){
-		return 1;
+		return MOSQ_ERR_INVAL;
 	}
 	if(context->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
