@@ -198,6 +198,10 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 		}
 		(*sock_count)++;
 		*socks = _mosquitto_realloc(*socks, sizeof(int)*(*sock_count));
+		if(!(*socks)){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+			return MOSQ_ERR_NOMEM;
+		}
 		(*socks)[(*sock_count)-1] = sock;
 
 		ss_opt = 1;
