@@ -54,7 +54,6 @@ int mqtt3_packet_handle(mosquitto_db *db, mqtt3_context *context)
 			return mqtt3_handle_pubrec(context);
 		case PUBREL:
 			return mqtt3_handle_pubrel(db, context);
-#ifdef WITH_BROKER
 		case CONNECT:
 			return mqtt3_handle_connect(db, context);
 		case DISCONNECT:
@@ -63,7 +62,6 @@ int mqtt3_packet_handle(mosquitto_db *db, mqtt3_context *context)
 			return mqtt3_handle_subscribe(db, context);
 		case UNSUBSCRIBE:
 			return mqtt3_handle_unsubscribe(db, context);
-#endif
 #ifdef WITH_BRIDGE
 		case CONNACK:
 			return mqtt3_handle_connack(context);

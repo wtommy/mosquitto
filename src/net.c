@@ -280,10 +280,8 @@ int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context)
 		if(read_length == 1){
 			bytes_received++;
 			context->core.in_packet.command = byte;
-#ifdef WITH_BROKER
 			/* Clients must send CONNECT as their first command. */
 			if(!(context->bridge) && context->core.state == mosq_cs_new && (byte&0xF0) != CONNECT) return 1;
-#endif
 		}else{
 			if(read_length == 0) return 1; /* EOF */
 #ifndef WIN32
