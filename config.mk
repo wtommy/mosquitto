@@ -1,4 +1,4 @@
-# Also bump lib/mosquitto.h, lib/python/setup.py
+# Also bump lib/mosquitto.h, lib/python/setup.py, CMakeLists.txt
 VERSION=0.9.90
 TIMESTAMP:=$(shell date "+%F %T%z")
 

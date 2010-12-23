@@ -7,7 +7,7 @@ project(mosquitto)
 
 cmake_minimum_required(VERSION 2.6)
 
-set (VERSION 0.9)
+set (VERSION 0.9.99)
 
 option(USE_SSL
 	"Include SSL support?" ON)
