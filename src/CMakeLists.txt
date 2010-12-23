@@ -20,8 +20,16 @@ add_executable(mosquitto WIN32
 	util.c
 	../lib/util_mosq.c ../lib/util_mosq.h)
 
+set (MOSQ_LIBS ${OPENSSL_LIBRARIES})
+
 option(USE_LIBWRAP
 	"Include tcp-wrappers support?" OFF)
+
+if (${USE_LIBWRAP} STREQUAL ON)
+	set (MOSQ_LIBS ${MOSQ_LIBS} wrap)
+	add_definitions("-DWITH_WRAP")
+endif (${USE_LIBWRAP} STREQUAL ON)
+
 option(INC_DB_UPGRADE
 	"Include database upgrade support? (recommended)" ON)
 option(INC_MEMTRACK
@@ -29,9 +37,9 @@ option(INC_MEMTRACK
 
 add_definitions (-DWITH_BROKER -DWITH_BRIDGE)
 if (NOT WIN32)
-	target_link_libraries(mosquitto ${OPENSSL_LIBRARIES})
+	target_link_libraries(mosquitto ${MOSQ_LIBS})
 else (NOT WIN32)
-	target_link_libraries(mosquitto ws2_32 ${OPENSSL_LIBRARIES})
+	target_link_libraries(mosquitto ws2_32 ${MOSQ_LIBS})
 endif (NOT WIN32)
 set_target_properties(mosquitto PROPERTIES
 	VERSION ${VERSION})
