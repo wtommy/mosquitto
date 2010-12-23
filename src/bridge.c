@@ -34,6 +34,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <net_mosq.h>
 #include <mqtt3.h>
 #include <memory_mosq.h>
+#include <mosquitto.h>
 
 int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge)
 {
@@ -82,7 +83,7 @@ int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 	int new_sock = -1;
 	int i;
 
-	if(!context || !context->bridge) return 1;
+	if(!context || !context->bridge) return MOSQ_ERR_INVAL;
 
 	context->core.state = mosq_cs_new;
 	context->duplicate = false;

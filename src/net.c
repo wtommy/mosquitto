@@ -180,6 +180,10 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 		}
 		(*sock_count)++;
 		*socks = _mosquitto_realloc(*socks, sizeof(int)*(*sock_count));
+		if(!(*socks)){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+			return MOSQ_ERR_NOMEM;
+		}
 		(*socks)[(*sock_count)-1] = sock;
 
 		ss_opt = 1;
@@ -232,7 +236,7 @@ int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *pac
 {
 	struct _mosquitto_packet *tail;
 
-	if(!context || !packet) return 1;
+	if(!context || !packet) return MOSQ_ERR_INVAL;
 
 	packet->next = NULL;
 	if(context->core.out_packet){
@@ -253,7 +257,7 @@ int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context)
 	ssize_t read_length;
 	int rc = 0;
 
-	if(!context || context->core.sock == -1) return 1;
+	if(!context || context->core.sock == -1) return MOSQ_ERR_INVAL;
 	/* This gets called if pselect() indicates that there is network data
 	 * available - ie. at least one byte.  What we do depends on what data we
 	 * already have.
@@ -368,7 +372,7 @@ int mqtt3_net_write(mqtt3_context *context)
 	ssize_t write_length;
 	struct _mosquitto_packet *packet;
 
-	if(!context || context->core.sock == -1) return 1;
+	if(!context || context->core.sock == -1) return MOSQ_ERR_INVAL;
 
 	while(context->core.out_packet){
 		packet = context->core.out_packet;

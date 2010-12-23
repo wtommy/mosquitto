@@ -29,7 +29,7 @@ option(INC_MEMTRACK
 
 add_definitions (-DWITH_BROKER -DWITH_BRIDGE)
 if (NOT WIN32)
-	target_link_libraries(mosquitto sqlite3 ${OPENSSL_LIBRARIES})
+	target_link_libraries(mosquitto ${OPENSSL_LIBRARIES})
 else (NOT WIN32)
 	target_link_libraries(mosquitto ws2_32 ${OPENSSL_LIBRARIES})
 endif (NOT WIN32)

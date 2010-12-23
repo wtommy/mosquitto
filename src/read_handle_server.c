@@ -161,7 +161,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 int mqtt3_handle_disconnect(mqtt3_context *context)
 {
 	if(!context){
-		return 1;
+		return MOSQ_ERR_INVAL;
 	}
 	if(context->core.in_packet.remaining_length != 0){
 		return MOSQ_ERR_PROTOCOL;
@@ -182,7 +182,7 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 	uint8_t *payload = NULL;
 	uint32_t payloadlen = 0;
 
-	if(!context) return 1;
+	if(!context) return MOSQ_ERR_INVAL;
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received SUBSCRIBE from %s", context->core.id);
 	/* FIXME - plenty of potential for memory leaks here */
 
@@ -244,7 +244,7 @@ int mqtt3_handle_unsubscribe(mosquitto_db *db, mqtt3_context *context)
 	uint16_t mid;
 	char *sub;
 
-	if(!context) return 1;
+	if(!context) return MOSQ_ERR_INVAL;
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received UNSUBSCRIBE from %s", context->core.id);
 
 	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;

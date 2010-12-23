@@ -21,9 +21,10 @@
  * databases to the new mosquitto format. This means a dependency on sqlite. It
  * isn't needed for new installations.
  * Not available on Windows.
+ * This will be removed in version 0.11.
  */
 #ifndef WIN32
-#define WITH_SQLITE_UPGRADE
+//#define WITH_SQLITE_UPGRADE
 #endif
 
 /* Compile with persistent database support. This allows the broker to store

@@ -47,7 +47,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 	struct _mosquitto_packet *packet = NULL;
 	int packetlen;
 
-	if(!context || context->core.sock == -1 || !topic) return 1;
+	if(!context || context->core.sock == -1 || !topic) return MOSQ_ERR_INVAL;
 
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBLISH to %s (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", context->core.id, dup, qos, retain, mid, topic, (long)payloadlen);
 
