@@ -32,8 +32,12 @@ endif (${USE_LIBWRAP} STREQUAL ON)
 
 option(INC_DB_UPGRADE
 	"Include database upgrade support? (recommended)" ON)
+
 option(INC_MEMTRACK
 	"Include memory tracking support?" ON)
+if (${INC_MEMTRACK} STREQUAL ON)
+	add_definitions("-DWITH_MEMORY_TRACKING")
+endif (${INC_MEMTRACK} STREQUAL ON)
 
 add_definitions (-DWITH_BROKER -DWITH_BRIDGE)
 if (NOT WIN32)
