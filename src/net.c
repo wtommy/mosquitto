@@ -144,14 +144,7 @@ void mqtt3_socket_close(mqtt3_context *context)
 
 	assert(context);
 
-	if(context->core.sock != -1){
-#ifndef WIN32
-		rc = close(context->core.sock);
-#else
-		rc = closesocket(context->core.sock);
-#endif
-		context->core.sock = -1;
-	}
+	_mosquitto_socket_close(&context->core);
 }
 
 /* Creates a socket and listens on port 'port'.

@@ -1,6 +1,7 @@
 /* Fudge a file description into a client instead of a socket connection so
  * that we can write out packets to a file.
  * See http://answers.launchpad.net/mosquitto/+question/123594
+ * also http://answers.launchpad.net/mosquitto/+question/136821
  */
 #include <fcntl.h>
 #include <stdio.h>
@@ -31,6 +32,17 @@ int main(int argc, char *argv[])
 	}
 	mosq->core.sock = fd;
 	printf("_mosquitto_send_connect(): %d\n", _mosquitto_send_connect(mosq, keepalive, clean_session));
+	printf("loop: %d\n", mosquitto_loop_write(mosq));
+	close(fd);
+
+	/* SUBSCRIBE */
+	fd = open("mqtt.subscribe", O_CREAT|O_WRONLY, 00644);
+	if(fd<0){
+		fprintf(stderr, "Error: Unable to open mqtt.subscribe for writing.\n");
+		return 1;
+	}
+	mosq->core.sock = fd;
+	printf("_mosquitto_send_subscribe(): %d\n", _mosquitto_send_subscribe(mosq, NULL, false, "subscribe/topic", 2));
 	printf("loop: %d\n", mosquitto_loop_write(mosq));
 	close(fd);
 

@@ -1,5 +1,5 @@
 include_directories(${mosquitto_SOURCE_DIR} ${mosquitto_SOURCE_DIR}/src
-		${mosquitto_SOURCE_DIR}/lib
+		${mosquitto_SOURCE_DIR}/lib ${OPENSSL_INCLUDE_DIR}
 		${STDBOOL_H_PATH} ${STDINT_H_PATH})
 
 add_executable(mosquitto WIN32
@@ -29,9 +29,9 @@ option(INC_MEMTRACK
 
 add_definitions (-DWITH_BROKER -DWITH_BRIDGE)
 if (NOT WIN32)
-	target_link_libraries(mosquitto sqlite3)
+	target_link_libraries(mosquitto sqlite3 ${OPENSSL_LIBRARIES})
 else (NOT WIN32)
-	target_link_libraries(mosquitto ws2_32)
+	target_link_libraries(mosquitto ws2_32 ${OPENSSL_LIBRARIES})
 endif (NOT WIN32)
 set_target_properties(mosquitto PROPERTIES
 	VERSION ${VERSION})
