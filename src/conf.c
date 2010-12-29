@@ -36,8 +36,10 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->store_clean_interval = 10;
 	config->sys_interval = 10;
 	config->user = "mosquitto";
+#ifdef WITH_BRIDGE
 	config->bridges = NULL;
 	config->bridge_count = 0;
+#endif
 }
 
 int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
@@ -128,6 +130,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 			token = strtok(buf, " ");
 			if(token){
 				if(!strcmp(token, "address") || !strcmp(token, "addresses")){
+#ifdef WITH_BRIDGE
 					if(!cur_bridge || cur_bridge->address){
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
 						return MOSQ_ERR_INVAL;
@@ -157,6 +160,9 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty address value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
+#else
+					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "allow_anonymous")){
 					if(_mqtt3_conf_parse_bool(&token, "allow_anonymous", &config->allow_anonymous)) return 1;
 				}else if(!strcmp(token, "autosave_interval")){
@@ -177,12 +183,17 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "ext_sqlite_regex")){
 					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: ext_sqlite_regex variable no longer in use.");
 				}else if(!strcmp(token, "cleansession")){
+#ifdef WITH_BRIDGE
 					if(!cur_bridge){
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
 						return MOSQ_ERR_INVAL;
 					}
 					if(_mqtt3_conf_parse_bool(&token, "cleansession", &cur_bridge->clean_session)) return 1;
+#else
+					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "connection")){
+#ifdef WITH_BRIDGE
 					token = strtok(NULL, " ");
 					if(token){
 						config->bridge_count++;
@@ -206,7 +217,11 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty connection value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
+#else
+					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "keepalive_interval")){
+#ifdef WITH_BRIDGE
 					if(!cur_bridge){
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
 						return MOSQ_ERR_INVAL;
@@ -216,6 +231,9 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "keepalive interval too low, using 5 seconds.");
 						cur_bridge->keepalive = 5;
 					}
+#else
+					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "listener")){
 					token = strtok(NULL, " ");
 					if(token){
@@ -311,6 +329,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty max_queued_messages value in configuration.");
 					}
 				}else if(!strcmp(token, "password")){
+#ifdef WITH_BRIDGE
 					if(!cur_bridge){
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
 						return MOSQ_ERR_INVAL;
@@ -330,6 +349,9 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty password value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
+#else
+					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "password_file")){
 					token = strtok(NULL, " ");
 					if(token){
@@ -390,6 +412,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "topic")){
+#ifdef WITH_BRIDGE
 					if(!cur_bridge){
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
 						return MOSQ_ERR_INVAL;
@@ -426,6 +449,9 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 							return MOSQ_ERR_INVAL;
 						}
 					}
+#else
+					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "user")){
 					token = strtok(NULL, " ");
 					if(token){
@@ -435,6 +461,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "username")){
+#ifdef WITH_BRIDGE
 					if(!cur_bridge){
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
 						return MOSQ_ERR_INVAL;
@@ -454,6 +481,9 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty username value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
+#else
+					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "autosave_on_changes")
 						|| !strcmp(token, "clientid_prefixes")
 						|| !strcmp(token, "connection_messages")

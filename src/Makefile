@@ -1,6 +1,6 @@
 include ../config.mk
 
-CFLAGS_FINAL=${CFLAGS} -DVERSION="\"${VERSION}\"" -DTIMESTAMP="\"${TIMESTAMP}\"" -DWITH_BROKER -DWITH_BRIDGE
+CFLAGS_FINAL=${CFLAGS} -DVERSION="\"${VERSION}\"" -DTIMESTAMP="\"${TIMESTAMP}\"" -DWITH_BROKER
 
 .PHONY: all install uninstall clean reallyclean
 

@@ -36,6 +36,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <mosquitto.h>
 
+#ifdef WITH_BRIDGE
+
 int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge)
 {
 	int i;
@@ -135,3 +137,5 @@ void mqtt3_bridge_packet_cleanup(mqtt3_context *context)
 
 	_mosquitto_packet_cleanup(&(context->core.in_packet));
 }
+
+#endif

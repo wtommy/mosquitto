@@ -2,8 +2,7 @@ include_directories(${mosquitto_SOURCE_DIR} ${mosquitto_SOURCE_DIR}/src
 		${mosquitto_SOURCE_DIR}/lib ${OPENSSL_INCLUDE_DIR}
 		${STDBOOL_H_PATH} ${STDINT_H_PATH})
 
-add_executable(mosquitto WIN32
-	bridge.c
+set (MOSQ_SRCS
 	conf.c
 	context.c
 	database.c
@@ -22,6 +21,14 @@ add_executable(mosquitto WIN32
 
 set (MOSQ_LIBS ${OPENSSL_LIBRARIES})
 
+option(INC_BRIDGE_SUPPORT
+	"Include bridge support for connecting to other brokers?" ON)
+if (${INC_BRIDGE_SUPPORT} STREQUAL ON)
+	set (MOSQ_SRCS ${MOSQ_SRCS} bridge.c)
+	add_definitions("-DWITH_BRIDGE")
+endif (${INC_BRIDGE_SUPPORT} STREQUAL ON)
+
+
 option(USE_LIBWRAP
 	"Include tcp-wrappers support?" OFF)
 
@@ -39,7 +46,10 @@ if (${INC_MEMTRACK} STREQUAL ON)
 	add_definitions("-DWITH_MEMORY_TRACKING")
 endif (${INC_MEMTRACK} STREQUAL ON)
 
-add_definitions (-DWITH_BROKER -DWITH_BRIDGE)
+add_definitions (-DWITH_BROKER)
+
+add_executable(mosquitto WIN32 ${MOSQ_SRCS})
+
 if (NOT WIN32)
 	target_link_libraries(mosquitto ${MOSQ_LIBS})
 else (NOT WIN32)

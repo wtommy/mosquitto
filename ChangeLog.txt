@@ -1,6 +1,7 @@
 0.10 - 2011xxxx
 ===============
 
+- Bridge support can now be disabled at compile time.
 
 0.9.1 - 20101203
 ================

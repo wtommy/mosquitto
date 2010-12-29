@@ -165,9 +165,11 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 		for(i=0; i<int_db.context_count; i++){
 			if(int_db.contexts[i]){
 				if(int_db.contexts[i]->core.sock != -1){
+#ifdef WITH_BRIDGE
 					if(int_db.contexts[i]->bridge){
 						mqtt3_check_keepalive(int_db.contexts[i]);
 					}
+#endif
 					if(!(int_db.contexts[i]->core.keepalive) || now - int_db.contexts[i]->core.last_msg_in < (time_t)(int_db.contexts[i]->core.keepalive)*3/2){
 						if(mqtt3_db_message_write(int_db.contexts[i])){
 							// FIXME - do something here.
@@ -189,6 +191,7 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 						}
 					}
 				}else{
+#ifdef WITH_BRIDGE
 					if(int_db.contexts[i]->bridge){
 						/* Want to try to restart the bridge connection */
 						if(!int_db.contexts[i]->bridge->restart_t){
@@ -200,11 +203,14 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 							}
 						}
 					}else{
+#endif
 						if(int_db.contexts[i]->clean_session == true){
 							mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
 							int_db.contexts[i] = NULL;
 						}
+#ifdef WITH_BRIDGE
 					}
+#endif
 				}
 			}
 		}
@@ -457,12 +463,14 @@ int main(int argc, char *argv[])
 	signal(SIGPIPE, SIG_IGN);
 #endif
 
+#ifdef WITH_BRIDGE
 	for(i=0; i<config.bridge_count; i++){
 		if(mqtt3_bridge_new(&int_db, &(config.bridges[i]))){
 			mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Unable to connect to bridge %s.", 
 					config.bridges[i].name);
 		}
 	}
+#endif
 	run = 1;
 	rc = loop(&config, listensock, listensock_count, listener_max);
 

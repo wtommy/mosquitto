@@ -37,6 +37,13 @@
 #define WITH_PERSISTENCE
 #endif
 
+/* Compile with bridge support included. This allow the broker to connect to
+ * other brokers and subscribe/publish to topics. You probably want to leave
+ * this included unless you want to save a very small amount of memory size and
+ * CPU time.
+ */
+#define WITH_BRIDGE
+
 /* Compile with 32-bit integer database IDs instead of 64-bit integers. May be
  * useful in embedded systems or where be64toh()/htobe64() aren't available.
  * There is the potential for bad things to happen after the IDs wrap around.
