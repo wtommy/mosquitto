@@ -294,7 +294,7 @@ ssize_t _mosquitto_net_read(struct _mosquitto_core *core, void *buf, size_t coun
 	assert(core);
 #ifdef WITH_SSL
 	if(core->ssl){
-		return (ssize_t )SSL_read(core->ssl, buf, count);
+		return (ssize_t )SSL_read(core->ssl->ssl, buf, count);
 	}else{
 		/* Call normal read/recv */
 
@@ -317,7 +317,7 @@ ssize_t _mosquitto_net_write(struct _mosquitto_core *core, void *buf, size_t cou
 
 #ifdef WITH_SSL
 	if(core->ssl){
-		return (ssize_t )SSL_write(core->ssl, buf, count);
+		return (ssize_t )SSL_write(core->ssl->ssl, buf, count);
 	}else{
 		/* Call normal write/send */
 #endif
