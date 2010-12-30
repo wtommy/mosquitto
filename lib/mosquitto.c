@@ -337,6 +337,10 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	FD_ZERO(&writefds);
 	if(mosq->core.out_packet){
 		FD_SET(mosq->core.sock, &writefds);
+#ifdef WITH_SSL
+	}else if(mosq->core.ssl && mosq->core.ssl->want_write){
+		FD_SET(mosq->core.sock, &writefds);
+#endif
 	}
 	if(timeout >= 0){
 		local_timeout.tv_sec = timeout/1000;
