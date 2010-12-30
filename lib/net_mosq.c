@@ -49,6 +49,12 @@ POSSIBILITY OF SUCH DAMAGE.
 static SSL_CTX *ssl_ctx = NULL;
 #endif
 
+#ifdef WIN32
+#  define COMPAT_CLOSE(a) closesocket(a)
+#else
+#  define COMPAT_CLOSE(a) close(a)
+#endif
+
 void _mosquitto_net_init(void)
 {
 #ifdef WIN32
@@ -120,11 +126,7 @@ int _mosquitto_socket_close(struct _mosquitto_core *core)
 	assert(core);
 	/* FIXME - need to shutdown SSL here. */
 	if(core->sock != INVALID_SOCKET){
-#ifndef WIN32
-		rc = close(core->sock);
-#else
-		rc = closesocket(core->sock);
-#endif
+		rc = COMPAT_CLOSE(core->sock);
 		core->sock = INVALID_SOCKET;
 	}
 
@@ -184,15 +186,12 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 #ifndef WIN32
 	opt = fcntl(sock, F_GETFL, 0);
 	if(opt == -1 || fcntl(sock, F_SETFL, opt | O_NONBLOCK) == -1){
-		close(sock);
-		return 1;
-	}
 #else
 	if(ioctlsocket(sock, FIONBIO, &val)){
-		closesocket(sock);
+		COMPAT_CLOSE(sock);
+#endif
 		return 1;
 	}
-#endif
 
 	core->sock = sock;
 
