@@ -135,7 +135,7 @@ int _mosquitto_socket_close(struct _mosquitto_core *core)
  * Returns -1 on failure (ip is NULL, socket creation/connection error)
  * Returns sock number on success.
  */
-int _mosquitto_socket_connect(const char *host, uint16_t port)
+int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, uint16_t port)
 {
 	int sock;
 	int opt;
@@ -146,7 +146,7 @@ int _mosquitto_socket_connect(const char *host, uint16_t port)
 	uint32_t val = 1;
 #endif
 
-	if(!host || !port) return INVALID_SOCKET;
+	if(!core || !host || !port) return MOSQ_ERR_INVAL;
 
 	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = PF_UNSPEC;
@@ -154,7 +154,7 @@ int _mosquitto_socket_connect(const char *host, uint16_t port)
 	hints.ai_socktype = SOCK_STREAM;
 
 	s = getaddrinfo(host, NULL, &hints, &ainfo);
-	if(s) return INVALID_SOCKET;
+	if(s) return 1;
 
 	for(rp = ainfo; rp != NULL; rp = rp->ai_next){
 		sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
@@ -166,17 +166,17 @@ int _mosquitto_socket_connect(const char *host, uint16_t port)
 			((struct sockaddr_in6 *)rp->ai_addr)->sin6_port = htons(port);
 		}else{
 			freeaddrinfo(ainfo);
-			return INVALID_SOCKET;
+			return 1;
 		}
 		if(connect(sock, rp->ai_addr, rp->ai_addrlen) != -1){
 			break;
 		}
 
-		return INVALID_SOCKET;
+		return 1;
 	}
 	if(!rp){
 		fprintf(stderr, "Error: %s", strerror(errno));
-		return INVALID_SOCKET;
+		return 1;
 	}
 	freeaddrinfo(ainfo);
 
@@ -185,16 +185,18 @@ int _mosquitto_socket_connect(const char *host, uint16_t port)
 	opt = fcntl(sock, F_GETFL, 0);
 	if(opt == -1 || fcntl(sock, F_SETFL, opt | O_NONBLOCK) == -1){
 		close(sock);
-		return INVALID_SOCKET;
+		return 1;
 	}
 #else
 	if(ioctlsocket(sock, FIONBIO, &val)){
 		closesocket(sock);
-		return INVALID_SOCKET;
+		return 1;
 	}
 #endif
 
-	return sock;
+	core->sock = sock;
+
+	return MOSQ_ERR_SUCCESS;
 }
 
 int _mosquitto_read_byte(struct _mosquitto_packet *packet, uint8_t *byte)

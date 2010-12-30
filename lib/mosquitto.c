@@ -227,12 +227,12 @@ int mosquitto_socket(struct mosquitto *mosq)
 
 int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session)
 {
+	int rc;
 	if(!mosq) return MOSQ_ERR_INVAL;
 	if(!host || !port) return MOSQ_ERR_INVAL;
 
-	mosq->core.sock = _mosquitto_socket_connect(host, port);
-
-	if(mosq->core.sock == INVALID_SOCKET){
+	rc = _mosquitto_socket_connect(&mosq->core, host, port);
+	if(rc){
 		return 1;
 	}
 

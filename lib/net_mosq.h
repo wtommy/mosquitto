@@ -54,7 +54,7 @@ void _mosquitto_net_cleanup(void);
 
 void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet);
 void _mosquitto_packet_queue(struct _mosquitto_core *core, struct _mosquitto_packet *packet);
-int _mosquitto_socket_connect(const char *host, uint16_t port);
+int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, uint16_t port);
 int _mosquitto_socket_close(struct _mosquitto_core *core);
 
 int _mosquitto_read_byte(struct _mosquitto_packet *packet, uint8_t *byte);
