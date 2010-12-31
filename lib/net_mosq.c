@@ -63,6 +63,8 @@ void _mosquitto_net_init(void)
 #endif
 
 #ifdef WITH_SSL
+	SSL_library_init();
+	OpenSSL_add_all_algorithms();
 	if(!ssl_ctx){
 		ssl_ctx = SSL_CTX_new(TLSv1_method());
 	}
