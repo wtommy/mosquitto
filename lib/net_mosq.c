@@ -147,6 +147,9 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 #ifdef WIN32
 	uint32_t val = 1;
 #endif
+#ifdef WITH_SSL
+	int ret;
+#endif
 
 	if(!core || !host || !port) return MOSQ_ERR_INVAL;
 
@@ -182,14 +185,37 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 	}
 	freeaddrinfo(ainfo);
 
+#ifdef WITH_SSL
+	if(core->ssl){
+		core->ssl->bio = BIO_new_socket(sock, BIO_NOCLOSE);
+		if(!core->ssl->bio){
+			COMPAT_CLOSE(sock);
+			return MOSQ_ERR_SSL;
+		}
+		SSL_set_bio(core->ssl->ssl, core->ssl->bio, core->ssl->bio);
+
+		ret = SSL_connect(core->ssl->ssl);
+		if(ret != 1){
+			COMPAT_CLOSE(sock);
+			return MOSQ_ERR_SSL;
+		}
+	}
+#endif
+
 	/* Set non-blocking */
 #ifndef WIN32
 	opt = fcntl(sock, F_GETFL, 0);
 	if(opt == -1 || fcntl(sock, F_SETFL, opt | O_NONBLOCK) == -1){
 #else
 	if(ioctlsocket(sock, FIONBIO, &val)){
-		COMPAT_CLOSE(sock);
 #endif
+#ifdef WITH_SSL
+		if(core->ssl){
+			_mosquitto_free(core->ssl);
+			core->ssl = NULL;
+		}
+#endif
+		COMPAT_CLOSE(sock);
 		return 1;
 	}
 
