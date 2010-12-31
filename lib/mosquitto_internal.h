@@ -89,6 +89,7 @@ struct mosquitto_message_all{
 
 #ifdef WITH_SSL
 struct _mosquitto_ssl{
+	SSL_CTX *ssl_ctx;
 	SSL *ssl;
 	BIO *bio;
 	bool want_read;

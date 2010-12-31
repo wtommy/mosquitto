@@ -45,10 +45,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <net_mosq.h>
 
-#ifdef WITH_SSL
-static SSL_CTX *ssl_ctx = NULL;
-#endif
-
 #ifdef WIN32
 #  define COMPAT_CLOSE(a) closesocket(a)
 #else
@@ -65,18 +61,11 @@ void _mosquitto_net_init(void)
 #ifdef WITH_SSL
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();
-	if(!ssl_ctx){
-		ssl_ctx = SSL_CTX_new(TLSv1_method());
-	}
 #endif
 }
 
 void _mosquitto_net_cleanup(void)
 {
-#ifdef WITH_SSL
-	SSL_CTX_free(ssl_ctx);
-#endif
-
 #ifdef WIN32
 	WSACleanup();
 #endif
