@@ -39,6 +39,7 @@ typedef int ssize_t;
 #endif
 
 #include <mosquitto.h>
+#include <mosquitto_internal.h>
 #include <logging_mosq.h>
 #include <messages_mosq.h>
 #include <memory_mosq.h>
@@ -216,6 +217,14 @@ void mosquitto_destroy(struct mosquitto *mosq)
 		if(mosq->core.will->payload) _mosquitto_free(mosq->core.will->payload);
 	}
 	_mosquitto_free(mosq->core.will);
+#ifdef WITH_SSL
+	if(mosq->core.ssl){
+		if(mosq->core.ssl->ssl_ctx){
+			SSL_CTX_free(mosq->core.ssl->ssl_ctx);
+		}
+		_mosquitto_free(mosq->core.ssl);
+	}
+#endif
 	_mosquitto_free(mosq);
 }
 
@@ -316,6 +325,18 @@ int mosquitto_unsubscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub
 	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 
 	return _mosquitto_send_unsubscribe(mosq, mid, false, sub);
+}
+
+int mosquitto_ssl_set(struct mosquitto *mosq, const char *pemfile, const char *password)
+{
+	if(!mosq || mosq->core.ssl) return MOSQ_ERR_INVAL; //FIXME
+
+	mosq->core.ssl = _mosquitto_malloc(sizeof(struct _mosquitto_ssl));
+	if(!mosq->core.ssl) return MOSQ_ERR_NOMEM;
+
+	mosq->core.ssl->ssl_ctx = SSL_CTX_new(TLSv1_method());
+
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mosquitto_loop(struct mosquitto *mosq, int timeout)

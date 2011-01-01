@@ -409,6 +409,8 @@ libmosq_EXPORT void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned
  *                 retrying. Defaults to 60.
  */
 
+libmosq_EXPORT int mosquitto_ssl_set(struct mosquitto *mosq, const char *pemfile, const char *password);
+
 #ifdef __cplusplus
 }
 #endif

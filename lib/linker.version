@@ -33,3 +33,7 @@ VERS_0.9 {
 		mosquitto_message_retry_set;
 	local: *;
 };
+VERS_0.10 {
+	global:
+		mosquitto_ssl_set;
+};
