@@ -46,7 +46,7 @@ extern "C" {
 
 #define LIBMOSQUITTO_MAJOR 0
 #define LIBMOSQUITTO_MINOR 9
-#define LIBMOSQUITTO_REVISION 1
+#define LIBMOSQUITTO_REVISION 90
 #define LIBMOSQUITTO_VERSION_NUMBER (LIBMOSQUITTO_MAJOR*1000000+LIBMOSQUITTO_MINOR*1000+LIBMOSQUITTO_REVISION)
 
 #include <stdbool.h>
@@ -74,6 +74,7 @@ extern "C" {
 #define MOSQ_ERR_CONN_REFUSED 5
 #define MOSQ_ERR_NOT_FOUND 6
 #define MOSQ_ERR_CONN_LOST 7
+#define MOSQ_ERR_SSL 8
 #define MOSQ_ERR_PAYLOAD_SIZE 9
 
 struct mosquitto_message{
@@ -408,6 +409,8 @@ libmosq_EXPORT void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned
  * message_retry : the number of seconds to wait for a response before
  *                 retrying. Defaults to 60.
  */
+
+libmosq_EXPORT int mosquitto_ssl_set(struct mosquitto *mosq, const char *pemfile, const char *password);
 
 #ifdef __cplusplus
 }

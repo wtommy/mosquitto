@@ -165,9 +165,11 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 		for(i=0; i<int_db.context_count; i++){
 			if(int_db.contexts[i]){
 				if(int_db.contexts[i]->core.sock != -1){
+#ifdef WITH_BRIDGE
 					if(int_db.contexts[i]->bridge){
 						mqtt3_check_keepalive(int_db.contexts[i]);
 					}
+#endif
 					if(!(int_db.contexts[i]->core.keepalive) || now - int_db.contexts[i]->core.last_msg_in < (time_t)(int_db.contexts[i]->core.keepalive)*3/2){
 						if(mqtt3_db_message_write(int_db.contexts[i])){
 							// FIXME - do something here.
@@ -182,13 +184,14 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", int_db.contexts[i]->core.id);
 						/* Client has exceeded keepalive*1.5 */
 						if(int_db.contexts[i]->bridge || int_db.contexts[i]->clean_session == false){
-							mqtt3_socket_close(int_db.contexts[i]);
+							_mosquitto_socket_close(&int_db.contexts[i]->core);
 						}else{
 							mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
 							int_db.contexts[i] = NULL;
 						}
 					}
 				}else{
+#ifdef WITH_BRIDGE
 					if(int_db.contexts[i]->bridge){
 						/* Want to try to restart the bridge connection */
 						if(!int_db.contexts[i]->bridge->restart_t){
@@ -200,11 +203,14 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 							}
 						}
 					}else{
+#endif
 						if(int_db.contexts[i]->clean_session == true){
 							mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
 							int_db.contexts[i] = NULL;
 						}
+#ifdef WITH_BRIDGE
 					}
+#endif
 				}
 			}
 		}
@@ -266,7 +272,7 @@ static void loop_handle_errors(struct pollfd *pollfds)
 					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", int_db.contexts[i]->core.id);
 				}
 				if(int_db.contexts[i]->bridge || int_db.contexts[i]->clean_session == false){
-					mqtt3_socket_close(int_db.contexts[i]);
+					_mosquitto_socket_close(&int_db.contexts[i]->core);
 				}else{
 					mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
 					int_db.contexts[i] = NULL;
@@ -293,7 +299,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 					/* Write error or other that means we should disconnect */
 					/* Bridges don't get cleaned up because they will reconnect later. */
 					if(int_db.contexts[i]->bridge || int_db.contexts[i]->clean_session == false){
-						mqtt3_socket_close(int_db.contexts[i]);
+						_mosquitto_socket_close(&int_db.contexts[i]->core);
 					}else{
 						mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
 						int_db.contexts[i] = NULL;
@@ -313,7 +319,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 					/* Read error or other that means we should disconnect */
 					/* Bridges don't get cleaned up because they will reconnect later. */
 					if(int_db.contexts[i]->bridge || int_db.contexts[i]->clean_session == false){
-						mqtt3_socket_close(int_db.contexts[i]);
+						_mosquitto_socket_close(&int_db.contexts[i]->core);
 					}else{
 						mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
 						int_db.contexts[i] = NULL;
@@ -358,10 +364,7 @@ int main(int argc, char *argv[])
 	int listener_max;
 	int rc;
 
-#ifdef WIN32
-	WSADATA wsaData;
-	WSAStartup(MAKEWORD(2,2), &wsaData);
-#endif
+	_mosquitto_net_init();
 
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
@@ -460,12 +463,14 @@ int main(int argc, char *argv[])
 	signal(SIGPIPE, SIG_IGN);
 #endif
 
+#ifdef WITH_BRIDGE
 	for(i=0; i<config.bridge_count; i++){
 		if(mqtt3_bridge_new(&int_db, &(config.bridges[i]))){
 			mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Unable to connect to bridge %s.", 
 					config.bridges[i].name);
 		}
 	}
+#endif
 	run = 1;
 	rc = loop(&config, listensock, listensock_count, listener_max);
 
@@ -505,9 +510,7 @@ int main(int argc, char *argv[])
 		remove(config.pid_file);
 	}
 
-#ifdef WIN32
-	WSACleanup();
-#endif
+	_mosquitto_net_cleanup();
 
 	return rc;
 }

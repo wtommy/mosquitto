@@ -39,6 +39,7 @@ typedef int ssize_t;
 #endif
 
 #include <mosquitto.h>
+#include <mosquitto_internal.h>
 #include <logging_mosq.h>
 #include <messages_mosq.h>
 #include <memory_mosq.h>
@@ -61,19 +62,14 @@ void mosquitto_lib_version(int *major, int *minor, int *revision)
 
 int mosquitto_lib_init(void)
 {
-#ifdef WIN32
-	WSADATA wsaData;
-	WSAStartup(MAKEWORD(2,2), &wsaData);
-#endif
+	_mosquitto_net_init();
 
 	return MOSQ_ERR_SUCCESS;
 }
 
 int mosquitto_lib_cleanup(void)
 {
-#ifdef WIN32
-	WSACleanup();
-#endif
+	_mosquitto_net_cleanup();
 
 	return MOSQ_ERR_SUCCESS;
 }
@@ -114,6 +110,9 @@ struct mosquitto *mosquitto_new(const char *id, void *obj)
 		mosq->on_unsubscribe = NULL;
 		mosq->log_destinations = MOSQ_LOG_NONE;
 		mosq->log_priorities = MOSQ_LOG_ERR | MOSQ_LOG_WARNING | MOSQ_LOG_NOTICE | MOSQ_LOG_INFO;
+#ifdef WITH_SSL
+		mosq->core.ssl = NULL;
+#endif
 	}
 	return mosq;
 }
@@ -219,6 +218,14 @@ void mosquitto_destroy(struct mosquitto *mosq)
 		if(mosq->core.will->payload) _mosquitto_free(mosq->core.will->payload);
 	}
 	_mosquitto_free(mosq->core.will);
+#ifdef WITH_SSL
+	if(mosq->core.ssl){
+		if(mosq->core.ssl->ssl_ctx){
+			SSL_CTX_free(mosq->core.ssl->ssl_ctx);
+		}
+		_mosquitto_free(mosq->core.ssl);
+	}
+#endif
 	_mosquitto_free(mosq);
 }
 
@@ -230,12 +237,12 @@ int mosquitto_socket(struct mosquitto *mosq)
 
 int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session)
 {
+	int rc;
 	if(!mosq) return MOSQ_ERR_INVAL;
 	if(!host || !port) return MOSQ_ERR_INVAL;
 
-	mosq->core.sock = _mosquitto_socket_connect(host, port);
-
-	if(mosq->core.sock == INVALID_SOCKET){
+	rc = _mosquitto_socket_connect(&mosq->core, host, port);
+	if(rc){
 		return 1;
 	}
 
@@ -322,6 +329,18 @@ int mosquitto_unsubscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub
 	return _mosquitto_send_unsubscribe(mosq, mid, false, sub);
 }
 
+int mosquitto_ssl_set(struct mosquitto *mosq, const char *pemfile, const char *password)
+{
+	if(!mosq || mosq->core.ssl) return MOSQ_ERR_INVAL; //FIXME
+
+	mosq->core.ssl = _mosquitto_malloc(sizeof(struct _mosquitto_ssl));
+	if(!mosq->core.ssl) return MOSQ_ERR_NOMEM;
+
+	mosq->core.ssl->ssl_ctx = SSL_CTX_new(TLSv1_method());
+
+	return MOSQ_ERR_SUCCESS;
+}
+
 int mosquitto_loop(struct mosquitto *mosq, int timeout)
 {
 #ifndef WIN32
@@ -341,6 +360,10 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	FD_ZERO(&writefds);
 	if(mosq->core.out_packet){
 		FD_SET(mosq->core.sock, &writefds);
+#ifdef WITH_SSL
+	}else if(mosq->core.ssl && mosq->core.ssl->want_write){
+		FD_SET(mosq->core.sock, &writefds);
+#endif
 	}
 	if(timeout >= 0){
 		local_timeout.tv_sec = timeout/1000;

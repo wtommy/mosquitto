@@ -37,7 +37,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int mqtt3_packet_handle(mosquitto_db *db, mqtt3_context *context)
 {
-	if(!context) return 1;
+	if(!context) return MOSQ_ERR_INVAL;
 
 	switch((context->core.in_packet.command)&0xF0){
 		case PINGREQ:
@@ -54,7 +54,6 @@ int mqtt3_packet_handle(mosquitto_db *db, mqtt3_context *context)
 			return mqtt3_handle_pubrec(context);
 		case PUBREL:
 			return mqtt3_handle_pubrel(db, context);
-#ifdef WITH_BROKER
 		case CONNECT:
 			return mqtt3_handle_connect(db, context);
 		case DISCONNECT:
@@ -63,7 +62,6 @@ int mqtt3_packet_handle(mosquitto_db *db, mqtt3_context *context)
 			return mqtt3_handle_subscribe(db, context);
 		case UNSUBSCRIBE:
 			return mqtt3_handle_unsubscribe(db, context);
-#endif
 #ifdef WITH_BRIDGE
 		case CONNACK:
 			return mqtt3_handle_connack(context);
@@ -83,7 +81,7 @@ int mqtt3_handle_puback(mqtt3_context *context)
 	uint16_t mid;
 
 	if(!context){
-		return 1;
+		return MOSQ_ERR_INVAL;
 	}
 	if(context->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
@@ -100,7 +98,7 @@ int mqtt3_handle_puback(mqtt3_context *context)
 int mqtt3_handle_pingreq(mqtt3_context *context)
 {
 	if(!context){
-		return 1;
+		return MOSQ_ERR_INVAL;
 	}
 	if(context->core.in_packet.remaining_length != 0){
 		return MOSQ_ERR_PROTOCOL;
@@ -112,7 +110,7 @@ int mqtt3_handle_pingreq(mqtt3_context *context)
 int mqtt3_handle_pingresp(mqtt3_context *context)
 {
 	if(!context){
-		return 1;
+		return MOSQ_ERR_INVAL;
 	}
 	if(context->core.in_packet.remaining_length != 0){
 		return MOSQ_ERR_PROTOCOL;
@@ -126,7 +124,7 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 	uint16_t mid;
 
 	if(!context){
-		return 1;
+		return MOSQ_ERR_INVAL;
 	}
 	if(context->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
@@ -225,7 +223,7 @@ int mqtt3_handle_pubrec(mqtt3_context *context)
 	uint16_t mid;
 
 	if(!context){
-		return 1;
+		return MOSQ_ERR_INVAL;
 	}
 	if(context->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_NOMEM;
@@ -244,7 +242,7 @@ int mqtt3_handle_pubrel(mosquitto_db *db, mqtt3_context *context)
 	uint16_t mid;
 
 	if(!context){
-		return 1;
+		return MOSQ_ERR_INVAL;
 	}
 	if(context->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_NOMEM;

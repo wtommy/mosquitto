@@ -136,24 +136,6 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 	return new_sock;
 }
 
-/* Close a socket associated with a context and set it to -1.
- */
-void mqtt3_socket_close(mqtt3_context *context)
-{
-	int rc = 0;
-
-	assert(context);
-
-	if(context->core.sock != -1){
-#ifndef WIN32
-		rc = close(context->core.sock);
-#else
-		rc = closesocket(context->core.sock);
-#endif
-		context->core.sock = -1;
-	}
-}
-
 /* Creates a socket and listens on port 'port'.
  * Returns 1 on failure
  * Returns 0 on success.
@@ -198,6 +180,10 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 		}
 		(*sock_count)++;
 		*socks = _mosquitto_realloc(*socks, sizeof(int)*(*sock_count));
+		if(!(*socks)){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+			return MOSQ_ERR_NOMEM;
+		}
 		(*socks)[(*sock_count)-1] = sock;
 
 		ss_opt = 1;
@@ -250,7 +236,7 @@ int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *pac
 {
 	struct _mosquitto_packet *tail;
 
-	if(!context || !packet) return 1;
+	if(!context || !packet) return MOSQ_ERR_INVAL;
 
 	packet->next = NULL;
 	if(context->core.out_packet){
@@ -271,7 +257,7 @@ int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context)
 	ssize_t read_length;
 	int rc = 0;
 
-	if(!context || context->core.sock == -1) return 1;
+	if(!context || context->core.sock == -1) return MOSQ_ERR_INVAL;
 	/* This gets called if pselect() indicates that there is network data
 	 * available - ie. at least one byte.  What we do depends on what data we
 	 * already have.
@@ -294,10 +280,8 @@ int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context)
 		if(read_length == 1){
 			bytes_received++;
 			context->core.in_packet.command = byte;
-#ifdef WITH_BROKER
 			/* Clients must send CONNECT as their first command. */
 			if(!(context->bridge) && context->core.state == mosq_cs_new && (byte&0xF0) != CONNECT) return 1;
-#endif
 		}else{
 			if(read_length == 0) return 1; /* EOF */
 #ifndef WIN32
@@ -386,7 +370,7 @@ int mqtt3_net_write(mqtt3_context *context)
 	ssize_t write_length;
 	struct _mosquitto_packet *packet;
 
-	if(!context || context->core.sock == -1) return 1;
+	if(!context || context->core.sock == -1) return MOSQ_ERR_INVAL;
 
 	while(context->core.out_packet){
 		packet = context->core.out_packet;

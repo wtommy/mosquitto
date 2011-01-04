@@ -162,6 +162,7 @@ struct _mqtt3_listener {
 };
 
 typedef struct {
+	bool allow_anonymous;
 	int autosave_interval;
 	bool daemon;
 	struct _mqtt3_listener default_listener;
@@ -170,6 +171,7 @@ typedef struct {
 	int log_dest;
 	int log_type;
 	int max_connections;
+	char *password_file;
 	bool persistence;
 	char *persistence_location;
 	char *persistence_file;
@@ -227,7 +229,6 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command);
  * Network functions
  * ============================================================ */
 int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int listensock);
-void mqtt3_socket_close(mqtt3_context *context);
 int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_count);
 
 int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *packet);
