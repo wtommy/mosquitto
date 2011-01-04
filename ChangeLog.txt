@@ -1,3 +1,9 @@
+0.10 - 2011xxxx
+===============
+
+- mosquitto_will_set() and mosquitto_publish() now return
+  MOSQ_ERR_PAYLOAD_SIZE if the payload is too large (>268,435,455 bytes).
+
 0.9.1 - 20101203
 ================
 

@@ -123,6 +123,7 @@ int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uin
 	int rc = MOSQ_ERR_SUCCESS;
 
 	if(!mosq || (will && !topic)) return MOSQ_ERR_INVAL;
+	if(payloadlen > 268435455) return MOSQ_ERR_PAYLOAD_SIZE;
 
 	if(mosq->core.will){
 		if(mosq->core.will->topic){
@@ -257,6 +258,7 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 	uint16_t local_mid;
 
 	if(!mosq || !topic || qos<0 || qos>2) return MOSQ_ERR_INVAL;
+	if(payloadlen > 268435455) return MOSQ_ERR_PAYLOAD_SIZE;
 
 	local_mid = _mosquitto_mid_generate(&mosq->core);
 	if(mid){
