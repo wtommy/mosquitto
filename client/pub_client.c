@@ -63,6 +63,7 @@ static uint16_t mid_sent = 0;
 static bool connected = true;
 static char *username = NULL;
 static char *password = NULL;
+static bool disconnect_sent = false;
 
 void my_connect_callback(void *obj, int result)
 {
@@ -115,8 +116,9 @@ void my_publish_callback(void *obj, uint16_t mid)
 {
 	struct mosquitto *mosq = obj;
 
-	if(mode != MSGMODE_STDIN_LINE){
+	if(mode != MSGMODE_STDIN_LINE && disconnect_sent == false){
 		mosquitto_disconnect(mosq);
+		disconnect_sent = true;
 	}
 }
 
@@ -464,8 +466,9 @@ int main(int argc, char *argv[])
 			if(fgets(buf, 1024, stdin)){
 				buf[strlen(buf)-1] = '\0';
 				mosquitto_publish(mosq, &mid_sent, topic, strlen(buf), (uint8_t *)buf, qos, retain);
-			}else if(feof(stdin)){
+			}else if(feof(stdin) && disconnect_sent == false){
 				mosquitto_disconnect(mosq);
+				disconnect_sent = true;
 			}
 		}
 	}
