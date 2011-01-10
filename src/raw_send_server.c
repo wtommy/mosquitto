@@ -53,7 +53,7 @@ int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 	packet->payload[0] = 0;
 	packet->payload[1] = result;
 
-	if(mqtt3_net_packet_queue(context, packet)) return 1;
+	_mosquitto_packet_queue(&context->core, packet);
 	return MOSQ_ERR_SUCCESS;
 }
 
@@ -78,7 +78,7 @@ int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, 
 		_mosquitto_write_bytes(packet, payload, payloadlen);
 	}
 
-	if(mqtt3_net_packet_queue(context, packet)) return 1;
+	_mosquitto_packet_queue(&context->core, packet);
 
 	return MOSQ_ERR_SUCCESS;
 }

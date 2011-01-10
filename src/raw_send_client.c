@@ -97,7 +97,7 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 	}
 
 	context->core.keepalive = keepalive;
-	if(mqtt3_net_packet_queue(context, packet)) return 1;
+	_mosquitto_packet_queue(&context->core, packet);
 	return MOSQ_ERR_SUCCESS;
 }
 
@@ -136,7 +136,7 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 	_mosquitto_write_string(packet, topic, strlen(topic));
 	_mosquitto_write_byte(packet, topic_qos);
 
-	if(mqtt3_net_packet_queue(context, packet)) return 1;
+	_mosquitto_packet_queue(&context->core, packet);
 	return MOSQ_ERR_SUCCESS;
 }
 
@@ -170,7 +170,7 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic)
 	/* Payload */
 	_mosquitto_write_string(packet, topic, strlen(topic));
 
-	if(mqtt3_net_packet_queue(context, packet)) return 1;
+	_mosquitto_packet_queue(&context->core, packet);
 	return MOSQ_ERR_SUCCESS;
 }
 

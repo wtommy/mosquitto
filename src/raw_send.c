@@ -78,11 +78,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 		_mosquitto_write_bytes(packet, payload, payloadlen);
 	}
 
-	if(mqtt3_net_packet_queue(context, packet)){
-		mqtt3_log_printf(MOSQ_LOG_DEBUG, "PUBLISH failed queuing packet.");
-		_mosquitto_free(packet);
-		return 1;
-	}
+	_mosquitto_packet_queue(&context->core, packet);
 
 	return MOSQ_ERR_SUCCESS;
 }
@@ -126,7 +122,7 @@ int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_
 	packet->payload[0] = MOSQ_MSB(mid);
 	packet->payload[1] = MOSQ_LSB(mid);
 
-	if(mqtt3_net_packet_queue(context, packet)) return 1;
+	_mosquitto_packet_queue(&context->core, packet);
 
 	return MOSQ_ERR_SUCCESS;
 }
@@ -142,10 +138,7 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command)
 	packet->command = command;
 	packet->remaining_length = 0;
 
-	if(mqtt3_net_packet_queue(context, packet)){
-		_mosquitto_free(packet);
-		return 1;
-	}
+	_mosquitto_packet_queue(&context->core, packet);
 
 	return MOSQ_ERR_SUCCESS;
 }
