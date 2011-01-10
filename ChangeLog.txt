@@ -1,3 +1,8 @@
+0.10 - 2011xxxx
+===============
+
+- Only send a single DISCONNECT command when using -l in the pub client.
+
 0.9.1 - 20101203
 ================
 
