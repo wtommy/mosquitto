@@ -33,10 +33,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
 #include <memory_mosq.h>
+#include <util_mosq.h>
 
 int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 {
 	struct _mosquitto_packet *packet = NULL;
+	int rc;
 
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending CONNACK to %s (%d)", context->core.id, result);
 
@@ -45,13 +47,16 @@ int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 
 	packet->command = CONNACK;
 	packet->remaining_length = 2;
-	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*2);
-	if(!packet->payload){
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
+		if(packet->payload){
+			_mosquitto_free(packet->payload);
+		}
 		_mosquitto_free(packet);
-		return MOSQ_ERR_NOMEM;
+		return rc;
 	}
-	packet->payload[0] = 0;
-	packet->payload[1] = result;
+	packet->payload[packet->pos+0] = 0;
+	packet->payload[packet->pos+1] = result;
 
 	_mosquitto_packet_queue(&context->core, packet);
 	return MOSQ_ERR_SUCCESS;
@@ -60,6 +65,7 @@ int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload)
 {
 	struct _mosquitto_packet *packet = NULL;
+	int rc;
 
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending SUBACK to %s", context->core.id);
 
@@ -68,10 +74,13 @@ int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, 
 
 	packet->command = SUBACK;
 	packet->remaining_length = 2+payloadlen;
-	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*(2+payloadlen));
-	if(!packet->payload){
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
+		if(packet->payload){
+			_mosquitto_free(packet->payload);
+		}
 		_mosquitto_free(packet);
-		return MOSQ_ERR_NOMEM;
+		return rc;
 	}
 	_mosquitto_write_uint16(packet, mid);
 	if(payloadlen){

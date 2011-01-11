@@ -68,6 +68,9 @@ void _mosquitto_packet_queue(struct _mosquitto_core *core, struct _mosquitto_pac
 	assert(core);
 	assert(packet);
 
+	packet->pos = 0;
+	packet->to_process = packet->packet_length;
+
 	packet->next = NULL;
 	if(core->out_packet){
 		tail = core->out_packet;
@@ -181,7 +184,7 @@ int _mosquitto_read_byte(struct _mosquitto_packet *packet, uint8_t *byte)
 void _mosquitto_write_byte(struct _mosquitto_packet *packet, uint8_t byte)
 {
 	assert(packet);
-	assert(packet->pos+1 <= packet->remaining_length);
+	assert(packet->pos+1 <= packet->packet_length);
 
 	packet->payload[packet->pos] = byte;
 	packet->pos++;
@@ -201,7 +204,7 @@ int _mosquitto_read_bytes(struct _mosquitto_packet *packet, uint8_t *bytes, uint
 void _mosquitto_write_bytes(struct _mosquitto_packet *packet, const uint8_t *bytes, uint32_t count)
 {
 	assert(packet);
-	assert(packet->pos+count <= packet->remaining_length);
+	assert(packet->pos+count <= packet->packet_length);
 
 	memcpy(&(packet->payload[packet->pos]), bytes, count);
 	packet->pos += count;

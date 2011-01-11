@@ -61,12 +61,12 @@ enum mosquitto_client_state {
 
 struct _mosquitto_packet{
 	uint8_t command;
-	uint8_t command_saved;
 	uint8_t have_remaining;
 	uint8_t remaining_count;
 	uint16_t mid;
 	uint32_t remaining_mult;
 	uint32_t remaining_length;
+	uint32_t packet_length;
 	uint32_t to_process;
 	uint32_t pos;
 	uint8_t *payload;

@@ -35,6 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3_protocol.h>
 #include <memory_mosq.h>
 #include <net_mosq.h>
+#include <util_mosq.h>
 
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 {
@@ -46,6 +47,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 {
 	struct _mosquitto_packet *packet = NULL;
 	int packetlen;
+	int rc;
 
 	if(!context || context->core.sock == -1 || !topic) return 1;
 
@@ -61,11 +63,13 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 
 	packet->command = PUBLISH | ((dup&0x1)<<3) | (qos<<1) | retain;
 	packet->remaining_length = packetlen;
-	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
-	if(!packet->payload){
-		mqtt3_log_printf(MOSQ_LOG_DEBUG, "PUBLISH failed allocating payload memory.");
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
+		if(packet->payload){
+			_mosquitto_free(packet->payload);
+		}
 		_mosquitto_free(packet);
-		return MOSQ_ERR_NOMEM;
+		return rc;
 	}
 	/* Variable header (topic string) */
 	_mosquitto_write_string(packet, topic, strlen(topic));
@@ -105,6 +109,7 @@ int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid, bool dup)
 int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid, bool dup)
 {
 	struct _mosquitto_packet *packet = NULL;
+	int rc;
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return MOSQ_ERR_NOMEM;
@@ -114,13 +119,16 @@ int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_
 		packet->command |= 8;
 	}
 	packet->remaining_length = 2;
-	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*2);
-	if(!packet->payload){
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
+		if(packet->payload){
+			_mosquitto_free(packet->payload);
+		}
 		_mosquitto_free(packet);
-		return MOSQ_ERR_NOMEM;
+		return rc;
 	}
-	packet->payload[0] = MOSQ_MSB(mid);
-	packet->payload[1] = MOSQ_LSB(mid);
+	packet->payload[packet->pos+0] = MOSQ_MSB(mid);
+	packet->payload[packet->pos+1] = MOSQ_LSB(mid);
 
 	_mosquitto_packet_queue(&context->core, packet);
 
@@ -131,12 +139,18 @@ int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_
 int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command)
 {
 	struct _mosquitto_packet *packet = NULL;
+	int rc;
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return MOSQ_ERR_NOMEM;
 
 	packet->command = command;
 	packet->remaining_length = 0;
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
+		_mosquitto_free(packet);
+		return rc;
+	}
 
 	_mosquitto_packet_queue(&context->core, packet);
 

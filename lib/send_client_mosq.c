@@ -43,6 +43,7 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	int payloadlen;
 	uint8_t will = 0;
 	uint8_t byte;
+	int rc;
 
 	assert(mosq);
 	assert(mosq->core.id);
@@ -66,10 +67,13 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 
 	packet->command = CONNECT;
 	packet->remaining_length = 12+payloadlen;
-	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*(12+payloadlen));
-	if(!packet->payload){
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
+		if(packet->payload){
+			_mosquitto_free(packet->payload);
+		}
 		_mosquitto_free(packet);
-		return MOSQ_ERR_NOMEM;
+		return rc;
 	}
 
 	/* Variable header */
@@ -118,6 +122,7 @@ int _mosquitto_send_subscribe(struct mosquitto *mosq, uint16_t *mid, bool dup, c
 	struct _mosquitto_packet *packet = NULL;
 	uint32_t packetlen;
 	uint16_t local_mid;
+	int rc;
 
 	assert(mosq);
 	assert(topic);
@@ -129,10 +134,13 @@ int _mosquitto_send_subscribe(struct mosquitto *mosq, uint16_t *mid, bool dup, c
 
 	packet->command = SUBSCRIBE | (dup<<3) | (1<<1);
 	packet->remaining_length = packetlen;
-	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
-	if(!packet->payload){
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
+		if(packet->payload){
+			_mosquitto_free(packet->payload);
+		}
 		_mosquitto_free(packet);
-		return MOSQ_ERR_NOMEM;
+		return rc;
 	}
 
 	/* Variable header */
@@ -155,6 +163,7 @@ int _mosquitto_send_unsubscribe(struct mosquitto *mosq, uint16_t *mid, bool dup,
 	struct _mosquitto_packet *packet = NULL;
 	uint32_t packetlen;
 	uint16_t local_mid;
+	int rc;
 
 	assert(mosq);
 	assert(topic);
@@ -166,10 +175,13 @@ int _mosquitto_send_unsubscribe(struct mosquitto *mosq, uint16_t *mid, bool dup,
 
 	packet->command = UNSUBSCRIBE | (dup<<3) | (1<<1);
 	packet->remaining_length = packetlen;
-	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
-	if(!packet->payload){
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
+		if(packet->payload){
+			_mosquitto_free(packet->payload);
+		}
 		_mosquitto_free(packet);
-		return MOSQ_ERR_NOMEM;
+		return rc;
 	}
 
 	/* Variable header */
