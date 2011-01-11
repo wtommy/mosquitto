@@ -69,9 +69,6 @@ int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool cle
 	packet->remaining_length = 12+payloadlen;
 	rc = _mosquitto_packet_alloc(packet);
 	if(rc){
-		if(packet->payload){
-			_mosquitto_free(packet->payload);
-		}
 		_mosquitto_free(packet);
 		return rc;
 	}
@@ -136,9 +133,6 @@ int _mosquitto_send_subscribe(struct mosquitto *mosq, uint16_t *mid, bool dup, c
 	packet->remaining_length = packetlen;
 	rc = _mosquitto_packet_alloc(packet);
 	if(rc){
-		if(packet->payload){
-			_mosquitto_free(packet->payload);
-		}
 		_mosquitto_free(packet);
 		return rc;
 	}
@@ -177,9 +171,6 @@ int _mosquitto_send_unsubscribe(struct mosquitto *mosq, uint16_t *mid, bool dup,
 	packet->remaining_length = packetlen;
 	rc = _mosquitto_packet_alloc(packet);
 	if(rc){
-		if(packet->payload){
-			_mosquitto_free(packet->payload);
-		}
 		_mosquitto_free(packet);
 		return rc;
 	}

@@ -64,9 +64,6 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 	packet->remaining_length = 12+payloadlen;
 	rc = _mosquitto_packet_alloc(packet);
 	if(rc){
-		if(packet->payload){
-			_mosquitto_free(packet->payload);
-		}
 		_mosquitto_free(packet);
 		return rc;
 	}
@@ -129,9 +126,6 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 	packet->remaining_length = packetlen;
 	rc = _mosquitto_packet_alloc(packet);
 	if(rc){
-		if(packet->payload){
-			_mosquitto_free(packet->payload);
-		}
 		_mosquitto_free(packet);
 		return rc;
 	}
@@ -168,9 +162,6 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic)
 	packet->remaining_length = packetlen;
 	rc = _mosquitto_packet_alloc(packet);
 	if(rc){
-		if(packet->payload){
-			_mosquitto_free(packet->payload);
-		}
 		_mosquitto_free(packet);
 		return rc;
 	}

@@ -49,9 +49,6 @@ int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 	packet->remaining_length = 2;
 	rc = _mosquitto_packet_alloc(packet);
 	if(rc){
-		if(packet->payload){
-			_mosquitto_free(packet->payload);
-		}
 		_mosquitto_free(packet);
 		return rc;
 	}
@@ -76,9 +73,6 @@ int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, 
 	packet->remaining_length = 2+payloadlen;
 	rc = _mosquitto_packet_alloc(packet);
 	if(rc){
-		if(packet->payload){
-			_mosquitto_free(packet->payload);
-		}
 		_mosquitto_free(packet);
 		return rc;
 	}

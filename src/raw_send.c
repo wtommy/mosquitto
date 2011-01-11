@@ -65,9 +65,6 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 	packet->remaining_length = packetlen;
 	rc = _mosquitto_packet_alloc(packet);
 	if(rc){
-		if(packet->payload){
-			_mosquitto_free(packet->payload);
-		}
 		_mosquitto_free(packet);
 		return rc;
 	}
@@ -121,9 +118,6 @@ int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_
 	packet->remaining_length = 2;
 	rc = _mosquitto_packet_alloc(packet);
 	if(rc){
-		if(packet->payload){
-			_mosquitto_free(packet->payload);
-		}
 		_mosquitto_free(packet);
 		return rc;
 	}

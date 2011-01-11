@@ -58,9 +58,6 @@ static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t comm
 	packet->remaining_length = 2;
 	rc = _mosquitto_packet_alloc(packet);
 	if(rc){
-		if(packet->payload){
-			_mosquitto_free(packet->payload);
-		}
 		_mosquitto_free(packet);
 		return rc;
 	}
@@ -148,9 +145,6 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 	packet->remaining_length = packetlen;
 	rc = _mosquitto_packet_alloc(packet);
 	if(rc){
-		if(packet->payload){
-			_mosquitto_free(packet->payload);
-		}
 		_mosquitto_free(packet);
 		return rc;
 	}
