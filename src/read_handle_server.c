@@ -87,6 +87,15 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 
 	if(_mosquitto_read_string(&context->core.in_packet, &client_id)) return 1;
 
+	/* clientid_prefixes check */
+	if(db->config->clientid_prefixes){
+		if(strncmp(db->config->clientid_prefixes, client_id, strlen(db->config->clientid_prefixes))){
+			mqtt3_raw_connack(context, 2);
+			mqtt3_socket_close(context);
+			return MOSQ_ERR_SUCCESS;
+		}
+	}
+
 	/* Find if this client already has an entry */
 	for(i=0; i<db->context_count; i++){
 		if(db->contexts[i] && db->contexts[i]->core.id && !strcmp(db->contexts[i]->core.id, client_id)){

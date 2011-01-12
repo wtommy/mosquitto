@@ -64,6 +64,17 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>clientid_prefixes</option></term>
+				<listitem>
+					<para>If defined, only clients that have a clientid with a
+					prefix that matches clientid_prefixes will be allowed to
+					connect to the broker. For example, setting "secure-" here
+					would mean a client "secure-client" could connect but
+					another with clientid "mqtt" couldn't. By default, all
+					client ids are valid.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>listener</option></term>
 				<listitem>
 					<para>Listen for incoming network connection on the

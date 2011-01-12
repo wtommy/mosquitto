@@ -466,6 +466,8 @@ int main(int argc, char *argv[])
 					config.bridges[i].name);
 		}
 	}
+	int_db.config = &config;
+
 	run = 1;
 	rc = loop(&config, listensock, listensock_count, listener_max);
 

@@ -13,6 +13,7 @@ void mqtt3_config_init(mqtt3_config *config)
 {
 	/* Set defaults */
 	config->autosave_interval = 1800;
+	config->clientid_prefixes = NULL;
 	config->daemon = false;
 	config->default_listener.host = NULL;
 	config->default_listener.port = 0;
@@ -178,6 +179,22 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						return MOSQ_ERR_INVAL;
 					}
 					if(_mqtt3_conf_parse_bool(&token, "cleansession", &cur_bridge->clean_session)) return 1;
+				}else if(!strcmp(token, "clientid_prefixes")){
+					token = strtok(NULL, " ");
+					if(token){
+						if(config->clientid_prefixes){
+							mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: clientid_prefixes specified multiple times. Only the latest will be used.");
+							_mosquitto_free(config->clientid_prefixes);
+						}
+						config->clientid_prefixes = _mosquitto_strdup(token);
+						if(!config->clientid_prefixes){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty clientid_prefixes value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
 				}else if(!strcmp(token, "connection")){
 					token = strtok(NULL, " ");
 					if(token){
@@ -443,7 +460,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "autosave_on_changes")
-						|| !strcmp(token, "clientid_prefixes")
 						|| !strcmp(token, "connection_messages")
 						|| !strcmp(token, "retained_persistence")
 						|| !strcmp(token, "trace_level")

@@ -74,6 +74,36 @@ enum mqtt3_msg_state {
 	ms_queued = 11
 };
 
+struct _mqtt3_listener {
+	int fd;
+	char *host;
+	uint16_t port;
+	int max_connections;
+	char *mount_point;
+};
+
+typedef struct {
+	int autosave_interval;
+	char *clientid_prefixes;
+	bool daemon;
+	struct _mqtt3_listener default_listener;
+	struct _mqtt3_listener *listeners;
+	int listener_count;
+	int log_dest;
+	int log_type;
+	int max_connections;
+	bool persistence;
+	char *persistence_location;
+	char *persistence_file;
+	int retry_interval;
+	int store_clean_interval;
+	int sys_interval;
+	char *pid_file;
+	char *user;
+	struct _mqtt3_bridge *bridges;
+	int bridge_count;
+} mqtt3_config;
+
 struct _mosquitto_subleaf {
 	struct _mosquitto_subleaf *prev;
 	struct _mosquitto_subleaf *next;
@@ -118,6 +148,7 @@ typedef struct _mosquitto_db{
 	struct mosquitto_msg_store *msg_store;
 	int msg_store_count;
 	char *filepath;
+	mqtt3_config *config;
 } mosquitto_db;
 
 enum mqtt3_bridge_direction{
@@ -152,35 +183,6 @@ typedef struct _mqtt3_context{
 	struct _mqtt3_bridge *bridge;
 	mosquitto_client_msg *msgs;
 } mqtt3_context;
-
-struct _mqtt3_listener {
-	int fd;
-	char *host;
-	uint16_t port;
-	int max_connections;
-	char *mount_point;
-};
-
-typedef struct {
-	int autosave_interval;
-	bool daemon;
-	struct _mqtt3_listener default_listener;
-	struct _mqtt3_listener *listeners;
-	int listener_count;
-	int log_dest;
-	int log_type;
-	int max_connections;
-	bool persistence;
-	char *persistence_location;
-	char *persistence_file;
-	int retry_interval;
-	int store_clean_interval;
-	int sys_interval;
-	char *pid_file;
-	char *user;
-	struct _mqtt3_bridge *bridges;
-	int bridge_count;
-} mqtt3_config;
 
 /* ============================================================
  * Utility functions

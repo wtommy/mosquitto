@@ -6,6 +6,7 @@
   writes!
 - Set QoS=1 on PUBREL commands to meet protocol spec.
 - Install man pages when building under cmake.
+- Add support for clientid_prefixes variable.
 
 0.9.1 - 20101203
 ================
