@@ -5,6 +5,7 @@
 - Group together network writes for outgoing packets - don't send single byte
   writes!
 - Set QoS=1 on PUBREL commands to meet protocol spec.
+- Install man pages when building under cmake.
 
 0.9.1 - 20101203
 ================
