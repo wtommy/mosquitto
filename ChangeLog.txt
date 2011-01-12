@@ -4,6 +4,7 @@
 - Only send a single DISCONNECT command when using -l in the pub client.
 - Group together network writes for outgoing packets - don't send single byte
   writes!
+- Set QoS=1 on PUBREL commands to meet protocol spec.
 
 0.9.1 - 20101203
 ================

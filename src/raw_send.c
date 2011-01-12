@@ -99,7 +99,7 @@ int mqtt3_raw_pubrec(mqtt3_context *context, uint16_t mid)
 int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid, bool dup)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBREL to %s (Mid: %d)", context->core.id, mid);
-	return mqtt3_send_command_with_mid(context, PUBREL, mid, dup);
+	return mqtt3_send_command_with_mid(context, PUBREL|2, mid, dup);
 }
 
 /* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
