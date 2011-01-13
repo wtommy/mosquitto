@@ -171,6 +171,26 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty bind_address value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "clientid")){
+					if(!cur_bridge){
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					token = strtok(NULL, " ");
+					if(token){
+						if(cur_bridge->clientid){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Duplicate clientid value in bridge configuration.");
+							return MOSQ_ERR_INVAL;
+						}
+						cur_bridge->clientid = _mosquitto_strdup(token);
+						if(!cur_bridge->clientid){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty clientid value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
 				}else if(!strcmp(token, "ext_sqlite_regex")){
 					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: ext_sqlite_regex variable no longer in use.");
 				}else if(!strcmp(token, "cleansession")){
@@ -209,6 +229,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						cur_bridge->address = NULL;
 						cur_bridge->keepalive = 60;
 						cur_bridge->clean_session = false;
+						cur_bridge->clientid = NULL;
 						cur_bridge->port = 0;
 						cur_bridge->topics = NULL;
 						cur_bridge->topic_count = 0;
@@ -472,7 +493,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						|| !strcmp(token, "threshold")
 						|| !strcmp(token, "try_private")
 						|| !strcmp(token, "mount_point")
-						|| !strcmp(token, "clientid")
 						|| !strcmp(token, "acl_file")
 						|| !strcmp(token, "allow_anonymous")
 						|| !strcmp(token, "ffdc_output")

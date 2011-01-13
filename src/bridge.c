@@ -29,6 +29,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <config.h>
 #include <net_mosq.h>
@@ -40,6 +42,8 @@ int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge)
 	int i;
 	mqtt3_context *new_context = NULL;
 	mqtt3_context **tmp_contexts;
+	char hostname[256];
+	int len;
 
 	assert(db);
 	assert(bridge);
@@ -67,7 +71,20 @@ int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge)
 	}
 
 	/* FIXME - need to check that this name isn't already in use. */
-	new_context->core.id = _mosquitto_strdup(bridge->name);
+	if(bridge->clientid){
+		new_context->core.id = _mosquitto_strdup(bridge->clientid);
+	}else{
+		if(!gethostname(hostname, 256)){
+			len = strlen(hostname) + strlen(bridge->name) + 2;
+			new_context->core.id = _mosquitto_malloc(len);
+			if(!new_context->core.id){
+				return MOSQ_ERR_NOMEM;
+			}
+			snprintf(new_context->core.id, len, "%s.%s", hostname, bridge->name);
+		}else{
+			return 1;
+		}
+	}
 	if(!new_context->core.id){
 		return MOSQ_ERR_NOMEM;
 	}

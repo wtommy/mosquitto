@@ -165,6 +165,7 @@ struct _mqtt3_bridge_topic{
 struct _mqtt3_bridge{
 	char *name;
 	char *address;
+	char *clientid;
 	uint16_t port;
 	int keepalive;
 	bool clean_session;

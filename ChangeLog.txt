@@ -7,6 +7,8 @@
 - Set QoS=1 on PUBREL commands to meet protocol spec.
 - Install man pages when building under cmake.
 - Add support for clientid_prefixes variable.
+- Add support for the clientid config variable for controlling bridge client
+  ids.
 
 0.9.1 - 20101203
 ================
