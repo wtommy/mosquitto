@@ -26,7 +26,8 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->log_dest = MQTT3_LOG_SYSLOG;
 	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING;
 #endif
-	config->max_connections = -1;
+ 	config->max_connections = -1;
+ 	config->password_file = NULL;
 	config->persistence = false;
 	config->persistence_location = NULL;
 	config->persistence_file = "mosquitto.db";
@@ -343,6 +344,22 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						if(max_queued_messages < 0) max_queued_messages = 0;
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty max_queued_messages value in configuration.");
+					}
+				}else if(!strcmp(token, "password_file")){
+					token = strtok(NULL, " ");
+					if(token){
+						if(config->password_file){
+							mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: password_file specified multiple times. Only the latest will be used.");
+							_mosquitto_free(config->password_file);
+						}
+						config->password_file = _mosquitto_strdup(token);
+						if(!config->password_file){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty password_file value in configuration.");
+						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "password")){
 					if(!cur_bridge){

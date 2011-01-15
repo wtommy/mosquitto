@@ -92,6 +92,7 @@ typedef struct {
 	int log_dest;
 	int log_type;
 	int max_connections;
+	char *password_file;
 	bool persistence;
 	char *persistence_location;
 	char *persistence_file;
