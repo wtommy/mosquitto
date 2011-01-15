@@ -178,7 +178,7 @@ int mqtt3_handle_disconnect(mqtt3_context *context)
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received DISCONNECT from %s", context->core.id);
 	context->core.state = mosq_cs_disconnecting;
 	mqtt3_socket_close(context);
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 

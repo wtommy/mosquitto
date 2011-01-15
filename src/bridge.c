@@ -134,7 +134,7 @@ int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 		}
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 void mqtt3_bridge_packet_cleanup(mqtt3_context *context)

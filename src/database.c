@@ -177,7 +177,7 @@ int mqtt3_db_close(mosquitto_db *db)
 int mqtt3_db_client_will_queue(mosquitto_db *db, mqtt3_context *context)
 {
 	if(!context || !context->core.id) return 1;
-	if(!context->core.will) return 0;
+	if(!context->core.will) return MOSQ_ERR_SUCCESS;
 
 	return mqtt3_db_messages_easy_queue(db, context, context->core.will->topic, context->core.will->qos, context->core.will->payloadlen, context->core.will->payload, context->core.will->retain);
 }
@@ -198,7 +198,7 @@ int mqtt3_db_client_count(mosquitto_db *db, int *count)
 		if(db->contexts[i]) (*count)++;
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 /* Internal function.
@@ -278,11 +278,11 @@ int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid, enum mosquitto
 			tail = tail->next;
 		}
 		if(msg_index > max_inflight && deleted){
-			return 0;
+			return MOSQ_ERR_SUCCESS;
 		}
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, int qos, bool retain, struct mosquitto_msg_store *stored)
@@ -366,7 +366,7 @@ int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, enum mosquitto
 		if(tail->mid == mid && tail->direction == dir){
 			tail->state = state;
 			tail->timestamp = time(NULL);
-			return 0;
+			return MOSQ_ERR_SUCCESS;
 		}
 		tail = tail->next;
 	}
@@ -389,7 +389,7 @@ int mqtt3_db_messages_delete(mqtt3_context *context)
 	}
 	context->msgs = NULL;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_db_messages_easy_queue(mosquitto_db *db, mqtt3_context *context, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
@@ -473,7 +473,7 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 		temp->db_id = store_id;
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_db_message_store_find(mosquitto_db *db, const char *source, uint16_t mid, struct mosquitto_msg_store **stored)
@@ -485,7 +485,7 @@ int mqtt3_db_message_store_find(mosquitto_db *db, const char *source, uint16_t m
 	while(tail){
 		if(tail->source_mid == mid && !strcmp(tail->source_id, source)){
 			*stored = tail;
-			return 0;
+			return MOSQ_ERR_SUCCESS;
 		}
 		tail = tail->next;
 	}
@@ -564,7 +564,7 @@ int mqtt3_db_message_release(mosquitto_db *db, mqtt3_context *context, uint16_t 
 					context->msgs = tail->next;
 				}
 				_mosquitto_free(tail);
-				return 0;
+				return MOSQ_ERR_SUCCESS;
 			}else{
 				return 1;
 			}
@@ -667,7 +667,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 		}
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 void mqtt3_db_store_clean(mosquitto_db *db)

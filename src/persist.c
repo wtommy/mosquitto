@@ -165,7 +165,7 @@ static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_con
 
 #undef write_e
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 
@@ -232,7 +232,7 @@ static int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 
 #undef write_e
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 static int mqtt3_db_client_write(mosquitto_db *db, int db_fd)
@@ -250,7 +250,7 @@ static int mqtt3_db_client_write(mosquitto_db *db, int db_fd)
 		}
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 static int _db_subs_retain_write(mosquitto_db *db, int db_fd, struct _mosquitto_subhier *node, const char *topic)
@@ -314,7 +314,7 @@ static int _db_subs_retain_write(mosquitto_db *db, int db_fd, struct _mosquitto_
 		subhier = subhier->next;
 	}
 	_mosquitto_free(thistopic);
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 static int mqtt3_db_subs_retain_write(mosquitto_db *db, int db_fd)
@@ -327,7 +327,7 @@ static int mqtt3_db_subs_retain_write(mosquitto_db *db, int db_fd)
 		subhier = subhier->next;
 	}
 	
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
@@ -441,7 +441,7 @@ static int _db_client_msg_restore(mosquitto_db *db, const char *client_id, uint1
 	}
 	cmsg->next = NULL;
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
@@ -617,7 +617,7 @@ static int _db_retain_chunk_restore(mosquitto_db *db, int db_fd)
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error restoring persistent database, message store corrupt.");
 		return 1;
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 static int _db_sub_chunk_restore(mosquitto_db *db, int db_fd)
@@ -680,7 +680,7 @@ int mqtt3_db_restore(mosquitto_db *db)
 
 #define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
 	fd = open(db->filepath, O_RDONLY);
-	if(fd < 0) return 0;
+	if(fd < 0) return MOSQ_ERR_SUCCESS;
 	read_e(fd, &header, 15);
 	if(!memcmp(header, magic, 15)){
 		// Restore DB as normal

@@ -243,7 +243,7 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 	}
 	freeaddrinfo(ainfo);
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context)
