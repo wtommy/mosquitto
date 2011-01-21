@@ -3,6 +3,7 @@
 
 - Only send a single DISCONNECT command when using -l in the pub client.
 - Set QoS=1 on PUBREL commands to meet protocol spec.
+- Don't leak sockets on connection failure in the library.
 
 0.9.1 - 20101203
 ================

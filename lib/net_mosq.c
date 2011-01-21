@@ -136,16 +136,31 @@ int _mosquitto_socket_connect(const char *host, uint16_t port)
 			((struct sockaddr_in6 *)rp->ai_addr)->sin6_port = htons(port);
 		}else{
 			freeaddrinfo(ainfo);
+#ifndef WIN32
+			close(sock);
+#else
+			closesocket(sock);
+#endif
 			return INVALID_SOCKET;
 		}
 		if(connect(sock, rp->ai_addr, rp->ai_addrlen) != -1){
 			break;
 		}
 
+#ifndef WIN32
+		close(sock);
+#else
+		closesocket(sock);
+#endif
 		return INVALID_SOCKET;
 	}
 	if(!rp){
 		fprintf(stderr, "Error: %s", strerror(errno));
+#ifndef WIN32
+		close(sock);
+#else
+		closesocket(sock);
+#endif
 		return INVALID_SOCKET;
 	}
 	freeaddrinfo(ainfo);
