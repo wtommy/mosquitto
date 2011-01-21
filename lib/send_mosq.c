@@ -164,6 +164,6 @@ int _mosquitto_send_pubrec(struct mosquitto *mosq, uint16_t mid)
 int _mosquitto_send_pubrel(struct mosquitto *mosq, uint16_t mid, bool dup)
 {
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBREL (Mid: %d)", mid);
-	return _mosquitto_send_command_with_mid(mosq, PUBREL, mid, dup);
+	return _mosquitto_send_command_with_mid(mosq, PUBREL|2, mid, dup);
 }
 
