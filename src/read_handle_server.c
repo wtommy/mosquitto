@@ -113,7 +113,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	}
 
 	if(connect_flags & 0x04){
-		context->core.will = malloc(sizeof(struct mosquitto_message));
+		context->core.will = _mosquitto_calloc(1, sizeof(struct mosquitto_message));
 		if(!context->core.will) return MOSQ_ERR_NOMEM;
 		if(_mosquitto_read_string(&context->core.in_packet, &context->core.will->topic)) return 1;
 		if(_mosquitto_read_string(&context->core.in_packet, &will_message)) return 1;
