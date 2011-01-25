@@ -5,6 +5,7 @@
 - Set QoS=1 on PUBREL commands to meet protocol spec.
 - Don't leak sockets on connection failure in the library.
 - Install man pages when building under cmake.
+- Fix crash bug on malformed CONNECT message.
 
 0.9.1 - 20101203
 ================
