@@ -6,6 +6,8 @@
 - Don't leak sockets on connection failure in the library.
 - Install man pages when building under cmake.
 - Fix crash bug on malformed CONNECT message.
+- Clients are now rejected if their socket peer name cannot be obtained on
+  connection.
 
 0.9.1 - 20101203
 ================

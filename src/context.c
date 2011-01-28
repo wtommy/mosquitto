@@ -78,6 +78,11 @@ mqtt3_context *mqtt3_context_init(int sock)
 			}
 		}
 	}
+	if(!context->address && sock != -1){
+		/* getpeername and inet_ntop failed and not a bridge */
+		_mosquitto_free(context);
+		return NULL;
+	}
 	context->bridge = NULL;
 	context->msgs = NULL;
 	
