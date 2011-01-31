@@ -155,7 +155,12 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 			/* Username flag given, but no username. Ignore. */
 			username_flag = 0;
 		}
+	}else if(db->config->allow_anonymous == false){
+		mqtt3_raw_connack(context, 2);
+		mqtt3_socket_close(context);
+		return MOSQ_ERR_SUCCESS;
 	}
+
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
 	context->core.id = client_id;
 	context->clean_session = clean_session;

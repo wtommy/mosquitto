@@ -41,6 +41,16 @@
 		<title>Variables</title>
 		<variablelist>
 			<varlistentry>
+				<term><option>allow_anonymous</option></term>
+				<listitem>
+					<para>Boolean value that determines whether clients that
+					connect without providing a username are allowed to
+					connect. If set to false then a password file should be
+					created (see the password_file option) to control
+					authenticated client access. Defaults to true.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>autosave_interval</option></term>
 				<listitem>
 					<para>The number of seconds that mosquitto will wait 

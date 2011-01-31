@@ -83,6 +83,7 @@ struct _mqtt3_listener {
 };
 
 typedef struct {
+	bool allow_anonymous;
 	int autosave_interval;
 	char *clientid_prefixes;
 	bool daemon;

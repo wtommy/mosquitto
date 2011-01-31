@@ -12,6 +12,7 @@ static int _mqtt3_conf_parse_int(char **token, const char *name, int *value);
 void mqtt3_config_init(mqtt3_config *config)
 {
 	/* Set defaults */
+	config->allow_anonymous = true;
 	config->autosave_interval = 1800;
 	config->clientid_prefixes = NULL;
 	config->daemon = false;
@@ -157,6 +158,8 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty address value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "allow_anonymous")){
+					if(_mqtt3_conf_parse_bool(&token, "allow_anonymous", &config->allow_anonymous)) return 1;
 				}else if(!strcmp(token, "autosave_interval")){
 					if(_mqtt3_conf_parse_int(&token, "autosave_interval", &config->autosave_interval)) return 1;
 					if(config->autosave_interval < 0) config->autosave_interval = 0;
