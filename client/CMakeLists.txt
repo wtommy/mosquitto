@@ -5,8 +5,8 @@ link_directories(${mosquitto_BINARY_DIR}/lib)
 add_executable(mosquitto_pub pub_client.c)
 add_executable(mosquitto_sub sub_client.c)
 
-target_link_libraries(mosquitto_pub mosquitto)
-target_link_libraries(mosquitto_sub mosquitto)
+target_link_libraries(mosquitto_pub libmosquitto)
+target_link_libraries(mosquitto_sub libmosquitto)
 
 set_target_properties(mosquitto_pub PROPERTIES
 	VERSION ${VERSION})
