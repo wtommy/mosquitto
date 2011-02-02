@@ -235,7 +235,6 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 			payloadlen++;
 		}else{
 			if(payload) _mosquitto_free(payload);
-			if(sub) _mosquitto_free(sub);
 
 			return MOSQ_ERR_NOMEM;
 		}
