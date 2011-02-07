@@ -7,7 +7,14 @@ OBJS=context.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o 
 
 .PHONY: all clean
 
-all : msgsps_pub msgsps_sub packet-gen qos
+all : fake_user msgsps_pub msgsps_sub packet-gen qos
+
+fake_user : fake_user.o
+	#${CC} $^ -o $@ ../lib/libmosquitto.so.0 -nopie
+	${CC} $^ -o $@ -lmosquitto -nopie
+
+fake_user.o : fake_user.c
+	${CC} $(CFLAGS) -c $< -o $@
 
 msgsps_pub : msgsps_pub.o
 	${CC} $^ -o $@ ../lib/libmosquitto.so.0 -nopie
