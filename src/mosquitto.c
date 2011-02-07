@@ -132,7 +132,7 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 		if(new_clients){
 			client_max = -1;
 			for(i=0; i<int_db.context_count; i++){
-				if(int_db.contexts[i] && int_db.contexts[i]->core.sock != -1 && int_db.contexts[i]->core.sock > sock_max){
+				if(int_db.contexts[i] && int_db.contexts[i]->core.sock >= 0 && int_db.contexts[i]->core.sock > sock_max){
 					client_max = int_db.contexts[i]->core.sock;
 				}
 			}
@@ -164,7 +164,7 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 		now = time(NULL);
 		for(i=0; i<int_db.context_count; i++){
 			if(int_db.contexts[i]){
-				if(int_db.contexts[i]->core.sock != -1){
+				if(int_db.contexts[i]->core.sock >= 0){
 					if(int_db.contexts[i]->bridge){
 						mqtt3_check_keepalive(int_db.contexts[i]);
 					}
@@ -257,7 +257,7 @@ static void loop_handle_errors(struct pollfd *pollfds)
 	int i;
 
 	for(i=0; i<int_db.context_count; i++){
-		if(int_db.contexts[i] && int_db.contexts[i]->core.sock != -1){
+		if(int_db.contexts[i] && int_db.contexts[i]->core.sock >= 0){
 			if(pollfds[int_db.contexts[i]->core.sock].revents & POLLHUP){
 				if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
 					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket error on client %s, disconnecting.", int_db.contexts[i]->core.id);
@@ -281,7 +281,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 	int i;
 
 	for(i=0; i<int_db.context_count; i++){
-		if(int_db.contexts[i] && int_db.contexts[i]->core.sock != -1){
+		if(int_db.contexts[i] && int_db.contexts[i]->core.sock >= 0){
 			if(pollfds[int_db.contexts[i]->core.sock].revents & POLLOUT){
 				if(mqtt3_net_write(int_db.contexts[i])){
 					if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
@@ -301,7 +301,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 				}
 			}
 		}
-		if(int_db.contexts[i] && int_db.contexts[i]->core.sock != -1){
+		if(int_db.contexts[i] && int_db.contexts[i]->core.sock >= 0){
 			if(pollfds[int_db.contexts[i]->core.sock].revents & POLLIN){
 				if(mqtt3_net_read(&int_db, int_db.contexts[i])){
 					if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
@@ -489,7 +489,7 @@ int main(int argc, char *argv[])
 
 	if(listensock){
 		for(i=0; i<listensock_count; i++){
-			if(listensock[i] != -1){
+			if(listensock[i] >= 0){
 #ifndef WIN32
 				close(listensock[i]);
 #else

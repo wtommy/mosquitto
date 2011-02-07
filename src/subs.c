@@ -172,12 +172,13 @@ static int _sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *
 	/* Not found */
 	branch = _mosquitto_calloc(1, sizeof(struct _mosquitto_subhier));
 	if(!branch) return 1;
+	branch->topic = _mosquitto_strdup(tokens->topic);
+	if(!branch->topic) return MOSQ_ERR_NOMEM;
 	if(!last){
 		subhier->children = branch;
 	}else{
 		last->next = branch;
 	}
-	branch->topic = _mosquitto_strdup(tokens->topic);
 	return _sub_add(context, qos, branch, tokens->next);
 }
 

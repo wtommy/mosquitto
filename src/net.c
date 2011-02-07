@@ -114,7 +114,14 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 	}else{
 #endif
 		new_context = mqtt3_context_init(new_sock);
-		if(!new_context) return -1;
+		if(!new_context){
+#ifndef WIN32
+			close(new_sock);
+#else
+			closesocket(new_sock);
+#endif
+			return -1;
+		}
 		mqtt3_log_printf(MOSQ_LOG_NOTICE, "New client connected from %s.", new_context->address);
 		for(i=0; i<(*context_count); i++){
 			if((*contexts)[i] == NULL){
@@ -123,11 +130,13 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 			}
 		}
 		if(i==(*context_count)){
-			(*context_count)++;
-			tmp_contexts = _mosquitto_realloc(*contexts, sizeof(mqtt3_context*)*(*context_count));
+			tmp_contexts = _mosquitto_realloc(*contexts, sizeof(mqtt3_context*)*((*context_count)+1));
 			if(tmp_contexts){
+				(*context_count)++;
 				*contexts = tmp_contexts;
 				(*contexts)[(*context_count)-1] = new_context;
+			}else{
+				mqtt3_context_cleanup(NULL, new_context, true);
 			}
 		}
 #ifdef WITH_WRAP
@@ -198,6 +207,9 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 		}
 		(*sock_count)++;
 		*socks = _mosquitto_realloc(*socks, sizeof(int)*(*sock_count));
+		if(!(*socks)){
+			return MOSQ_ERR_NOMEM;
+		}
 		(*socks)[(*sock_count)-1] = sock;
 
 		ss_opt = 1;

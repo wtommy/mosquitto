@@ -94,24 +94,30 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 	db->subs.topic = "";
 
 	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
+	if(!child) return MOSQ_ERR_NOMEM;
 	child->next = NULL;
 	child->topic = _mosquitto_strdup("");
+	if(!child->topic) return MOSQ_ERR_NOMEM;
 	child->subs = NULL;
 	child->children = NULL;
 	child->retained = NULL;
 	db->subs.children = child;
 
 	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
+	if(!child) return MOSQ_ERR_NOMEM;
 	child->next = NULL;
 	child->topic = _mosquitto_strdup("/");
+	if(!child->topic) return MOSQ_ERR_NOMEM;
 	child->subs = NULL;
 	child->children = NULL;
 	child->retained = NULL;
 	db->subs.children->next = child;
 
 	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
+	if(!child) return MOSQ_ERR_NOMEM;
 	child->next = NULL;
 	child->topic = _mosquitto_strdup("$SYS");
+	if(!child->topic) return MOSQ_ERR_NOMEM;
 	child->subs = NULL;
 	child->children = NULL;
 	child->retained = NULL;
@@ -451,7 +457,9 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 	temp->msg.payloadlen = payloadlen;
 	if(payloadlen){
 		temp->msg.payload = _mosquitto_malloc(sizeof(uint8_t)*payloadlen);
-		memcpy(temp->msg.payload, payload, sizeof(uint8_t)*payloadlen);
+		if(temp->msg.payload){
+			memcpy(temp->msg.payload, payload, sizeof(uint8_t)*payloadlen);
+		}
 	}else{
 		temp->msg.payload = NULL;
 	}

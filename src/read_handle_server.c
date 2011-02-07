@@ -113,7 +113,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	}
 
 	if(connect_flags & 0x04){
-		context->core.will = malloc(sizeof(struct mosquitto_message));
+		context->core.will = _mosquitto_calloc(1, sizeof(struct mosquitto_message));
 		if(!context->core.will) return MOSQ_ERR_NOMEM;
 		if(_mosquitto_read_string(&context->core.in_packet, &context->core.will->topic)) return 1;
 		if(_mosquitto_read_string(&context->core.in_packet, &will_message)) return 1;
@@ -176,7 +176,7 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 	uint16_t mid;
 	char *sub;
 	uint8_t qos;
-	uint8_t *payload = NULL;
+	uint8_t *payload = NULL, *tmp_payload;
 	uint32_t payloadlen = 0;
 
 	if(!context) return 1;
@@ -225,9 +225,16 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 			_mosquitto_free(sub);
 		}
 
-		payload = _mosquitto_realloc(payload, payloadlen + 1);
-		payload[payloadlen] = qos;
-		payloadlen++;
+		tmp_payload = _mosquitto_realloc(payload, payloadlen + 1);
+		if(tmp_payload){
+			payload = tmp_payload;
+			payload[payloadlen] = qos;
+			payloadlen++;
+		}else{
+			if(payload) _mosquitto_free(payload);
+
+			return MOSQ_ERR_NOMEM;
+		}
 	}
 
 	if(mqtt3_raw_suback(context, mid, payloadlen, payload)) rc = 1;

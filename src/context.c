@@ -78,6 +78,11 @@ mqtt3_context *mqtt3_context_init(int sock)
 			}
 		}
 	}
+	if(!context->address && sock != -1){
+		/* getpeername and inet_ntop failed and not a bridge */
+		_mosquitto_free(context);
+		return NULL;
+	}
 	context->bridge = NULL;
 	context->msgs = NULL;
 	
@@ -99,7 +104,7 @@ void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_fre
 	if(context->core.sock != -1){
 		mqtt3_socket_close(context);
 	}
-	if(context->clean_session && !context->duplicate){
+	if(context->clean_session && !context->duplicate && db){
 		mqtt3_subs_clean_session(context, &db->subs);
 		mqtt3_db_messages_delete(context);
 	}

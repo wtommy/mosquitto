@@ -62,6 +62,7 @@ int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge)
 			db->contexts = tmp_contexts;
 			db->contexts[db->context_count-1] = new_context;
 		}else{
+			_mosquitto_free(new_context);
 			return MOSQ_ERR_NOMEM;
 		}
 	}
@@ -69,6 +70,7 @@ int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge)
 	/* FIXME - need to check that this name isn't already in use. */
 	new_context->core.id = _mosquitto_strdup(bridge->name);
 	if(!new_context->core.id){
+		_mosquitto_free(new_context);
 		return MOSQ_ERR_NOMEM;
 	}
 	new_context->core.username = new_context->bridge->username;
