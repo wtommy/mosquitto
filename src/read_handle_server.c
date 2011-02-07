@@ -41,7 +41,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	uint8_t protocol_version;
 	uint8_t connect_flags;
 	char *client_id;
-	char *will_topic = NULL, *will_message = NULL;
+	char *will_message = NULL;
 	uint8_t will, will_retain, will_qos, clean_session;
 	uint8_t username_flag, password_flag;
 	char *username, *password;
@@ -150,9 +150,6 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
 	context->core.id = client_id;
 	context->clean_session = clean_session;
-
-	if(will_topic) _mosquitto_free(will_topic);
-	if(will_message) _mosquitto_free(will_message);
 
 	context->core.state = mosq_cs_connected;
 	return mqtt3_raw_connack(context, 0);
