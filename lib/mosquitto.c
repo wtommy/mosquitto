@@ -220,6 +220,9 @@ void mosquitto_destroy(struct mosquitto *mosq)
 	_mosquitto_free(mosq->core.will);
 #ifdef WITH_SSL
 	if(mosq->core.ssl){
+		if(mosq->core.ssl->ssl){
+			SSL_free(mosq->core.ssl->ssl);
+		}
 		if(mosq->core.ssl->ssl_ctx){
 			SSL_CTX_free(mosq->core.ssl->ssl_ctx);
 		}
@@ -331,14 +334,21 @@ int mosquitto_unsubscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub
 
 int mosquitto_ssl_set(struct mosquitto *mosq, const char *pemfile, const char *password)
 {
+#ifdef WITH_SSL
 	if(!mosq || mosq->core.ssl) return MOSQ_ERR_INVAL; //FIXME
 
 	mosq->core.ssl = _mosquitto_malloc(sizeof(struct _mosquitto_ssl));
 	if(!mosq->core.ssl) return MOSQ_ERR_NOMEM;
 
 	mosq->core.ssl->ssl_ctx = SSL_CTX_new(TLSv1_method());
+	if(!mosq->core.ssl->ssl_ctx) return MOSQ_ERR_SSL;
+
+	mosq->core.ssl->ssl = SSL_new(mosq->core.ssl->ssl_ctx);
 
 	return MOSQ_ERR_SUCCESS;
+#else
+	return MOSQ_ERR_NOT_SUPPORTED;
+#endif
 }
 
 int mosquitto_loop(struct mosquitto *mosq, int timeout)

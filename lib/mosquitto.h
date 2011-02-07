@@ -76,6 +76,7 @@ extern "C" {
 #define MOSQ_ERR_CONN_LOST 7
 #define MOSQ_ERR_SSL 8
 #define MOSQ_ERR_PAYLOAD_SIZE 9
+#define MOSQ_ERR_NOT_SUPPORTED 10
 
 struct mosquitto_message{
 	uint16_t mid;
