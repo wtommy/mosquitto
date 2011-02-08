@@ -10,6 +10,7 @@
   connection.
 - Fix a number of potential problems caused when a client with a duplicate id
   connects.
+- Install mosquitto.conf under cmake.
 
 0.9.1 - 20101203
 ================

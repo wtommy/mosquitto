@@ -21,12 +21,15 @@ add_definitions (-DVERSION=\"${VERSION}\" -DTIMESTAMP=\"${TIMESTAMP}\")
 
 if (WIN32)
     set (BINDEST .)
+	set (CONFDEST .)
     set (LIBDEST .)
 	set (MANDEST man)
     set (SHAREDEST .)
 else (WIN32)
     set (BINDEST bin)
+	set (CONFDEST etc)
     set (LIBDEST lib${LIB_SUFFIX})
+	set (MANDEST share/man)
     set (SHAREDEST share/mosquitto)
 endif (WIN32)
 
@@ -53,3 +56,9 @@ add_subdirectory(lib)
 add_subdirectory(client)
 add_subdirectory(src)
 add_subdirectory(man)
+
+# ========================================
+# Install config file
+# ========================================
+
+install(FILES mosquitto.conf DESTINATION ${CONFDEST})
