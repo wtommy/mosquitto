@@ -112,7 +112,10 @@ void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_fre
 		_mosquitto_free(context->address);
 		context->address = NULL;
 	}
-	if(do_free && context->core.id) _mosquitto_free(context->core.id);
+	if(context->core.id){
+		_mosquitto_free(context->core.id);
+		context->core.id = NULL;
+	}
 	_mosquitto_packet_cleanup(&(context->core.in_packet));
 	while(context->core.out_packet){
 		_mosquitto_packet_cleanup(context->core.out_packet);
