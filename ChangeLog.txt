@@ -8,6 +8,8 @@
 - Fix crash bug on malformed CONNECT message.
 - Clients are now rejected if their socket peer name cannot be obtained on
   connection.
+- Fix a number of potential problems caused when a client with a duplicate id
+  connects.
 
 0.9.1 - 20101203
 ================

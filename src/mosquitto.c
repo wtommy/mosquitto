@@ -165,6 +165,9 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 		for(i=0; i<int_db.context_count; i++){
 			if(int_db.contexts[i]){
 				if(int_db.contexts[i]->core.sock >= 0){
+					if(int_db.contexts[i]->core.sock > sock_max){
+						sock_max = int_db.contexts[i]->core.sock;
+					}
 					if(int_db.contexts[i]->bridge){
 						mqtt3_check_keepalive(int_db.contexts[i]);
 					}
@@ -172,11 +175,13 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 						if(mqtt3_db_message_write(int_db.contexts[i])){
 							// FIXME - do something here.
 						}
-						pollfds[int_db.contexts[i]->core.sock].fd = int_db.contexts[i]->core.sock;
-						pollfds[int_db.contexts[i]->core.sock].events = POLLIN;
-						pollfds[int_db.contexts[i]->core.sock].revents = 0;
-						if(int_db.contexts[i]->core.out_packet){
-							pollfds[int_db.contexts[i]->core.sock].events |= POLLOUT;
+						if(int_db.contexts[i]->core.sock < pollfd_count){
+							pollfds[int_db.contexts[i]->core.sock].fd = int_db.contexts[i]->core.sock;
+							pollfds[int_db.contexts[i]->core.sock].events = POLLIN;
+							pollfds[int_db.contexts[i]->core.sock].revents = 0;
+							if(int_db.contexts[i]->core.out_packet){
+								pollfds[int_db.contexts[i]->core.sock].events |= POLLOUT;
+							}
 						}
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", int_db.contexts[i]->core.id);
