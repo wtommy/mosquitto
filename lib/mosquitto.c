@@ -535,7 +535,6 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 
 int mosquitto_loop_write(struct mosquitto *mosq)
 {
-	uint8_t byte;
 	ssize_t write_length;
 	struct _mosquitto_packet *packet;
 
@@ -545,70 +544,6 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 	while(mosq->core.out_packet){
 		packet = mosq->core.out_packet;
 
-		if(packet->command){
-			/* Assign to_proces here before remaining_length changes. */
-			packet->to_process = packet->remaining_length;
-			packet->pos = 0;
-
-			write_length = _mosquitto_net_write(&mosq->core, &packet->command, 1);
-			if(write_length == 1){
-				packet->command = 0;
-			}else{
-				if(write_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */
-#ifndef WIN32
-				if(errno == EAGAIN || errno == EWOULDBLOCK){
-#else
-				if(WSAGetLastError() == WSAEWOULDBLOCK){
-#endif
-					return MOSQ_ERR_SUCCESS;
-				}else{
-					switch(errno){
-						case ECONNRESET:
-							return MOSQ_ERR_CONN_LOST;
-						default:
-							return 1;
-					}
-				}
-			}
-		}
-		if(!packet->have_remaining){
-			/* Write remaining
-			 * Algorithm for encoding taken from pseudo code at
-			 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
-			 */
-			do{
-				byte = packet->remaining_length % 128;
-				packet->remaining_length = packet->remaining_length / 128;
-				/* If there are more digits to encode, set the top bit of this digit */
-				if(packet->remaining_length>0){
-					byte = byte | 0x80;
-				}
-				write_length = _mosquitto_net_write(&mosq->core, &byte, 1);
-				if(write_length == 1){
-					packet->remaining_count++;
-					/* Max 4 bytes length for remaining length as defined by protocol. */
-					if(packet->remaining_count > 4) return MOSQ_ERR_PROTOCOL;
-	
-				}else{
-					if(write_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */
-#ifndef WIN32
-					if(errno == EAGAIN || errno == EWOULDBLOCK){
-#else
-					if(WSAGetLastError() == WSAEWOULDBLOCK){
-#endif
-						return MOSQ_ERR_SUCCESS;
-					}else{
-						switch(errno){
-							case ECONNRESET:
-								return MOSQ_ERR_CONN_LOST;
-							default:
-								return 1;
-						}
-					}
-				}
-			}while(packet->remaining_length > 0);
-			packet->have_remaining = 1;
-		}
 		while(packet->to_process > 0){
 			write_length = _mosquitto_net_write(&mosq->core, &(packet->payload[packet->pos]), packet->to_process);
 			if(write_length > 0){
@@ -632,7 +567,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 			}
 		}
 
-		if(((packet->command_saved)&0xF6) == PUBLISH && mosq->on_publish){
+		if(((packet->command)&0xF6) == PUBLISH && mosq->on_publish){
 			/* This is a QoS=0 message */
 			mosq->on_publish(mosq->obj, packet->mid);
 		}

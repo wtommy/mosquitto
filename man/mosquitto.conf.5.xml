@@ -41,6 +41,16 @@
 		<title>Variables</title>
 		<variablelist>
 			<varlistentry>
+				<term><option>allow_anonymous</option></term>
+				<listitem>
+					<para>Boolean value that determines whether clients that
+					connect without providing a username are allowed to
+					connect. If set to false then a password file should be
+					created (see the password_file option) to control
+					authenticated client access. Defaults to true.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>autosave_interval</option></term>
 				<listitem>
 					<para>The number of seconds that mosquitto will wait 
@@ -61,6 +71,17 @@
 					access to mosquitto to the local host only, use "bind_address
 					localhost". This only applies to the default listener. Use
 					the listener variable to control other listeners.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>clientid_prefixes</option></term>
+				<listitem>
+					<para>If defined, only clients that have a clientid with a
+					prefix that matches clientid_prefixes will be allowed to
+					connect to the broker. For example, setting "secure-" here
+					would mean a client "secure-client" could connect but
+					another with clientid "mqtt" couldn't. By default, all
+					client ids are valid.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -254,6 +275,15 @@
 					drops. Note that setting to true may cause a large amount
 					of retained messages to be sent each time the bridge
 					reconnects.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>clientid</option> <replaceable>id</replaceable></term>
+				<listitem>
+					<para>Set the client id for this bridge connection. If not
+					defined, this defaults to 'name.hostname', where name is
+					the connection name and hostname is the hostname of this
+					computer.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

@@ -12,7 +12,9 @@ static int _mqtt3_conf_parse_int(char **token, const char *name, int *value);
 void mqtt3_config_init(mqtt3_config *config)
 {
 	/* Set defaults */
+	config->allow_anonymous = true;
 	config->autosave_interval = 1800;
+	config->clientid_prefixes = NULL;
 	config->daemon = false;
 	config->default_listener.host = NULL;
 	config->default_listener.port = 0;
@@ -25,7 +27,8 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->log_dest = MQTT3_LOG_SYSLOG;
 	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING;
 #endif
-	config->max_connections = -1;
+ 	config->max_connections = -1;
+ 	config->password_file = NULL;
 	config->persistence = false;
 	config->persistence_location = NULL;
 	config->persistence_file = "mosquitto.db";
@@ -155,6 +158,8 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty address value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "allow_anonymous")){
+					if(_mqtt3_conf_parse_bool(&token, "allow_anonymous", &config->allow_anonymous)) return 1;
 				}else if(!strcmp(token, "autosave_interval")){
 					if(_mqtt3_conf_parse_int(&token, "autosave_interval", &config->autosave_interval)) return 1;
 					if(config->autosave_interval < 0) config->autosave_interval = 0;
@@ -170,6 +175,26 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty bind_address value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "clientid")){
+					if(!cur_bridge){
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					token = strtok(NULL, " ");
+					if(token){
+						if(cur_bridge->clientid){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Duplicate clientid value in bridge configuration.");
+							return MOSQ_ERR_INVAL;
+						}
+						cur_bridge->clientid = _mosquitto_strdup(token);
+						if(!cur_bridge->clientid){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty clientid value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
 				}else if(!strcmp(token, "ext_sqlite_regex")){
 					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: ext_sqlite_regex variable no longer in use.");
 				}else if(!strcmp(token, "cleansession")){
@@ -178,6 +203,22 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						return MOSQ_ERR_INVAL;
 					}
 					if(_mqtt3_conf_parse_bool(&token, "cleansession", &cur_bridge->clean_session)) return 1;
+				}else if(!strcmp(token, "clientid_prefixes")){
+					token = strtok(NULL, " ");
+					if(token){
+						if(config->clientid_prefixes){
+							mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: clientid_prefixes specified multiple times. Only the latest will be used.");
+							_mosquitto_free(config->clientid_prefixes);
+						}
+						config->clientid_prefixes = _mosquitto_strdup(token);
+						if(!config->clientid_prefixes){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty clientid_prefixes value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
 				}else if(!strcmp(token, "connection")){
 					token = strtok(NULL, " ");
 					if(token){
@@ -192,6 +233,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						cur_bridge->address = NULL;
 						cur_bridge->keepalive = 60;
 						cur_bridge->clean_session = false;
+						cur_bridge->clientid = NULL;
 						cur_bridge->port = 0;
 						cur_bridge->topics = NULL;
 						cur_bridge->topic_count = 0;
@@ -305,6 +347,22 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						if(max_queued_messages < 0) max_queued_messages = 0;
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty max_queued_messages value in configuration.");
+					}
+				}else if(!strcmp(token, "password_file")){
+					token = strtok(NULL, " ");
+					if(token){
+						if(config->password_file){
+							mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: password_file specified multiple times. Only the latest will be used.");
+							_mosquitto_free(config->password_file);
+						}
+						config->password_file = _mosquitto_strdup(token);
+						if(!config->password_file){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty password_file value in configuration.");
+						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "password")){
 					if(!cur_bridge){
@@ -443,7 +501,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "autosave_on_changes")
-						|| !strcmp(token, "clientid_prefixes")
 						|| !strcmp(token, "connection_messages")
 						|| !strcmp(token, "retained_persistence")
 						|| !strcmp(token, "trace_level")
@@ -456,7 +513,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						|| !strcmp(token, "threshold")
 						|| !strcmp(token, "try_private")
 						|| !strcmp(token, "mount_point")
-						|| !strcmp(token, "clientid")
 						|| !strcmp(token, "acl_file")
 						|| !strcmp(token, "allow_anonymous")
 						|| !strcmp(token, "ffdc_output")

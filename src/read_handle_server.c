@@ -104,6 +104,15 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 		return 1;
 	}
 
+	/* clientid_prefixes check */
+	if(db->config->clientid_prefixes){
+		if(strncmp(db->config->clientid_prefixes, client_id, strlen(db->config->clientid_prefixes))){
+			mqtt3_raw_connack(context, 2);
+			mqtt3_socket_close(context);
+			return MOSQ_ERR_SUCCESS;
+		}
+	}
+
 	/* Find if this client already has an entry */
 	for(i=0; i<db->context_count; i++){
 		if(db->contexts[i] && db->contexts[i]->core.id && !strcmp(db->contexts[i]->core.id, client_id)){
@@ -175,7 +184,12 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 			/* Username flag given, but no username. Ignore. */
 			username_flag = 0;
 		}
+	}else if(db->config->allow_anonymous == false){
+		mqtt3_raw_connack(context, 2);
+		mqtt3_socket_close(context);
+		return MOSQ_ERR_SUCCESS;
 	}
+
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
 
 	context->core.state = mosq_cs_connected;
@@ -193,7 +207,7 @@ int mqtt3_handle_disconnect(mqtt3_context *context)
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received DISCONNECT from %s", context->core.id);
 	context->core.state = mosq_cs_disconnecting;
 	mqtt3_socket_close(context);
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 

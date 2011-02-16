@@ -255,25 +255,6 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 	}
 	freeaddrinfo(ainfo);
 
-	return 0;
-}
-
-int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *packet)
-{
-	struct _mosquitto_packet *tail;
-
-	if(!context || !packet) return 1;
-
-	packet->next = NULL;
-	if(context->core.out_packet){
-		tail = context->core.out_packet;
-		while(tail->next){
-			tail = tail->next;
-		}
-		tail->next = packet;
-	}else{
-		context->core.out_packet = packet;
-	}
 	return MOSQ_ERR_SUCCESS;
 }
 
@@ -394,7 +375,6 @@ int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context)
 
 int mqtt3_net_write(mqtt3_context *context)
 {
-	uint8_t byte;
 	ssize_t write_length;
 	struct _mosquitto_packet *packet;
 
@@ -403,62 +383,6 @@ int mqtt3_net_write(mqtt3_context *context)
 	while(context->core.out_packet){
 		packet = context->core.out_packet;
 
-		if(packet->command){
-			/* Assign to_proces here before remaining_length changes. */
-			packet->to_process = packet->remaining_length;
-			packet->pos = 0;
-
-			write_length = _mosquitto_net_write(&context->core, &packet->command, 1);
-			if(write_length == 1){
-				bytes_sent++;
-				packet->command = 0;
-			}else{
-				if(write_length == 0) return 1; /* EOF */
-#ifndef WIN32
-				if(errno == EAGAIN || errno == EWOULDBLOCK){
-#else
-				if(WSAGetLastError() == WSAEWOULDBLOCK){
-#endif
-					return MOSQ_ERR_SUCCESS;
-				}else{
-					return 1;
-				}
-			}
-		}
-		if(!packet->have_remaining){
-			/* Write remaining
-			 * Algorithm for encoding taken from pseudo code at
-			 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
-			 */
-			do{
-				byte = packet->remaining_length % 128;
-				packet->remaining_length = packet->remaining_length / 128;
-				/* If there are more digits to encode, set the top bit of this digit */
-				if(packet->remaining_length>0){
-					byte = byte | 0x80;
-				}
-				write_length = _mosquitto_net_write(&context->core, &byte, 1);
-				if(write_length == 1){
-					packet->remaining_count++;
-					/* Max 4 bytes length for remaining length as defined by protocol. */
-					if(packet->remaining_count > 4) return MOSQ_ERR_PROTOCOL;
-	
-					bytes_sent++;
-				}else{
-					if(write_length == 0) return 1; /* EOF */
-#ifndef WIN32
-					if(errno == EAGAIN || errno == EWOULDBLOCK){
-#else
-					if(WSAGetLastError() == WSAEWOULDBLOCK){
-#endif
-						return MOSQ_ERR_SUCCESS;
-					}else{
-						return 1;
-					}
-				}
-			}while(packet->remaining_length > 0);
-			packet->have_remaining = 1;
-		}
 		while(packet->to_process > 0){
 			write_length = _mosquitto_net_write(&context->core, &(packet->payload[packet->pos]), packet->to_process);
 			if(write_length > 0){

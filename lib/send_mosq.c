@@ -37,6 +37,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3_protocol.h>
 #include <net_mosq.h>
 #include <send_mosq.h>
+#include <util_mosq.h>
 
 static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid, bool dup);
 
@@ -44,6 +45,7 @@ static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t comm
 static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid, bool dup)
 {
 	struct _mosquitto_packet *packet = NULL;
+	int rc;
 
 	assert(mosq);
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
@@ -54,13 +56,14 @@ static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t comm
 		packet->command |= 8;
 	}
 	packet->remaining_length = 2;
-	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*2);
-	if(!packet->payload){
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
 		_mosquitto_free(packet);
-		return MOSQ_ERR_NOMEM;
+		return rc;
 	}
-	packet->payload[0] = MOSQ_MSB(mid);
-	packet->payload[1] = MOSQ_LSB(mid);
+
+	packet->payload[packet->pos+0] = MOSQ_MSB(mid);
+	packet->payload[packet->pos+1] = MOSQ_LSB(mid);
 
 	_mosquitto_packet_queue(&mosq->core, packet);
 
@@ -71,6 +74,7 @@ static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t comm
 int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 {
 	struct _mosquitto_packet *packet = NULL;
+	int rc;
 
 	assert(mosq);
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
@@ -78,6 +82,12 @@ int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 
 	packet->command = command;
 	packet->remaining_length = 0;
+
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
+		_mosquitto_free(packet);
+		return rc;
+	}
 
 	_mosquitto_packet_queue(&mosq->core, packet);
 
@@ -113,6 +123,7 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 {
 	struct _mosquitto_packet *packet = NULL;
 	int packetlen;
+	int rc;
 
 	assert(mosq);
 	assert(topic);
@@ -131,13 +142,11 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 
 	packet->mid = mid;
 	packet->command = PUBLISH | ((dup&0x1)<<3) | (qos<<1) | retain;
-	packet->command_saved = PUBLISH | (qos<<1);
 	packet->remaining_length = packetlen;
-	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packetlen);
-	if(!packet->payload){
-		_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "PUBLISH failed allocating payload memory.");
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
 		_mosquitto_free(packet);
-		return MOSQ_ERR_NOMEM;
+		return rc;
 	}
 	/* Variable header (topic string) */
 	_mosquitto_write_string(packet, topic, strlen(topic));

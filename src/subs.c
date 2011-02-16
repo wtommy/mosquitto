@@ -81,7 +81,7 @@ static int _subs_process(struct _mosquitto_subhier *hier, const char *source_id,
 		if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, msg_qos, false, stored) == 1) rc = 1;
 		leaf = leaf->next;
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 static int _sub_topic_tokenise(const char *subtopic, struct _sub_token **topics)
@@ -116,7 +116,7 @@ static int _sub_topic_tokenise(const char *subtopic, struct _sub_token **topics)
 	
 	_mosquitto_free(local_subtopic);
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 
 cleanup:
 	_mosquitto_free(local_subtopic);
@@ -158,7 +158,7 @@ static int _sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *
 				leaf->prev = NULL;
 			}
 		}
-		return 0;
+		return MOSQ_ERR_SUCCESS;
 	}
 
 	branch = subhier->children;
@@ -200,11 +200,11 @@ static int _sub_remove(mqtt3_context *context, struct _mosquitto_subhier *subhie
 					leaf->next->prev = leaf->prev;
 				}
 				_mosquitto_free(leaf);
-				return 0;
+				return MOSQ_ERR_SUCCESS;
 			}
 			leaf = leaf->next;
 		}
-		return 0;
+		return MOSQ_ERR_SUCCESS;
 	}
 
 	branch = subhier->children;
@@ -220,12 +220,12 @@ static int _sub_remove(mqtt3_context *context, struct _mosquitto_subhier *subhie
 				_mosquitto_free(branch->topic);
 				_mosquitto_free(branch);
 			}
-			return 0;
+			return MOSQ_ERR_SUCCESS;
 		}
 		last = branch;
 		branch = branch->next;
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 static int _sub_search(struct _mosquitto_subhier *subhier, struct _sub_token *tokens, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
@@ -252,7 +252,7 @@ static int _sub_search(struct _mosquitto_subhier *subhier, struct _sub_token *to
 		last = branch;
 		branch = branch->next;
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_sub_add(mqtt3_context *context, const char *sub, int qos, struct _mosquitto_subhier *root)
@@ -267,15 +267,15 @@ int mqtt3_sub_add(mqtt3_context *context, const char *sub, int qos, struct _mosq
 
 	if(!strncmp(sub, "$SYS/", 5)){
 		tree = 2;
-		if(strlen(sub+5) == 0) return 0;
+		if(strlen(sub+5) == 0) return MOSQ_ERR_SUCCESS;
 		if(_sub_topic_tokenise(sub+5, &tokens)) return 1;
 	}else if(sub[0] == '/'){
 		tree = 1;
-		if(strlen(sub+1) == 0) return 0;
+		if(strlen(sub+1) == 0) return MOSQ_ERR_SUCCESS;
 		if(_sub_topic_tokenise(sub+1, &tokens)) return 1;
 	}else{
 		tree = 0;
-		if(strlen(sub) == 0) return 0;
+		if(strlen(sub) == 0) return MOSQ_ERR_SUCCESS;
 		if(_sub_topic_tokenise(sub, &tokens)) return 1;
 	}
 
@@ -415,7 +415,7 @@ static int _subs_clean_session(mqtt3_context *context, struct _mosquitto_subhier
 	struct _mosquitto_subhier *child, *last = NULL;
 	struct _mosquitto_subleaf *leaf, *next;
 
-	if(!root) return 0;
+	if(!root) return MOSQ_ERR_SUCCESS;
 
 	leaf = root->subs;
 	while(leaf){
@@ -472,7 +472,7 @@ int mqtt3_subs_clean_session(mqtt3_context *context, struct _mosquitto_subhier *
 		child = child->next;
 	}
 
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 void mqtt3_sub_tree_print(struct _mosquitto_subhier *root, int level)
@@ -550,7 +550,7 @@ static int _retain_search(struct _mosquitto_subhier *subhier, struct _sub_token 
 		last = branch;
 		branch = branch->next;
 	}
-	return 0;
+	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_retain_queue(mosquitto_db *db, mqtt3_context *context, const char *sub, int sub_qos)
