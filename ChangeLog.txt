@@ -6,6 +6,7 @@
   is available, rather than aborting when any address family is not available.
 - Don't clean queued messages when a non clean session client reconnects.
 - Make mosquitto.py compatible with Python <2.6.
+- Fix mosquitto.h header includes for Windows.
 
 0.9.2 - 20110208
 ================

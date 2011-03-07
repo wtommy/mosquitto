@@ -44,13 +44,29 @@ extern "C" {
 #define libmosq_EXPORT
 #endif
 
+#ifdef WIN32
+#	if _MSC_VER < 1600
+		typedef unsigned char uint8_t;
+		typedef unsigned short uint16_t;
+		typedef unsigned int uint32_t;
+		typedef unsigned long long uint64_t;
+#	else
+#		include <stdint.h>
+#	endif
+#	ifndef __cplusplus
+#		define bool char
+#		define true 1
+#		define false 0
+#	endif
+#else
+#	include <stdint.h>
+#	include <stdbool.h>
+#endif
+
 #define LIBMOSQUITTO_MAJOR 0
 #define LIBMOSQUITTO_MINOR 9
 #define LIBMOSQUITTO_REVISION 3
 #define LIBMOSQUITTO_VERSION_NUMBER (LIBMOSQUITTO_MAJOR*1000000+LIBMOSQUITTO_MINOR*1000+LIBMOSQUITTO_REVISION)
-
-#include <stdbool.h>
-#include <stdint.h>
 
 /* Log destinations */
 #define MOSQ_LOG_NONE 0x00

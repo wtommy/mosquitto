@@ -40,7 +40,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #define mosqpp_EXPORT
 #endif
 
-#include <stdint.h>
 #include <cstdlib>
 #include <time.h>
 #include <mosquitto.h>
