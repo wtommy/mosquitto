@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2010, Roger Light <roger@atchoo.org>
+Copyright (c) 2010 Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@ extern "C" {
 
 #define LIBMOSQUITTO_MAJOR 0
 #define LIBMOSQUITTO_MINOR 9
-#define LIBMOSQUITTO_REVISION 2
+#define LIBMOSQUITTO_REVISION 3
 #define LIBMOSQUITTO_VERSION_NUMBER (LIBMOSQUITTO_MAJOR*1000000+LIBMOSQUITTO_MINOR*1000+LIBMOSQUITTO_REVISION)
 
 #include <stdbool.h>
