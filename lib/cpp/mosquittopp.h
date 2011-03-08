@@ -45,6 +45,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <time.h>
 #include <mosquitto.h>
 
+/*
+ * Class: mosquittopp
+ *
+ * A mosquitto client class. This is a C++ wrapper class for the mosquitto C
+ * library. Please see mosquitto.h for details of the functions.
+ */
 class mosqpp_EXPORT mosquittopp {
 	private:
 		struct mosquitto *mosq;
