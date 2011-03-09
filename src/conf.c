@@ -517,7 +517,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						|| !strcmp(token, "allow_anonymous")
 						|| !strcmp(token, "ffdc_output")
 						|| !strcmp(token, "max_log_entries")
-						|| !strcmp(token, "password_file")
 						|| !strcmp(token, "trace_output")){
 					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Unsupported rsmb configuration option \"%s\".", token);
 				}else{
