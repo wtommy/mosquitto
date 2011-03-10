@@ -202,8 +202,8 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 
 		sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 		if(sock == -1){
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
-			return 1;
+			mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: %s", strerror(errno));
+			continue;
 		}
 		(*sock_count)++;
 		*socks = _mosquitto_realloc(*socks, sizeof(int)*(*sock_count));
@@ -255,6 +255,29 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 	}
 	freeaddrinfo(ainfo);
 
+	if(sock >= 0){
+		return 0;
+	}else{
+		return 1;
+	}
+}
+
+int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *packet)
+{
+	struct _mosquitto_packet *tail;
+
+	if(!context || !packet) return 1;
+
+	packet->next = NULL;
+	if(context->core.out_packet){
+		tail = context->core.out_packet;
+		while(tail->next){
+			tail = tail->next;
+		}
+		tail->next = packet;
+	}else{
+		context->core.out_packet = packet;
+	}
 	return MOSQ_ERR_SUCCESS;
 }
 

@@ -1,5 +1,5 @@
-# Also bump lib/mosquitto.h, lib/python/setup.py
-VERSION=0.9.2
+# Also bump lib/mosquitto.h, lib/python/setup.py, CMakeLists.txt
+VERSION=0.9.3
 TIMESTAMP:=$(shell date "+%F %T%z")
 
 #MANCOUNTRIES=en_GB

@@ -128,14 +128,16 @@ void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_fre
 		if(context->core.will->payload) _mosquitto_free(context->core.will->payload);
 		_mosquitto_free(context->core.will);
 	}
-	msg = context->msgs;
-	while(msg){
-		next = msg->next;
-		msg->store->ref_count--;
-		_mosquitto_free(msg);
-		msg = next;
+	if(do_free || context->clean_session){
+		msg = context->msgs;
+		while(msg){
+			next = msg->next;
+			msg->store->ref_count--;
+			_mosquitto_free(msg);
+			msg = next;
+		}
+		context->msgs = NULL;
 	}
-	context->msgs = NULL;
 	if(do_free){
 		_mosquitto_free(context);
 	}
