@@ -9,7 +9,7 @@ drop in replacement.
 See the following links for more information on mqtt:
 
 http://mqtt.org/
-http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10840_.htm
+http://www.ibm.com/developerworks/webservices/library/ws-mqtt/index.html
 
 Mosquitto project information is available at the following locations:
 
