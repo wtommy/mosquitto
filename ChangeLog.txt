@@ -1,4 +1,4 @@
-0.9.3 - 20110306
+0.9.3 - 20110310
 ================
 
 - Set retained message status for QoS 2 messages (bug #726535).
