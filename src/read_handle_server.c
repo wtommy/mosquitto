@@ -41,7 +41,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	uint8_t protocol_version;
 	uint8_t connect_flags;
 	char *client_id;
-	char *will_message = NULL;
+	char *will_topic = NULL, *will_message = NULL;
 	uint8_t will, will_retain, will_qos, clean_session;
 	uint8_t username_flag, password_flag;
 	char *username, *password;
@@ -59,14 +59,14 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 		return 1;
 	}
 	if(!protocol_name){
-		mqtt3_socket_close(context);
+		_mosquitto_socket_close(&context->core);
 		return 3;
 	}
 	if(strcmp(protocol_name, PROTOCOL_NAME)){
 		mqtt3_log_printf(MOSQ_LOG_INFO, "Invalid protocol \"%s\" in CONNECT from %s.",
 				protocol_name, context->address);
 		_mosquitto_free(protocol_name);
-		mqtt3_socket_close(context);
+		_mosquitto_socket_close(&context->core);
 		return MOSQ_ERR_PROTOCOL;
 	}
 	_mosquitto_free(protocol_name);
@@ -78,13 +78,14 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	if(protocol_version != PROTOCOL_VERSION){
 		mqtt3_log_printf(MOSQ_LOG_INFO, "Invalid protocol version %d in CONNECT from %s.",
 				protocol_version, context->address);
+		_mosquitto_free(protocol_name);
 		mqtt3_raw_connack(context, 1);
-		mqtt3_socket_close(context);
+		_mosquitto_socket_close(&context->core);
 		return MOSQ_ERR_PROTOCOL;
 	}
 
 	if(_mosquitto_read_byte(&context->core.in_packet, &connect_flags)){
-		mqtt3_socket_close(context);
+		_mosquitto_socket_close(&context->core);
 		return 1;
 	}
 	clean_session = connect_flags & 0x02;
@@ -95,12 +96,12 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	password_flag = connect_flags & 0x80;
 
 	if(_mosquitto_read_uint16(&context->core.in_packet, &(context->core.keepalive))){
-		mqtt3_socket_close(context);
+		_mosquitto_socket_close(&context->core);
 		return 1;
 	}
 
 	if(_mosquitto_read_string(&context->core.in_packet, &client_id)){
-		mqtt3_socket_close(context);
+		_mosquitto_socket_close(&context->core);
 		return 1;
 	}
 
@@ -142,15 +143,15 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	if(connect_flags & 0x04){
 		context->core.will = _mosquitto_calloc(1, sizeof(struct mosquitto_message));
 		if(!context->core.will){
-			mqtt3_socket_close(context);
+			_mosquitto_socket_close(&context->core);
 			return MOSQ_ERR_NOMEM;
 		}
 		if(_mosquitto_read_string(&context->core.in_packet, &context->core.will->topic)){
-			mqtt3_socket_close(context);
+			_mosquitto_socket_close(&context->core);
 			return 1;
 		}
 		if(_mosquitto_read_string(&context->core.in_packet, &will_message)){
-			mqtt3_socket_close(context);
+			_mosquitto_socket_close(&context->core);
 			return 1;
 		}
 		if(will_message){
@@ -197,14 +198,14 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 int mqtt3_handle_disconnect(mqtt3_context *context)
 {
 	if(!context){
-		return 1;
+		return MOSQ_ERR_INVAL;
 	}
 	if(context->core.in_packet.remaining_length != 0){
 		return MOSQ_ERR_PROTOCOL;
 	}
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received DISCONNECT from %s", context->core.id);
 	context->core.state = mosq_cs_disconnecting;
-	mqtt3_socket_close(context);
+	_mosquitto_socket_close(&context->core);
 	return MOSQ_ERR_SUCCESS;
 }
 
@@ -218,7 +219,7 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 	uint8_t *payload = NULL, *tmp_payload;
 	uint32_t payloadlen = 0;
 
-	if(!context) return 1;
+	if(!context) return MOSQ_ERR_INVAL;
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received SUBSCRIBE from %s", context->core.id);
 	/* FIXME - plenty of potential for memory leaks here */
 
@@ -287,7 +288,7 @@ int mqtt3_handle_unsubscribe(mosquitto_db *db, mqtt3_context *context)
 	uint16_t mid;
 	char *sub;
 
-	if(!context) return 1;
+	if(!context) return MOSQ_ERR_INVAL;
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received UNSUBSCRIBE from %s", context->core.id);
 
 	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;

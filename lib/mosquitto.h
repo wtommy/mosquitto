@@ -65,7 +65,7 @@ extern "C" {
 
 #define LIBMOSQUITTO_MAJOR 0
 #define LIBMOSQUITTO_MINOR 9
-#define LIBMOSQUITTO_REVISION 3
+#define LIBMOSQUITTO_REVISION 90
 #define LIBMOSQUITTO_VERSION_NUMBER (LIBMOSQUITTO_MAJOR*1000000+LIBMOSQUITTO_MINOR*1000+LIBMOSQUITTO_REVISION)
 
 /* Log destinations */
@@ -90,6 +90,9 @@ extern "C" {
 #define MOSQ_ERR_CONN_REFUSED 5
 #define MOSQ_ERR_NOT_FOUND 6
 #define MOSQ_ERR_CONN_LOST 7
+#define MOSQ_ERR_SSL 8
+#define MOSQ_ERR_PAYLOAD_SIZE 9
+#define MOSQ_ERR_NOT_SUPPORTED 10
 
 struct mosquitto_message{
 	uint16_t mid;
@@ -263,6 +266,8 @@ libmosq_EXPORT int mosquitto_will_set(struct mosquitto *mosq, bool will, const c
  * Configure username and password for a mosquitton instance. This is only
  * supported by brokers that implement the MQTT spec v3.1. By default, no
  * username or password will be sent.
+ * If username is NULL, the password argument is ignored.
+ * This must be called before calling mosquitto_connect().
  *
  * This is must be called before calling <mosquitto_connect>.
  *
@@ -664,6 +669,15 @@ libmosq_EXPORT void mosquitto_unsubscribe_callback_set(struct mosquitto *mosq, v
  *                  retrying. Defaults to 60.
  */
 libmosq_EXPORT void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_retry);
+/* Set the number of seconds to wait before retrying messages. This applies to
+ * publish messages with QoS>0. May be called at any time.
+ *
+ * mosq :          a valid mosquitto instance
+ * message_retry : the number of seconds to wait for a response before
+ *                 retrying. Defaults to 60.
+ */
+
+libmosq_EXPORT int mosquitto_ssl_set(struct mosquitto *mosq, const char *pemfile, const char *password);
 
 #ifdef __cplusplus
 }

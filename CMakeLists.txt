@@ -7,7 +7,20 @@ project(mosquitto)
 
 cmake_minimum_required(VERSION 2.6)
 
-set (VERSION 0.9.3)
+set (VERSION 0.9.99)
+
+option(USE_SSL
+	"Include SSL support?" ON)
+
+if (${USE_SSL} STREQUAL ON)
+	# Find needed libraries
+	include(FindOpenSSL)
+	if (NOT OPENSSL_FOUND)
+		message(FATAL_ERROR "OpenSSL was requested but couldn't be found.")
+	endif (NOT OPENSSL_FOUND)
+	add_definitions("-DWITH_SSL")
+endif (${USE_SSL} STREQUAL ON)
+
 
 if (WIN32)
 	execute_process(COMMAND echo "%DATE% %TIME%" OUTPUT_VARIABLE TIMESTAMP

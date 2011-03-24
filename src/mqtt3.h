@@ -235,6 +235,7 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 void mqtt3_socket_close(mqtt3_context *context);
 int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_count);
 
+int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *packet);
 int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context);
 int mqtt3_net_write(mqtt3_context *context);
 

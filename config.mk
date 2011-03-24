@@ -1,11 +1,11 @@
 # Also bump lib/mosquitto.h, lib/python/setup.py, CMakeLists.txt
-VERSION=0.9.3
+VERSION=0.9.90
 TIMESTAMP:=$(shell date "+%F %T%z")
 
 #MANCOUNTRIES=en_GB
 
 CFLAGS=-I. -I.. -ggdb -Wall -O2 -I../lib
-LDFLAGS=-lsqlite3
+LDFLAGS=
 # Add -lwrap to LDFLAGS if compiling with tcp wrappers support.
 
 CC=gcc

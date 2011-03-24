@@ -265,7 +265,7 @@ static int _db_subs_retain_write(mosquitto_db *db, int db_fd, struct _mosquitto_
 
 	slen = strlen(topic) + strlen(node->topic) + 2;
 	thistopic = _mosquitto_malloc(sizeof(char)*slen);
-	if(!thistopic) return 1;
+	if(!thistopic) return MOSQ_ERR_NOMEM;
 	if(strlen(topic)){
 		snprintf(thistopic, slen, "%s/%s", topic, node->topic);
 	}else{
@@ -341,7 +341,7 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 	uint16_t i16temp;
 	uint8_t i8temp;
 
-	if(!db || !db->filepath) return 1;
+	if(!db || !db->filepath) return MOSQ_ERR_INVAL;
 	mqtt3_log_printf(MOSQ_LOG_INFO, "Saving in-memory database to %s.", db->filepath);
 	if(cleanup){
 		mqtt3_db_store_clean(db);
@@ -400,7 +400,7 @@ static int _db_client_msg_restore(mosquitto_db *db, const char *client_id, uint1
 	cmsg = _mosquitto_calloc(1, sizeof(mosquitto_client_msg));
 	if(!cmsg){
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 
 	cmsg->store = NULL;
@@ -464,7 +464,7 @@ static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
 	if(!client_id){
 		close(db_fd);
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 	read_e(db_fd, client_id, slen);
 
@@ -515,7 +515,7 @@ static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 		if(!source_id){
 			close(db_fd);
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-			return 1;
+			return MOSQ_ERR_NOMEM;
 		}
 		if(read(db_fd, source_id, slen) != slen){
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
@@ -538,7 +538,7 @@ static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 			close(db_fd);
 			_mosquitto_free(source_id);
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-			return 1;
+			return MOSQ_ERR_NOMEM;
 		}
 		if(read(db_fd, topic, slen) != slen){
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
@@ -566,7 +566,7 @@ static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 			_mosquitto_free(source_id);
 			_mosquitto_free(topic);
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-			return 1;
+			return MOSQ_ERR_NOMEM;
 		}
 		if(read(db_fd, payload, payloadlen) != payloadlen){
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
@@ -635,7 +635,7 @@ static int _db_sub_chunk_restore(mosquitto_db *db, int db_fd)
 	if(!client_id){
 		close(db_fd);
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 	read_e(db_fd, client_id, slen);
 	read_e(db_fd, &i16temp, sizeof(uint16_t));
@@ -645,7 +645,7 @@ static int _db_sub_chunk_restore(mosquitto_db *db, int db_fd)
 		close(db_fd);
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
 		_mosquitto_free(client_id);
-		return 1;
+		return MOSQ_ERR_NOMEM;
 	}
 	read_e(db_fd, topic, slen);
 	read_e(db_fd, &qos, sizeof(uint8_t));

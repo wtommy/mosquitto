@@ -42,7 +42,7 @@ int mqtt3_raw_connect(mqtt3_context *context, const char *client_id, bool will, 
 	uint8_t byte;
 	int rc;
 
-	if(!context || !client_id) return 1;
+	if(!context || !client_id) return MOSQ_ERR_INVAL;
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return MOSQ_ERR_NOMEM;
@@ -115,7 +115,7 @@ int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uin
 	uint16_t mid;
 	int rc;
 
-	if(!context || !topic) return 1;
+	if(!context || !topic) return MOSQ_ERR_INVAL;
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return MOSQ_ERR_NOMEM;
@@ -151,7 +151,7 @@ int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic)
 	uint16_t mid;
 	int rc;
 
-	if(!context || !topic) return 1;
+	if(!context || !topic) return MOSQ_ERR_INVAL;
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return MOSQ_ERR_NOMEM;

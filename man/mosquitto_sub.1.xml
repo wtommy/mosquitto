@@ -243,7 +243,7 @@
 		<para>The minimum requirement for this is to use --will-topic to
 		specify which topic the will should be sent out on. This will result in
 		a non-retained, zero length message with QoS 0.</para>
-		<para>Use the --will-retain, -will-payload and --will-qos arguments to
+		<para>Use the --will-retain, --will-payload and --will-qos arguments to
 		modify the other will parameters.</para>
 	</refsect1>
 

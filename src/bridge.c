@@ -36,6 +36,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <net_mosq.h>
 #include <mqtt3.h>
 #include <memory_mosq.h>
+#include <mosquitto.h>
+
+#ifdef WITH_BRIDGE
 
 int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge)
 {
@@ -101,7 +104,7 @@ int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 	int new_sock = -1;
 	int i;
 
-	if(!context || !context->bridge) return 1;
+	if(!context || !context->bridge) return MOSQ_ERR_INVAL;
 
 	context->core.state = mosq_cs_new;
 	context->duplicate = false;
@@ -114,7 +117,7 @@ int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 	mqtt3_bridge_packet_cleanup(context);
 
 	mqtt3_log_printf(MOSQ_LOG_NOTICE, "Connecting bridge %s", context->bridge->name);
-	new_sock = _mosquitto_socket_connect(context->bridge->address, context->bridge->port);
+	new_sock = _mosquitto_socket_connect(&context->core, context->bridge->address, context->bridge->port);
 	if(new_sock == -1){
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error creating bridge.");
 		return 1;
@@ -153,3 +156,5 @@ void mqtt3_bridge_packet_cleanup(mqtt3_context *context)
 
 	_mosquitto_packet_cleanup(&(context->core.in_packet));
 }
+
+#endif

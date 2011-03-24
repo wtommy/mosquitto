@@ -1,30 +1,41 @@
-/usr/sbin/mosquitto flags=(complain) {
+/usr/sbin/mosquitto {
 	/usr/sbin/mosquitto r,
-	/etc/mosquitto.conf r,
+	/etc/mosquitto/mosquitto.conf r,
 	/var/lib/mosquitto/ r,
 	/var/lib/mosquitto/mosquitto.db rwk,
 
 	network inet stream,
 	network inet6 stream,
+	network inet dgram,
+	network inet6 dgram,
 
 	# Base
 	/dev/urandom r,
+	/etc/gai.conf r,
 	/etc/ld.so.cache rm,
 	/etc/localtime r,
-	/lib/tls/i686/cmov/libc-*.so rm,
-	/lib/tls/i686/cmov/libdl-*.so rm,
-	/lib/tls/i686/cmov/libnsl-*.so rm,
-	/lib/tls/i686/cmov/libpthread-*.so rm,
+	/lib{,32,64}/tls/i686/cmov/libc-*.so rm,
+	/lib{,32,64}/tls/i686/cmov/libdl-*.so rm,
+	/lib{,32,64}/tls/i686/cmov/libnsl-*.so rm,
+	/lib{,32,64}/tls/i686/cmov/libpthread-*.so rm,
+	/lib{,32,64}/libc-*.so rm,
+	/lib{,32,64}/libdl-*.so rm,
+	/lib{,32,64}/libnsl-*.so rm,
+	/lib{,32,64}/libpthread-*.so rm,
 
 	# For drop privileges
 	capability setgid,
 	capability setuid,
 	/etc/nsswitch.conf r,
 	/etc/passwd r,
-	/lib/tls/i686/cmov/libnss_*-*.so rm,
+	/lib{,32,64}/tls/i686/cmov/libnss_*-*.so rm,
+	/lib{,32,64}/libnss_*-*.so rm,
 
 	# For tcp-wrappers
-	/lib/libwrap.so*  rm,
+	/lib{,32,64}/libwrap.so*  rm,
 	/etc/hosts.allow r,
 	/etc/hosts.deny r,
+
+	# For sqlite compatible
+	/usr/lib{,32,64}/libsqlite3.so* rm,
 }
