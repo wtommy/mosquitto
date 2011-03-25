@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2010 Roger Light <roger@atchoo.org>
+Copyright (c) 2011 Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -28,5 +28,58 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <config.h>
+#include <memory_mosq.h>
+#include <mqtt3.h>
 
+int mqtt3_pwfile_parse(struct _mosquitto_db *db)
+{
+	FILE *pwfile;
+	struct _mosquitto_unpwd *unpwd;
+	char buf[256];
+	char *username, *password;
+
+	if(!db || !db->config) return MOSQ_ERR_INVAL;
+
+	if(!db->config->password_file) return MOSQ_ERR_SUCCESS;
+
+	pwfile = fopen(db->config->password_file, "rt");
+	if(!pwfile) return 1;
+
+	while(!feof(pwfile)){
+		if(fgets(buf, 256, pwfile)){
+			username = strtok(buf, ":");
+			if(username){
+				unpwd = _mosquitto_calloc(1, sizeof(struct _mosquitto_unpwd));
+				if(!unpwd) return MOSQ_ERR_NOMEM;
+				unpwd->username = _mosquitto_strdup(username);
+				if(!unpwd) return MOSQ_ERR_NOMEM;
+				password = strtok(NULL, ":");
+				if(password){
+					unpwd->password = _mosquitto_strdup(password);
+					if(!unpwd) return MOSQ_ERR_NOMEM;
+				}
+				unpwd->next = db->unpwd;
+				db->unpwd = unpwd;
+			}
+		}
+	}
+	fclose(pwfile);
+
+	return MOSQ_ERR_SUCCESS;
+}
+
+int mqtt3_unpwd_cleanup(struct _mosquitto_db *db)
+{
+	struct _mosquitto_unpwd *tail;
+
+	if(!db) return MOSQ_ERR_INVAL;
+
+	while(db->unpwd){
+		tail = db->unpwd->next;
+		if(db->unpwd->password) _mosquitto_free(db->unpwd->password);
+		if(db->unpwd->username) _mosquitto_free(db->unpwd->username);
+		_mosquitto_free(db->unpwd);
+		db->unpwd = tail;
+	}
+}
 
