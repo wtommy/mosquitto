@@ -47,21 +47,6 @@ else (WIN32)
 endif (WIN32)
 
 # ========================================
-# Check for required compatibility headers
-# ========================================
-include (CheckIncludeFile)
-
-check_include_file(stdbool.h HAVE_STDBOOL_H)
-if (NOT HAVE_STDBOOL_H)
-	set (STDBOOL_H_PATH ${mosquitto_SOURCE_DIR}/compat/stdbool)
-endif (NOT HAVE_STDBOOL_H)
-
-check_include_file(stdint.h HAVE_STDINT_H)
-if (NOT HAVE_STDINT_H)
-	set (STDINT_H_PATH ${mosquitto_SOURCE_DIR}/compat/stdint)
-endif (NOT HAVE_STDINT_H)
-
-# ========================================
 # Include projects
 # ========================================
 
