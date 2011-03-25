@@ -41,7 +41,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	uint8_t protocol_version;
 	uint8_t connect_flags;
 	char *client_id;
-	char *will_topic = NULL, *will_message = NULL;
+	char *will_message = NULL;
 	uint8_t will, will_retain, will_qos, clean_session;
 	uint8_t username_flag, password_flag;
 	char *username, *password;
