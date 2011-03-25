@@ -256,7 +256,8 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 	}
 	freeaddrinfo(ainfo);
 
-	if(sock >= 0){
+	/* We need to have at least one working socket. */
+	if(*sock_count > 0){
 		return 0;
 	}else{
 		return 1;
