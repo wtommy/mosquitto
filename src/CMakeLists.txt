@@ -16,6 +16,7 @@ set (MOSQ_SRCS
 	raw_send.c raw_send_client.c raw_send_server.c
 	read_handle.c read_handle_client.c read_handle_server.c
 	subs.c
+	security.c
 	util.c
 	../lib/util_mosq.c ../lib/util_mosq.h)
 

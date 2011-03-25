@@ -138,9 +138,16 @@ typedef struct _mosquitto_client_msg{
 	bool dup;
 } mosquitto_client_msg;
 
+struct _mosquitto_unpwd{
+	struct _mosquitto_unpwd *next;
+	char *username;
+	char *password;
+};
+
 typedef struct _mosquitto_db{
 	dbid_t last_db_id;
 	struct _mosquitto_subhier subs;
+	struct _mosquitto_unpwd *unpwd;
 	struct _mqtt3_context **contexts;
 	int context_count;
 	struct mosquitto_msg_store *msg_store;
