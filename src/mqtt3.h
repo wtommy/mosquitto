@@ -42,7 +42,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 /* Database macros */
-#define MOSQ_DB_VERSION 0
+#define MOSQ_DB_VERSION 1
 
 /* Log destinations */
 #define MQTT3_LOG_NONE 0x00
@@ -53,11 +53,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MQTT3_LOG_TOPIC 0x10
 #define MQTT3_LOG_ALL 0xFF
 
-#ifdef WITH_32BIT_DBID
-typedef uint32_t dbid_t;
-#else
 typedef uint64_t dbid_t;
-#endif
 
 enum mqtt3_msg_state {
 	ms_invalid = 0,

@@ -41,22 +41,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <mqtt3.h>
 
-
-#ifdef WITH_32BIT_DBID
-#  define DBID_HTON(a) htonl(a)
-#  define DBID_NTOH(a) ntohl(a)
-#else
-#  ifdef __APPLE__
-#    include <libkern/OSByteOrder.h>
-#    define DBID_HTON(a) OSSwapHostToBigInt64(a)
-#    define DBID_NTOH(a) OSSwapBigToHostInt64(a)
-#  else
-#    include <endian.h>
-#    define DBID_HTON(a) htobe64(a)
-#    define DBID_NTOH(a) be64toh(a)
-#  endif
-#endif
-
 /* DB read/write */
 const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','t','o',' ','d','b'};
 #define DB_CHUNK_CFG 1
@@ -139,7 +123,7 @@ static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_con
 		write_e(db_fd, &i16temp, sizeof(uint16_t));
 		write_e(db_fd, context->core.id, slen);
 
-		i64temp = DBID_HTON(cmsg->store->db_id);
+		i64temp = cmsg->store->db_id;
 		write_e(db_fd, &i64temp, sizeof(dbid_t));
 
 		i16temp = htons(cmsg->mid);
@@ -194,7 +178,7 @@ static int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 		write_e(db_fd, &i16temp, sizeof(uint16_t));
 		write_e(db_fd, &length, sizeof(uint32_t));
 
-		i64temp = DBID_HTON(stored->db_id);
+		i64temp = stored->db_id;
 		write_e(db_fd, &i64temp, sizeof(dbid_t));
 
 		slen = strlen(stored->source_id);
@@ -303,7 +287,7 @@ static int _db_subs_retain_write(mosquitto_db *db, int db_fd, struct _mosquitto_
 		write_e(db_fd, &i16temp, sizeof(uint16_t));
 		write_e(db_fd, &length, sizeof(uint32_t));
 
-		i64temp = DBID_HTON(node->retained->db_id);
+		i64temp = node->retained->db_id;
 		write_e(db_fd, &i64temp, sizeof(dbid_t));
 	}
 #undef write_e
@@ -371,7 +355,7 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 	i8temp = sizeof(dbid_t);
 	write_e(db_fd, &i8temp, sizeof(uint8_t));
 	/* last db mid */
-	i64temp = DBID_HTON(db->last_db_id);
+	i64temp = db->last_db_id;
 	write_e(db_fd, &i64temp, sizeof(dbid_t));
 #undef write_e
 
@@ -469,7 +453,7 @@ static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
 	read_e(db_fd, client_id, slen);
 
 	read_e(db_fd, &i64temp, sizeof(dbid_t));
-	store_id = DBID_NTOH(i64temp);
+	store_id = i64temp;
 
 	read_e(db_fd, &i16temp, sizeof(uint16_t));
 	mid = ntohs(i16temp);
@@ -506,7 +490,7 @@ static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 
 #define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
 	read_e(db_fd, &i64temp, sizeof(dbid_t));
-	store_id = DBID_NTOH(i64temp);
+	store_id = i64temp;
 
 	read_e(db_fd, &i16temp, sizeof(uint16_t));
 	slen = ntohs(i16temp);
@@ -603,7 +587,7 @@ static int _db_retain_chunk_restore(mosquitto_db *db, int db_fd)
 		close(db_fd);
 		return 1;
 	}
-	store_id = DBID_NTOH(i64temp);
+	store_id = i64temp;
 	store = db->msg_store;
 	while(store){
 		if(store->db_id == store_id){
@@ -687,7 +671,7 @@ int mqtt3_db_restore(mosquitto_db *db)
 		read_e(fd, &crc, sizeof(uint32_t));
 		read_e(fd, &i32temp, sizeof(uint32_t));
 		db_version = ntohl(i32temp);
-		if(db_version != MOSQ_DB_VERSION){
+		if(db_version != MOSQ_DB_VERSION && db_version != 0){
 			close(fd);
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unsupported persistent database format version %d (need version %d).", db_version, MOSQ_DB_VERSION);
 			return 1;
@@ -708,7 +692,7 @@ int mqtt3_db_restore(mosquitto_db *db)
 						return 1;
 					}
 					read_e(fd, &i64temp, sizeof(dbid_t));
-					db->last_db_id = DBID_NTOH(i64temp);
+					db->last_db_id = i64temp;
 					break;
 
 				case DB_CHUNK_MSG_STORE:
