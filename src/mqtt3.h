@@ -332,6 +332,7 @@ void mqtt3_bridge_packet_cleanup(mqtt3_context *context);
  * Security related functions
  * ============================================================ */
 int mqtt3_pwfile_parse(struct _mosquitto_db *db);
+int mqtt3_unpwd_check(struct _mosquitto_db *db, const char *username, const char *password);
 int mqtt3_unpwd_cleanup(struct _mosquitto_db *db);
 
 #endif

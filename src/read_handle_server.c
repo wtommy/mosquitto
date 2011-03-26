@@ -143,6 +143,14 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 					password_flag = 0;
 				}
 			}
+			rc = mqtt3_unpwd_check(db, username, password);
+			if(rc == MOSQ_ERR_AUTH){
+				mqtt3_raw_connack(context, 2);
+				mqtt3_socket_close(context);
+				return MOSQ_ERR_SUCCESS;
+			}else if(rc == MOSQ_ERR_INVAL){
+				return MOSQ_ERR_INVAL;
+			}
 		}else if(rc == MOSQ_ERR_NOMEM){
 			return MOSQ_ERR_NOMEM;
 		}else{

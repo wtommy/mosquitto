@@ -72,6 +72,31 @@ int mqtt3_pwfile_parse(struct _mosquitto_db *db)
 	return MOSQ_ERR_SUCCESS;
 }
 
+int mqtt3_unpwd_check(struct _mosquitto_db *db, const char *username, const char *password)
+{
+	struct _mosquitto_unpwd *tail;
+
+	if(!db || !username) return MOSQ_ERR_INVAL;
+
+	tail = db->unpwd;
+	while(tail){
+		if(!strcmp(tail->username, username)){
+			if(tail->password){
+				if(password){
+					if(!strcmp(tail->password, password)){
+						return MOSQ_ERR_SUCCESS;
+					}
+				}
+			}else{
+				return MOSQ_ERR_SUCCESS;
+			}
+		}
+		tail = tail->next;
+	}
+
+	return MOSQ_ERR_AUTH;
+}
+
 int mqtt3_unpwd_cleanup(struct _mosquitto_db *db)
 {
 	struct _mosquitto_unpwd *tail;
