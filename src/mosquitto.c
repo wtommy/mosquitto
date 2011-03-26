@@ -411,6 +411,15 @@ int main(int argc, char *argv[])
 	mqtt3_log_init(config.log_type, config.log_dest);
 	mqtt3_log_printf(MOSQ_LOG_INFO, "mosquitto version %s (build date %s) starting", VERSION, TIMESTAMP);
 
+	/* Load username/password data if required. */
+	if(config.password_file){
+		rc = mqtt3_pwfile_parse(&int_db);
+		if(rc){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening password file.");
+			return rc;
+		}
+	}
+
 	/* Set static $SYS messages */
 	snprintf(buf, 1024, "mosquitto version %s", VERSION);
 	mqtt3_db_messages_easy_queue(&int_db, NULL, "$SYS/broker/version", 2, strlen(buf), (uint8_t *)buf, 1);
@@ -512,6 +521,7 @@ int main(int argc, char *argv[])
 		_mosquitto_free(listensock);
 	}
 
+	mqtt3_unpwd_cleanup(&int_db);
 
 	if(config.pid_file){
 		remove(config.pid_file);

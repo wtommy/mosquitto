@@ -81,5 +81,7 @@ int mqtt3_unpwd_cleanup(struct _mosquitto_db *db)
 		_mosquitto_free(db->unpwd);
 		db->unpwd = tail;
 	}
+
+	return MOSQ_ERR_SUCCESS;
 }
 

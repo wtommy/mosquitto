@@ -328,4 +328,10 @@ int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge);
 int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context);
 void mqtt3_bridge_packet_cleanup(mqtt3_context *context);
 
+/* ============================================================
+ * Security related functions
+ * ============================================================ */
+int mqtt3_pwfile_parse(struct _mosquitto_db *db);
+int mqtt3_unpwd_cleanup(struct _mosquitto_db *db);
+
 #endif
