@@ -131,6 +131,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 		}
 	}
 
+	/* FIXME - sort memory leaks from auth failures. */
 	if(username_flag){
 		rc = _mosquitto_read_string(&context->core.in_packet, &username);
 		if(rc == MOSQ_ERR_SUCCESS){
@@ -190,16 +191,18 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	context->clean_session = clean_session;
 
 	context->core.will = will_struct;
-	context->core.will->topic = will_topic;
-	if(will_message){
-		context->core.will->payload = (uint8_t *)will_message;
-		context->core.will->payloadlen = strlen(will_message);
-	}else{
-		context->core.will->payload = NULL;
-		context->core.will->payloadlen = 0;
+	if(context->core.will){
+		context->core.will->topic = will_topic;
+		if(will_message){
+			context->core.will->payload = (uint8_t *)will_message;
+			context->core.will->payloadlen = strlen(will_message);
+		}else{
+			context->core.will->payload = NULL;
+			context->core.will->payloadlen = 0;
+		}
+		context->core.will->qos = will_qos;
+		context->core.will->retain = will_retain;
 	}
-	context->core.will->qos = will_qos;
-	context->core.will->retain = will_retain;
 
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
 
