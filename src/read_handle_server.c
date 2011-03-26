@@ -41,7 +41,8 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	uint8_t protocol_version;
 	uint8_t connect_flags;
 	char *client_id;
-	char *will_message = NULL;
+	char *will_message = NULL, *will_topic = NULL;
+	struct mosquitto_message *will_struct = NULL;
 	uint8_t will, will_retain, will_qos, clean_session;
 	uint8_t username_flag, password_flag;
 	char *username, *password;
@@ -114,39 +115,13 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 		}
 	}
 
-	/* Find if this client already has an entry */
-	for(i=0; i<db->context_count; i++){
-		if(db->contexts[i] && db->contexts[i]->core.id && !strcmp(db->contexts[i]->core.id, client_id)){
-			/* Client does match. */
-			if(db->contexts[i]->core.sock == -1){
-				/* Client is reconnecting after a disconnect */
-				/* FIXME - does anything else need to be done here? */
-			}else{
-				/* Client is already connected, disconnect old version */
-				mqtt3_log_printf(MOSQ_LOG_ERR, "Client %s already connected, closing old connection.", client_id);
-			}
-			db->contexts[i]->clean_session = clean_session;
-			mqtt3_context_cleanup(db, db->contexts[i], false);
-			db->contexts[i]->core.state = mosq_cs_connected;
-			db->contexts[i]->address = _mosquitto_strdup(context->address);
-			db->contexts[i]->core.sock = context->core.sock;
-			context->core.sock = -1;
-			context->core.state = mosq_cs_disconnecting;
-			context = db->contexts[i];
-			break;
-		}
-	}
-
-	context->core.id = client_id;
-	context->clean_session = clean_session;
-
 	if(connect_flags & 0x04){
-		context->core.will = _mosquitto_calloc(1, sizeof(struct mosquitto_message));
-		if(!context->core.will){
+		will_struct = _mosquitto_calloc(1, sizeof(struct mosquitto_message));
+		if(!will_struct){
 			_mosquitto_socket_close(&context->core);
 			return MOSQ_ERR_NOMEM;
 		}
-		if(_mosquitto_read_string(&context->core.in_packet, &context->core.will->topic)){
+		if(_mosquitto_read_string(&context->core.in_packet, &will_topic)){
 			_mosquitto_socket_close(&context->core);
 			return 1;
 		}
@@ -154,15 +129,6 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 			_mosquitto_socket_close(&context->core);
 			return 1;
 		}
-		if(will_message){
-			context->core.will->payload = (uint8_t *)will_message;
-			context->core.will->payloadlen = strlen(will_message);
-		}else{
-			context->core.will->payload = NULL;
-			context->core.will->payloadlen = 0;
-		}
-		context->core.will->qos = will_qos;
-		context->core.will->retain = will_retain;
 	}
 
 	if(username_flag){
@@ -188,6 +154,44 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 		mqtt3_socket_close(context);
 		return MOSQ_ERR_SUCCESS;
 	}
+
+	/* Find if this client already has an entry. This must be done *after* any security checks. */
+	for(i=0; i<db->context_count; i++){
+		if(db->contexts[i] && db->contexts[i]->core.id && !strcmp(db->contexts[i]->core.id, client_id)){
+			/* Client does match. */
+			if(db->contexts[i]->core.sock == -1){
+				/* Client is reconnecting after a disconnect */
+				/* FIXME - does anything else need to be done here? */
+			}else{
+				/* Client is already connected, disconnect old version */
+				mqtt3_log_printf(MOSQ_LOG_ERR, "Client %s already connected, closing old connection.", client_id);
+			}
+			db->contexts[i]->clean_session = clean_session;
+			mqtt3_context_cleanup(db, db->contexts[i], false);
+			db->contexts[i]->core.state = mosq_cs_connected;
+			db->contexts[i]->address = _mosquitto_strdup(context->address);
+			db->contexts[i]->core.sock = context->core.sock;
+			context->core.sock = -1;
+			context->core.state = mosq_cs_disconnecting;
+			context = db->contexts[i];
+			break;
+		}
+	}
+
+	context->core.id = client_id;
+	context->clean_session = clean_session;
+
+	context->core.will = will_struct;
+	context->core.will->topic = will_topic;
+	if(will_message){
+		context->core.will->payload = (uint8_t *)will_message;
+		context->core.will->payloadlen = strlen(will_message);
+	}else{
+		context->core.will->payload = NULL;
+		context->core.will->payloadlen = 0;
+	}
+	context->core.will->qos = will_qos;
+	context->core.will->retain = will_retain;
 
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
 
