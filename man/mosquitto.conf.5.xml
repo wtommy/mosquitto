@@ -151,6 +151,21 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>password_file</option></term>
+				<listitem>
+					<para>Set the path to a password file. If defined, the
+					contents of the file are used to control client access to
+					the broker. Each line should be in the format
+					"username:password", where the colon and password are
+					optional but recommended. If allow_anonymous is set to
+					false, only users defined in this file will be able to
+					connect. Setting allow_anonymous to true when password_file
+					is defined is valid and could be used with acl_file to have
+					e.g. read only guest/anonymous accounts and defined users
+					that can publish.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>persistence</option></term>
 				<listitem>
 					<para>Can be true or false. If true, connection,
