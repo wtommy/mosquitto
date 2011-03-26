@@ -406,6 +406,8 @@ int main(int argc, char *argv[])
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Couldn't open database.");
 		return 1;
 	}
+	int_db.config = &config;
+
 	/* Initialise logging only after initialising the database in case we're
 	 * logging to topics */
 	mqtt3_log_init(config.log_type, config.log_dest);
@@ -485,7 +487,6 @@ int main(int argc, char *argv[])
 		}
 	}
 #endif
-	int_db.config = &config;
 
 	run = 1;
 	rc = loop(&config, listensock, listensock_count, listener_max);

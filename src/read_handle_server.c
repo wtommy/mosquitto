@@ -45,7 +45,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	struct mosquitto_message *will_struct = NULL;
 	uint8_t will, will_retain, will_qos, clean_session;
 	uint8_t username_flag, password_flag;
-	char *username, *password;
+	char *username, *password = NULL;
 	int i;
 	int rc;
 	
@@ -93,8 +93,8 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	will = connect_flags & 0x04;
 	will_qos = (connect_flags & 0x18) >> 3;
 	will_retain = connect_flags & 0x20;
-	username_flag = connect_flags & 0x40;
-	password_flag = connect_flags & 0x80;
+	password_flag = connect_flags & 0x40;
+	username_flag = connect_flags & 0x80;
 
 	if(_mosquitto_read_uint16(&context->core.in_packet, &(context->core.keepalive))){
 		_mosquitto_socket_close(&context->core);
@@ -158,7 +158,9 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 			/* Username flag given, but no username. Ignore. */
 			username_flag = 0;
 		}
-	}else if(db->config->allow_anonymous == false){
+	}
+
+	if(!username_flag && db->config->allow_anonymous == false){
 		mqtt3_raw_connack(context, 2);
 		mqtt3_socket_close(context);
 		return MOSQ_ERR_SUCCESS;

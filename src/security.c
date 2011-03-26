@@ -41,6 +41,7 @@ int mqtt3_pwfile_parse(struct _mosquitto_db *db)
 	struct _mosquitto_unpwd *unpwd;
 	char buf[256];
 	char *username, *password;
+	int len;
 
 	if(!db || !db->config) return MOSQ_ERR_INVAL;
 
@@ -57,10 +58,20 @@ int mqtt3_pwfile_parse(struct _mosquitto_db *db)
 				if(!unpwd) return MOSQ_ERR_NOMEM;
 				unpwd->username = _mosquitto_strdup(username);
 				if(!unpwd) return MOSQ_ERR_NOMEM;
+				len = strlen(unpwd->username);
+				while(unpwd->username[len-1] == 10 || unpwd->username[len-1] == 13){
+					unpwd->username[len-1] = '\0';
+					len = strlen(unpwd->username);
+				}
 				password = strtok(NULL, ":");
 				if(password){
 					unpwd->password = _mosquitto_strdup(password);
 					if(!unpwd) return MOSQ_ERR_NOMEM;
+					len = strlen(unpwd->password);
+					while(unpwd->password[len-1] == 10 || unpwd->password[len-1] == 13){
+						unpwd->password[len-1] = '\0';
+						len = strlen(unpwd->password);
+					}
 				}
 				unpwd->next = db->unpwd;
 				db->unpwd = unpwd;
@@ -86,6 +97,8 @@ int mqtt3_unpwd_check(struct _mosquitto_db *db, const char *username, const char
 					if(!strcmp(tail->password, password)){
 						return MOSQ_ERR_SUCCESS;
 					}
+				}else{
+					return MOSQ_ERR_AUTH;
 				}
 			}else{
 				return MOSQ_ERR_SUCCESS;
