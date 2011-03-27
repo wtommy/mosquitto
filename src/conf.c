@@ -12,6 +12,7 @@ static int _mqtt3_conf_parse_int(char **token, const char *name, int *value);
 void mqtt3_config_init(mqtt3_config *config)
 {
 	/* Set defaults */
+	config->acl_file = NULL;
 	config->allow_anonymous = true;
 	config->autosave_interval = 1800;
 	config->clientid_prefixes = NULL;
@@ -130,7 +131,23 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 			}
 			token = strtok(buf, " ");
 			if(token){
-				if(!strcmp(token, "address") || !strcmp(token, "addresses")){
+				if(!strcmp(token, "acl_file")){
+					token = strtok(NULL, " ");
+					if(token){
+						if(config->acl_file){
+							mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: acl_file specified multiple times. Only the latest will be used.");
+							_mosquitto_free(config->acl_file);
+						}
+						config->acl_file = _mosquitto_strdup(token);
+						if(!config->acl_file){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty acl_file value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+				}else if(!strcmp(token, "address") || !strcmp(token, "addresses")){
 #ifdef WITH_BRIDGE
 					if(!cur_bridge || cur_bridge->address){
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
@@ -551,7 +568,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						|| !strcmp(token, "threshold")
 						|| !strcmp(token, "try_private")
 						|| !strcmp(token, "mount_point")
-						|| !strcmp(token, "acl_file")
 						|| !strcmp(token, "ffdc_output")
 						|| !strcmp(token, "max_log_entries")
 						|| !strcmp(token, "trace_output")){
