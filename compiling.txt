@@ -1,8 +1,6 @@
 Add a very brief blurb on packages needed for compiling
 The following packages are required for mosquitto:
 
-sqlite3 (required, package name libsqlite3-dev or similar, minimum version is
-3.6.14.1)
 tcp-wrappers (optional, package name libwrap0-dev)
 
 To compile, run "make".
