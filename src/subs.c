@@ -142,6 +142,12 @@ static int _sub_add(mqtt3_context *context, int qos, struct _mosquitto_subhier *
 			leaf = subhier->subs;
 			last_leaf = NULL;
 			while(leaf){
+				if(!strcmp(leaf->context->core.id, context->core.id)){
+					/* Client making a second subscription to same topic. Only
+					 * need to update QoS. */
+					leaf->qos = qos;
+					return MOSQ_ERR_SUCCESS;
+				}
 				last_leaf = leaf;
 				leaf = leaf->next;
 			}

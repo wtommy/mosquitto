@@ -1,6 +1,8 @@
 0.10 - 2011xxxx
 ===============
 
+- Multiple client subscriptions to the same topic result in only a single
+  subscription. Bug #744077.
 - Implement support for the password_file option and accompanying
   authentication requirements in the broker.
 - mosquitto_will_set() and mosquitto_publish() now return
