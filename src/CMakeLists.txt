@@ -59,7 +59,7 @@ endif (NOT WIN32)
 set_target_properties(mosquitto PROPERTIES
 	VERSION ${VERSION})
 
-install(TARGETS mosquitto RUNTIME DESTINATION ${SBINDEST} LIBRARY DESTINATION ${LIBDEST})
+install(TARGETS mosquitto RUNTIME DESTINATION ${SBINDIR} LIBRARY DESTINATION ${LIBDIR})
 
 if (UNIX)
 	install(CODE "EXEC_PROGRAM(/sbin/ldconfig)")
