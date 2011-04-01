@@ -422,6 +422,15 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	/* Load acl data if required. */
+	if(config.acl_file){
+		rc = mqtt3_aclfile_parse(&int_db);
+		if(rc){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening acl file.");
+			return rc;
+		}
+	}
+
 	/* Set static $SYS messages */
 	snprintf(buf, 1024, "mosquitto version %s", VERSION);
 	mqtt3_db_messages_easy_queue(&int_db, NULL, "$SYS/broker/version", 2, strlen(buf), (uint8_t *)buf, 1);

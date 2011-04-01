@@ -35,6 +35,21 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <mqtt3.h>
 
+int mqtt3_aclfile_parse(struct _mosquitto_db *db)
+{
+	FILE *aclfile;
+
+	if(!db || !db->config) return MOSQ_ERR_INVAL;
+	if(!db->config->acl_file) return MOSQ_ERR_SUCCESS;
+
+	aclfile = fopen(db->config->acl_file, "rt");
+	if(!aclfile) return 1;
+
+	fclose(aclfile);
+
+	return MOSQ_ERR_SUCCESS;
+}
+
 int mqtt3_pwfile_parse(struct _mosquitto_db *db)
 {
 	FILE *pwfile;
