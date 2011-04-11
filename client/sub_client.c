@@ -132,6 +132,7 @@ void print_usage(void)
 	printf(" --will-qos : QoS level for the client Will.\n");
 	printf(" --will-retain : if given, make the client Will retained.\n");
 	printf(" --will-topic : the topic on which to publish the client Will.\n");
+	printf("\nSee http://mosquitto.org/ for more information.\n\n");
 }
 
 int main(int argc, char *argv[])
