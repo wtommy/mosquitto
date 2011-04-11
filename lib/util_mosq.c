@@ -48,8 +48,7 @@ int _mosquitto_packet_alloc(struct _mosquitto_packet *packet)
 	remaining_length = packet->remaining_length;
 	packet->payload = NULL;
 	packet->remaining_count = 0;
-
-	while(remaining_length > 0 && packet->remaining_count < 4){
+	do{
 		byte = remaining_length % 128;
 		remaining_length = remaining_length / 128;
 		/* If there are more digits to encode, set the top bit of this digit */
@@ -58,7 +57,7 @@ int _mosquitto_packet_alloc(struct _mosquitto_packet *packet)
 		}
 		remaining_bytes[packet->remaining_count] = byte;
 		packet->remaining_count++;
-	}
+	}while(remaining_length > 0 && packet->remaining_count < 5);
 	if(packet->remaining_count == 4) return MOSQ_ERR_PROTOCOL;
 	packet->packet_length = packet->remaining_length + 1 + packet->remaining_count;
 	packet->payload = _mosquitto_malloc(sizeof(uint8_t)*packet->packet_length);
