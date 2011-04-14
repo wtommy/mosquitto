@@ -264,25 +264,6 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 	}
 }
 
-int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *packet)
-{
-	struct _mosquitto_packet *tail;
-
-	if(!context || !packet) return MOSQ_ERR_INVAL;
-
-	packet->next = NULL;
-	if(context->core.out_packet){
-		tail = context->core.out_packet;
-		while(tail->next){
-			tail = tail->next;
-		}
-		tail->next = packet;
-	}else{
-		context->core.out_packet = packet;
-	}
-	return MOSQ_ERR_SUCCESS;
-}
-
 int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context)
 {
 	uint8_t byte;
