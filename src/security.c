@@ -38,12 +38,73 @@ POSSIBILITY OF SUCH DAMAGE.
 int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 {
 	FILE *aclfile;
+	char buf[1024];
+	char *token;
+	char *user = NULL;
+	char *topic;
+	char *access_s;
+	int access;
 
 	if(!db || !db->config) return MOSQ_ERR_INVAL;
 	if(!db->config->acl_file) return MOSQ_ERR_SUCCESS;
 
 	aclfile = fopen(db->config->acl_file, "rt");
 	if(!aclfile) return 1;
+
+	// topic [read|write] <topic> 
+	// user <user>
+
+	while(fgets(buf, 1024, aclfile)){
+		token = strtok(buf, " ");
+		if(token){
+			if(!strcmp(token, "topic")){
+				access_s = strtok(NULL, " ");
+				if(!access_s){
+					mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty topic in acl_file.");
+					if(user) _mosquitto_free(user);
+					fclose(aclfile);
+					return 1;
+				}
+				token = strtok(NULL, " ");
+				if(token){
+					topic = token;
+				}else{
+					topic = access_s;
+					access_s = NULL;
+				}
+				if(access_s){
+					if(!strcmp(access_s, "read")){
+						access = MOSQ_ACL_READ;
+					}else if(!strcmp(access_s, "write")){
+						access = MOSQ_ACL_WRITE;
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty invalid topic access type in acl_file.");
+						if(user) _mosquitto_free(user);
+						fclose(aclfile);
+						return 1;
+					}
+				}else{
+					access = MOSQ_ACL_READWRITE;
+				}
+
+			}else if(!strcmp(token, "user")){
+				token = strtok(NULL, " ");
+				if(token){
+					if(user) _mosquitto_free(user);
+					user = _mosquitto_strdup(token);
+					if(!user){
+						fclose(aclfile);
+						return MOSQ_ERR_NOMEM;
+					}
+				}else{
+					mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Missing username in acl_file.");
+					if(user) _mosquitto_free(user);
+					fclose(aclfile);
+					return 1;
+				}
+			}
+		}
+	}
 
 	fclose(aclfile);
 
