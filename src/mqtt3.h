@@ -53,6 +53,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MQTT3_LOG_TOPIC 0x10
 #define MQTT3_LOG_ALL 0xFF
 
+#define MOSQ_ACL_READWRITE 0
+#define MOSQ_ACL_READ 1
+#define MOSQ_ACL_WRITE 2
+
 typedef uint64_t dbid_t;
 
 enum mqtt3_msg_state {
@@ -143,6 +147,19 @@ struct _mosquitto_unpwd{
 	struct _mosquitto_unpwd *next;
 	char *username;
 	char *password;
+};
+
+struct _mosquitto_acl{
+	struct _mosquitto_acl *child;
+	struct _mosquitto_acl *next;
+	char *topic;
+	int access;
+};
+
+struct _mosquitto_acl_user{
+	struct _mosquitto_acl_user *next;
+	char *username;
+	struct _mosquitto_acl *acl;
 };
 
 typedef struct _mosquitto_db{
