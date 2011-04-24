@@ -229,7 +229,7 @@ int mqtt3_handle_disconnect(mqtt3_context *context)
 
 int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 {
-	int rc = 0;
+	int rc = 0, rc2;
 	uint16_t mid;
 	char *sub;
 	uint8_t qos;
@@ -276,9 +276,15 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 				return 1;
 			}
 			mqtt3_log_printf(MOSQ_LOG_DEBUG, "\t%s (QoS %d)", sub, qos);
-			mqtt3_sub_add(context, sub, qos, &db->subs);
-	
-			if(mqtt3_retain_queue(db, context, sub, qos)) rc = 1;
+
+			/* Check for topic access */
+			rc2 = mqtt3_acl_check(db, context, sub, MOSQ_ACL_READ);
+			if(rc2 == MOSQ_ERR_SUCCESS){
+				mqtt3_sub_add(context, sub, qos, &db->subs);
+				if(mqtt3_retain_queue(db, context, sub, qos)) rc = 1;
+			}else if(rc2 != MOSQ_ERR_ACL_DENIED){
+				rc = 1;
+			}
 			_mosquitto_free(sub);
 		}
 

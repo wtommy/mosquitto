@@ -178,6 +178,18 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 		}
 	}
 
+	/* Check for topic access */
+	rc = mqtt3_acl_check(db, context, topic, MOSQ_ACL_WRITE);
+	if(rc == MOSQ_ERR_ACL_DENIED){
+		_mosquitto_free(topic);
+		if(payload) _mosquitto_free(payload);
+		return MOSQ_ERR_SUCCESS;
+	}else if(rc != MOSQ_ERR_ACL_DENIED){
+		_mosquitto_free(topic);
+		if(payload) _mosquitto_free(payload);
+		return rc;
+	}
+
 	if(qos > 0){
 		mqtt3_db_message_store_find(db, context->core.id, mid, &stored);
 	}

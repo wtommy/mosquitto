@@ -158,6 +158,15 @@ int _add_acl(struct _mosquitto_db *db, const char *user, const char *topic, int 
 	return MOSQ_ERR_SUCCESS;
 }
 
+int mqtt3_acl_check(struct _mosquitto_db *db, mqtt3_context *context, const char *topic, int access)
+{
+	if(!db || !context || !topic) return MOSQ_ERR_INVAL;
+
+	if(!db->acl_list) return MOSQ_ERR_SUCCESS;
+
+	return MOSQ_ERR_SUCCESS;
+}
+
 int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 {
 	FILE *aclfile;

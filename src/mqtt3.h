@@ -324,7 +324,7 @@ void mqtt3_db_vacuum(void);
  * ============================================================ */
 int mqtt3_sub_add(struct _mqtt3_context *context, const char *sub, int qos, struct _mosquitto_subhier *root);
 int mqtt3_sub_remove(struct _mqtt3_context *context, const char *sub, struct _mosquitto_subhier *root);
-int mqtt3_sub_search(struct _mosquitto_subhier *root, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored);
+int mqtt3_sub_search(struct _mosquitto_db *db, struct _mosquitto_subhier *root, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored);
 void mqtt3_sub_tree_print(struct _mosquitto_subhier *root, int level);
 int mqtt3_subs_clean_session(struct _mqtt3_context *context, struct _mosquitto_subhier *root);
 
@@ -352,6 +352,7 @@ void mqtt3_bridge_packet_cleanup(mqtt3_context *context);
  * Security related functions
  * ============================================================ */
 int mqtt3_aclfile_parse(struct _mosquitto_db *db);
+int mqtt3_acl_check(struct _mosquitto_db *db, mqtt3_context *context, const char *topic, int access);
 int mqtt3_pwfile_parse(struct _mosquitto_db *db);
 int mqtt3_unpwd_check(struct _mosquitto_db *db, const char *username, const char *password);
 int mqtt3_unpwd_cleanup(struct _mosquitto_db *db);

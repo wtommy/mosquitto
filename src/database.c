@@ -449,7 +449,7 @@ int mqtt3_db_messages_queue(mosquitto_db *db, const char *source_id, const char 
 	/* Find all clients that subscribe to topic and put messages into the db for them. */
 	if(!source_id || !topic) return MOSQ_ERR_INVAL;
 
-	mqtt3_sub_search(&db->subs, source_id, topic, qos, retain, stored);
+	mqtt3_sub_search(db, &db->subs, source_id, topic, qos, retain, stored);
 	return rc;
 }
 
