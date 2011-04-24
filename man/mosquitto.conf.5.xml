@@ -41,6 +41,14 @@
 		<title>Variables</title>
 		<variablelist>
 			<varlistentry>
+				<term><option>acl_file</option></term>
+				<listitem>
+					<para>Set the path to an access control list file. If defined, the
+					contents of the file are used to control client access to
+					topics on the broker.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>allow_anonymous</option></term>
 				<listitem>
 					<para>Boolean value that determines whether clients that
