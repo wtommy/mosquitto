@@ -83,6 +83,7 @@ int _add_acl(struct _mosquitto_db *db, const char *user, const char *topic, int 
 			acl_user->username = NULL;
 		}
 		acl_user->next = NULL;
+		acl_user->acl = NULL;
 	}
 
 	/* Tokenise topic */
@@ -167,6 +168,7 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 	char *access_s;
 	int access;
 	int rc;
+	int slen;
 
 	if(!db || !db->config) return MOSQ_ERR_INVAL;
 	if(!db->config->acl_file) return MOSQ_ERR_SUCCESS;
@@ -178,6 +180,11 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 	// user <user>
 
 	while(fgets(buf, 1024, aclfile)){
+		slen = strlen(buf);
+		while(buf[slen-1] == 10 || buf[slen-1] == 13){
+			buf[slen-1] = '\0';
+			slen = strlen(buf);
+		}
 		token = strtok(buf, " ");
 		if(token){
 			if(!strcmp(token, "topic")){
