@@ -58,7 +58,7 @@ int _add_acl(struct _mosquitto_db *db, const char *user, const char *topic, int 
 					acl_user = user_tail;
 					break;
 				}
-			}else if(!strcmp(user_tail->username, user)){
+			}else if(user_tail->username && !strcmp(user_tail->username, user)){
 				acl_user = user_tail;
 				break;
 			}
