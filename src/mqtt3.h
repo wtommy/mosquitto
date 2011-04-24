@@ -53,9 +53,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MQTT3_LOG_TOPIC 0x10
 #define MQTT3_LOG_ALL 0xFF
 
-#define MOSQ_ACL_READWRITE 0
-#define MOSQ_ACL_READ 1
-#define MOSQ_ACL_WRITE 2
+#define MOSQ_ACL_NONE 0
+#define MOSQ_ACL_READWRITE 1
+#define MOSQ_ACL_READ 2
+#define MOSQ_ACL_WRITE 3
 
 typedef uint64_t dbid_t;
 
@@ -166,6 +167,7 @@ typedef struct _mosquitto_db{
 	dbid_t last_db_id;
 	struct _mosquitto_subhier subs;
 	struct _mosquitto_unpwd *unpwd;
+	struct _mosquitto_acl_user *acl_list;
 	struct _mqtt3_context **contexts;
 	int context_count;
 	struct mosquitto_msg_store *msg_store;
