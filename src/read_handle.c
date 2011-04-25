@@ -184,7 +184,7 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 		_mosquitto_free(topic);
 		if(payload) _mosquitto_free(payload);
 		return MOSQ_ERR_SUCCESS;
-	}else if(rc != MOSQ_ERR_ACL_DENIED){
+	}else if(rc != MOSQ_ERR_SUCCESS){
 		_mosquitto_free(topic);
 		if(payload) _mosquitto_free(payload);
 		return rc;
