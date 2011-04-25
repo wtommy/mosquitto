@@ -1,10 +1,9 @@
 0.10 - 2011xxxx
 ===============
 
-- Multiple client subscriptions to the same topic result in only a single
-  subscription. Bug #744077.
 - Implement support for the password_file option and accompanying
   authentication requirements in the broker.
+- Implement topic Access Control Lists. 
 - mosquitto_will_set() and mosquitto_publish() now return
   MOSQ_ERR_PAYLOAD_SIZE if the payload is too large (>268,435,455 bytes).
 - Bridge support can now be disabled at compile time.
@@ -14,6 +13,8 @@
 - Add support for the clientid config variable for controlling bridge client
   ids.
 - Remove 32-bit database ID support because htobe64() no longer used.
+- Multiple client subscriptions to the same topic result in only a single
+  subscription. Bug #744077.
 
 0.9.3 - 20110310
 ================
