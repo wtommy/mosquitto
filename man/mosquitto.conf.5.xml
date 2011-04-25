@@ -43,9 +43,28 @@
 			<varlistentry>
 				<term><option>acl_file</option></term>
 				<listitem>
-					<para>Set the path to an access control list file. If defined, the
-					contents of the file are used to control client access to
-					topics on the broker.</para>
+					<para>Set the path to an access control list file. If
+					defined, the contents of the file are used to control
+					client access to topics on the broker.</para>
+					<para>If this parameter is defined then only the topics
+					listed will have access. Topic access is added with lines
+					of the format:</para>
+
+					<para><code>topic [read|write] &lt;topic&gt;</code></para>
+
+					<para>The access type is controlled using "read" or
+					"write". This parameter is optional - if not given then the
+					access is read/write.  &lt;topic&gt; can contain the + or #
+					wildcards as in subscriptions.</para>
+
+					<para>The first set of topics are applied to anonymous
+					clients, assuming allow_anonymous is true. User specific
+					topic ACLs are added after a user line as follows:</para>
+
+					<para><code>user &lt;username&gt;</code></para>
+
+					<para>The username referred to here is the same as in
+					password_file. It is not the clientid.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
