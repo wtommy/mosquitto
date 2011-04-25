@@ -246,7 +246,7 @@ static int _sub_remove(mqtt3_context *context, struct _mosquitto_subhier *subhie
 static int _sub_search(struct _mosquitto_db *db, struct _mosquitto_subhier *subhier, struct _sub_token *tokens, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
 {
 	/* FIXME - need to take into account source_id if the client is a bridge */
-	struct _mosquitto_subhier *branch, *last = NULL;
+	struct _mosquitto_subhier *branch;
 
 	branch = subhier->children;
 	while(branch){
@@ -264,7 +264,6 @@ static int _sub_search(struct _mosquitto_db *db, struct _mosquitto_subhier *subh
 			_subs_process(db, branch, source_id, topic, qos, retain, stored);
 			break;
 		}
-		last = branch;
 		branch = branch->next;
 	}
 	return MOSQ_ERR_SUCCESS;
@@ -520,11 +519,9 @@ void mqtt3_sub_tree_print(struct _mosquitto_subhier *root, int level)
 static int _retain_process(struct mosquitto_msg_store *retained, mqtt3_context *context, const char *sub, int sub_qos)
 {
 	int rc = 0;
-	char *topic;
 	int qos;
 	uint16_t mid;
 
-	topic = retained->msg.topic;
 	qos = retained->msg.qos;
 
 	if(qos > sub_qos) qos = sub_qos;
@@ -539,7 +536,7 @@ static int _retain_process(struct mosquitto_msg_store *retained, mqtt3_context *
 
 static int _retain_search(struct _mosquitto_subhier *subhier, struct _sub_token *tokens, mqtt3_context *context, const char *sub, int sub_qos)
 {
-	struct _mosquitto_subhier *branch, *last = NULL;
+	struct _mosquitto_subhier *branch;
 
 	branch = subhier->children;
 	while(branch){
@@ -562,7 +559,6 @@ static int _retain_search(struct _mosquitto_subhier *subhier, struct _sub_token 
 				}
 			}
 		}
-		last = branch;
 		branch = branch->next;
 	}
 	return MOSQ_ERR_SUCCESS;

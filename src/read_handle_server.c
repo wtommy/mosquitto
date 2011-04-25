@@ -116,7 +116,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 		}
 	}
 
-	if(connect_flags & 0x04){
+	if(will){
 		will_struct = _mosquitto_calloc(1, sizeof(struct mosquitto_message));
 		if(!will_struct){
 			_mosquitto_socket_close(&context->core);
@@ -251,7 +251,7 @@ int mqtt3_handle_disconnect(mqtt3_context *context)
 
 int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 {
-	int rc = 0, rc2;
+	int rc = 0;
 	uint16_t mid;
 	char *sub;
 	uint8_t qos;
