@@ -21,6 +21,8 @@ install : mosquitto
 	@for d in ${DIRS}; do $(MAKE) -C $${d} install; done
 	$(INSTALL) -d ${DESTDIR}/etc/mosquitto
 	$(INSTALL) -m 644 mosquitto.conf ${DESTDIR}/etc/mosquitto/mosquitto.conf
+	$(INSTALL) -m 644 aclfile.example ${DESTDIR}/etc/mosquitto/aclfile.example
+	$(INSTALL) -m 644 pwfile.example ${DESTDIR}/etc/mosquitto/pwfile.example
 
 uninstall :
 	@for d in ${DIRS}; do $(MAKE) -C $${d} uninstall; done
