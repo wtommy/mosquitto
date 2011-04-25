@@ -224,6 +224,8 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 			}
 			acl_tail = acl_tail->next;
 		}
+	}else{
+		context->acl_list = NULL;
 	}
 
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
@@ -296,7 +298,8 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 				return 1;
 			}
 			mqtt3_log_printf(MOSQ_LOG_DEBUG, "\t%s (QoS %d)", sub, qos);
-
+			/* FIXME - need to deny access to retained messages. */
+#if 0
 			/* Check for topic access */
 			rc2 = mqtt3_acl_check(db, context, sub, MOSQ_ACL_READ);
 			if(rc2 == MOSQ_ERR_SUCCESS){
@@ -305,6 +308,10 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 			}else if(rc2 != MOSQ_ERR_ACL_DENIED){
 				rc = 1;
 			}
+#else
+			mqtt3_sub_add(context, sub, qos, &db->subs);
+			if(mqtt3_retain_queue(db, context, sub, qos)) rc = 1;
+#endif
 			_mosquitto_free(sub);
 		}
 

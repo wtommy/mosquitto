@@ -122,8 +122,8 @@ int _add_acl(struct _mosquitto_db *db, const char *user, const char *topic, int 
 	}
 	if(acl_root){
 		acl_tail = acl_root;
-		while(acl_tail->next){
-			acl_tail = acl_tail->next;
+		while(acl_tail->child){
+			acl_tail = acl_tail->child;
 		}
 		acl_tail->access = access;
 	}else{
@@ -160,11 +160,53 @@ int _add_acl(struct _mosquitto_db *db, const char *user, const char *topic, int 
 
 int mqtt3_acl_check(struct _mosquitto_db *db, mqtt3_context *context, const char *topic, int access)
 {
+	char *local_topic;
+	char *token;
+	struct _mosquitto_acl *acl_root, *acl_tail;
+
 	if(!db || !context || !topic) return MOSQ_ERR_INVAL;
-
 	if(!db->acl_list) return MOSQ_ERR_SUCCESS;
+	if(!context->acl_list) return MOSQ_ERR_ACL_DENIED;
 
-	return MOSQ_ERR_SUCCESS;
+	acl_root = context->acl_list->acl;
+
+	/* FIXME - need to take wildcards into account */
+	while(acl_root){
+		local_topic = _mosquitto_strdup(topic);
+		if(!local_topic) return MOSQ_ERR_NOMEM;
+
+		acl_tail = acl_root;
+
+		if(local_topic[0] == '/'){
+			if(strcmp(acl_tail->topic, "/")){
+				acl_root = acl_root->next;
+				continue;
+			}
+			acl_tail = acl_tail->child;
+		}
+
+		token = strtok(local_topic, "/");
+		while(token){
+			if(!acl_tail || strcmp(acl_tail->topic, token)){
+				break;
+			}
+			token = strtok(NULL, "/");
+			if(!token && acl_tail->child == NULL){
+				/* We have a match */
+				if(access & acl_tail->access){
+					/* And access is allowed. */
+					_mosquitto_free(local_topic);
+					return MOSQ_ERR_SUCCESS;
+				}
+			}
+			acl_tail = acl_tail->child;
+		}
+		_mosquitto_free(local_topic);
+
+		acl_root = acl_root->next;
+	}
+
+	return MOSQ_ERR_ACL_DENIED;
 }
 
 int mqtt3_aclfile_parse(struct _mosquitto_db *db)
@@ -223,7 +265,7 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 						return 1;
 					}
 				}else{
-					access = MOSQ_ACL_READWRITE;
+					access = MOSQ_ACL_READ | MOSQ_ACL_WRITE;
 				}
 				rc = _add_acl(db, user, topic, access);
 				if(rc) return rc;

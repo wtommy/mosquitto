@@ -70,6 +70,7 @@ static int _subs_process(struct _mosquitto_db *db, struct _mosquitto_subhier *hi
 		/* Check for ACL topic access. */
 		rc2 = mqtt3_acl_check(db, leaf->context, topic, MOSQ_ACL_READ);
 		if(rc2 == MOSQ_ERR_ACL_DENIED){
+			leaf = leaf->next;
 			continue;
 		}else if(rc2 != MOSQ_ERR_SUCCESS){
 			rc = 1;

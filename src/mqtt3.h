@@ -53,10 +53,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MQTT3_LOG_TOPIC 0x10
 #define MQTT3_LOG_ALL 0xFF
 
-#define MOSQ_ACL_NONE 0
-#define MOSQ_ACL_READWRITE 1
-#define MOSQ_ACL_READ 2
-#define MOSQ_ACL_WRITE 3
+#define MOSQ_ACL_NONE 0x00
+#define MOSQ_ACL_READ 0x01
+#define MOSQ_ACL_WRITE 0x02
 
 typedef uint64_t dbid_t;
 
