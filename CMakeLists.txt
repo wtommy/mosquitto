@@ -65,4 +65,4 @@ add_subdirectory(man)
 # Install config file
 # ========================================
 
-install(FILES mosquitto.conf pwfile.example DESTINATION ${SYSCONFDIR})
+install(FILES mosquitto.conf aclfile.example pwfile.example DESTINATION ${SYSCONFDIR})
