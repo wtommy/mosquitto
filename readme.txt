@@ -1,7 +1,7 @@
 Mosquitto
 =========
 
-Mosquitto is an open source implementation of a server for version 3 of the
+Mosquitto is an open source implementation of a server for version 3.1 of the
 mqtt protocol. IBM have a closed source version of this server, known as
 Really Small Message Broker (rsmb). The plan is to make this a more or less
 drop in replacement.

@@ -79,7 +79,7 @@
 
 	<refsect1>
 		<title>Description</title>
-		<para><command>mosquitto_sub</command> is a simple mqtt version 3
+		<para><command>mosquitto_sub</command> is a simple mqtt version 3.1
 		client that will subscribe to a topic and print the messages that it
 		receives.</para>
 	</refsect1>
