@@ -170,7 +170,7 @@ int mqtt3_acl_check(struct _mosquitto_db *db, mqtt3_context *context, const char
 
 	acl_root = context->acl_list->acl;
 
-	/* FIXME - need to take wildcards into account */
+	/* Loop through all ACLs for this client. */
 	while(acl_root){
 		local_topic = _mosquitto_strdup(topic);
 		if(!local_topic) return MOSQ_ERR_NOMEM;
@@ -186,20 +186,37 @@ int mqtt3_acl_check(struct _mosquitto_db *db, mqtt3_context *context, const char
 		}
 
 		token = strtok(local_topic, "/");
+		/* Loop through the topic looking for matches to this ACL. */
 		while(token){
-			if(!acl_tail || strcmp(acl_tail->topic, token)){
+			if(acl_tail){
+				if(!strcmp(acl_tail->topic, "#") && acl_tail->child == NULL){
+					/* We have a match */
+					if(access & acl_tail->access){
+						/* And access is allowed. */
+						_mosquitto_free(local_topic);
+						return MOSQ_ERR_SUCCESS;
+					}else{
+						break;
+					}
+				}else if(!strcmp(acl_tail->topic, token) || !strcmp(acl_tail->topic, "+")){
+					token = strtok(NULL, "/");
+					if(!token && acl_tail->child == NULL){
+						/* We have a match */
+						if(access & acl_tail->access){
+							/* And access is allowed. */
+							_mosquitto_free(local_topic);
+							return MOSQ_ERR_SUCCESS;
+						}else{
+							break;
+						}
+					}
+				}else{
+					break;
+				}
+				acl_tail = acl_tail->child;
+			}else{
 				break;
 			}
-			token = strtok(NULL, "/");
-			if(!token && acl_tail->child == NULL){
-				/* We have a match */
-				if(access & acl_tail->access){
-					/* And access is allowed. */
-					_mosquitto_free(local_topic);
-					return MOSQ_ERR_SUCCESS;
-				}
-			}
-			acl_tail = acl_tail->child;
 		}
 		_mosquitto_free(local_topic);
 
