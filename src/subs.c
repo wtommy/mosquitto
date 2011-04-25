@@ -516,11 +516,18 @@ void mqtt3_sub_tree_print(struct _mosquitto_subhier *root, int level)
 	}
 }
 
-static int _retain_process(struct mosquitto_msg_store *retained, mqtt3_context *context, const char *sub, int sub_qos)
+static int _retain_process(struct _mosquitto_db *db, struct mosquitto_msg_store *retained, mqtt3_context *context, const char *sub, int sub_qos)
 {
 	int rc = 0;
 	int qos;
 	uint16_t mid;
+
+	rc = mqtt3_acl_check(db, context, retained->msg.topic, MOSQ_ACL_READ);
+	if(rc == MOSQ_ERR_ACL_DENIED){
+		return MOSQ_ERR_SUCCESS;
+	}else if(rc != MOSQ_ERR_SUCCESS){
+		return rc;
+	}
 
 	qos = retained->msg.qos;
 
@@ -530,11 +537,10 @@ static int _retain_process(struct mosquitto_msg_store *retained, mqtt3_context *
 	}else{
 		mid = 0;
 	}
-	if(mqtt3_db_message_insert(context, mid, mosq_md_out, qos, true, retained) == 1) rc = 1;
-	return rc;
+	return mqtt3_db_message_insert(context, mid, mosq_md_out, qos, true, retained);
 }
 
-static int _retain_search(struct _mosquitto_subhier *subhier, struct _sub_token *tokens, mqtt3_context *context, const char *sub, int sub_qos)
+static int _retain_search(struct _mosquitto_db *db, struct _mosquitto_subhier *subhier, struct _sub_token *tokens, mqtt3_context *context, const char *sub, int sub_qos)
 {
 	struct _mosquitto_subhier *branch;
 
@@ -546,15 +552,15 @@ static int _retain_search(struct _mosquitto_subhier *subhier, struct _sub_token 
 		if(strcmp(branch->topic, "+") && strcmp(branch->topic, "#")){
 			if(!strcmp(tokens->topic, "#") && !tokens->next){
 				if(branch->retained){
-					_retain_process(branch->retained, context, sub, sub_qos);
+					_retain_process(db, branch->retained, context, sub, sub_qos);
 				}
-				_retain_search(branch, tokens, context, sub, sub_qos);
+				_retain_search(db, branch, tokens, context, sub, sub_qos);
 			}else if(!strcmp(branch->topic, tokens->topic) || !strcmp(branch->topic, "+")){
 				if(tokens->next){
-					_retain_search(branch, tokens->next, context, sub, sub_qos);
+					_retain_search(db, branch, tokens->next, context, sub, sub_qos);
 				}else{
 					if(branch->retained){
-						_retain_process(branch->retained, context, sub, sub_qos);
+						_retain_process(db, branch->retained, context, sub, sub_qos);
 					}
 				}
 			}
@@ -589,13 +595,13 @@ int mqtt3_retain_queue(mosquitto_db *db, mqtt3_context *context, const char *sub
 	subhier = db->subs.children;
 	while(subhier){
 		if(!strcmp(subhier->topic, "") && tree == 0){
-			rc = _retain_search(subhier, tokens, context, sub, sub_qos);
+			rc = _retain_search(db, subhier, tokens, context, sub, sub_qos);
 			break;
 		}else if(!strcmp(subhier->topic, "/") && tree == 1){
-			rc = _retain_search(subhier, tokens, context, sub, sub_qos);
+			rc = _retain_search(db, subhier, tokens, context, sub, sub_qos);
 			break;
 		}else if(!strcmp(subhier->topic, "$SYS") && tree == 2){
-			rc = _retain_search(subhier, tokens, context, sub, sub_qos);
+			rc = _retain_search(db, subhier, tokens, context, sub, sub_qos);
 			break;
 		}
 		subhier = subhier->next;
