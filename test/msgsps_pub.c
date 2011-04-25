@@ -3,11 +3,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 #include <mosquitto.h>
 
-#define MESSAGE_COUNT 20000
-#define MESSAGE_SIZE 100
+#include <msgsps_common.h>
 
 static bool run = true;
 static int message_count = 0;
@@ -44,7 +44,7 @@ int create_data(void)
 	fptr = fopen("msgsps_pub.dat", "rb");
 	if(fptr){
 		fseek(fptr, 0, SEEK_END);
-		if(ftell(fptr) == MESSAGE_SIZE*MESSAGE_COUNT){
+		if(ftell(fptr) >= MESSAGE_SIZE*MESSAGE_COUNT){
 			fclose(fptr);
 			return 0;
 		}
@@ -81,7 +81,13 @@ int main(int argc, char *argv[])
 	int i;
 	double dstart, dstop, diff;
 	FILE *fptr;
-	uint8_t buf[MESSAGE_SIZE*MESSAGE_COUNT];
+	uint8_t *buf;
+	
+	buf = malloc(MESSAGE_SIZE*MESSAGE_COUNT);
+	if(!buf){
+		printf("Error: Out of memory.\n");
+		return 1;
+	}
 
 	start.tv_sec = 0;
 	start.tv_usec = 0;
@@ -107,12 +113,14 @@ int main(int argc, char *argv[])
 	mosquitto_disconnect_callback_set(mosq, my_disconnect_callback);
 	mosquitto_publish_callback_set(mosq, my_publish_callback);
 
-	mosquitto_connect(mosq, "127.0.0.1", 1885, 600, true);
-	for(i=0; i<MESSAGE_COUNT; i++){
-		mosquitto_publish(mosq, NULL, "perf/test", MESSAGE_SIZE, &buf[i*MESSAGE_SIZE], 0, false);
-	}
+	mosquitto_connect(mosq, "127.0.0.1", 1883, 600, true);
 
+	i=0;
 	while(!mosquitto_loop(mosq, 1) && run){
+		if(i<MESSAGE_COUNT){
+			mosquitto_publish(mosq, NULL, "perf/test", MESSAGE_SIZE, &buf[i*MESSAGE_SIZE], 0, false);
+			i++;
+		}
 	}
 	dstart = (double)start.tv_sec*1.0e6 + (double)start.tv_usec;
 	dstop = (double)stop.tv_sec*1.0e6 + (double)stop.tv_usec;

@@ -4,9 +4,10 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include <mosquitto.h>
 
-#define MESSAGE_COUNT 20000
+#include <msgsps_common.h>
 
 static bool run = true;
 static int message_count = 0;
@@ -40,9 +41,9 @@ void my_message_callback(void *obj, const struct mosquitto_message *msg)
 int main(int argc, char *argv[])
 {
 	struct mosquitto *mosq;
-	int i;
 	double dstart, dstop, diff;
 	uint16_t mid = 0;
+	char id[50];
 
 	start.tv_sec = 0;
 	start.tv_usec = 0;
@@ -56,12 +57,13 @@ int main(int argc, char *argv[])
 	}
 	mosquitto_lib_init();
 
-	mosq = mosquitto_new("msgsps_sub", NULL);
+	snprintf(id, 50, "msgps_sub_%d", getpid());
+	mosq = mosquitto_new(id, NULL);
 	mosquitto_connect_callback_set(mosq, my_connect_callback);
 	mosquitto_disconnect_callback_set(mosq, my_disconnect_callback);
 	mosquitto_message_callback_set(mosq, my_message_callback);
 
-	mosquitto_connect(mosq, "127.0.0.1", 1885, 600, true);
+	mosquitto_connect(mosq, "127.0.0.1", 1883, 600, true);
 	mosquitto_subscribe(mosq, &mid, "perf/test", 0);
 
 	while(!mosquitto_loop(mosq, 1) && run){

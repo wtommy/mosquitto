@@ -7,7 +7,8 @@ OBJS=context.o database.o logging.o memory.o net.o raw_send.o raw_send_client.o 
 
 .PHONY: all clean
 
-all : fake_user msgsps_pub msgsps_sub packet-gen qos
+all : fake_user msgsps_pub msgsps_sub 
+#packet-gen qos
 
 fake_user : fake_user.o
 	#${CC} $^ -o $@ ../lib/libmosquitto.so.0 -nopie
@@ -19,13 +20,13 @@ fake_user.o : fake_user.c
 msgsps_pub : msgsps_pub.o
 	${CC} $^ -o $@ ../lib/libmosquitto.so.0 -nopie
 
-msgsps_pub.o : msgsps_pub.c
+msgsps_pub.o : msgsps_pub.c msgsps_common.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 msgsps_sub : msgsps_sub.o
 	${CC} $^ -o $@ ../lib/libmosquitto.so.0 -nopie
 
-msgsps_sub.o : msgsps_sub.c
+msgsps_sub.o : msgsps_sub.c msgsps_common.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 packet-gen : packet-gen.o
@@ -77,4 +78,4 @@ util.o : ../src/util.c ../src/mqtt3.h
 	${CC} $(CFLAGS) -c $< -o $@
 
 clean : 
-	-rm -f *.o random_client
+	-rm -f *.o random_client qos msgsps_pub msgsps_sub fake_user test_client
