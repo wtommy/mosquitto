@@ -46,7 +46,7 @@ void my_connect_callback(void *obj, int result)
 	char topic[100];
 
 	if(!result){
-		snprintf(topic, 100, "fake/%d", getpid()%1000);
+		snprintf(topic, 100, "fake/%d", getpid()%100);
 		mosquitto_subscribe(mosq, NULL, topic, rand()%3);
 	}
 }
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	}
 
 	if(rand()%5 == 0){
-		snprintf(will_topic, 100, "fake/wills/%d", rand()%1000);
+		snprintf(will_topic, 100, "fake/wills/%d", rand()%100);
 		if(mosquitto_will_set(mosq, true, will_topic, will_payloadlen, will_payload, will_qos, will_retain)){
 			fprintf(stderr, "Error: Problem setting will.\n");
 			return 1;
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 
 		while(!mosquitto_loop(mosq, -1)){
 			if(rand()%100==0){
-				snprintf(topic, 100, "fake/%d", rand()%1000);
+				snprintf(topic, 100, "fake/%d", rand()%100);
 				mosquitto_publish(mosq, NULL, topic, 10, (uint8_t*)"0123456789", rand()%3, rand()%2);
 			}
 			if(rand()%5000==0){
