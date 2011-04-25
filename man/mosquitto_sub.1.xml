@@ -66,13 +66,8 @@
 					</group>
 				</arg>
 			</group>
-			<group choice='req'>
-				<group choice='plain'>
-					<arg><option>-n</option></arg>
-				</group>
-				<group choice='plain' rep="repeat">
-					<arg><option>-t</option> <replaceable>message topic</replaceable></arg>
-				</group>
+			<group choice='plain' rep="repeat">
+				<arg><option>-t</option> <replaceable>message topic</replaceable></arg>
 			</group>
 		</cmdsynopsis>
 	</refsynopsisdiv>
@@ -133,17 +128,6 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>-n</option></term>
-				<term><option>--no-subscribe</option></term>
-				<listitem>
-					<para>Don't subscribe to any topics. This is useful if you
-					have previously connected to a broker and made a
-					subscription using the -c option to disable clean
-					session.</para>
-					<para>Can't be used in conjunction with --topic.</para>
-				</listitem>
-			</varlistentry>
-			<varlistentry>
 				<term><option>-p</option></term>
 				<term><option>--port</option></term>
 				<listitem>
@@ -179,7 +163,6 @@
 					<citerefentry><refentrytitle>mqtt</refentrytitle><manvolnum>7</manvolnum></citerefentry>
 					for more information on mqtt topics.</para>
 					<para>This option may be repeated to subscribe to multiple topics.</para>
-					<para>See also --no-subscribe.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

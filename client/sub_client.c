@@ -111,7 +111,7 @@ void my_subscribe_callback(void *obj, uint16_t mid, int qos_count, const uint8_t
 void print_usage(void)
 {
 	printf("mosquitto_sub is a simple mqtt client that will subscribe to a single topic and print all messages it receives.\n\n");
-	printf("Usage: mosquitto_sub [-c] [-i id] [-k keepalive] [-p port] [-q qos] [-v] {-n | -t topic} ...\n");
+	printf("Usage: mosquitto_sub [-c] [-i id] [-k keepalive] [-p port] [-q qos] [-v] -t topic ...\n");
 	printf("                     [-u username [--pw password]]\n");
 	printf("                     [--will-topic [--will-payload payload] [--will-qos qos] [--will-retain]]\n\n");
 	printf(" -c : disable 'clean session' (store subscription and pending messages when client disconnects).\n");
@@ -119,7 +119,6 @@ void print_usage(void)
 	printf(" -h : mqtt host to connect to. Defaults to localhost.\n");
 	printf(" -i : id to use for this client. Defaults to mosquitto_sub_ appended with the process id.\n");
 	printf(" -k : keep alive in seconds for this client. Defaults to 60.\n");
-	printf(" -n : Don't subscribe to any topic (useful when reconnecting with -c).\n");
 	printf(" -p : network port to connect to. Defaults to 1883.\n");
 	printf(" -q : quality of service level to use for the subscription. Defaults to 0.\n");
 	printf(" -t : mqtt topic to subscribe to. May be repeated multiple times.\n");
@@ -145,7 +144,6 @@ int main(int argc, char *argv[])
 	bool clean_session = true;
 	bool debug = false;
 	struct mosquitto *mosq = NULL;
-	bool no_subscribe = false;
 	
 	uint8_t *will_payload = NULL;
 	long will_payloadlen = 0;
@@ -207,13 +205,6 @@ int main(int argc, char *argv[])
 				}
 			}
 			i++;
-		}else if(!strcmp(argv[i], "-n") || !strcmp(argv[i], "--no-subscribe")){
-			if(topic_count > 0){
-				fprintf(stderr, "Error: -n and -t cannot be used together.\n\n");
-				print_usage();
-				return 1;
-			}
-			no_subscribe = true;
 		}else if(!strcmp(argv[i], "-q") || !strcmp(argv[i], "--qos")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -q argument given but no QoS specified.\n\n");
@@ -231,10 +222,6 @@ int main(int argc, char *argv[])
 		}else if(!strcmp(argv[i], "-t") || !strcmp(argv[i], "--topic")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: -t argument given but no topic specified.\n\n");
-				print_usage();
-				return 1;
-			}else if(no_subscribe){
-				fprintf(stderr, "Error: -n and -t cannot be used together.\n\n");
 				print_usage();
 				return 1;
 			}else{
@@ -303,8 +290,8 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
-	if(topic_count == 0 && no_subscribe == false){
-		fprintf(stderr, "Error: You must specify a topic to subscribe to or use -n to not subscribe..\n");
+	if(topic_count == 0){
+		fprintf(stderr, "Error: You must specify a topic to subscribe to.\n");
 		print_usage();
 		return 1;
 	}

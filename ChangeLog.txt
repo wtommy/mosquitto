@@ -13,8 +13,6 @@
 - Add support for clientid_prefixes variable.
 - Add support for the clientid config variable for controlling bridge client
   ids.
-- Add the --no-subscribe option to mosquitto_sub which can be used when
-  reconnecting a client that is using the -c option to disable clean session.
 - Remove 32-bit database ID support because htobe64() no longer used.
 
 0.9.3 - 20110310
