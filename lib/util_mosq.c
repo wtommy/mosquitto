@@ -39,7 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int _mosquitto_packet_alloc(struct _mosquitto_packet *packet)
 {
-	uint8_t remaining_bytes[4], byte;
+	uint8_t remaining_bytes[5], byte;
 	uint32_t remaining_length;
 	int i;
 
