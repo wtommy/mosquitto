@@ -208,6 +208,7 @@ typedef struct _mqtt3_context{
 	char *address;
 	struct _mqtt3_bridge *bridge;
 	mosquitto_client_msg *msgs;
+	struct _mosquitto_acl_user *acl_list;
 } mqtt3_context;
 
 /* ============================================================

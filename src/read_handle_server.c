@@ -48,6 +48,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	char *username, *password = NULL;
 	int i;
 	int rc;
+	struct _mosquitto_acl_user *acl_tail;
 	
 	/* Don't accept multiple CONNECT commands. */
 	if(context->core.state != mosq_cs_new){
@@ -204,6 +205,25 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 		}
 		context->core.will->qos = will_qos;
 		context->core.will->retain = will_retain;
+	}
+
+	/* Associate user with its ACL, assuming we have ACLs loaded. */
+	if(db->acl_list){
+		acl_tail = db->acl_list;
+		while(acl_tail){
+			if(context->core.username){
+				if(!strcmp(context->core.username, acl_tail->username)){
+					context->acl_list = acl_tail;
+					break;
+				}
+			}else{
+				if(acl_tail->username == NULL){
+					context->acl_list = acl_tail;
+					break;
+				}
+			}
+			acl_tail = acl_tail->next;
+		}
 	}
 
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
