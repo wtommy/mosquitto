@@ -95,6 +95,7 @@ extern "C" {
 #define MOSQ_ERR_NOT_SUPPORTED 10
 #define MOSQ_ERR_AUTH 11
 #define MOSQ_ERR_ACL_DENIED 12
+#define MOSQ_ERR_UNKNOWN 13
 
 struct mosquitto_message{
 	uint16_t mid;

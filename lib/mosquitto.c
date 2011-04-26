@@ -246,7 +246,7 @@ int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int ke
 
 	rc = _mosquitto_socket_connect(&mosq->core, host, port);
 	if(rc){
-		return 1;
+		return rc;
 	}
 
 	return _mosquitto_send_connect(mosq, keepalive, clean_session);
@@ -397,7 +397,7 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	fdcount = select(mosq->core.sock+1, &readfds, &writefds, NULL, &local_timeout);
 #endif
 	if(fdcount == -1){
-		return 1; // FIXME what error to return?
+		return MOSQ_ERR_UNKNOWN; // FIXME what error to return?
 	}else{
 		if(FD_ISSET(mosq->core.sock, &readfds)){
 			rc = mosquitto_loop_read(mosq);
@@ -487,7 +487,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 					case ECONNRESET:
 						return MOSQ_ERR_CONN_LOST;
 					default:
-						return 1;
+						return MOSQ_ERR_UNKNOWN;
 				}
 			}
 		}
@@ -521,7 +521,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 						case ECONNRESET:
 							return MOSQ_ERR_CONN_LOST;
 						default:
-							return 1;
+							return MOSQ_ERR_UNKNOWN;
 					}
 				}
 			}
@@ -551,7 +551,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 					case ECONNRESET:
 						return MOSQ_ERR_CONN_LOST;
 					default:
-						return 1;
+						return MOSQ_ERR_UNKNOWN;
 				}
 			}
 		}
@@ -596,7 +596,7 @@ int mosquitto_loop_write(struct mosquitto *mosq)
 						case ECONNRESET:
 							return MOSQ_ERR_CONN_LOST;
 						default:
-							return 1;
+							return MOSQ_ERR_UNKNOWN;
 					}
 				}
 			}

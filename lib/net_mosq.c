@@ -153,7 +153,7 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 	hints.ai_socktype = SOCK_STREAM;
 
 	s = getaddrinfo(host, NULL, &hints, &ainfo);
-	if(s) return 1;
+	if(s) return MOSQ_ERR_UNKNOWN;
 
 	for(rp = ainfo; rp != NULL; rp = rp->ai_next){
 		sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
@@ -166,19 +166,19 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 		}else{
 			freeaddrinfo(ainfo);
 			COMPAT_CLOSE(sock);
-			return 1;
+			return MOSQ_ERR_UNKNOWN;
 		}
 		if(connect(sock, rp->ai_addr, rp->ai_addrlen) != -1){
 			break;
 		}
 
 		COMPAT_CLOSE(sock);
-		return 1;
+		return MOSQ_ERR_UNKNOWN;
 	}
 	if(!rp){
 		fprintf(stderr, "Error: %s", strerror(errno));
 		COMPAT_CLOSE(sock);
-		return 1;
+		return MOSQ_ERR_UNKNOWN;
 	}
 	freeaddrinfo(ainfo);
 
@@ -210,7 +210,7 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 		}
 #endif
 		COMPAT_CLOSE(sock);
-		return 1;
+		return MOSQ_ERR_UNKNOWN;
 	}
 #else
 	if(ioctlsocket(sock, FIONBIO, &val)){
@@ -221,7 +221,7 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 		}
 #endif
 		COMPAT_CLOSE(sock);
-		return 1;
+		return MOSQ_ERR_UNKNOWN;
 	}
 #endif
 
