@@ -66,19 +66,19 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context->core.out_packet = NULL;
 
 	addrlen = sizeof(addr);
-	context->address = NULL;
+	context->core.address = NULL;
 	if(!getpeername(sock, (struct sockaddr *)&addr, &addrlen)){
 		if(addr.ss_family == AF_INET){
 			if(inet_ntop(AF_INET, &((struct sockaddr_in *)&addr)->sin_addr.s_addr, address, 1024)){
-				context->address = _mosquitto_strdup(address);
+				context->core.address = _mosquitto_strdup(address);
 			}
 		}else if(addr.ss_family == AF_INET6){
 			if(inet_ntop(AF_INET6, &((struct sockaddr_in6 *)&addr)->sin6_addr.s6_addr, address, 1024)){
-				context->address = _mosquitto_strdup(address);
+				context->core.address = _mosquitto_strdup(address);
 			}
 		}
 	}
-	if(!context->address && sock != -1){
+	if(!context->core.address && sock != -1){
 		/* getpeername and inet_ntop failed and not a bridge */
 		_mosquitto_free(context);
 		return NULL;
@@ -111,9 +111,9 @@ void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_fre
 		mqtt3_subs_clean_session(context, &db->subs);
 		mqtt3_db_messages_delete(context);
 	}
-	if(context->address){
-		_mosquitto_free(context->address);
-		context->address = NULL;
+	if(context->core.address){
+		_mosquitto_free(context->core.address);
+		context->core.address = NULL;
 	}
 	if(context->core.id){
 		_mosquitto_free(context->core.id);

@@ -66,7 +66,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	}
 	if(strcmp(protocol_name, PROTOCOL_NAME)){
 		mqtt3_log_printf(MOSQ_LOG_INFO, "Invalid protocol \"%s\" in CONNECT from %s.",
-				protocol_name, context->address);
+				protocol_name, context->core.address);
 		_mosquitto_free(protocol_name);
 		_mosquitto_socket_close(&context->core);
 		return MOSQ_ERR_PROTOCOL;
@@ -79,7 +79,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	}
 	if(protocol_version != PROTOCOL_VERSION){
 		mqtt3_log_printf(MOSQ_LOG_INFO, "Invalid protocol version %d in CONNECT from %s.",
-				protocol_version, context->address);
+				protocol_version, context->core.address);
 		_mosquitto_free(protocol_name);
 		mqtt3_raw_connack(context, 1);
 		_mosquitto_socket_close(&context->core);
@@ -181,7 +181,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 			db->contexts[i]->clean_session = clean_session;
 			mqtt3_context_cleanup(db, db->contexts[i], false);
 			db->contexts[i]->core.state = mosq_cs_connected;
-			db->contexts[i]->address = _mosquitto_strdup(context->address);
+			db->contexts[i]->core.address = _mosquitto_strdup(context->core.address);
 			db->contexts[i]->core.sock = context->core.sock;
 			context->core.sock = -1;
 			context->core.state = mosq_cs_disconnecting;
@@ -228,7 +228,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 		context->acl_list = NULL;
 	}
 
-	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNECT from %s as %s", context->address, client_id);
+	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNECT from %s as %s", context->core.address, client_id);
 
 	context->core.state = mosq_cs_connected;
 	return mqtt3_raw_connack(context, 0);
@@ -280,7 +280,7 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 			}
 			if(qos > 2){
 				mqtt3_log_printf(MOSQ_LOG_INFO, "Invalid QoS in subscription command from %s, disconnecting.",
-					context->address);
+					context->core.address);
 				_mosquitto_free(sub);
 				if(payload) _mosquitto_free(payload);
 				return 1;
@@ -292,7 +292,7 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 			}
 			if(!strlen(sub)){
 				mqtt3_log_printf(MOSQ_LOG_INFO, "Empty subscription string from %s, disconnecting.",
-					context->address);
+					context->core.address);
 				_mosquitto_free(sub);
 				if(payload) _mosquitto_free(payload);
 				return 1;

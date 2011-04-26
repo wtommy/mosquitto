@@ -204,7 +204,6 @@ typedef struct _mqtt3_context{
 	struct _mosquitto_core core;
 	bool clean_session;
 	bool duplicate;
-	char *address;
 	struct _mqtt3_bridge *bridge;
 	mosquitto_client_msg *msgs;
 	struct _mosquitto_acl_user *acl_list;

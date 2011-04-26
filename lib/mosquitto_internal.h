@@ -104,6 +104,7 @@ struct _mosquitto_core
 #else
 	SOCKET sock;
 #endif
+	char *address;
 	char *id;
 	char *username;
 	char *password;
