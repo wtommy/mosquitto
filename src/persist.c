@@ -229,7 +229,7 @@ static int mqtt3_db_client_write(mosquitto_db *db, int db_fd)
 
 	for(i=0; i<db->context_count; i++){
 		context = db->contexts[i];
-		if(context && context->clean_session == false){
+		if(context && context->core.clean_session == false){
 			if(mqtt3_db_client_messages_write(db, db_fd, context)) return 1;
 		}
 	}
@@ -259,7 +259,7 @@ static int _db_subs_retain_write(mosquitto_db *db, int db_fd, struct _mosquitto_
 #define write_e(a, b, c) if(write(a, b, c) != c){ return 1; }
 	sub = node->subs;
 	while(sub){
-		if(sub->context->clean_session == false){
+		if(sub->context->core.clean_session == false){
 			length = htonl(2+strlen(sub->context->core.id) + 2+strlen(thistopic) + sizeof(uint8_t));
 
 			i16temp = htons(DB_CHUNK_SUB);

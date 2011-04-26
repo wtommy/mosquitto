@@ -109,6 +109,7 @@ struct _mosquitto_core
 	char *username;
 	char *password;
 	uint16_t keepalive;
+	bool clean_session;
 	enum mosquitto_client_state state;
 	time_t last_msg_in;
 	time_t last_msg_out;

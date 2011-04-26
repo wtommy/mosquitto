@@ -112,7 +112,7 @@ int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 	context->core.last_msg_in = time(NULL);
 	context->core.last_msg_out = time(NULL);
 	context->core.keepalive = context->bridge->keepalive;
-	context->clean_session = context->bridge->clean_session;
+	context->core.clean_session = context->bridge->clean_session;
 	context->core.in_packet.payload = NULL;
 	mqtt3_bridge_packet_cleanup(context);
 
@@ -128,7 +128,7 @@ int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 	context->core.last_msg_in = time(NULL);
 	if(mqtt3_raw_connect(context, context->core.id,
 			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
-			context->core.keepalive, context->clean_session)){
+			context->core.keepalive, context->core.clean_session)){
 
 		return 1;
 	}

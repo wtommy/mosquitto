@@ -178,7 +178,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 				/* Client is already connected, disconnect old version */
 				mqtt3_log_printf(MOSQ_LOG_ERR, "Client %s already connected, closing old connection.", client_id);
 			}
-			db->contexts[i]->clean_session = clean_session;
+			db->contexts[i]->core.clean_session = clean_session;
 			mqtt3_context_cleanup(db, db->contexts[i], false);
 			db->contexts[i]->core.state = mosq_cs_connected;
 			db->contexts[i]->core.address = _mosquitto_strdup(context->core.address);
@@ -191,7 +191,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	}
 
 	context->core.id = client_id;
-	context->clean_session = clean_session;
+	context->core.clean_session = clean_session;
 
 	context->core.will = will_struct;
 	if(context->core.will){
