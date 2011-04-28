@@ -332,6 +332,7 @@ int mosquitto_unsubscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub
 	return _mosquitto_send_unsubscribe(mosq, mid, false, sub);
 }
 
+#if 0
 int mosquitto_ssl_set(struct mosquitto *mosq, const char *pemfile, const char *password)
 {
 #ifdef WITH_SSL
@@ -350,6 +351,7 @@ int mosquitto_ssl_set(struct mosquitto *mosq, const char *pemfile, const char *p
 	return MOSQ_ERR_NOT_SUPPORTED;
 #endif
 }
+#endif
 
 int mosquitto_loop(struct mosquitto *mosq, int timeout)
 {
