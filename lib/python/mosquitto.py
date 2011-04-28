@@ -321,10 +321,6 @@ class Mosquitto:
 		Returns >0 on error."""
 		return _mosquitto_username_pw_set(self._mosq, username, password)
 
-	def ssl_set(self, pemfile, password=None):
-		"""SSL set"""
-		return _mosquitto_ssl_set(self._mosq, pemfile, password);
-
 	def _internal_on_connect(self, obj, rc):
 		if self.on_connect:
 			argcount = self.on_connect.func_code.co_argcount

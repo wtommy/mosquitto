@@ -673,15 +673,6 @@ libmosq_EXPORT void mosquitto_unsubscribe_callback_set(struct mosquitto *mosq, v
  *                  retrying. Defaults to 60.
  */
 libmosq_EXPORT void mosquitto_message_retry_set(struct mosquitto *mosq, unsigned int message_retry);
-/* Set the number of seconds to wait before retrying messages. This applies to
- * publish messages with QoS>0. May be called at any time.
- *
- * mosq :          a valid mosquitto instance
- * message_retry : the number of seconds to wait for a response before
- *                 retrying. Defaults to 60.
- */
-
-libmosq_EXPORT int mosquitto_ssl_set(struct mosquitto *mosq, const char *pemfile, const char *password);
 
 #ifdef __cplusplus
 }

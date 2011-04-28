@@ -131,11 +131,6 @@ int mosquittopp::username_pw_set(const char *username, const char *password)
 	return mosquitto_username_pw_set(mosq, username, password);
 }
 
-int mosquittopp::ssl_set(const char *pemfile, const char *password)
-{
-	return mosquitto_ssl_set(mosq, pemfile, password);
-}
-
 int mosquittopp::publish(uint16_t *mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
 	return mosquitto_publish(mosq, mid, topic, payloadlen, payload, qos, retain);

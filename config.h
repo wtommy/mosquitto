@@ -44,9 +44,6 @@
  */
 #define WITH_BRIDGE
 
-/* Compile with SSL support */
-//#define WITH_SSL
-
 /* ============================================================
  * Compatibility defines
  *
