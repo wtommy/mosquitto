@@ -250,7 +250,7 @@ libmosq_EXPORT int mosquitto_log_init(struct mosquitto *mosq, int priorities, in
  *               at least "topic" but also be valid.
  * 	topic -      the topic on which to publish the will.
  * 	payloadlen - the size of the payload (bytes). Valid values are between 0 and
- *               268,435,455, although the upper limit isn't currently enforced.
+ *               268,435,455.
  * 	payload -    pointer to the data to send. If payloadlen > 0 this must be a
  *               valid memory location.
  * 	qos -        integer value 0, 1 or 2 indicating the Quality of Service to be
@@ -258,9 +258,10 @@ libmosq_EXPORT int mosquitto_log_init(struct mosquitto *mosq, int priorities, in
  * 	retain -     set to true to make the will a retained message.
  *
  * Returns:
- * 	MOSQ_ERR_SUCCESS - on success.
- * 	MOSQ_ERR_INVAL -   if the input parameters were invalid.
- * 	MOSQ_ERR_NOMEM -   if an out of memory condition occurred.
+ * 	MOSQ_ERR_SUCCESS -      on success.
+ * 	MOSQ_ERR_INVAL -        if the input parameters were invalid.
+ * 	MOSQ_ERR_NOMEM -        if an out of memory condition occurred.
+ * 	MOSQ_ERR_PAYLOAD_SIZE - if payloadlen is too large.
  */
 libmosq_EXPORT int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
 
@@ -350,11 +351,13 @@ libmosq_EXPORT int mosquitto_disconnect(struct mosquitto *mosq);
  * 	retain -     set to true to make the message retained.
  *
  * Returns:
- * 	MOSQ_ERR_SUCCESS -  on success.
- * 	MOSQ_ERR_INVAL -    if the input parameters were invalid.
- * 	MOSQ_ERR_NOMEM -    if an out of memory condition occurred.
- * 	MOSQ_ERR_NO_CONN -  if the client isn't connected to a broker.
- *	MOSQ_ERR_PROTOCOL - if the payload is too large.
+ * 	MOSQ_ERR_SUCCESS -      on success.
+ * 	MOSQ_ERR_INVAL -        if the input parameters were invalid.
+ * 	MOSQ_ERR_NOMEM -        if an out of memory condition occurred.
+ * 	MOSQ_ERR_NO_CONN -      if the client isn't connected to a broker.
+ *	MOSQ_ERR_PROTOCOL -     if there is a protocol error communicating with the
+ *                          broker.
+ * 	MOSQ_ERR_PAYLOAD_SIZE - if payloadlen is too large.
  */
 libmosq_EXPORT int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain);
 
