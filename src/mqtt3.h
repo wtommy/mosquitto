@@ -30,7 +30,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef MQTT3_H
 #define MQTT3_H
 
+#ifndef CMAKE
 #include <config.h>
+#endif
+
 #include <net_mosq.h>
 
 #include <stdbool.h>

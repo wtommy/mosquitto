@@ -1,7 +1,5 @@
 # This is a cmake script.
-# It is only intended for building libmosquitto and the clients and can be
-# used to generate Visual Studio projects, allowing them to be compiled
-# natively on Windows.
+# It is intended to be the default means of building mosquitto.
 
 project(mosquitto)
 
@@ -17,7 +15,7 @@ else (WIN32)
 			OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif (WIN32)
 
-add_definitions (-DVERSION=\"${VERSION}\" -DTIMESTAMP=\"${TIMESTAMP}\")
+add_definitions (-DCMAKE -DVERSION=\"${VERSION}\" -DTIMESTAMP=\"${TIMESTAMP}\")
 
 if (WIN32)
 	set (BINDIR .)

@@ -34,7 +34,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <ws2tcpip.h>
 #endif
 
+#ifndef CMAKE
 #include <config.h>
+#endif
+
 #include <mqtt3.h>
 #include <memory_mosq.h>
 

@@ -31,7 +31,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef CMAKE
 #include <config.h>
+#endif
+
 #include <mqtt3.h>
 #include <memory_mosq.h>
 

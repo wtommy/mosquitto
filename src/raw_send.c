@@ -30,7 +30,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include <string.h>
 
+#ifndef CMAKE
 #include <config.h>
+#endif
+
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
 #include <memory_mosq.h>

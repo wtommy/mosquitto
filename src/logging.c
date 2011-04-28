@@ -33,7 +33,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <syslog.h>
 #endif
 
+#ifndef CMAKE
 #include <config.h>
+#endif
+
 #include <mqtt3.h>
 
 extern mosquitto_db int_db;
