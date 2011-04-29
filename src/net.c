@@ -288,9 +288,6 @@ int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context)
 	 * Finally, free the memory and reset everything to starting conditions.
 	 */
 	if(!context->core.in_packet.command){
-		/* FIXME - check command and fill in expected length if we know it.
-		 * This means we can check the client is sending valid data some times.
-		 */
 		read_length = _mosquitto_net_read(&context->core, &byte, 1);
 		if(read_length == 1){
 			bytes_received++;
