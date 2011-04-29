@@ -637,7 +637,7 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	const uint8_t *payload;
 
 	if(!context || context->core.sock == -1
-			|| (context->core.state = mosq_cs_connected && !context->core.id)){
+			|| (context->core.state == mosq_cs_connected && !context->core.id)){
 		return MOSQ_ERR_INVAL;
 	}
 
