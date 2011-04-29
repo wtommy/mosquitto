@@ -1,5 +1,6 @@
 # This is a cmake script.
-# It is intended to be the default means of building mosquitto.
+# It is intended to be the default means of building mosquitto, but isn't
+# quite ready for all cases yet.
 
 project(mosquitto)
 
