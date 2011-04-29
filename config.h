@@ -17,16 +17,6 @@
  * slightly less memory and CPU time. */
 #define WITH_MEMORY_TRACKING
 
-/* Compile with the ability to upgrade from old style sqlite persistent
- * databases to the new mosquitto format. This means a dependency on sqlite. It
- * isn't needed for new installations.
- * Not available on Windows.
- * This will be removed in version 0.11.
- */
-#ifndef WIN32
-//#define WITH_SQLITE_UPGRADE
-#endif
-
 /* Compile with persistent database support. This allows the broker to store
  * retained messages and durable subscriptions to a file periodically and on
  * shutdown. This is usually desirable (and is suggested by the MQTT spec), but

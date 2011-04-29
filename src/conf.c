@@ -250,8 +250,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty clientid value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
-				}else if(!strcmp(token, "ext_sqlite_regex")){
-					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: ext_sqlite_regex variable no longer in use.");
 				}else if(!strcmp(token, "cleansession")){
 #ifdef WITH_BRIDGE
 					if(!cur_bridge){

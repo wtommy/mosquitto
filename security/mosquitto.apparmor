@@ -35,7 +35,4 @@
 	/lib{,32,64}/libwrap.so*  rm,
 	/etc/hosts.allow r,
 	/etc/hosts.deny r,
-
-	# For sqlite compatible
-	/usr/lib{,32,64}/libsqlite3.so* rm,
 }
