@@ -440,8 +440,6 @@ int main(int argc, char *argv[])
 	mqtt3_db_messages_easy_queue(&int_db, NULL, "$SYS/broker/timestamp", 2, strlen(buf), (uint8_t *)buf, 1);
 	snprintf(buf, 1024, "%s", "$Revision$"); // Requires hg keyword extension.
 	mqtt3_db_messages_easy_queue(&int_db, NULL, "$SYS/broker/changeset", 2, strlen(buf), (uint8_t *)buf, 1);
-	snprintf(buf, 1024, "%d-bit", 8*sizeof(dbid_t));
-	mqtt3_db_messages_easy_queue(&int_db, NULL, "$SYS/broker/dbid_size", 2, strlen(buf), (uint8_t *)buf, 1);
 
 	listener_max = -1;
 	listensock_index = 0;
