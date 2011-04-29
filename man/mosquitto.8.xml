@@ -31,7 +31,7 @@
 
 	<refsect1>
 		<title>Description</title>
-		<para><command>mosquitto</command> is a broker for the mqtt protocol version 3.</para>
+		<para><command>mosquitto</command> is a broker for the mqtt protocol version 3.1.</para>
 		<para>It is intended to be a drop in replacement for rsmb, but it's a little way off yet.</para>
 	</refsect1>
 
@@ -64,7 +64,7 @@
 
 	<refsect1>
 		<title>Limitations</title>
-		<para><command>mosquitto</command> implements all of the mqtt protocol version 3, but there are some significant limitations compared to rsmb.</para>
+		<para><command>mosquitto</command> implements all of the mqtt protocol version 3.1, but there are some significant limitations compared to rsmb.</para>
 		<itemizedlist mark="circle">
 			<listitem><para>There is only basic bridge support.</para></listitem>
 			<listitem><para>There are fewer configuration options.</para></listitem>
@@ -215,14 +215,14 @@
 					<para>Upon receiving the SIGUSR1 signal, mosquitto will write the persistence database to disk. This signal is only acted upon if persistence is enabled.</para>
 				</listitem>
 			</varlistentry>
-			<varlistentry>
+			<!--<varlistentry>
 				<term>SIGUSR2</term>
 				<listitem>
 					<para>The SIGUSR2 signal causes mosquitto to run VACUUM on
 					the in-memory database. This frees currently unused memory
 					associated with the database.</para>
 				</listitem>
-			</varlistentry>
+			</varlistentry>-->
 		</variablelist>
 	</refsect1>
 

@@ -6,7 +6,7 @@ This describes how to run Mosquitto as a Windows service.
 
 http://maven.dyndns.org/2/com/sun/winsw/winsw/
 
-The latest version as of this writing is winsw-1.8-bin.exe.
+The latest version as of this writing is winsw-1.9-bin.exe.
 
 * Place winsw in the mosquitto directory, and rename it to mosquitto-svc.exe.
 
