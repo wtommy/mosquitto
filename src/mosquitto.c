@@ -177,7 +177,7 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 #endif
 					if(!(int_db.contexts[i]->core.keepalive) || now - int_db.contexts[i]->core.last_msg_in < (time_t)(int_db.contexts[i]->core.keepalive)*3/2){
 						if(mqtt3_db_message_write(int_db.contexts[i])){
-							// FIXME - do something here.
+							_mosquitto_socket_close(&int_db.contexts[i]->core);
 						}
 						if(int_db.contexts[i]->core.sock < pollfd_count){
 							pollfds[int_db.contexts[i]->core.sock].fd = int_db.contexts[i]->core.sock;
