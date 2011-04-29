@@ -140,7 +140,7 @@
 					<para>Provide a password to be used for authenticating with
 					the broker. Using this argument without also specifying a
 					username is invalid. This requires a broker that supports
-					MQTT v3.1.  See also the --username option.</para>
+					MQTT v3.1.  See also the <option>--username</option> option.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -171,7 +171,7 @@
 				<listitem>
 					<para>Provide a username to be used for authenticating with
 					the broker. This requires a broker that supports MQTT v3.1.
-					See also the --pw argument.</para>
+					See also the <option>--pw</option> argument.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -189,14 +189,14 @@
 				<listitem>
 					<para>Specify a message that will be stored by the broker
 					and sent out if this client disconnects unexpectedly. This
-					must be used in conjunction with --will-topic.</para>
+					must be used in conjunction with <option>--will-topic</option>.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>--will-qos</option></term>
 				<listitem>
 					<para>The QoS to use for the Will. Defaults to 0. This must
-					be used in conjunction with --will-topic.</para>
+					be used in conjunction with <option>--will-topic</option>.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -204,7 +204,7 @@
 				<listitem>
 					<para>If given, if the client disconnects unexpectedly the
 					message sent out will be treated as a retained message.
-					This must be used in conjunction with --will-topic.</para>
+					This must be used in conjunction with <option>--will-topic</option>.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -223,10 +223,10 @@
 		sent out if it disconnects unexpectedly. See
 		<citerefentry><refentrytitle>mqtt</refentrytitle><manvolnum>7</manvolnum></citerefentry>
 		for more information.</para>
-		<para>The minimum requirement for this is to use --will-topic to
+		<para>The minimum requirement for this is to use <option>--will-topic</option> to
 		specify which topic the will should be sent out on. This will result in
 		a non-retained, zero length message with QoS 0.</para>
-		<para>Use the --will-retain, --will-payload and --will-qos arguments to
+		<para>Use the <option>--will-retain</option>, <option>--will-payload</option> and <option>--will-qos</option> arguments to
 		modify the other will parameters.</para>
 	</refsect1>
 
@@ -237,18 +237,18 @@
 		messages on those topics for you to receive anything.</para>
 		<para>Subscribe to temperature information on localhost with QoS 1:</para>
 		<itemizedlist mark="circle">
-			<listitem><para>mosquitto_sub -t sensors/temperature -q 1</para></listitem>
+			<listitem><para>mosquitto_sub <literal>-t</literal> sensors/temperature <literal>-q</literal> 1</para></listitem>
 		</itemizedlist>
 		<para>Subscribe to hard drive temperature updates on multiple
 		machines/hard drives. This expects each machine to be publishing its
 		hard drive temperature to
 		sensors/machines/HOSTNAME/temperature/HD_NAME.</para>
 		<itemizedlist mark="circle">
-			<listitem><para>mosquitto_sub -t sensors/machines/+/temperature/+</para></listitem>
+			<listitem><para>mosquitto_sub <literal>-t</literal> sensors/machines/+/temperature/+</para></listitem>
 		</itemizedlist>
 		<para>Subscribe to all broker status messages:</para>
 		<itemizedlist mark="circle">
-			<listitem><para>mosquitto_sub -v -t \$SYS/#</para></listitem>
+			<listitem><para>mosquitto_sub <literal>-v</literal> <literal>-t</literal> \$SYS/#</para></listitem>
 		</itemizedlist>
 	</refsect1>
 

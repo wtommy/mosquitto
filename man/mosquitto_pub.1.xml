@@ -229,32 +229,36 @@
 		<para>The minimum requirement for this is to use --will-topic to
 		specify which topic the will should be sent out on. This will result in
 		a non-retained, zero length message with QoS 0.</para>
-		<para>Use the --will-retain, --will-payload and --will-qos arguments to
-		modify the other will parameters.</para>
+		<para>Use the <option>--will-retain</option>,
+		<option>--will-payload</option> and <option>--will-qos</option>
+		arguments to modify the other will parameters.</para>
 	</refsect1>
 
 	<refsect1>
 		<title>Examples</title>
 		<para>Publish temperature information to localhost with QoS 1:</para>
 		<itemizedlist mark="circle">
-			<listitem><para>mosquitto_pub -t sensors/temperature -m 32 -q 1</para></listitem>
+			<listitem><para>mosquitto_pub <literal>-t</literal> sensors/temperature <literal>-m</literal> 32 <literal>-q</literal> 1</para></listitem>
 		</itemizedlist>
 		<para>Publish timestamp and temperature information to a remote host on a non-standard port and QoS 0:</para>
 		<itemizedlist mark="circle">
-			<listitem><para>mosquitto_pub -h 192.168.1.1 -p 1885 -t sensors/temperature -m "1266193804 32"</para></listitem>
+			<listitem><para>mosquitto_pub <literal>-h</literal> 192.168.1.1
+			<literal>-p</literal> 1885 <literal>-t</literal>
+			sensors/temperature <literal>-m</literal> "1266193804
+			32"</para></listitem>
 		</itemizedlist>
 		<para>Publish light switch status. Message is set to retained because there may be a long period of time between light switch events:</para>
 		<itemizedlist mark="circle">
-			<listitem><para>mosquitto_pub -r -t switches/kitchen_lights/status -m "on"</para></listitem>
+			<listitem><para>mosquitto_pub <literal>-r</literal> <literal>-t</literal> switches/kitchen_lights/status <literal>-m</literal> "on"</para></listitem>
 		</itemizedlist>
 		<para>Send the contents of a file in two ways:</para>
 		<itemizedlist mark="circle">
-			<listitem><para>mosquitto_pub -t my/topic -f ./data</para></listitem>
-			<listitem><para>mosquitto_pub -t my/topic -s &lt; ./data</para></listitem>
+			<listitem><para>mosquitto_pub <literal>-t</literal> my/topic <literal>-f</literal> ./data</para></listitem>
+			<listitem><para>mosquitto_pub <literal>-t</literal> my/topic <literal>-s</literal> &lt; ./data</para></listitem>
 		</itemizedlist>
 		<para>Send parsed electricity usage data from a Current Cost meter, reading from stdin with one line/reading as one message:</para>
 		<itemizedlist mark="circle">
-			<listitem><para>read_cc128.pl | mosquitto_pub -t sensors/cc128 -l</para></listitem>
+			<listitem><para>read_cc128.pl | mosquitto_pub <literal>-t</literal> sensors/cc128 <literal>-l</literal></para></listitem>
 		</itemizedlist>
 	</refsect1>
 
