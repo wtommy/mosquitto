@@ -636,7 +636,10 @@ int mqtt3_db_message_write(mqtt3_context *context)
 	uint32_t payloadlen;
 	const uint8_t *payload;
 
-	if(!context || !context->core.id || context->core.sock == -1) return MOSQ_ERR_INVAL;
+	if(!context || context->core.sock == -1
+			|| (context->core.state = mosq_cs_connected && !context->core.id)){
+		return MOSQ_ERR_INVAL;
+	}
 
 	tail = context->msgs;
 	while(tail){
