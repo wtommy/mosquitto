@@ -626,6 +626,7 @@ int mqtt3_db_message_release(mosquitto_db *db, mqtt3_context *context, uint16_t 
 
 int mqtt3_db_message_write(mqtt3_context *context)
 {
+	int rc;
 	mosquitto_client_msg *tail, *last = NULL;
 	uint16_t mid;
 	int retries;
@@ -650,7 +651,8 @@ int mqtt3_db_message_write(mqtt3_context *context)
 
 			switch(tail->state){
 				case ms_publish:
-					if(!mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload)){
+					rc = mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload);
+					if(!rc){
 						if(last){
 							last->next = tail->next;
 							tail->store->ref_count--;
@@ -662,44 +664,61 @@ int mqtt3_db_message_write(mqtt3_context *context)
 							_mosquitto_free(tail);
 							tail = context->msgs;
 						}
+					}else{
+						return rc;
 					}
 					break;
 
 				case ms_publish_puback:
-					if(!mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload)){
+					rc = mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload);
+					if(!rc){
 						tail->state = ms_wait_puback;
+					}else{
+						return rc;
 					}
 					last = tail;
 					tail = tail->next;
 					break;
 
 				case ms_publish_pubrec:
-					if(!mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload)){
+					rc = mqtt3_raw_publish(context, retries, qos, retain, mid, topic, payloadlen, payload);
+					if(!rc){
 						tail->state = ms_wait_pubrec;
+					}else{
+						return rc;
 					}
 					last = tail;
 					tail = tail->next;
 					break;
 				
 				case ms_resend_pubrec:
-					if(!mqtt3_raw_pubrec(context, mid)){
+					rc = mqtt3_raw_pubrec(context, mid);
+					if(!rc){
 						tail->state = ms_wait_pubrel;
+					}else{
+						return rc;
 					}
 					last = tail;
 					tail = tail->next;
 					break;
 
 				case ms_resend_pubrel:
-					if(!mqtt3_raw_pubrel(context, mid, true)){
+					rc = mqtt3_raw_pubrel(context, mid, true);
+					if(!rc){
 						tail->state = ms_wait_pubcomp;
+					}else{
+						return rc;
 					}
 					last = tail;
 					tail = tail->next;
 					break;
 
 				case ms_resend_pubcomp:
-					if(!mqtt3_raw_pubcomp(context, mid)){
+					rc = mqtt3_raw_pubcomp(context, mid);
+					if(!rc){
 						tail->state = ms_wait_pubrel;
+					}else{
+						return rc;
 					}
 					last = tail;
 					tail = tail->next;
