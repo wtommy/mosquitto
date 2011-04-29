@@ -28,7 +28,6 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <assert.h>
-#include <stdint.h>
 #include <string.h>
 
 #include <mosquitto.h>

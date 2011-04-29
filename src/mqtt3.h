@@ -36,8 +36,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <net_mosq.h>
 
-#include <stdbool.h>
-#include <stdint.h>
 #include <time.h>
 
 #ifndef __GNUC__

@@ -28,7 +28,6 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <assert.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 

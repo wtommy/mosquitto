@@ -29,7 +29,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef _NET_MOSQ_H_
 #define _NET_MOSQ_H_
 
-#include <stdint.h>
 #ifndef WIN32
 #include <unistd.h>
 #else
