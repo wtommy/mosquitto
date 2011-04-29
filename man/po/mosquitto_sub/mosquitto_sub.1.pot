@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2010-11-14 20:53+0000\n"
+"POT-Creation-Date: 2011-04-29 17:23+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -130,7 +130,7 @@ msgid "Description"
 msgstr ""
 
 #: mosquitto_sub.1.xml:77(para)
-msgid "<command>mosquitto_sub</command> is a simple mqtt version 3 client that will subscribe to a topic and print the messages that it receives."
+msgid "<command>mosquitto_sub</command> is a simple mqtt version 3.1 client that will subscribe to a topic and print the messages that it receives."
 msgstr ""
 
 #: mosquitto_sub.1.xml:83(title)
@@ -262,7 +262,7 @@ msgid "The minimum requirement for this is to use --will-topic to specify which 
 msgstr ""
 
 #: mosquitto_sub.1.xml:229(para)
-msgid "Use the --will-retain, -will-payload and --will-qos arguments to modify the other will parameters."
+msgid "Use the --will-retain, --will-payload and --will-qos arguments to modify the other will parameters."
 msgstr ""
 
 #: mosquitto_sub.1.xml:234(title)

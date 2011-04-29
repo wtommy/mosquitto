@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2010-11-14 20:53+0000\n"
+"POT-Creation-Date: 2011-04-29 17:22+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -50,7 +50,7 @@ msgid "Description"
 msgstr ""
 
 #: mosquitto.8.xml:34(para)
-msgid "<command>mosquitto</command> is a broker for the mqtt protocol version 3."
+msgid "<command>mosquitto</command> is a broker for the mqtt protocol version 3.1."
 msgstr ""
 
 #: mosquitto.8.xml:35(para)
@@ -86,7 +86,7 @@ msgid "Limitations"
 msgstr ""
 
 #: mosquitto.8.xml:67(para)
-msgid "<command>mosquitto</command> implements all of the mqtt protocol version 3, but there are some significant limitations compared to rsmb."
+msgid "<command>mosquitto</command> implements all of the mqtt protocol version 3.1, but there are some significant limitations compared to rsmb."
 msgstr ""
 
 #: mosquitto.8.xml:69(para)
@@ -307,14 +307,6 @@ msgstr ""
 
 #: mosquitto.8.xml:215(para)
 msgid "Upon receiving the SIGUSR1 signal, mosquitto will write the persistence database to disk. This signal is only acted upon if persistence is enabled."
-msgstr ""
-
-#: mosquitto.8.xml:219(term)
-msgid "SIGUSR2"
-msgstr ""
-
-#: mosquitto.8.xml:221(para)
-msgid "The SIGUSR2 signal causes mosquitto to run VACUUM on the in-memory database. This frees currently unused memory associated with the database."
 msgstr ""
 
 #: mosquitto.8.xml:230(title)

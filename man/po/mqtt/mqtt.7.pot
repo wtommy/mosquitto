@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2010-11-14 20:53+0000\n"
+"POT-Creation-Date: 2011-04-29 17:23+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -30,7 +30,7 @@ msgid "<command>mqtt</command> is a publish/subscribe messaging protocol intende
 msgstr ""
 
 #: mqtt.7.xml:27(para)
-msgid "This manual describes some of the features of mqtt version 3, to assist end users in getting the most out of it. For more complete information on mqtt, see <uri type=\"webpage\">http://mqtt.org/</uri>."
+msgid "This manual describes some of the features of mqtt version 3.1, to assist end users in getting the most out of it. For more complete information on mqtt, see <uri type=\"webpage\">http://mqtt.org/</uri>."
 msgstr ""
 
 #: mqtt.7.xml:34(title)

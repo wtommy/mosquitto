@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2010-11-14 20:53+0000\n"
+"POT-Creation-Date: 2011-04-29 17:22+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -9,11 +9,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: mosquitto.conf.5.xml:7(refentrytitle) mosquitto.conf.5.xml:12(refname) mosquitto.conf.5.xml:18(command) mosquitto.conf.5.xml:321(para)
+#: mosquitto.conf.5.xml:7(refentrytitle) mosquitto.conf.5.xml:12(refname) mosquitto.conf.5.xml:18(command) mosquitto.conf.5.xml:393(para)
 msgid "mosquitto.conf"
 msgstr ""
 
-#: mosquitto.conf.5.xml:8(manvolnum) mosquitto.conf.5.xml:339(manvolnum)
+#: mosquitto.conf.5.xml:8(manvolnum) mosquitto.conf.5.xml:411(manvolnum)
 msgid "5"
 msgstr ""
 
@@ -46,278 +46,346 @@ msgid "Variables"
 msgstr ""
 
 #: mosquitto.conf.5.xml:44(option)
-msgid "autosave_interval"
+msgid "acl_file"
 msgstr ""
 
 #: mosquitto.conf.5.xml:46(para)
+msgid "Set the path to an access control list file. If defined, the contents of the file are used to control client access to topics on the broker."
+msgstr ""
+
+#: mosquitto.conf.5.xml:49(para)
+msgid "If this parameter is defined then only the topics listed will have access. Topic access is added with lines of the format:"
+msgstr ""
+
+#: mosquitto.conf.5.xml:53(code)
+msgid "topic [read|write] &lt;topic&gt;"
+msgstr ""
+
+#: mosquitto.conf.5.xml:55(para)
+msgid "The access type is controlled using \"read\" or \"write\". This parameter is optional - if not given then the access is read/write. &lt;topic&gt; can contain the + or # wildcards as in subscriptions."
+msgstr ""
+
+#: mosquitto.conf.5.xml:60(para)
+msgid "The first set of topics are applied to anonymous clients, assuming allow_anonymous is true. User specific topic ACLs are added after a user line as follows:"
+msgstr ""
+
+#: mosquitto.conf.5.xml:64(code)
+msgid "user &lt;username&gt;"
+msgstr ""
+
+#: mosquitto.conf.5.xml:66(para)
+msgid "The username referred to here is the same as in password_file. It is not the clientid."
+msgstr ""
+
+#: mosquitto.conf.5.xml:71(option)
+msgid "allow_anonymous"
+msgstr ""
+
+#: mosquitto.conf.5.xml:73(para)
+msgid "Boolean value that determines whether clients that connect without providing a username are allowed to connect. If set to false then a password file should be created (see the password_file option) to control authenticated client access. Defaults to true."
+msgstr ""
+
+#: mosquitto.conf.5.xml:81(option)
+msgid "autosave_interval"
+msgstr ""
+
+#: mosquitto.conf.5.xml:83(para)
 msgid "The number of seconds that mosquitto will wait between each time it saves the in-memory database to disk. If set to 0, the in-memory database will only be saved when mosquitto exits or when receiving the SIGUSR1 signal. Note that this setting only has an effect if persistence is enabled. Defaults to 1800 seconds (30 minutes)."
 msgstr ""
 
-#: mosquitto.conf.5.xml:56(option)
+#: mosquitto.conf.5.xml:93(option)
 msgid "bind_address"
 msgstr ""
 
-#: mosquitto.conf.5.xml:58(para)
+#: mosquitto.conf.5.xml:95(para)
 msgid "Listen for incoming network connections on the specified IP address/hostname only. This is useful to restrict access to certain network interfaces. To restrict access to mosquitto to the local host only, use \"bind_address localhost\". This only applies to the default listener. Use the listener variable to control other listeners."
 msgstr ""
 
-#: mosquitto.conf.5.xml:67(option)
-msgid "listener"
-msgstr ""
-
-#: mosquitto.conf.5.xml:69(para)
-msgid "Listen for incoming network connection on the specified port. A second optional argument allows the listener to be bound to a specific ip address/hostname. If this variable is used and neither bind_address nor port are used then the default listener will not be started. This option may be specified multiple times."
-msgstr ""
-
-#: mosquitto.conf.5.xml:78(option)
-msgid "log_dest"
-msgstr ""
-
-#: mosquitto.conf.5.xml:80(para)
-msgid "Send log messages to a particular destination. Possible destinations are: stdout stderr syslog topic. stdout and stderr log to the console on the named output. syslog uses the userspace syslog facility which usually ends up in /var/log/messages or similar and topic logs to the broker topic '$SYS/broker/log/&lt;severity&gt;', where severity is one of D, E, W, N, I which are debug, error, warning, notice and information. Use \"log_dest none\" if you wish to disable logging. Defaults to stderr. This option may be specified multiple times."
-msgstr ""
-
-#: mosquitto.conf.5.xml:93(option)
-msgid "log_type"
-msgstr ""
-
-#: mosquitto.conf.5.xml:95(para)
-msgid "Choose types of messages to log. Possible types are: debug, error, warning, notice, information, none. Defaults to error, warning, notice and information. This option may be specified multiple times. Note that the debug type (used for decoding incoming network packets) is never logged in syslog or topics."
-msgstr ""
-
 #: mosquitto.conf.5.xml:104(option)
-msgid "max_connections"
+msgid "clientid_prefixes"
 msgstr ""
 
 #: mosquitto.conf.5.xml:106(para)
+msgid "If defined, only clients that have a clientid with a prefix that matches clientid_prefixes will be allowed to connect to the broker. For example, setting \"secure-\" here would mean a client \"secure-client\" could connect but another with clientid \"mqtt\" couldn't. By default, all client ids are valid."
+msgstr ""
+
+#: mosquitto.conf.5.xml:115(option)
+msgid "listener"
+msgstr ""
+
+#: mosquitto.conf.5.xml:117(para)
+msgid "Listen for incoming network connection on the specified port. A second optional argument allows the listener to be bound to a specific ip address/hostname. If this variable is used and neither bind_address nor port are used then the default listener will not be started. This option may be specified multiple times."
+msgstr ""
+
+#: mosquitto.conf.5.xml:126(option)
+msgid "log_dest"
+msgstr ""
+
+#: mosquitto.conf.5.xml:128(para)
+msgid "Send log messages to a particular destination. Possible destinations are: stdout stderr syslog topic. stdout and stderr log to the console on the named output. syslog uses the userspace syslog facility which usually ends up in /var/log/messages or similar and topic logs to the broker topic '$SYS/broker/log/&lt;severity&gt;', where severity is one of D, E, W, N, I which are debug, error, warning, notice and information. Use \"log_dest none\" if you wish to disable logging. Defaults to stderr. This option may be specified multiple times."
+msgstr ""
+
+#: mosquitto.conf.5.xml:141(option)
+msgid "log_type"
+msgstr ""
+
+#: mosquitto.conf.5.xml:143(para)
+msgid "Choose types of messages to log. Possible types are: debug, error, warning, notice, information, none. Defaults to error, warning, notice and information. This option may be specified multiple times. Note that the debug type (used for decoding incoming network packets) is never logged in syslog or topics."
+msgstr ""
+
+#: mosquitto.conf.5.xml:152(option)
+msgid "max_connections"
+msgstr ""
+
+#: mosquitto.conf.5.xml:154(para)
 msgid "Limit the total number of clients connected. Set to -1 to have \"unlimited\" connections. Note that other limits may be imposed that are outside the control of mosquitto. See e.g. <citerefentry><refentrytitle>limits.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>."
 msgstr ""
 
-#: mosquitto.conf.5.xml:113(option)
+#: mosquitto.conf.5.xml:161(option)
 msgid "max_inflight_messages"
 msgstr ""
 
-#: mosquitto.conf.5.xml:115(para)
+#: mosquitto.conf.5.xml:163(para)
 msgid "The maximum number of QoS 1 or 2 messages that can be in the process of being transmitted simultaneously. This includes messages currently going through handshakes and messages that are being retried. Defaults to 20. Set to 0 for no maximum. If set to 1, this will guarantee in-order delivery of messages."
 msgstr ""
 
-#: mosquitto.conf.5.xml:124(option)
+#: mosquitto.conf.5.xml:172(option)
 msgid "max_queued_messages"
 msgstr ""
 
-#: mosquitto.conf.5.xml:126(para)
+#: mosquitto.conf.5.xml:174(para)
 msgid "The maximum number of QoS 1 or 2 messages to hold in the queue above those messages that are currently in flight. Defaults to 100. Set to 0 for no maximum (not recommended)."
 msgstr ""
 
-#: mosquitto.conf.5.xml:133(option)
+#: mosquitto.conf.5.xml:181(option)
+msgid "password_file"
+msgstr ""
+
+#: mosquitto.conf.5.xml:183(para)
+msgid "Set the path to a password file. If defined, the contents of the file are used to control client access to the broker. Each line should be in the format \"username:password\", where the colon and password are optional but recommended. If allow_anonymous is set to false, only users defined in this file will be able to connect. Setting allow_anonymous to true when password_file is defined is valid and could be used with acl_file to have e.g. read only guest/anonymous accounts and defined users that can publish."
+msgstr ""
+
+#: mosquitto.conf.5.xml:196(option)
 msgid "persistence"
 msgstr ""
 
-#: mosquitto.conf.5.xml:135(para)
+#: mosquitto.conf.5.xml:198(para)
 msgid "Can be true or false. If true, connection, subscription and message data will be written to the disk in mosquitto.db at the location dictated by persistence_location. When mosquitto is restarted, it will reload the information stored in mosquitto.db. The data will be written to disk when mosquitto closes and also at periodic intervals as defined by autosave_interval. Writing of the persistence database may also be forced by sending mosquitto the SIGUSR1 signal. If false, the data will be stored in memory only. Defaults to false."
 msgstr ""
 
-#: mosquitto.conf.5.xml:148(option)
+#: mosquitto.conf.5.xml:211(option)
 msgid "persistence_file"
 msgstr ""
 
-#: mosquitto.conf.5.xml:150(para)
+#: mosquitto.conf.5.xml:213(para)
 msgid "The filename to use for the persistent database. Defaults to mosquitto.db."
 msgstr ""
 
-#: mosquitto.conf.5.xml:154(option)
+#: mosquitto.conf.5.xml:217(option)
 msgid "persistence_location"
 msgstr ""
 
-#: mosquitto.conf.5.xml:156(para)
+#: mosquitto.conf.5.xml:219(para)
 msgid "The path where the persistence database should be stored. Must end in a trailing slash. If not given, then the current directory is used."
 msgstr ""
 
-#: mosquitto.conf.5.xml:162(option)
+#: mosquitto.conf.5.xml:225(option)
 msgid "pid_file"
 msgstr ""
 
-#: mosquitto.conf.5.xml:164(para)
+#: mosquitto.conf.5.xml:227(para)
 msgid "Write a pid file to the file specified. If not given (the default), no pid file will be written. If the pid file cannot be written, mosquitto will exit. This option only has an effect is mosquitto is run in daemon mode."
 msgstr ""
 
-#: mosquitto.conf.5.xml:168(para)
+#: mosquitto.conf.5.xml:231(para)
 msgid "If mosquitto is being automatically started by an init script it will usually be required to write a pid file. This should then be configured as /var/run/mosquitto.pid"
 msgstr ""
 
-#: mosquitto.conf.5.xml:175(option)
+#: mosquitto.conf.5.xml:238(option)
 msgid "port"
 msgstr ""
 
-#: mosquitto.conf.5.xml:177(para)
+#: mosquitto.conf.5.xml:240(para)
 msgid "Set the network port for the default listener to listen on. Defaults to 1883."
 msgstr ""
 
-#: mosquitto.conf.5.xml:182(option)
+#: mosquitto.conf.5.xml:245(option)
 msgid "retry_interval"
 msgstr ""
 
-#: mosquitto.conf.5.xml:184(para)
+#: mosquitto.conf.5.xml:247(para)
 msgid "The integer number of seconds after a QoS=1 or QoS=2 message has been sent that mosquitto will wait before retrying when no response is received. If unset, defaults to 20 seconds."
 msgstr ""
 
-#: mosquitto.conf.5.xml:191(option)
+#: mosquitto.conf.5.xml:254(option)
 msgid "store_clean_interval"
 msgstr ""
 
-#: mosquitto.conf.5.xml:193(para)
+#: mosquitto.conf.5.xml:256(para)
 msgid "The integer number of seconds between the internal message store being cleaned of messages that are no longer referenced. Lower values will result in lower memory usage but more processor time, higher values will have the opposite effect. Setting a value of 0 means the unreferenced messages will be disposed of as quickly as possible. Defaults to 10 seconds."
 msgstr ""
 
-#: mosquitto.conf.5.xml:203(option)
+#: mosquitto.conf.5.xml:266(option)
 msgid "sys_interval"
 msgstr ""
 
-#: mosquitto.conf.5.xml:205(para)
+#: mosquitto.conf.5.xml:268(para)
 msgid "The integer number of seconds between updates of the $SYS subscription hierarchy, which provides status information about the broker. If unset, defaults to 10 seconds."
 msgstr ""
 
-#: mosquitto.conf.5.xml:212(option)
+#: mosquitto.conf.5.xml:275(option)
 msgid "user"
 msgstr ""
 
-#: mosquitto.conf.5.xml:214(para)
+#: mosquitto.conf.5.xml:277(para)
 msgid "When run as root, change to this user and its primary group on startup. If mosquitto is unable to change to this user and group, it will exit with an error. The user specified must have read/write access to the persistence database if it is to be written. If run as a non-root user, this setting has no effect. Defaults to mosquitto."
 msgstr ""
 
-#: mosquitto.conf.5.xml:220(para)
+#: mosquitto.conf.5.xml:283(para)
 msgid "This setting has no effect on Windows and so you should run mosquitto as the user you wish it to run as."
 msgstr ""
 
-#: mosquitto.conf.5.xml:229(title)
+#: mosquitto.conf.5.xml:292(title)
 msgid "Configuring Bridges"
 msgstr ""
 
-#: mosquitto.conf.5.xml:230(para)
+#: mosquitto.conf.5.xml:293(para)
 msgid "Multiple bridges (connections to other brokers) can be configured using the following variables."
 msgstr ""
 
-#: mosquitto.conf.5.xml:234(option)
+#: mosquitto.conf.5.xml:297(option)
 msgid "address"
 msgstr ""
 
-#: mosquitto.conf.5.xml:234(replaceable) mosquitto.conf.5.xml:235(replaceable)
+#: mosquitto.conf.5.xml:297(replaceable) mosquitto.conf.5.xml:298(replaceable)
 msgid "address[:port]"
 msgstr ""
 
-#: mosquitto.conf.5.xml:235(option)
+#: mosquitto.conf.5.xml:298(option)
 msgid "addresses"
 msgstr ""
 
-#: mosquitto.conf.5.xml:237(para)
+#: mosquitto.conf.5.xml:300(para)
 msgid "Specify the address and optionally the port of the bridge to connect to. This must be given for each bridge connection. If the port is not specified, the default of 1883 is used."
 msgstr ""
 
-#: mosquitto.conf.5.xml:241(para)
+#: mosquitto.conf.5.xml:304(para)
 msgid "Unlike rsmb, it is not currently possible to specify multiple addresses for a single bridge connection here. This is true even if the name \"addresses\" is used."
 msgstr ""
 
-#: mosquitto.conf.5.xml:247(term)
+#: mosquitto.conf.5.xml:310(term)
 msgid "<option>cleansession</option> [ true | false ]"
 msgstr ""
 
-#: mosquitto.conf.5.xml:249(para)
+#: mosquitto.conf.5.xml:312(para)
 msgid "Set the clean session option for this bridge. Setting to false (the default), means that all subscriptions on the remote broker are kept in case of the network connection dropping. If set to true, all subscriptions and messages on the remote broker will be cleaned up if the connection drops. Note that setting to true may cause a large amount of retained messages to be sent each time the bridge reconnects."
 msgstr ""
 
-#: mosquitto.conf.5.xml:260(option)
+#: mosquitto.conf.5.xml:323(option)
+msgid "clientid"
+msgstr ""
+
+#: mosquitto.conf.5.xml:323(replaceable)
+msgid "id"
+msgstr ""
+
+#: mosquitto.conf.5.xml:325(para)
+msgid "Set the client id for this bridge connection. If not defined, this defaults to 'name.hostname', where name is the connection name and hostname is the hostname of this computer."
+msgstr ""
+
+#: mosquitto.conf.5.xml:332(option)
 msgid "connection"
 msgstr ""
 
-#: mosquitto.conf.5.xml:260(replaceable) mosquitto.conf.5.xml:308(replaceable)
+#: mosquitto.conf.5.xml:332(replaceable) mosquitto.conf.5.xml:380(replaceable)
 msgid "name"
 msgstr ""
 
-#: mosquitto.conf.5.xml:262(para)
+#: mosquitto.conf.5.xml:334(para)
 msgid "This variable marks the start of a new bridge connection. It is also used to give the bridge a name which is used as the client id on the remote broker."
 msgstr ""
 
-#: mosquitto.conf.5.xml:269(option)
+#: mosquitto.conf.5.xml:341(option)
 msgid "keepalive_interval"
 msgstr ""
 
-#: mosquitto.conf.5.xml:269(replaceable)
+#: mosquitto.conf.5.xml:341(replaceable)
 msgid "seconds"
 msgstr ""
 
-#: mosquitto.conf.5.xml:271(para)
+#: mosquitto.conf.5.xml:343(para)
 msgid "Set the number of seconds after which the bridge should send a ping if no other traffic has occurred. Defaults to 60. A minimum value of 5 seconds isallowed."
 msgstr ""
 
-#: mosquitto.conf.5.xml:278(option)
+#: mosquitto.conf.5.xml:350(option)
 msgid "password"
 msgstr ""
 
-#: mosquitto.conf.5.xml:278(replaceable)
+#: mosquitto.conf.5.xml:350(replaceable)
 msgid "value"
 msgstr ""
 
-#: mosquitto.conf.5.xml:280(para)
+#: mosquitto.conf.5.xml:352(para)
 msgid "Configure a password for the bridge. This is used for authentication purposes when connecting to a broker that support MQTT v3.1 and requires a username and/or password to connect. This option is only valid if a username is also supplied."
 msgstr ""
 
-#: mosquitto.conf.5.xml:288(term)
+#: mosquitto.conf.5.xml:360(term)
 msgid "<option>topic</option><replaceable>pattern</replaceable> [ out | in | both ]"
 msgstr ""
 
-#: mosquitto.conf.5.xml:290(para)
+#: mosquitto.conf.5.xml:362(para)
 msgid "Define a topic pattern to be shared between the two brokers. Any topics matching the pattern (which may include wildcards) are shared. The second parameter defines the direction that the messages will be shared in, so it is possible to import messages from a remote broker using \"in\", export messages to a remote broker using \"out\" or share messages in both directions. If this parameter is not defined, the default of \"out\" is used."
 msgstr ""
 
-#: mosquitto.conf.5.xml:298(para)
+#: mosquitto.conf.5.xml:370(para)
 msgid "This option can be specified multiple times per bridge."
 msgstr ""
 
-#: mosquitto.conf.5.xml:300(para)
+#: mosquitto.conf.5.xml:372(para)
 msgid "Care must be taken to ensure that loops are not created with this option. If you are experiencing high CPU load from a broker, it is possible that you have a loop where each broker is forever forwarding each other the same messages."
 msgstr ""
 
-#: mosquitto.conf.5.xml:308(option)
+#: mosquitto.conf.5.xml:380(option)
 msgid "username"
 msgstr ""
 
-#: mosquitto.conf.5.xml:310(para)
+#: mosquitto.conf.5.xml:382(para)
 msgid "Configure a username for the bridge. This is used for authentication purposes when connecting to a broker that support MQTT v3.1 and requires a username and/or password to connect. See also the password option."
 msgstr ""
 
-#: mosquitto.conf.5.xml:320(title)
+#: mosquitto.conf.5.xml:392(title)
 msgid "Files"
 msgstr ""
 
-#: mosquitto.conf.5.xml:325(title)
+#: mosquitto.conf.5.xml:397(title)
 msgid "Bugs"
 msgstr ""
 
-#: mosquitto.conf.5.xml:326(para)
+#: mosquitto.conf.5.xml:398(para)
 msgid "<command>mosquitto</command> bug information can be found at <uri type=\"webpage\">http://launchpad.net/mosquitto</uri>."
 msgstr ""
 
-#: mosquitto.conf.5.xml:331(title)
+#: mosquitto.conf.5.xml:403(title)
 msgid "See Also"
 msgstr ""
 
-#: mosquitto.conf.5.xml:334(refentrytitle)
+#: mosquitto.conf.5.xml:406(refentrytitle)
 msgid "mosquitto"
 msgstr ""
 
-#: mosquitto.conf.5.xml:335(manvolnum)
+#: mosquitto.conf.5.xml:407(manvolnum)
 msgid "8"
 msgstr ""
 
-#: mosquitto.conf.5.xml:338(refentrytitle)
+#: mosquitto.conf.5.xml:410(refentrytitle)
 msgid "limits.conf"
 msgstr ""
 
-#: mosquitto.conf.5.xml:345(title)
+#: mosquitto.conf.5.xml:417(title)
 msgid "Author"
 msgstr ""
 
-#: mosquitto.conf.5.xml:346(para)
+#: mosquitto.conf.5.xml:418(para)
 msgid "Roger Light <email>roger@atchoo.org</email>"
 msgstr ""
 

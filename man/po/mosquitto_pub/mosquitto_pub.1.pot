@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2010-11-14 20:53+0000\n"
+"POT-Creation-Date: 2011-04-29 17:23+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -146,7 +146,7 @@ msgid "Description"
 msgstr ""
 
 #: mosquitto_pub.1.xml:82(para)
-msgid "<command>mosquitto_pub</command> is a simple mqtt version 3 client that will publish a single message on a topic and exit."
+msgid "<command>mosquitto_pub</command> is a simple mqtt version 3.1 client that will publish a single message on a topic and exit."
 msgstr ""
 
 #: mosquitto_pub.1.xml:86(title)
