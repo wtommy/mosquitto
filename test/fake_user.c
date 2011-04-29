@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 {
 	char id[30];
 	char *host = "localhost";
-	int port = 1883;
+	int port = 1885;
 	int keepalive = 60;
 	bool clean_session = true;
 	struct mosquitto *mosq = NULL;

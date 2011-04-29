@@ -1,4 +1,4 @@
-0.10 - 2011xxxx
+0.10 - 20110429
 ===============
 
 - Implement support for the password_file option and accompanying

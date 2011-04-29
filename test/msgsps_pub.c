@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
 	mosquitto_disconnect_callback_set(mosq, my_disconnect_callback);
 	mosquitto_publish_callback_set(mosq, my_publish_callback);
 
-	mosquitto_connect(mosq, "127.0.0.1", 1883, 600, true);
+	mosquitto_connect(mosq, "127.0.0.1", 1885, 600, true);
 
 	i=0;
 	while(!mosquitto_loop(mosq, 1) && run){
