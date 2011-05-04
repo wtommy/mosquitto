@@ -3,6 +3,7 @@
 
 - Removed all old sqlite code.
 - Remove client id limit in clients.
+- Implemented $SYS/broker/heap/maximum size
 
 0.10 - 20110429
 ===============

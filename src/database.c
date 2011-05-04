@@ -796,8 +796,10 @@ void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time)
 		}
 
 #ifdef REAL_WITH_MEMORY_TRACKING
-		snprintf(buf, 100, "%ld", _mosquitto_memory_used());
+		snprintf(buf, 100, "%lu", _mosquitto_memory_used());
 		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/heap/current size", 2, strlen(buf), (uint8_t *)buf, 1);
+		snprintf(buf, 100, "%lu", _mosquitto_max_memory_used());
+		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/heap/maximum size", 2, strlen(buf), (uint8_t *)buf, 1);
 #endif
 
 		snprintf(buf, 100, "%lu", mqtt3_net_msgs_total_received());

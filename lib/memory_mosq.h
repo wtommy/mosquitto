@@ -41,6 +41,7 @@ void _mosquitto_free(void *mem);
 void *_mosquitto_malloc(size_t size);
 #ifdef REAL_WITH_MEMORY_TRACKING
 unsigned long _mosquitto_memory_used(void);
+unsigned long _mosquitto_max_memory_used(void);
 #endif
 void *_mosquitto_realloc(void *ptr, size_t size);
 char *_mosquitto_strdup(const char *s);

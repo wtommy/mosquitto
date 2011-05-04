@@ -47,7 +47,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 
 #ifdef REAL_WITH_MEMORY_TRACKING
-static unsigned long memcount;
+static unsigned long memcount = 0;
+static unsigned long max_memcount = 0;
 #endif
 
 void *_mosquitto_calloc(size_t nmemb, size_t size)
@@ -56,6 +57,9 @@ void *_mosquitto_calloc(size_t nmemb, size_t size)
 
 #ifdef REAL_WITH_MEMORY_TRACKING
 	memcount += malloc_usable_size(mem);
+	if(memcount > max_memcount){
+		max_memcount = memcount;
+	}
 #endif
 
 	return mem;
@@ -75,6 +79,9 @@ void *_mosquitto_malloc(size_t size)
 
 #ifdef REAL_WITH_MEMORY_TRACKING
 	memcount += malloc_usable_size(mem);
+	if(memcount > max_memcount){
+		max_memcount = memcount;
+	}
 #endif
 
 	return mem;
@@ -84,6 +91,11 @@ void *_mosquitto_malloc(size_t size)
 unsigned long _mosquitto_memory_used(void)
 {
 	return memcount;
+}
+
+unsigned long _mosquitto_max_memory_used(void)
+{
+	return max_memcount;
 }
 #endif
 
@@ -99,6 +111,9 @@ void *_mosquitto_realloc(void *ptr, size_t size)
 
 #ifdef REAL_WITH_MEMORY_TRACKING
 	memcount += malloc_usable_size(mem);
+	if(memcount > max_memcount){
+		max_memcount = memcount;
+	}
 #endif
 
 	return mem;
@@ -110,6 +125,9 @@ char *_mosquitto_strdup(const char *s)
 
 #ifdef REAL_WITH_MEMORY_TRACKING
 	memcount += malloc_usable_size(str);
+	if(memcount > max_memcount){
+		max_memcount = memcount;
+	}
 #endif
 
 	return str;
