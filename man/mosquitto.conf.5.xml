@@ -242,6 +242,13 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>retained_persistence</option></term>
+				<listitem>
+					<para>This is a synonym of the <option>persistence</option>
+					option.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>retry_interval</option></term>
 				<listitem>
 					<para>The integer number of seconds after a QoS=1 or QoS=2

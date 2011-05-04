@@ -6,6 +6,8 @@
 - Implemented $SYS/broker/heap/maximum size
 - $SYS/broker/heap/current size and maximum size messages now include "bytes"
   to match rsmb message format.
+- Implemented the retained_persistence config file option - a synonym of the
+  "persistence" option.
 
 0.10 - 20110429
 ===============

@@ -461,8 +461,8 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty password_file value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
-				}else if(!strcmp(token, "persistence")){
-					if(_mqtt3_conf_parse_bool(&token, "persistence", &config->persistence)) return 1;
+				}else if(!strcmp(token, "persistence") || !strcmp(token, "retained_persistence")){
+					if(_mqtt3_conf_parse_bool(&token, token, &config->persistence)) return 1;
 				}else if(!strcmp(token, "persistence_file")){
 					token = strtok(NULL, " ");
 					if(token){
@@ -587,7 +587,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 #endif
 				}else if(!strcmp(token, "autosave_on_changes")
 						|| !strcmp(token, "connection_messages")
-						|| !strcmp(token, "retained_persistence")
 						|| !strcmp(token, "trace_level")
 						|| !strcmp(token, "addresses")
 						|| !strcmp(token, "idle_timeout")
