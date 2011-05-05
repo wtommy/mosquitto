@@ -32,7 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mosquitto.h>
 
 int _mosquitto_send_simple_command(struct _mosquitto_core *core, uint8_t command);
-int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid, bool dup);
+int _mosquitto_send_command_with_mid(struct _mosquitto_core *core, uint8_t command, uint16_t mid, bool dup);
 
 int _mosquitto_send_connect(struct _mosquitto_core *core, uint16_t keepalive, bool clean_session);
 int _mosquitto_send_disconnect(struct _mosquitto_core *core);

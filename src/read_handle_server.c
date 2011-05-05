@@ -36,6 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
 #include <memory_mosq.h>
+#include <send_mosq.h>
 #include <util_mosq.h>
 
 int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
@@ -360,7 +361,7 @@ int mqtt3_handle_unsubscribe(mosquitto_db *db, mqtt3_context *context)
 		}
 	}
 
-	if(mqtt3_send_command_with_mid(context, UNSUBACK, mid, false)) return 1;
+	if(_mosquitto_send_command_with_mid(&context->core, UNSUBACK, mid, false)) return 1;
 
 	return MOSQ_ERR_SUCCESS;
 }
