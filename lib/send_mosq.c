@@ -38,84 +38,29 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <send_mosq.h>
 #include <util_mosq.h>
 
-static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid, bool dup);
-
-/* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
-static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid, bool dup)
-{
-	struct _mosquitto_packet *packet = NULL;
-	int rc;
-
-	assert(mosq);
-	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return MOSQ_ERR_NOMEM;
-
-	packet->command = command;
-	if(dup){
-		packet->command |= 8;
-	}
-	packet->remaining_length = 2;
-	rc = _mosquitto_packet_alloc(packet);
-	if(rc){
-		_mosquitto_free(packet);
-		return rc;
-	}
-
-	packet->payload[packet->pos+0] = MOSQ_MSB(mid);
-	packet->payload[packet->pos+1] = MOSQ_LSB(mid);
-
-	_mosquitto_packet_queue(&mosq->core, packet);
-
-	return MOSQ_ERR_SUCCESS;
-}
-
-/* For DISCONNECT, PINGREQ and PINGRESP */
-int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
-{
-	struct _mosquitto_packet *packet = NULL;
-	int rc;
-
-	assert(mosq);
-	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return MOSQ_ERR_NOMEM;
-
-	packet->command = command;
-	packet->remaining_length = 0;
-
-	rc = _mosquitto_packet_alloc(packet);
-	if(rc){
-		_mosquitto_free(packet);
-		return rc;
-	}
-
-	_mosquitto_packet_queue(&mosq->core, packet);
-
-	return MOSQ_ERR_SUCCESS;
-}
-
 int _mosquitto_send_pingreq(struct mosquitto *mosq)
 {
 	assert(mosq);
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PINGREQ");
-	return _mosquitto_send_simple_command(mosq, PINGREQ);
+	return _mosquitto_send_simple_command(&mosq->core, PINGREQ);
 }
 
 int _mosquitto_send_pingresp(struct mosquitto *mosq)
 {
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PINGRESP");
-	return _mosquitto_send_simple_command(mosq, PINGRESP);
+	return _mosquitto_send_simple_command(&mosq->core, PINGRESP);
 }
 
 int _mosquitto_send_puback(struct mosquitto *mosq, uint16_t mid)
 {
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBACK (Mid: %d)", mid);
-	return _mosquitto_send_command_with_mid(mosq, PUBACK, mid, false);
+	return _mosquitto_send_command_with_mid(&mosq->core, PUBACK, mid, false);
 }
 
 int _mosquitto_send_pubcomp(struct mosquitto *mosq, uint16_t mid)
 {
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBCOMP (Mid: %d)", mid);
-	return _mosquitto_send_command_with_mid(mosq, PUBCOMP, mid, false);
+	return _mosquitto_send_command_with_mid(&mosq->core, PUBCOMP, mid, false);
 }
 
 int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain, bool dup)
@@ -166,12 +111,12 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 int _mosquitto_send_pubrec(struct mosquitto *mosq, uint16_t mid)
 {
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBREC (Mid: %d)", mid);
-	return _mosquitto_send_command_with_mid(mosq, PUBREC, mid, false);
+	return _mosquitto_send_command_with_mid(&mosq->core, PUBREC, mid, false);
 }
 
 int _mosquitto_send_pubrel(struct mosquitto *mosq, uint16_t mid, bool dup)
 {
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBREL (Mid: %d)", mid);
-	return _mosquitto_send_command_with_mid(mosq, PUBREL|2, mid, dup);
+	return _mosquitto_send_command_with_mid(&mosq->core, PUBREL|2, mid, dup);
 }
 

@@ -39,6 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <memory_mosq.h>
 #include <mosquitto.h>
+#include <send_mosq.h>
 
 #ifdef WITH_BRIDGE
 
@@ -128,10 +129,7 @@ int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 	context->core.sock = new_sock;
 
 	context->core.last_msg_in = time(NULL);
-	if(mqtt3_raw_connect(context, context->core.id,
-			/*will*/ false, /*will qos*/ 0, /*will retain*/ false, /*will topic*/ NULL, /*will msg*/ NULL,
-			context->core.keepalive, context->core.clean_session)){
-
+	if(_mosquitto_send_connect(&context->core, context->core.keepalive, context->core.clean_session)){
 		return 1;
 	}
 
