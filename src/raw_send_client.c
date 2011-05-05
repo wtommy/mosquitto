@@ -43,42 +43,6 @@ int mqtt3_raw_disconnect(mqtt3_context *context)
 	return mqtt3_send_simple_command(context, DISCONNECT);
 }
 
-int mqtt3_raw_subscribe(mqtt3_context *context, bool dup, const char *topic, uint8_t topic_qos)
-{
-	/* FIXME - only deals with a single topic */
-	struct _mosquitto_packet *packet = NULL;
-	uint32_t packetlen;
-	uint16_t mid;
-	int rc;
-
-	if(!context || !topic) return MOSQ_ERR_INVAL;
-
-	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return MOSQ_ERR_NOMEM;
-
-	packetlen = 2 + 2+strlen(topic) + 1;
-
-	packet->command = SUBSCRIBE | (dup<<3) | (1<<1);
-	packet->remaining_length = packetlen;
-	rc = _mosquitto_packet_alloc(packet);
-	if(rc){
-		_mosquitto_free(packet);
-		return rc;
-	}
-
-	/* Variable header */
-	mid = _mosquitto_mid_generate(&context->core);
-	_mosquitto_write_uint16(packet, mid);
-
-	/* Payload */
-	_mosquitto_write_string(packet, topic, strlen(topic));
-	_mosquitto_write_byte(packet, topic_qos);
-
-	_mosquitto_packet_queue(&context->core, packet);
-	return MOSQ_ERR_SUCCESS;
-}
-
-
 int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic)
 {
 	/* FIXME - only deals with a single topic */
