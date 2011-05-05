@@ -249,7 +249,7 @@ int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int ke
 		return rc;
 	}
 
-	return _mosquitto_send_connect(mosq, keepalive, clean_session);
+	return _mosquitto_send_connect(&mosq->core, keepalive, clean_session);
 }
 
 int mosquitto_disconnect(struct mosquitto *mosq)

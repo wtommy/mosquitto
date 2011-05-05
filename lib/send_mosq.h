@@ -33,7 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command);
 
-int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool clean_session);
+int _mosquitto_send_connect(struct _mosquitto_core *core, uint16_t keepalive, bool clean_session);
 int _mosquitto_send_disconnect(struct mosquitto *mosq);
 int _mosquitto_send_pingreq(struct mosquitto *mosq);
 int _mosquitto_send_pingresp(struct mosquitto *mosq);
