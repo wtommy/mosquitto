@@ -38,61 +38,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <send_mosq.h>
 #include <util_mosq.h>
 
-static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid, bool dup);
-
-/* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
-static int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid, bool dup)
-{
-	struct _mosquitto_packet *packet = NULL;
-	int rc;
-
-	assert(mosq);
-	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return MOSQ_ERR_NOMEM;
-
-	packet->command = command;
-	if(dup){
-		packet->command |= 8;
-	}
-	packet->remaining_length = 2;
-	rc = _mosquitto_packet_alloc(packet);
-	if(rc){
-		_mosquitto_free(packet);
-		return rc;
-	}
-
-	packet->payload[packet->pos+0] = MOSQ_MSB(mid);
-	packet->payload[packet->pos+1] = MOSQ_LSB(mid);
-
-	_mosquitto_packet_queue(&mosq->core, packet);
-
-	return MOSQ_ERR_SUCCESS;
-}
-
-/* For DISCONNECT, PINGREQ and PINGRESP */
-int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
-{
-	struct _mosquitto_packet *packet = NULL;
-	int rc;
-
-	assert(mosq);
-	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return MOSQ_ERR_NOMEM;
-
-	packet->command = command;
-	packet->remaining_length = 0;
-
-	rc = _mosquitto_packet_alloc(packet);
-	if(rc){
-		_mosquitto_free(packet);
-		return rc;
-	}
-
-	_mosquitto_packet_queue(&mosq->core, packet);
-
-	return MOSQ_ERR_SUCCESS;
-}
-
 int _mosquitto_send_pingreq(struct mosquitto *mosq)
 {
 	assert(mosq);
