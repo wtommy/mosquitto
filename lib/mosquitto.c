@@ -259,7 +259,7 @@ int mosquitto_disconnect(struct mosquitto *mosq)
 
 	mosq->core.state = mosq_cs_disconnecting;
 
-	return _mosquitto_send_disconnect(mosq);
+	return _mosquitto_send_disconnect(&mosq->core);
 }
 
 int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)

@@ -107,6 +107,12 @@ int _mosquitto_send_connect(struct _mosquitto_core *core, uint16_t keepalive, bo
 	return MOSQ_ERR_SUCCESS;
 }
 
+int _mosquitto_send_disconnect(struct _mosquitto_core *core)
+{
+	assert(core);
+	return _mosquitto_send_simple_command(core, DISCONNECT);
+}
+
 int _mosquitto_send_subscribe(struct _mosquitto_core *core, uint16_t *mid, bool dup, const char *topic, uint8_t topic_qos)
 {
 	/* FIXME - only deals with a single topic */
@@ -181,11 +187,3 @@ int _mosquitto_send_unsubscribe(struct _mosquitto_core *core, uint16_t *mid, boo
 	return MOSQ_ERR_SUCCESS;
 }
 
-#ifndef WITH_BROKER
-int _mosquitto_send_disconnect(struct mosquitto *mosq)
-{
-	assert(mosq);
-	return _mosquitto_send_simple_command(mosq, DISCONNECT);
-}
-
-#endif

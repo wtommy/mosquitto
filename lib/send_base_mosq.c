@@ -68,12 +68,12 @@ int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, ui
 }
 
 /* For DISCONNECT, PINGREQ and PINGRESP */
-int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
+int _mosquitto_send_simple_command(struct _mosquitto_core *core, uint8_t command)
 {
 	struct _mosquitto_packet *packet = NULL;
 	int rc;
 
-	assert(mosq);
+	assert(core);
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return MOSQ_ERR_NOMEM;
 
@@ -86,7 +86,7 @@ int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 		return rc;
 	}
 
-	_mosquitto_packet_queue(&mosq->core, packet);
+	_mosquitto_packet_queue(core, packet);
 
 	return MOSQ_ERR_SUCCESS;
 }

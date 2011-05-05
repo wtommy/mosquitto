@@ -42,13 +42,13 @@ int _mosquitto_send_pingreq(struct mosquitto *mosq)
 {
 	assert(mosq);
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PINGREQ");
-	return _mosquitto_send_simple_command(mosq, PINGREQ);
+	return _mosquitto_send_simple_command(&mosq->core, PINGREQ);
 }
 
 int _mosquitto_send_pingresp(struct mosquitto *mosq)
 {
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PINGRESP");
-	return _mosquitto_send_simple_command(mosq, PINGRESP);
+	return _mosquitto_send_simple_command(&mosq->core, PINGRESP);
 }
 
 int _mosquitto_send_puback(struct mosquitto *mosq, uint16_t mid)

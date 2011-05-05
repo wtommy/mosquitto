@@ -236,7 +236,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename);
  */
 int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid, bool dup);
 int mqtt3_raw_connack(mqtt3_context *context, uint8_t result);
-int mqtt3_raw_disconnect(mqtt3_context *context);
 int mqtt3_raw_pingreq(mqtt3_context *context);
 int mqtt3_raw_pingresp(mqtt3_context *context);
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid);

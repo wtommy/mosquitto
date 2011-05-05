@@ -6,7 +6,7 @@ CFLAGS_FINAL=${CFLAGS} -DVERSION="\"${VERSION}\"" -DTIMESTAMP="\"${TIMESTAMP}\""
 
 all : mosquitto
 
-mosquitto : mosquitto.o bridge.o conf.o context.o database.o logging.o memory_mosq.o persist.o net.o net_mosq.o raw_send.o raw_send_client.o raw_send_server.o read_handle.o read_handle_client.o read_handle_server.o security.o send_client_mosq.o subs.o util.o util_mosq.o
+mosquitto : mosquitto.o bridge.o conf.o context.o database.o logging.o memory_mosq.o persist.o net.o net_mosq.o raw_send.o raw_send_server.o read_handle.o read_handle_client.o read_handle_server.o security.o send_base_mosq.o send_client_mosq.o subs.o util.o util_mosq.o
 	${CC} $^ -o $@ ${LDFLAGS}
 
 mosquitto.o : mosquitto.c mqtt3.h
@@ -42,9 +42,6 @@ persist.o : persist.c mqtt3.h
 raw_send.o : raw_send.c mqtt3.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
-raw_send_client.o : raw_send_client.c mqtt3.h
-	${CC} $(CFLAGS_FINAL) -c $< -o $@
-
 raw_send_server.o : raw_send_server.c mqtt3.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
@@ -58,6 +55,9 @@ read_handle_server.o : read_handle_server.c mqtt3.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 security.o : security.c mqtt3.h
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
+
+send_base_mosq.o : ../lib/send_base_mosq.c ../lib/send_mosq.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 send_client_mosq.o : ../lib/send_client_mosq.c ../lib/send_mosq.h
