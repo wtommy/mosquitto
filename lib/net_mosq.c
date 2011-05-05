@@ -44,12 +44,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <net_mosq.h>
 
-#ifdef WIN32
-#  define COMPAT_CLOSE(a) closesocket(a)
-#else
-#  define COMPAT_CLOSE(a) close(a)
-#endif
-
 void _mosquitto_net_init(void)
 {
 #ifdef WIN32
