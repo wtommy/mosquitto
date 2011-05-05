@@ -43,6 +43,6 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 int _mosquitto_send_pubrec(struct mosquitto *mosq, uint16_t mid);
 int _mosquitto_send_pubrel(struct mosquitto *mosq, uint16_t mid, bool dup);
 int _mosquitto_send_subscribe(struct _mosquitto_core *core, uint16_t *mid, bool dup, const char *topic, uint8_t topic_qos);
-int _mosquitto_send_unsubscribe(struct mosquitto *mosq, uint16_t *mid, bool dup, const char *topic);
+int _mosquitto_send_unsubscribe(struct _mosquitto_core *core, uint16_t *mid, bool dup, const char *topic);
 
 #endif

@@ -245,7 +245,6 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 int mqtt3_raw_pubrec(mqtt3_context *context, uint16_t mid);
 int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid, bool dup);
 int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload);
-int mqtt3_raw_unsubscribe(mqtt3_context *context, bool dup, const char *topic);
 int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command);
 
 /* ============================================================

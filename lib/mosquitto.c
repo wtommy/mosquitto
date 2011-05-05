@@ -329,7 +329,7 @@ int mosquitto_unsubscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub
 	if(!mosq) return MOSQ_ERR_INVAL;
 	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 
-	return _mosquitto_send_unsubscribe(mosq, mid, false, sub);
+	return _mosquitto_send_unsubscribe(&mosq->core, mid, false, sub);
 }
 
 #if 0
