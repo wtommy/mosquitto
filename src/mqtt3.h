@@ -248,7 +248,6 @@ int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, 
  * Network functions
  * ============================================================ */
 int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int listensock);
-void mqtt3_socket_close(mqtt3_context *context);
 int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_count);
 
 int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *packet);

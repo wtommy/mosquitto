@@ -56,12 +56,12 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	
 	/* Don't accept multiple CONNECT commands. */
 	if(context->core.state != mosq_cs_new){
-		mqtt3_socket_close(context);
+		_mosquitto_socket_close(&context->core);
 		return MOSQ_ERR_PROTOCOL;
 	}
 
 	if(_mosquitto_read_string(&context->core.in_packet, &protocol_name)){
-		mqtt3_socket_close(context);
+		_mosquitto_socket_close(&context->core);
 		return 1;
 	}
 	if(!protocol_name){
@@ -78,7 +78,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	_mosquitto_free(protocol_name);
 
 	if(_mosquitto_read_byte(&context->core.in_packet, &protocol_version)){
-		mqtt3_socket_close(context);
+		_mosquitto_socket_close(&context->core);
 		return 1;
 	}
 	if(protocol_version != PROTOCOL_VERSION){
@@ -115,7 +115,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	if(db->config->clientid_prefixes){
 		if(strncmp(db->config->clientid_prefixes, client_id, strlen(db->config->clientid_prefixes))){
 			mqtt3_raw_connack(context, 2);
-			mqtt3_socket_close(context);
+			_mosquitto_socket_close(&context->core);
 			return MOSQ_ERR_SUCCESS;
 		}
 	}
@@ -152,7 +152,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 			rc = mqtt3_unpwd_check(db, username, password);
 			if(rc == MOSQ_ERR_AUTH){
 				mqtt3_raw_connack(context, 2);
-				mqtt3_socket_close(context);
+				_mosquitto_socket_close(&context->core);
 				return MOSQ_ERR_SUCCESS;
 			}else if(rc == MOSQ_ERR_INVAL){
 				return MOSQ_ERR_INVAL;
@@ -167,7 +167,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 
 	if(!username_flag && db->config->allow_anonymous == false){
 		mqtt3_raw_connack(context, 2);
-		mqtt3_socket_close(context);
+		_mosquitto_socket_close(&context->core);
 		return MOSQ_ERR_SUCCESS;
 	}
 

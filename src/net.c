@@ -147,24 +147,6 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 	return new_sock;
 }
 
-/* Close a socket associated with a context and set it to -1.
- */
-void mqtt3_socket_close(mqtt3_context *context)
-{
-	int rc = 0;
-
-	assert(context);
-
-	if(context->core.sock != -1){
-#ifndef WIN32
-		rc = close(context->core.sock);
-#else
-		rc = closesocket(context->core.sock);
-#endif
-		context->core.sock = -1;
-	}
-}
-
 /* Creates a socket and listens on port 'port'.
  * Returns 1 on failure
  * Returns 0 on success.
