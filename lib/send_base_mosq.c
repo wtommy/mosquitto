@@ -31,7 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 #include <mosquitto.h>
-#include <logging_mosq.h>
+#include <mosquitto_internal.h>
 #include <memory_mosq.h>
 #include <mqtt3_protocol.h>
 #include <net_mosq.h>
