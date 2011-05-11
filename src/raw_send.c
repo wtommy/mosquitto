@@ -50,12 +50,28 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 	struct _mosquitto_packet *packet = NULL;
 	int packetlen;
 	int rc;
+	int len;
+	const char *local_topic;
 
 	if(!context || context->core.sock == -1 || !topic) return MOSQ_ERR_INVAL;
 
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBLISH to %s (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", context->core.id, dup, qos, retain, mid, topic, (long)payloadlen);
+	if(context->mount_point){
+		len = strlen(context->mount_point);
+		if(strlen(topic) > len){
+			if(!strncmp(topic, context->mount_point, len)){
+				local_topic = topic+len;
+			}else{
+				return MOSQ_ERR_INVAL;
+			}
+		}else{
+			return MOSQ_ERR_INVAL;
+		}
+	}else{
+		local_topic = topic;
+	}
 
-	packetlen = 2+strlen(topic) + payloadlen;
+	packetlen = 2+strlen(local_topic) + payloadlen;
 	if(qos > 0) packetlen += 2; /* For message id */
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet){
@@ -71,7 +87,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 		return rc;
 	}
 	/* Variable header (topic string) */
-	_mosquitto_write_string(packet, topic, strlen(topic));
+	_mosquitto_write_string(packet, local_topic, strlen(local_topic));
 	if(qos > 0){
 		_mosquitto_write_uint16(packet, mid);
 	}
