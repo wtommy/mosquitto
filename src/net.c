@@ -124,6 +124,12 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 #endif
 			return -1;
 		}
+		for(i=0; i<db->config->listener_count; i++){
+			if(db->config->listeners[i].fd == listensock){
+				new_context->mount_point = db->config->listeners[i].mount_point;
+			}
+		}
+
 		mqtt3_log_printf(MOSQ_LOG_NOTICE, "New client connected from %s.", new_context->core.address);
 		for(i=0; i<db->context_count; i++){
 			if(db->contexts[i] == NULL){
