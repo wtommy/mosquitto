@@ -422,6 +422,10 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 					token = strtok(NULL, " ");
 					if(token){
 							config->listeners[config->listener_count-1].mount_point = _mosquitto_strdup(token);
+							if(!config->listeners[config->listener_count-1].mount_point){
+								mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+								return MOSQ_ERR_NOMEM;
+							}
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty mount_point value in configuration.");
 						return MOSQ_ERR_INVAL;
