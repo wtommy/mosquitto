@@ -207,6 +207,7 @@ typedef struct _mqtt3_context{
 	struct _mqtt3_bridge *bridge;
 	mosquitto_client_msg *msgs;
 	struct _mosquitto_acl_user *acl_list;
+	char *mount_point;
 } mqtt3_context;
 
 /* ============================================================
@@ -253,7 +254,7 @@ int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command);
 /* ============================================================
  * Network functions
  * ============================================================ */
-int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int listensock);
+int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock);
 void mqtt3_socket_close(mqtt3_context *context);
 int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_count);
 

@@ -239,7 +239,7 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 			for(i=0; i<listensock_count; i++){
 				if(pollfds[listensock[i]].revents & (POLLIN | POLLPRI)){
 					new_clients = 1;
-					while(mqtt3_socket_accept(&int_db.contexts, &int_db.context_count, listensock[i]) != -1){
+					while(mqtt3_socket_accept(&int_db, listensock[i]) != -1){
 					}
 				}
 			}

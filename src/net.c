@@ -63,7 +63,7 @@ void mqtt3_net_set_max_connections(int max)
 	max_connections = max;
 }
 
-int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int listensock)
+int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 {
 	int i;
 	int new_sock = -1;
@@ -77,7 +77,7 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 	new_sock = accept(listensock, NULL, 0);
 	if(new_sock < 0) return -1;
 
-	if(max_connections > 0 && (*context_count) >= max_connections){
+	if(max_connections > 0 && db->context_count >= max_connections){
 #ifndef WIN32
 		close(new_sock);
 #else
@@ -125,18 +125,18 @@ int mqtt3_socket_accept(mqtt3_context ***contexts, int *context_count, int liste
 			return -1;
 		}
 		mqtt3_log_printf(MOSQ_LOG_NOTICE, "New client connected from %s.", new_context->core.address);
-		for(i=0; i<(*context_count); i++){
-			if((*contexts)[i] == NULL){
-				(*contexts)[i] = new_context;
+		for(i=0; i<db->context_count; i++){
+			if(db->contexts[i] == NULL){
+				db->contexts[i] = new_context;
 				break;
 			}
 		}
-		if(i==(*context_count)){
-			tmp_contexts = _mosquitto_realloc(*contexts, sizeof(mqtt3_context*)*((*context_count)+1));
+		if(i==db->context_count){
+			tmp_contexts = _mosquitto_realloc(db->contexts, sizeof(mqtt3_context*)*(db->context_count+1));
 			if(tmp_contexts){
-				(*context_count)++;
-				*contexts = tmp_contexts;
-				(*contexts)[(*context_count)-1] = new_context;
+				db->context_count++;
+				db->contexts = tmp_contexts;
+				db->contexts[db->context_count-1] = new_context;
 			}else{
 				mqtt3_context_cleanup(NULL, new_context, true);
 			}
