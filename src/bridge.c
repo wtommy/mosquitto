@@ -31,9 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <string.h>
 
-#ifndef CMAKE
 #include <config.h>
-#endif
 
 #include <net_mosq.h>
 #include <mqtt3.h>

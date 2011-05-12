@@ -7,6 +7,14 @@
 - $SYS/broker/heap/current size and maximum size messages now include "bytes"
   to match rsmb message format.
 
+0.10.1 - 20110512
+=================
+
+- Fix Windows compilation.
+- Fix mosquitto.py on Windows - call lib init/cleanup.
+- Don't abort when connecting if given an unknown address type (assuming an
+  IPv4 or IPv6 address is given).
+
 0.10 - 20110429
 ===============
 

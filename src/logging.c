@@ -33,9 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <syslog.h>
 #endif
 
-#ifndef CMAKE
 #include <config.h>
-#endif
 
 #include <mqtt3.h>
 

@@ -157,9 +157,7 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 		}else if(rp->ai_family == PF_INET6){
 			((struct sockaddr_in6 *)rp->ai_addr)->sin6_port = htons(port);
 		}else{
-			freeaddrinfo(ainfo);
-			COMPAT_CLOSE(sock);
-			return MOSQ_ERR_UNKNOWN;
+			continue;
 		}
 		if(connect(sock, rp->ai_addr, rp->ai_addrlen) != -1){
 			break;

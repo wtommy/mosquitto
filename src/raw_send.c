@@ -29,9 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <string.h>
 
-#ifndef CMAKE
 #include <config.h>
-#endif
 
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
