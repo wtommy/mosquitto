@@ -260,6 +260,10 @@
 		<title>See Also</title>
 		<para>
 			<citerefentry>
+				<refentrytitle>mqtt</refentrytitle>
+				<manvolnum>7</manvolnum>
+			</citerefentry>
+			<citerefentry>
 				<refentrytitle>mosquitto.conf</refentrytitle>
 				<manvolnum>5</manvolnum>
 			</citerefentry>
