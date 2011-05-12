@@ -3,6 +3,8 @@
 
 - Fix Windows compilation.
 - Fix mosquitto.py on Windows - call lib init/cleanup.
+- Don't abort when connecting if given an unknown address type (assuming an
+  IPv4 or IPv6 address is given).
 
 0.10 - 20110429
 ===============
