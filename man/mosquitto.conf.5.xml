@@ -407,6 +407,10 @@
 				<manvolnum>8</manvolnum>
 			</citerefentry>
 			<citerefentry>
+				<refentrytitle>mqtt</refentrytitle>
+				<manvolnum>7</manvolnum>
+			</citerefentry>
+			<citerefentry>
 				<refentrytitle>limits.conf</refentrytitle>
 				<manvolnum>5</manvolnum>
 			</citerefentry>
