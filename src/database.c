@@ -65,9 +65,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <sys/stat.h>
 
-#ifndef CMAKE
 #include <config.h>
-#endif
 
 #include <mqtt3.h>
 #include <memory_mosq.h>
