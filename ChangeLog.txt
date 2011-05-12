@@ -2,6 +2,7 @@
 =================
 
 - Fix Windows compilation.
+- Fix mosquitto.py on Windows - call lib init/cleanup.
 
 0.10 - 20110429
 ===============
