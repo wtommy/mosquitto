@@ -48,10 +48,10 @@ mqttc.on_connect = on_connect
 mqttc.on_publish = on_publish
 mqttc.on_subscribe = on_subscribe
 mqttc.connect("127.0.0.1", 1883, 60, True)
-mqttc.subscribe("$SYS/#", 2)
-mqttc.subscribe("#", 2)
-mqttc.publish("bob", "0000000")
+mqttc.subscribe("power/+", 0)
 
-while mqttc.loop() == 0:
-	pass
+rc = 0
+while rc == 0:
+	rc = mqttc.loop()
 
+print "rc:", rc
