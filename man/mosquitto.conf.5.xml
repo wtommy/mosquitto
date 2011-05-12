@@ -396,7 +396,7 @@
 	<refsect1>
 		<title>Bugs</title>
 		<para><command>mosquitto</command> bug information can be found at <uri
-		type="webpage">http://launchpad.net/mosquitto</uri>.</para>
+		type="webpage">http://launchpad.net/mosquitto</uri></para>
 	</refsect1>
 
 	<refsect1>
