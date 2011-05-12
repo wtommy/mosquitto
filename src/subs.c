@@ -29,7 +29,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
 #include <mqtt3.h>
 #include <memory_mosq.h>

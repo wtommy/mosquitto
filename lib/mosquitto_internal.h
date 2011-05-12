@@ -37,8 +37,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifdef WITH_SSL
 #include <openssl/ssl.h>
 #endif
-#include <stdbool.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 #ifdef WIN32
