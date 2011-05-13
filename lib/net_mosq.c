@@ -132,7 +132,7 @@ int _mosquitto_socket_close(struct _mosquitto_core *core)
  */
 int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, uint16_t port)
 {
-	int sock;
+	int sock = INVALID_SOCKET;
 	int opt;
 	struct addrinfo hints;
 	struct addrinfo *ainfo, *rp;
