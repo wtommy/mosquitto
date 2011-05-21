@@ -55,6 +55,7 @@ int _mosquitto_log_printf(struct mosquitto *mosq, int priority, const char *fmt,
 		va_start(va, fmt);
 		vsnprintf(s, 500, fmt, va);
 		va_end(va);
+		s[499] = '\0'; /* FIXME - quick hack to ensure string is null terminated. */
 
 		if(mosq->log_destinations & MOSQ_LOG_STDOUT){
 			fprintf(stdout, "%s\n", s);
