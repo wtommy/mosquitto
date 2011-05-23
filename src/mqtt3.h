@@ -351,10 +351,17 @@ void mqtt3_bridge_packet_cleanup(mqtt3_context *context);
 /* ============================================================
  * Security related functions
  * ============================================================ */
+#ifdef WITH_EXTERNAL_SECURITY_CHECKS
+int mosquitto_unpwd_init(struct _mosquitto_db *db);
+int mosquitto_acl_init(struct _mosquitto_db *db);
+void mosquitto_acl_cleanup(struct _mosquitto_db *db);
+#else
 int mqtt3_aclfile_parse(struct _mosquitto_db *db);
-int mqtt3_acl_check(struct _mosquitto_db *db, mqtt3_context *context, const char *topic, int access);
 int mqtt3_pwfile_parse(struct _mosquitto_db *db);
-int mqtt3_unpwd_check(struct _mosquitto_db *db, const char *username, const char *password);
-int mqtt3_unpwd_cleanup(struct _mosquitto_db *db);
+#endif
+
+int mosquitto_acl_check(struct _mosquitto_db *db, mqtt3_context *context, const char *topic, int access);
+int mosquitto_unpwd_check(struct _mosquitto_db *db, const char *username, const char *password);
+int mosquitto_unpwd_cleanup(struct _mosquitto_db *db);
 
 #endif

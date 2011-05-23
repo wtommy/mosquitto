@@ -67,7 +67,7 @@ static int _subs_process(struct _mosquitto_db *db, struct _mosquitto_subhier *hi
 			continue;
 		}
 		/* Check for ACL topic access. */
-		rc2 = mqtt3_acl_check(db, leaf->context, topic, MOSQ_ACL_READ);
+		rc2 = mosquitto_acl_check(db, leaf->context, topic, MOSQ_ACL_READ);
 		if(rc2 == MOSQ_ERR_ACL_DENIED){
 			leaf = leaf->next;
 			continue;
@@ -521,7 +521,7 @@ static int _retain_process(struct _mosquitto_db *db, struct mosquitto_msg_store 
 	int qos;
 	uint16_t mid;
 
-	rc = mqtt3_acl_check(db, context, retained->msg.topic, MOSQ_ACL_READ);
+	rc = mosquitto_acl_check(db, context, retained->msg.topic, MOSQ_ACL_READ);
 	if(rc == MOSQ_ERR_ACL_DENIED){
 		return MOSQ_ERR_SUCCESS;
 	}else if(rc != MOSQ_ERR_SUCCESS){

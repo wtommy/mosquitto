@@ -16,7 +16,7 @@ set (MOSQ_SRCS
 	raw_send.c raw_send_client.c raw_send_server.c
 	read_handle.c read_handle_client.c read_handle_server.c
 	subs.c
-	security.c
+	security.c security_external.c
 	util.c
 	../lib/util_mosq.c ../lib/util_mosq.h)
 
@@ -46,6 +46,12 @@ option(INC_MEMTRACK
 if (${INC_MEMTRACK} STREQUAL ON)
 	add_definitions("-DWITH_MEMORY_TRACKING")
 endif (${INC_MEMTRACK} STREQUAL ON)
+
+option(WITH_EXTERNAL_SECURITY_CHECKS
+	"Use external security checks (needs additional code)?" OFF)
+if (${WITH_EXTERNAL_SECURITY_CHECKS} STREQUAL ON)
+	add_definitions("-DWITH_EXTERNAL_SECURITY_CHECKS")
+endif (${WITH_EXTERNAL_SECURITY_CHECKS} STREQUAL ON)
 
 add_definitions (-DWITH_BROKER)
 

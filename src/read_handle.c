@@ -197,7 +197,7 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 	}
 
 	/* Check for topic access */
-	rc = mqtt3_acl_check(db, context, topic, MOSQ_ACL_WRITE);
+	rc = mosquitto_acl_check(db, context, topic, MOSQ_ACL_WRITE);
 	if(rc == MOSQ_ERR_ACL_DENIED){
 		_mosquitto_free(topic);
 		if(payload) _mosquitto_free(payload);

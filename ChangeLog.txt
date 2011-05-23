@@ -8,6 +8,9 @@
   to match rsmb message format.
 - Implemented the retained_persistence config file option - a synonym of the
   "persistence" option.
+- Added security_external.c to broker source to make it easier for third
+  parties to add support for their existing username/password and ACL database
+  for security checks.
 
 0.10 - 20110429
 ===============
