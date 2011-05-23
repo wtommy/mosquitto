@@ -406,13 +406,12 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 			if(rc){
 				_mosquitto_socket_close(&mosq->core);
 				if(mosq->core.state == mosq_cs_disconnecting){
-					if(mosq->on_disconnect){
-						mosq->on_disconnect(mosq->obj);
-					}
-					return MOSQ_ERR_SUCCESS;
-				}else{
-					return rc;
+					rc = MOSQ_ERR_SUCCESS;
 				}
+				if(mosq->on_disconnect){
+					mosq->on_disconnect(mosq->obj);
+				}
+				return rc;
 			}
 		}
 		if(FD_ISSET(mosq->core.sock, &writefds)){
@@ -420,13 +419,12 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 			if(rc){
 				_mosquitto_socket_close(&mosq->core);
 				if(mosq->core.state == mosq_cs_disconnecting){
-					if(mosq->on_disconnect){
-						mosq->on_disconnect(mosq->obj);
-					}
-					return MOSQ_ERR_SUCCESS;
-				}else{
-					return rc;
+					rc = MOSQ_ERR_SUCCESS;
 				}
+				if(mosq->on_disconnect){
+					mosq->on_disconnect(mosq->obj);
+				}
+				return rc;
 			}
 		}
 	}
