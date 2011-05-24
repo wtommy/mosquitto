@@ -781,38 +781,81 @@ void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time)
 	static time_t last_update = 0;
 	time_t now = time(NULL);
 	char buf[100];
-	int count;
+	int value;
+	unsigned long value_ul;
+	unsigned long long value_ull;
+
+	static int msg_store_count = -1;
+	static int client_count = -1;
+#ifdef REAL_WITH_MEMORY_TRACKING
+	static unsigned long current_heap = -1;
+	static unsigned long max_heap = -1;
+#endif
+	static unsigned long msgs_received = -1;
+	static unsigned long msgs_sent = -1;
+	static unsigned long long bytes_received = -1;
+	static unsigned long long bytes_sent = -1;
 
 	if(interval && now - interval > last_update){
 		snprintf(buf, 100, "%d seconds", (int)(now - start_time));
 		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/uptime", 2, strlen(buf), (uint8_t *)buf, 1);
 
-		snprintf(buf, 100, "%d", db->msg_store_count);
-		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/stored", 2, strlen(buf), (uint8_t *)buf, 1);
+		if(db->msg_store_count != msg_store_count){
+			msg_store_count = db->msg_store_count;
+			snprintf(buf, 100, "%d", msg_store_count);
+			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/stored", 2, strlen(buf), (uint8_t *)buf, 1);
+		}
 
-		if(!mqtt3_db_client_count(db, &count)){
-			snprintf(buf, 100, "%d", count);
-			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/clients/total", 2, strlen(buf), (uint8_t *)buf, 1);
+		if(!mqtt3_db_client_count(db, &value)){
+			if(client_count != value){
+				client_count = value;
+				snprintf(buf, 100, "%d", client_count);
+				mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/clients/total", 2, strlen(buf), (uint8_t *)buf, 1);
+			}
 		}
 
 #ifdef REAL_WITH_MEMORY_TRACKING
-		snprintf(buf, 100, "%lu bytes", _mosquitto_memory_used());
-		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/heap/current size", 2, strlen(buf), (uint8_t *)buf, 1);
-		snprintf(buf, 100, "%lu bytes", _mosquitto_max_memory_used());
-		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/heap/maximum size", 2, strlen(buf), (uint8_t *)buf, 1);
+		value_ul = _mosquitto_memory_used();
+		if(current_heap != value_ul){
+			current_heap = value_ul;
+			snprintf(buf, 100, "%lu bytes", current_heap);
+			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/heap/current size", 2, strlen(buf), (uint8_t *)buf, 1);
+		}
+		value_ul =_mosquitto_max_memory_used();
+		if(max_heap != value_ul){
+			max_heap = value_ul;
+			snprintf(buf, 100, "%lu bytes", max_heap);
+			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/heap/maximum size", 2, strlen(buf), (uint8_t *)buf, 1);
+		}
 #endif
 
-		snprintf(buf, 100, "%lu", mqtt3_net_msgs_total_received());
-		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/received", 2, strlen(buf), (uint8_t *)buf, 1);
+		value_ul = mqtt3_net_msgs_total_received();
+		if(msgs_received != value_ul){
+			msgs_received = value_ul;
+			snprintf(buf, 100, "%lu", msgs_received);
+			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/received", 2, strlen(buf), (uint8_t *)buf, 1);
+		}
 		
-		snprintf(buf, 100, "%lu", mqtt3_net_msgs_total_sent());
-		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/sent", 2, strlen(buf), (uint8_t *)buf, 1);
+		value_ul = mqtt3_net_msgs_total_sent();
+		if(msgs_sent != value_ul){
+			msgs_sent = value_ul;
+			snprintf(buf, 100, "%lu", msgs_sent);
+			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/sent", 2, strlen(buf), (uint8_t *)buf, 1);
+		}
 
-		snprintf(buf, 100, "%llu", (unsigned long long)mqtt3_net_bytes_total_received());
-		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/bytes/received", 2, strlen(buf), (uint8_t *)buf, 1);
+		value_ull = (unsigned long long)mqtt3_net_bytes_total_received();
+		if(bytes_received != value_ull){
+			bytes_received = value_ull;
+			snprintf(buf, 100, "%llu", bytes_received);
+			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/bytes/received", 2, strlen(buf), (uint8_t *)buf, 1);
+		}
 		
-		snprintf(buf, 100, "%llu", (unsigned long long)mqtt3_net_bytes_total_sent());
-		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/bytes/sent", 2, strlen(buf), (uint8_t *)buf, 1);
+		value_ull = (unsigned long long)mqtt3_net_bytes_total_sent();
+		if(bytes_sent != value_ull){
+			bytes_sent = value_ull;
+			snprintf(buf, 100, "%llu", bytes_sent);
+			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/bytes/sent", 2, strlen(buf), (uint8_t *)buf, 1);
+		}
 		
 		last_update = time(NULL);
 	}

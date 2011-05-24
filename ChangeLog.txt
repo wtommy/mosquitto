@@ -11,6 +11,7 @@
 - Added security_external.c to broker source to make it easier for third
   parties to add support for their existing username/password and ACL database
   for security checks.
+- $SYS messages are now only republished when their value changes.
 
 0.10 - 20110429
 ===============
