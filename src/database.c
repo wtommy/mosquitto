@@ -226,7 +226,7 @@ int mqtt3_db_client_count(mosquitto_db *db, int *count)
 
 	*count = 0;
 	for(i=0; i<db->context_count; i++){
-		if(db->contexts[i]) (*count)++;
+		if(db->contexts[i] && db->contexts[i]->core.sock != -1) (*count)++;
 	}
 
 	return MOSQ_ERR_SUCCESS;
