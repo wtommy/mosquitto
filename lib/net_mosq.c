@@ -170,7 +170,6 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 		}
 
 		COMPAT_CLOSE(sock);
-		return MOSQ_ERR_UNKNOWN;
 	}
 	if(!rp){
 		fprintf(stderr, "Error: %s", strerror(errno));

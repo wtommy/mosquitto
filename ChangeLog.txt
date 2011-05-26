@@ -1,3 +1,10 @@
+0.10.2 - 2011xxxx
+=================
+
+- Don't abort when connecting if the first connection fails. This is important
+  on e.g. Windows 7, where IPV6 is offered as the first choice but may not be
+  available.
+
 0.10.1 - 20110512
 =================
 
