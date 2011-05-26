@@ -143,6 +143,7 @@ int main(int argc, char *argv[])
 	bool clean_session = true;
 	bool debug = false;
 	struct mosquitto *mosq = NULL;
+	int rc;
 	
 	uint8_t *will_payload = NULL;
 	long will_payloadlen = 0;
@@ -337,9 +338,10 @@ int main(int argc, char *argv[])
 		mosquitto_subscribe_callback_set(mosq, my_subscribe_callback);
 	}
 
-	if(mosquitto_connect(mosq, host, port, keepalive, clean_session)){
-		fprintf(stderr, "Unable to connect.\n");
-		return 1;
+	rc = mosquitto_connect(mosq, host, port, keepalive, clean_session);
+	if(rc){
+		fprintf(stderr, "Unable to connect (%d).\n", rc);
+		return rc;
 	}
 
 	while(!mosquitto_loop(mosq, -1)){
