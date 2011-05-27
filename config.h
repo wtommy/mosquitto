@@ -5,6 +5,10 @@
  * easily in restrictive environments by removing features.
  * ============================================================ */
 
+#ifndef CMAKE
+/* Only use the compile time options defined here from the standard Makefile. */
+
+
 /* Uncomment to compile with tcpd/libwrap support. */
 //#define WITH_WRAP
 
@@ -43,6 +47,7 @@
  * system.
  */
 //#define WITH_EXTERNAL_SECURITY_CHECKS
+#endif
 
 /* ============================================================
  * Compatibility defines

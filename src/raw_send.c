@@ -29,155 +29,52 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <string.h>
 
-#ifndef CMAKE
 #include <config.h>
-#endif
 
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
-#include <memory_mosq.h>
-#include <net_mosq.h>
-#include <util_mosq.h>
+#include <send_mosq.h>
 
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBACK to %s (Mid: %d)", context->core.id, mid);
-	return mqtt3_send_command_with_mid(context, PUBACK, mid, false);
+	return _mosquitto_send_command_with_mid(&context->core, PUBACK, mid, false);
 }
 
 int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload)
 {
-	struct _mosquitto_packet *packet = NULL;
-	int packetlen;
-	int rc;
-	int len;
-	const char *local_topic;
-
 	if(!context || context->core.sock == -1 || !topic) return MOSQ_ERR_INVAL;
-
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBLISH to %s (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", context->core.id, dup, qos, retain, mid, topic, (long)payloadlen);
-	if(context->mount_point){
-		len = strlen(context->mount_point);
-		if(strlen(topic) > len){
-			if(!strncmp(topic, context->mount_point, len)){
-				local_topic = topic+len;
-			}else{
-				return MOSQ_ERR_INVAL;
-			}
-		}else{
-			return MOSQ_ERR_INVAL;
-		}
-	}else{
-		local_topic = topic;
-	}
-
-	packetlen = 2+strlen(local_topic) + payloadlen;
-	if(qos > 0) packetlen += 2; /* For message id */
-	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet){
-		mqtt3_log_printf(MOSQ_LOG_DEBUG, "PUBLISH failed allocating packet memory.");
-		return MOSQ_ERR_NOMEM;
-	}
-
-	packet->command = PUBLISH | ((dup&0x1)<<3) | (qos<<1) | retain;
-	packet->remaining_length = packetlen;
-	rc = _mosquitto_packet_alloc(packet);
-	if(rc){
-		_mosquitto_free(packet);
-		return rc;
-	}
-	/* Variable header (topic string) */
-	_mosquitto_write_string(packet, local_topic, strlen(local_topic));
-	if(qos > 0){
-		_mosquitto_write_uint16(packet, mid);
-	}
-
-	/* Payload */
-	if(payloadlen){
-		_mosquitto_write_bytes(packet, payload, payloadlen);
-	}
-
-	_mosquitto_packet_queue(&context->core, packet);
-
-	return MOSQ_ERR_SUCCESS;
+	return _mosquitto_send_real_publish(&context->core, mid, topic, payloadlen, payload, qos, retain, dup);
 }
 
 int mqtt3_raw_pubcomp(mqtt3_context *context, uint16_t mid)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBCOMP to %s (Mid: %d)", context->core.id, mid);
-	return mqtt3_send_command_with_mid(context, PUBCOMP, mid, false);
+	return _mosquitto_send_command_with_mid(&context->core, PUBCOMP, mid, false);
 }
 
 int mqtt3_raw_pubrec(mqtt3_context *context, uint16_t mid)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBREC to %s (Mid: %d)", context->core.id, mid);
-	return mqtt3_send_command_with_mid(context, PUBREC, mid, false);
+	return _mosquitto_send_command_with_mid(&context->core, PUBREC, mid, false);
 }
 
 int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid, bool dup)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBREL to %s (Mid: %d)", context->core.id, mid);
-	return mqtt3_send_command_with_mid(context, PUBREL|2, mid, dup);
-}
-
-/* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
-int mqtt3_send_command_with_mid(mqtt3_context *context, uint8_t command, uint16_t mid, bool dup)
-{
-	struct _mosquitto_packet *packet = NULL;
-	int rc;
-
-	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return MOSQ_ERR_NOMEM;
-
-	packet->command = command;
-	if(dup){
-		packet->command |= 8;
-	}
-	packet->remaining_length = 2;
-	rc = _mosquitto_packet_alloc(packet);
-	if(rc){
-		_mosquitto_free(packet);
-		return rc;
-	}
-	packet->payload[packet->pos+0] = MOSQ_MSB(mid);
-	packet->payload[packet->pos+1] = MOSQ_LSB(mid);
-
-	_mosquitto_packet_queue(&context->core, packet);
-
-	return MOSQ_ERR_SUCCESS;
-}
-
-/* For DISCONNECT, PINGREQ and PINGRESP */
-int mqtt3_send_simple_command(mqtt3_context *context, uint8_t command)
-{
-	struct _mosquitto_packet *packet = NULL;
-	int rc;
-
-	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet) return MOSQ_ERR_NOMEM;
-
-	packet->command = command;
-	packet->remaining_length = 0;
-	rc = _mosquitto_packet_alloc(packet);
-	if(rc){
-		_mosquitto_free(packet);
-		return rc;
-	}
-
-	_mosquitto_packet_queue(&context->core, packet);
-
-	return MOSQ_ERR_SUCCESS;
+	return _mosquitto_send_command_with_mid(&context->core, PUBREL|2, mid, dup);
 }
 
 int mqtt3_raw_pingreq(mqtt3_context *context)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PINGREQ to %s", context->core.id);
-	return mqtt3_send_simple_command(context, PINGREQ);
+	return _mosquitto_send_simple_command(&context->core, PINGREQ);
 }
 
 int mqtt3_raw_pingresp(mqtt3_context *context)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PINGRESP to %s", context->core.id);
-	return mqtt3_send_simple_command(context, PINGRESP);
+	return _mosquitto_send_simple_command(&context->core, PINGRESP);
 }
 

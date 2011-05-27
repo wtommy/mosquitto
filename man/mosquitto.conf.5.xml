@@ -403,7 +403,7 @@
 	<refsect1>
 		<title>Bugs</title>
 		<para><command>mosquitto</command> bug information can be found at <uri
-		type="webpage">http://launchpad.net/mosquitto</uri>.</para>
+		type="webpage">http://launchpad.net/mosquitto</uri></para>
 	</refsect1>
 
 	<refsect1>
@@ -412,6 +412,10 @@
 			<citerefentry>
 				<refentrytitle>mosquitto</refentrytitle>
 				<manvolnum>8</manvolnum>
+			</citerefentry>
+			<citerefentry>
+				<refentrytitle>mqtt</refentrytitle>
+				<manvolnum>7</manvolnum>
 			</citerefentry>
 			<citerefentry>
 				<refentrytitle>limits.conf</refentrytitle>

@@ -27,9 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef CMAKE
 #include <config.h>
-#endif
 
 #ifndef WIN32
 #include <netdb.h>
@@ -51,6 +49,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
 #include <memory_mosq.h>
+#include <net_mosq.h>
 
 static uint64_t bytes_received = 0;
 static uint64_t bytes_sent = 0;
@@ -78,11 +77,7 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 	if(new_sock < 0) return -1;
 
 	if(max_connections > 0 && db->context_count >= max_connections){
-#ifndef WIN32
-		close(new_sock);
-#else
-		closesocket(new_sock);
-#endif
+		COMPAT_CLOSE(new_sock);
 		return -1;
 	}
 #ifndef WIN32
@@ -107,21 +102,13 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 	if(!hosts_access(&wrap_req)){
 		/* Access is denied */
 		mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client connection denied access by tcpd.");
-#ifndef WIN32
-		close(new_sock);
-#else
-		closesocket(new_sock);
-#endif
+		COMPAT_CLOSE(new_sock);
 		return -1;
 	}else{
 #endif
 		new_context = mqtt3_context_init(new_sock);
 		if(!new_context){
-#ifndef WIN32
-			close(new_sock);
-#else
-			closesocket(new_sock);
-#endif
+			COMPAT_CLOSE(new_sock);
 			return -1;
 		}
 		for(i=0; i<db->config->listener_count; i++){
@@ -151,24 +138,6 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 	}
 #endif
 	return new_sock;
-}
-
-/* Close a socket associated with a context and set it to -1.
- */
-void mqtt3_socket_close(mqtt3_context *context)
-{
-	int rc = 0;
-
-	assert(context);
-
-	if(context->core.sock != -1){
-#ifndef WIN32
-		rc = close(context->core.sock);
-#else
-		rc = closesocket(context->core.sock);
-#endif
-		context->core.sock = -1;
-	}
 }
 
 /* Creates a socket and listens on port 'port'.
@@ -232,33 +201,25 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 		opt = fcntl(sock, F_GETFL, 0);
 		if(opt == -1 || fcntl(sock, F_SETFL, opt | O_NONBLOCK) == -1){
 			/* If either fcntl fails, don't want to allow this client to connect. */
-			close(sock);
+			COMPAT_CLOSE(sock);
 			return 1;
 		}
 #else
 		if(ioctlsocket(sock, FIONBIO, &opt)){
-			closesocket(sock);
+			COMPAT_CLOSE(sock);
 			return 1;
 		}
 #endif
 
 		if(bind(sock, rp->ai_addr, rp->ai_addrlen) == -1){
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
-#ifndef WIN32
-			close(sock);
-#else
-			closesocket(sock);
-#endif
+			COMPAT_CLOSE(sock);
 			return 1;
 		}
 
 		if(listen(sock, 100) == -1){
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
-#ifndef WIN32
-			close(sock);
-#else
-			closesocket(sock);
-#endif
+			COMPAT_CLOSE(sock);
 			return 1;
 		}
 	}

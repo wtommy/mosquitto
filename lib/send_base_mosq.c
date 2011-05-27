@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2009,2010, Roger Light <roger@atchoo.org>
+Copyright (c) 2009-2011 Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -27,60 +27,104 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <config.h>
+#include <assert.h>
+#include <string.h>
 
-#include <mqtt3.h>
-#include <mqtt3_protocol.h>
+#include <mosquitto.h>
+#include <mosquitto_internal.h>
 #include <memory_mosq.h>
+#include <mqtt3_protocol.h>
+#include <net_mosq.h>
+#include <send_mosq.h>
 #include <util_mosq.h>
 
-int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
+/* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
+int _mosquitto_send_command_with_mid(struct _mosquitto_core *core, uint8_t command, uint16_t mid, bool dup)
 {
 	struct _mosquitto_packet *packet = NULL;
 	int rc;
 
-	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending CONNACK to %s (%d)", context->core.id, result);
-
+	assert(core);
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return MOSQ_ERR_NOMEM;
 
-	packet->command = CONNACK;
+	packet->command = command;
+	if(dup){
+		packet->command |= 8;
+	}
 	packet->remaining_length = 2;
 	rc = _mosquitto_packet_alloc(packet);
 	if(rc){
 		_mosquitto_free(packet);
 		return rc;
 	}
-	packet->payload[packet->pos+0] = 0;
-	packet->payload[packet->pos+1] = result;
 
-	_mosquitto_packet_queue(&context->core, packet);
+	packet->payload[packet->pos+0] = MOSQ_MSB(mid);
+	packet->payload[packet->pos+1] = MOSQ_LSB(mid);
+
+	_mosquitto_packet_queue(core, packet);
+
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload)
+/* For DISCONNECT, PINGREQ and PINGRESP */
+int _mosquitto_send_simple_command(struct _mosquitto_core *core, uint8_t command)
 {
 	struct _mosquitto_packet *packet = NULL;
 	int rc;
 
-	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending SUBACK to %s", context->core.id);
-
+	assert(core);
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return MOSQ_ERR_NOMEM;
 
-	packet->command = SUBACK;
-	packet->remaining_length = 2+payloadlen;
+	packet->command = command;
+	packet->remaining_length = 0;
+
 	rc = _mosquitto_packet_alloc(packet);
 	if(rc){
 		_mosquitto_free(packet);
 		return rc;
 	}
-	_mosquitto_write_uint16(packet, mid);
+
+	_mosquitto_packet_queue(core, packet);
+
+	return MOSQ_ERR_SUCCESS;
+}
+
+int _mosquitto_send_real_publish(struct _mosquitto_core *core, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain, bool dup)
+{
+	struct _mosquitto_packet *packet = NULL;
+	int packetlen;
+	int rc;
+
+	assert(core);
+	assert(topic);
+
+	packetlen = 2+strlen(topic) + payloadlen;
+	if(qos > 0) packetlen += 2; /* For message id */
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
+	if(!packet) return MOSQ_ERR_NOMEM;
+
+	packet->mid = mid;
+	packet->command = PUBLISH | ((dup&0x1)<<3) | (qos<<1) | retain;
+	packet->remaining_length = packetlen;
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
+		_mosquitto_free(packet);
+		return rc;
+	}
+	/* Variable header (topic string) */
+	_mosquitto_write_string(packet, topic, strlen(topic));
+	if(qos > 0){
+		_mosquitto_write_uint16(packet, mid);
+	}
+
+	/* Payload */
 	if(payloadlen){
 		_mosquitto_write_bytes(packet, payload, payloadlen);
 	}
 
-	_mosquitto_packet_queue(&context->core, packet);
+	_mosquitto_packet_queue(core, packet);
 
 	return MOSQ_ERR_SUCCESS;
 }

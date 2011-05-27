@@ -249,7 +249,7 @@ int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int ke
 		return rc;
 	}
 
-	return _mosquitto_send_connect(mosq, keepalive, clean_session);
+	return _mosquitto_send_connect(&mosq->core, keepalive, clean_session);
 }
 
 int mosquitto_disconnect(struct mosquitto *mosq)
@@ -259,7 +259,7 @@ int mosquitto_disconnect(struct mosquitto *mosq)
 
 	mosq->core.state = mosq_cs_disconnecting;
 
-	return _mosquitto_send_disconnect(mosq);
+	return _mosquitto_send_disconnect(&mosq->core);
 }
 
 int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
@@ -321,7 +321,7 @@ int mosquitto_subscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub, 
 	if(!mosq) return MOSQ_ERR_INVAL;
 	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 
-	return _mosquitto_send_subscribe(mosq, mid, false, sub, qos);
+	return _mosquitto_send_subscribe(&mosq->core, mid, false, sub, qos);
 }
 
 int mosquitto_unsubscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub)
@@ -329,7 +329,7 @@ int mosquitto_unsubscribe(struct mosquitto *mosq, uint16_t *mid, const char *sub
 	if(!mosq) return MOSQ_ERR_INVAL;
 	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 
-	return _mosquitto_send_unsubscribe(mosq, mid, false, sub);
+	return _mosquitto_send_unsubscribe(&mosq->core, mid, false, sub);
 }
 
 #if 0

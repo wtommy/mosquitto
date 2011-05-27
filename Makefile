@@ -38,6 +38,7 @@ dist : reallyclean
 		hfile=$$(echo $${m} | sed -e 's/\./-/g'); \
 		man2html man/$${m} > dist/$${hfile}.html; \
 		sed -i 's#http://localhost/cgi-bin/man/man2html?8+mosquitto#mosquitto-8.html#' dist/$${hfile}.html; \
+		sed -i 's#http://localhost/cgi-bin/man/man2html?3+libmosquitto#libmosquitto-3.html#' dist/$${hfile}.html; \
 		sed -i 's#http://localhost/cgi-bin/man/man2html?5+mosquitto.conf#mosquitto-conf-5.html#' dist/$${hfile}.html; \
 		sed -i 's#http://localhost/cgi-bin/man/man2html?1+mosquitto_pub#mosquitto_pub-1.html#' dist/$${hfile}.html; \
 		sed -i 's#http://localhost/cgi-bin/man/man2html?1+mosquitto_sub#mosquitto_sub-1.html#' dist/$${hfile}.html; \

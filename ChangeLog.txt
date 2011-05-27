@@ -13,6 +13,14 @@
   for security checks.
 - $SYS messages are now only republished when their value changes.
 
+0.10.1 - 20110512
+=================
+
+- Fix Windows compilation.
+- Fix mosquitto.py on Windows - call lib init/cleanup.
+- Don't abort when connecting if given an unknown address type (assuming an
+  IPv4 or IPv6 address is given).
+
 0.10 - 20110429
 ===============
 
