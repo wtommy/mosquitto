@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <string.h>
 #ifndef WIN32
+#include <sys/select.h>
 #include <unistd.h>
 #else
 #include <winsock2.h>
@@ -51,6 +52,10 @@ typedef int ssize_t;
 
 #ifndef ECONNRESET
 #define ECONNRESET 104
+#endif
+
+#if !defined(WIN32) && defined(__SYMBIAN32__)
+#define HAVE_PSELECT
 #endif
 
 void mosquitto_lib_version(int *major, int *minor, int *revision)
@@ -355,7 +360,7 @@ int mosquitto_ssl_set(struct mosquitto *mosq, const char *pemfile, const char *p
 
 int mosquitto_loop(struct mosquitto *mosq, int timeout)
 {
-#ifndef WIN32
+#ifdef HAVE_PSELECT
 	struct timespec local_timeout;
 #else
 	struct timeval local_timeout;
@@ -379,21 +384,21 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	}
 	if(timeout >= 0){
 		local_timeout.tv_sec = timeout/1000;
-#ifndef WIN32
+#ifdef HAVE_PSELECT
 		local_timeout.tv_nsec = (timeout-local_timeout.tv_sec*1000)*1e6;
 #else
 		local_timeout.tv_usec = (timeout-local_timeout.tv_sec*1000)*1000;
 #endif
 	}else{
 		local_timeout.tv_sec = 1;
-#ifndef WIN32
+#ifdef HAVE_PSELECT
 		local_timeout.tv_nsec = 0;
 #else
 		local_timeout.tv_usec = 0;
 #endif
 	}
 
-#ifndef WIN32
+#ifdef HAVE_PSELECT
 	fdcount = pselect(mosq->core.sock+1, &readfds, &writefds, NULL, &local_timeout, NULL);
 #else
 	fdcount = select(mosq->core.sock+1, &readfds, &writefds, NULL, &local_timeout);
