@@ -33,9 +33,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <syslog.h>
 #endif
 
+#ifndef CMAKE
 #include <config.h>
+#endif
 
 #include <mqtt3.h>
+#include <memory_mosq.h>
 
 extern mosquitto_db int_db;
 
@@ -93,7 +96,8 @@ int mqtt3_log_close(void)
 int mqtt3_log_printf(int priority, const char *fmt, ...)
 {
 	va_list va;
-	char s[500];
+	char *s;
+	int len;
 #ifdef WIN32
 	char *sp;
 #endif
@@ -150,10 +154,14 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 				syslog_priority = EVENTLOG_ERROR_TYPE;
 #endif
 		}
+		len = strlen(fmt) + 500;
+		s = _mosquitto_malloc(len*sizeof(char));
+		if(!s) return MOSQ_ERR_NOMEM;
+
 		va_start(va, fmt);
-		vsnprintf(s, 500, fmt, va);
+		vsnprintf(s, len, fmt, va);
 		va_end(va);
-		s[499] = '\0'; /* FIXME - quick hack to ensure string is null terminated. */
+		s[len-1] = '\0'; /* Ensure string is null terminated. */
 
 		if(log_destinations & MQTT3_LOG_STDOUT){
 			fprintf(stdout, "%s\n", s);
@@ -174,6 +182,7 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 		if(log_destinations & MQTT3_LOG_TOPIC && priority != MOSQ_LOG_DEBUG){
 			mqtt3_db_messages_easy_queue(&int_db, NULL, topic, 2, strlen(s), (uint8_t *)s, 0);
 		}
+		_mosquitto_free(s);
 	}
 
 	return MOSQ_ERR_SUCCESS;
