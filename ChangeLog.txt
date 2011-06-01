@@ -6,6 +6,8 @@
   available.
 - Deal with long logging messages properly (bug #785882).
 - Fix library compilation on Symbian - no pselect() available.
+- Don't stop processing subscriptions on received messages after a
+  subscription with # matches. (bug #791206).
 
 0.10.1 - 20110512
 =================

@@ -262,9 +262,10 @@ static int _sub_search(struct _mosquitto_db *db, struct _mosquitto_subhier *subh
 			}
 		}else if(!strcmp(branch->topic, "#") && !branch->children){
 			/* The topic matches due to a # wildcard - process the
-			 * subscriptions and return. */
+			 * subscriptions but *don't* return. Although this branch has ended
+			 * there may still be other subscriptions to deal with.
+			 */
 			_subs_process(db, branch, source_id, topic, qos, retain, stored);
-			break;
 		}
 		branch = branch->next;
 	}
