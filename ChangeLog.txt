@@ -1,4 +1,4 @@
-0.10.2 - 2011xxxx
+0.10.2 - 20110106
 =================
 
 - Don't abort when connecting if the first connection fails. This is important
