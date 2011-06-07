@@ -63,6 +63,7 @@ static bool connected = true;
 static char *username = NULL;
 static char *password = NULL;
 static bool disconnect_sent = false;
+static bool quiet = false;
 
 void my_connect_callback(void *obj, int result)
 {
@@ -85,22 +86,22 @@ void my_connect_callback(void *obj, int result)
 	}else{
 		switch(result){
 			case 1:
-				fprintf(stderr, "Connection Refused: unacceptable protocol version\n");
+				if(!quiet) fprintf(stderr, "Connection Refused: unacceptable protocol version\n");
 				break;
 			case 2:
-				fprintf(stderr, "Connection Refused: identifier rejected\n");
+				if(!quiet) fprintf(stderr, "Connection Refused: identifier rejected\n");
 				break;
 			case 3:
-				fprintf(stderr, "Connection Refused: broker unavailable\n");
+				if(!quiet) fprintf(stderr, "Connection Refused: broker unavailable\n");
 				break;
 			case 4:
-				fprintf(stderr, "Connection Refused: bad user name or password\n");
+				if(!quiet) fprintf(stderr, "Connection Refused: bad user name or password\n");
 				break;
 			case 5:
-				fprintf(stderr, "Connection Refused: not authorised\n");
+				if(!quiet) fprintf(stderr, "Connection Refused: not authorised\n");
 				break;
 			default:
-				fprintf(stderr, "Connection Refused: unknown reason\n");
+				if(!quiet) fprintf(stderr, "Connection Refused: unknown reason\n");
 				break;
 		}
 	}
@@ -132,7 +133,7 @@ int load_stdin(void)
 		rlen = fread(buf, 1, 1024, stdin);
 		message = realloc(message, pos+rlen);
 		if(!message){
-			fprintf(stderr, "Error: Out of memory.\n");
+			if(!quiet) fprintf(stderr, "Error: Out of memory.\n");
 			return 1;
 		}
 		memcpy(&(message[pos]), buf, rlen);
@@ -141,7 +142,7 @@ int load_stdin(void)
 	msglen = pos;
 
 	if(!msglen){
-		fprintf(stderr, "Error: Zero length input.\n");
+		if(!quiet) fprintf(stderr, "Error: Zero length input.\n");
 		return 1;
 	}
 
@@ -155,7 +156,7 @@ int load_file(const char *filename)
 
 	fptr = fopen(filename, "rb");
 	if(!fptr){
-		fprintf(stderr, "Error: Unable to open file \"%s\".\n", filename);
+		if(!quiet) fprintf(stderr, "Error: Unable to open file \"%s\".\n", filename);
 		return 1;
 	}
 	mode = MSGMODE_FILE;
@@ -163,19 +164,19 @@ int load_file(const char *filename)
 	msglen = ftell(fptr);
 	if(msglen > 268435455){
 		fclose(fptr);
-		fprintf(stderr, "Error: File \"%s\" is too large (>268,435,455 bytes).\n", filename);
+		if(!quiet) fprintf(stderr, "Error: File \"%s\" is too large (>268,435,455 bytes).\n", filename);
 		return 1;
 	}
 	if(msglen == 0){
 		fclose(fptr);
-		fprintf(stderr, "Error: File \"%s\" is empty.\n", filename);
+		if(!quiet) fprintf(stderr, "Error: File \"%s\" is empty.\n", filename);
 		return 1;
 	}
 	fseek(fptr, 0, SEEK_SET);
 	message = malloc(msglen);
 	if(!message){
 		fclose(fptr);
-		fprintf(stderr, "Error: Out of memory.\n");
+		if(!quiet) fprintf(stderr, "Error: Out of memory.\n");
 		return 1;
 	}
 	pos = 0;
@@ -190,7 +191,8 @@ int load_file(const char *filename)
 void print_usage(void)
 {
 	printf("mosquitto_pub is a simple mqtt client that will publish a message on a single topic and exit.\n\n");
-	printf("Usage: mosquitto_pub [-d] [-h host] [-i id] [-p port] [-q qos] [-r] {-f file | -l | -n | -m message} -t topic\n");
+	printf("Usage: mosquitto_pub [-h host] [-i id] [-p port] [-q qos] [-r] {-f file | -l | -n | -m message} -t topic\n");
+	printf("                     [-d] [--quiet]\n");
 	printf("                     [-u username [--pw password]]\n");
 	printf("                     [--will-topic [--will-payload payload] [--will-qos qos] [--will-retain]]\n\n");
 	printf(" -d : enable debug messages.\n");
@@ -207,6 +209,7 @@ void print_usage(void)
 	printf(" -t : mqtt topic to publish to.\n");
 	printf(" -u : provide a username (requires MQTT 3.1 broker)\n");
 	printf(" --pw : provide a password (requires MQTT 3.1 broker)\n");
+	printf(" --quiet : don't print error messages.\n");
 	printf(" --will-payload : payload for the client Will, which is sent by the broker in case of\n");
 	printf("                  unexpected disconnection. If not given and will-topic is set, a zero\n");
 	printf("                  length message will be sent.\n");
@@ -335,6 +338,8 @@ int main(int argc, char *argv[])
 				}
 			}
 			i++;
+		}else if(!strcmp(argv[i], "--quiet")){
+			quiet = true;
 		}else if(!strcmp(argv[i], "-r") || !strcmp(argv[i], "--retain")){
 			retain = 1;
 		}else if(!strcmp(argv[i], "-s") || !strcmp(argv[i], "--stdin-file")){
@@ -415,7 +420,7 @@ int main(int argc, char *argv[])
 	if(!id){
 		id = malloc(30);
 		if(!id){
-			fprintf(stderr, "Error: Out of memory.\n");
+			if(!quiet) fprintf(stderr, "Error: Out of memory.\n");
 			return 1;
 		}
 		snprintf(id, 30, "mosquitto_pub_%d", getpid());
@@ -438,12 +443,12 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	if(password && !username){
-		fprintf(stderr, "Warning: Not using password since username not set.\n");
+		if(!quiet) fprintf(stderr, "Warning: Not using password since username not set.\n");
 	}
 	mosquitto_lib_init();
 	mosq = mosquitto_new(id, NULL);
 	if(!mosq){
-		fprintf(stderr, "Error: Out of memory.\n");
+		if(!quiet) fprintf(stderr, "Error: Out of memory.\n");
 		return 1;
 	}
 	if(debug){
@@ -451,11 +456,11 @@ int main(int argc, char *argv[])
 				| MOSQ_LOG_NOTICE | MOSQ_LOG_INFO, MOSQ_LOG_STDERR);
 	}
 	if(will_topic && mosquitto_will_set(mosq, true, will_topic, will_payloadlen, will_payload, will_qos, will_retain)){
-		fprintf(stderr, "Error: Problem setting will.\n");
+		if(!quiet) fprintf(stderr, "Error: Problem setting will.\n");
 		return 1;
 	}
 	if(username && mosquitto_username_pw_set(mosq, username, password)){
-		fprintf(stderr, "Error: Problem setting username and password.\n");
+		if(!quiet) fprintf(stderr, "Error: Problem setting username and password.\n");
 		return 1;
 	}
 
@@ -465,7 +470,7 @@ int main(int argc, char *argv[])
 
 	rc = mosquitto_connect(mosq, host, port, keepalive, true);
 	if(rc){
-		fprintf(stderr, "Unable to connect (%d).\n", rc);
+		if(!quiet) fprintf(stderr, "Unable to connect (%d).\n", rc);
 		return rc;
 	}
 

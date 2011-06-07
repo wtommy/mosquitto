@@ -14,6 +14,7 @@
 - $SYS messages are now only republished when their value changes.
 - Windows native broker now responds to command line arguments.
 - Simplify client disconnecting so wills gets sent in all cases (bug #792468).
+- Clients now have a --quiet option.
 
 0.10.2 - 20110106
 =================

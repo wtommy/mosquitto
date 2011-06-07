@@ -32,6 +32,9 @@
 				<arg><option>-q</option> <replaceable>message QoS</replaceable></arg>
 			</group>
 			<group choice='opt'>
+				<arg><option>--quiet</option></arg>
+			</group>
+			<group choice='opt'>
 				<arg><option>-r</option></arg>
 			</group>
 			<group choice='req'>
@@ -155,6 +158,15 @@
 				<term><option>--qos</option></term>
 				<listitem>
 					<para>Specify the quality of service to use for the message, from 0, 1 and 2. Defaults to 0.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--quiet</option></term>
+				<listitem>
+					<para>If this argument is given, no runtime errors will be
+					printed. This excludes any error messages given in case of
+					invalid user input (e.g. using --port without a
+					port).</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

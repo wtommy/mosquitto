@@ -38,6 +38,9 @@
 				<arg><option>-q</option> <replaceable>message QoS</replaceable></arg>
 			</group>
 			<group choice='opt'>
+				<arg><option>--quiet</option></arg>
+			</group>
+			<group choice='opt'>
 				<arg><option>-v</option></arg>
 			</group>
 			<group choice='opt'>
@@ -153,6 +156,15 @@
 					for more information on QoS.</para>
 					<para>The QoS is identical for all topics subscribed to in
 					a single instance of mosquitto_sub.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--quiet</option></term>
+				<listitem>
+					<para>If this argument is given, no runtime errors will be
+					printed. This excludes any error messages given in case of
+					invalid user input (e.g. using --port without a
+					port).</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
