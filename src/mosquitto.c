@@ -560,7 +560,26 @@ int main(int argc, char *argv[])
 #ifdef WIN32
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	char *argv = "mosquitto";
-	return main(1, &argv);
+	char **argv;
+	int argc = 1;
+	char *token;
+	int rc;
+
+	argv = _mosquitto_malloc(sizeof(char *)*1);
+	argv[0] = "mosquitto";
+	token = strtok(lpCmdLine, " ");
+	while(token){
+		argc++;
+		argv = _mosquitto_realloc(argv, sizeof(char *)*argc);
+		if(!argv){
+			fprintf(stderr, "Error: Out of memory.\n");
+			return MOSQ_ERR_NOMEM;
+		}
+		argv[argc-1] = token;
+		token = strtok(NULL, " ");
+	}
+	rc = main(argc, argv);
+	_mosquitto_free(argv);
+	return rc;
 }
 #endif

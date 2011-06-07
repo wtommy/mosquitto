@@ -12,6 +12,7 @@
   parties to add support for their existing username/password and ACL database
   for security checks.
 - $SYS messages are now only republished when their value changes.
+- Windows native broker now responds to command line arguments.
 
 0.10.1 - 20110512
 =================
