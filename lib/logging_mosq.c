@@ -33,6 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mosquitto_internal.h>
 #include <mosquitto.h>
+#include <memory_mosq.h>
 
 int mosquitto_log_init(struct mosquitto *mosq, int priorities, int destinations)
 {
@@ -47,15 +48,21 @@ int mosquitto_log_init(struct mosquitto *mosq, int priorities, int destinations)
 int _mosquitto_log_printf(struct mosquitto *mosq, int priority, const char *fmt, ...)
 {
 	va_list va;
-	char s[500];
+	char *s;
+	int len;
 
 	assert(mosq);
+	assert(fmt);
 
 	if((mosq->log_priorities & priority) && mosq->log_destinations != MOSQ_LOG_NONE){
+		len = strlen(fmt) + 500;
+		s = _mosquitto_malloc(len*sizeof(char));
+		if(!s) return MOSQ_ERR_NOMEM;
+
 		va_start(va, fmt);
-		vsnprintf(s, 500, fmt, va);
+		vsnprintf(s, len, fmt, va);
 		va_end(va);
-		s[499] = '\0'; /* FIXME - quick hack to ensure string is null terminated. */
+		s[len-1] = '\0'; /* Ensure string is null terminated. */
 
 		if(mosq->log_destinations & MOSQ_LOG_STDOUT){
 			fprintf(stdout, "%s\n", s);
@@ -65,6 +72,7 @@ int _mosquitto_log_printf(struct mosquitto *mosq, int priority, const char *fmt,
 			fprintf(stderr, "%s\n", s);
 			fflush(stderr);
 		}
+		_mosquitto_free(s);
 	}
 
 	return MOSQ_ERR_SUCCESS;
