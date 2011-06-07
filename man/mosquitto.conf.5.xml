@@ -119,7 +119,8 @@
 					listener to be bound to a specific ip address/hostname. If
 					this variable is used and neither bind_address nor port are
 					used then the default listener will not be started. This
-					option may be specified multiple times.</para>
+					option may be specified multiple times. See also the
+					mount_point option.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -175,6 +176,21 @@
 					the queue above those messages that are currently in
 					flight. Defaults to 100. Set to 0 for no maximum (not
 					recommended).</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>mount_point</option></term>
+				<listitem>
+					<para>This option is used with the listener option to
+					isolate groups of clients. When a client connects to a
+					listener which uses this option, the string argument is
+					attached to the start of all topics for this client. This
+					prefix is removed when any messages are sent to the client.
+					This means a client connected to a listener with mount
+					point <option>example</option> can only see messages that
+					are published in the topic hierarchy
+					<option>example</option> and above.</para>
+					</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
