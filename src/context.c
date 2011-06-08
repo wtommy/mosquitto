@@ -50,7 +50,6 @@ mqtt3_context *mqtt3_context_init(int sock)
 	if(!context) return NULL;
 	
 	context->core.state = mosq_cs_new;
-	context->duplicate = false;
 	context->core.sock = sock;
 	context->core.last_msg_in = time(NULL);
 	context->core.last_msg_out = time(NULL);
@@ -109,7 +108,7 @@ void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_fre
 	if(context->core.sock != -1){
 		_mosquitto_socket_close(&context->core);
 	}
-	if(context->core.clean_session && !context->duplicate && db){
+	if(context->core.clean_session && db){
 		mqtt3_subs_clean_session(context, &db->subs);
 		mqtt3_db_messages_delete(context);
 	}

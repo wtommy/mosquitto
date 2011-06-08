@@ -108,7 +108,6 @@ int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 	if(!context || !context->bridge) return MOSQ_ERR_INVAL;
 
 	context->core.state = mosq_cs_new;
-	context->duplicate = false;
 	context->core.sock = -1;
 	context->core.last_msg_in = time(NULL);
 	context->core.last_msg_out = time(NULL);
