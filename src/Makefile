@@ -58,6 +58,8 @@ security.o : security.c mqtt3.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 security_external.o : security_external.c mqtt3.h
+	${CC} $(CFLAGS_FINAL) -c $< -o $@
+
 send_base_mosq.o : ../lib/send_base_mosq.c ../lib/send_mosq.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
