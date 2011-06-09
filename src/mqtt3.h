@@ -104,6 +104,13 @@ typedef struct {
 	char *user;
 	struct _mqtt3_bridge *bridges;
 	int bridge_count;
+#ifdef WITH_EXTERNAL_SECURITY_CHECKS
+	char *db_host;
+	int db_port;
+	char *db_name;
+	char *db_username;
+	char *db_password;
+#endif
 } mqtt3_config;
 
 struct _mosquitto_subleaf {

@@ -43,6 +43,7 @@
  * support for existing username/password databases to mosquitto.
  * Uncommenting without adding your own code to security_external.c will
  * result in all access being denied.
+ * It also enables the db_* config options in mosquitto.conf.
  * Get in touch with the authors if you need help adding support for your
  * system.
  */

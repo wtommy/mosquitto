@@ -412,6 +412,45 @@
 	</refsect1>
 
 	<refsect1>
+		<title>External Security Checks</title>
+		<para>The following options are available when external security checks
+		have been compiled in. Unless you have done this yourself it is
+		unlikely to exist.</para>
+		<variablelist>
+			<varlistentry>
+				<term><option>db_host</option> <replaceable>hostname</replaceable></term>
+				<listitem>
+					<para>Database host name.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>db_port</option> <replaceable>port</replaceable></term>
+				<listitem>
+					<para>Database port.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>db_name</option> <replaceable>name</replaceable></term>
+				<listitem>
+					<para>Database name.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>db_username</option> <replaceable>username</replaceable></term>
+				<listitem>
+					<para>Database username.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>db_password</option> <replaceable>password</replaceable></term>
+				<listitem>
+					<para>Database password.</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsect1>
+
+	<refsect1>
 		<title>Files</title>
 		<para>mosquitto.conf</para>
 	</refsect1>

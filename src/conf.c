@@ -600,6 +600,74 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 #else
 					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
 #endif
+#ifdef WITH_EXTERNAL_SECURITY_CHECKS
+				}else if(!strcmp(token, "db_host")){
+					token = strtok(NULL, " ");
+					if(token){
+						if(config->db_host){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Duplicate db_host value in configuration.");
+							return MOSQ_ERR_INVAL;
+						}
+						config->db_host = _mosquitto_strdup(token);
+						if(!config->db_host){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty db_host value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+				}else if(!strcmp(token, "db_name")){
+					token = strtok(NULL, " ");
+					if(token){
+						if(config->db_name){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Duplicate db_name value in configuration.");
+							return MOSQ_ERR_INVAL;
+						}
+						config->db_name = _mosquitto_strdup(token);
+						if(!config->db_name){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty db_name value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+				}else if(!strcmp(token, "db_username")){
+					token = strtok(NULL, " ");
+					if(token){
+						if(config->db_username){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Duplicate db_username value in configuration.");
+							return MOSQ_ERR_INVAL;
+						}
+						config->db_username = _mosquitto_strdup(token);
+						if(!config->db_username){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty db_username value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+				}else if(!strcmp(token, "db_password")){
+					token = strtok(NULL, " ");
+					if(token){
+						if(config->db_password){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Duplicate db_password value in configuration.");
+							return MOSQ_ERR_INVAL;
+						}
+						config->db_password = _mosquitto_strdup(token);
+						if(!config->db_password){
+							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory");
+							return MOSQ_ERR_NOMEM;
+						}
+					}else{
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty db_password value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+				}else if(!strcmp(token, "db_port")){
+					if(_mqtt3_conf_parse_int(&token, "db_port", &config->db_port)) return 1;
+#endif
 				}else if(!strcmp(token, "autosave_on_changes")
 						|| !strcmp(token, "connection_messages")
 						|| !strcmp(token, "trace_level")
