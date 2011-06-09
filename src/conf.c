@@ -72,6 +72,13 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->bridges = NULL;
 	config->bridge_count = 0;
 #endif
+#ifdef WITH_EXTERNAL_SECURITY_CHECKS
+	config->db_host = NULL;
+	config->db_port = 0;
+	config->db_name = NULL;
+	config->db_username = NULL;
+	config->db_password = NULL;
+#endif
 }
 
 int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
