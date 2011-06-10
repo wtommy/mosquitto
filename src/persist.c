@@ -721,6 +721,8 @@ int mqtt3_db_restore(mosquitto_db *db)
 	}
 #undef read_e
 
+	close(fd);
+
 	return rc;
 error:
 	mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));

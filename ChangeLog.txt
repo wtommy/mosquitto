@@ -17,6 +17,7 @@
 - Clients now have a --quiet option.
 - The on_disconnect() callback will always be called now, even if the client
   has disconnected unexpectedly.
+- Always close persistent DB file after restoring.
 
 0.10.2 - 20110106
 =================
