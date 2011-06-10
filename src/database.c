@@ -479,6 +479,7 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 		return MOSQ_ERR_NOMEM;
 	}
 	temp->source_mid = source_mid;
+	temp->msg.mid = 0;
 	temp->msg.qos = qos;
 	temp->msg.retain = retain;
 	temp->msg.topic = _mosquitto_strdup(topic);
