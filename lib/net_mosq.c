@@ -166,7 +166,7 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 		COMPAT_CLOSE(sock);
 	}
 	if(!rp){
-		fprintf(stderr, "Error: %s", strerror(errno));
+		fprintf(stderr, "Error: %s\n", strerror(errno));
 		COMPAT_CLOSE(sock);
 		return MOSQ_ERR_UNKNOWN;
 	}
