@@ -2,6 +2,9 @@ Mosquitto is now easier to integrate with existing username/password
 databases. It doesn't do any of this for you, but it does provide access
 points to help.
 
+At the moment mosquitto doesn't support encrypted network connections so you
+should be wary of exposing your existing username/passwords.
+
 If you wish to do this, uncomment the WITH_EXTERNAL_SECURITY_CHECKS line in
 config.h, or enable the option when configuring the build options with cmake.
 
