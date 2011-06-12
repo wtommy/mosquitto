@@ -18,6 +18,7 @@
 - The on_disconnect() callback will always be called now, even if the client
   has disconnected unexpectedly.
 - Always close persistent DB file after restoring.
+- Return error code when exiting the clients.
 
 0.10.2 - 20110106
 =================

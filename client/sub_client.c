@@ -349,11 +349,13 @@ int main(int argc, char *argv[])
 		return rc;
 	}
 
-	while(!mosquitto_loop(mosq, -1)){
-	}
+	do{
+		rc = mosquitto_loop(mosq, -1);
+	}while(rc == MOSQ_ERR_SUCCESS);
+
 	mosquitto_destroy(mosq);
 	mosquitto_lib_cleanup();
 
-	return 0;
+	return rc;
 }
 

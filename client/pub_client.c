@@ -474,7 +474,7 @@ int main(int argc, char *argv[])
 		return rc;
 	}
 
-	while(!mosquitto_loop(mosq, -1) && connected){
+	do{
 		if(mode == MSGMODE_STDIN_LINE && status == STATUS_CONNACK_RECVD){
 			if(fgets(buf, 1024, stdin)){
 				buf[strlen(buf)-1] = '\0';
@@ -484,11 +484,13 @@ int main(int argc, char *argv[])
 				disconnect_sent = true;
 			}
 		}
-	}
+		rc = mosquitto_loop(mosq, -1);
+	}while(rc == MOSQ_ERR_SUCCESS && connected);
+
 	if(message && mode == MSGMODE_FILE){
 		free(message);
 	}
 	mosquitto_destroy(mosq);
 	mosquitto_lib_cleanup();
-	return 0;
+	return rc;
 }
