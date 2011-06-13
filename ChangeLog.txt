@@ -19,6 +19,7 @@
   has disconnected unexpectedly.
 - Always close persistent DB file after restoring.
 - Return error code when exiting the clients.
+- mosquitto_publish() now returns MOSQ_ERR_INVAL if the topic contains + or #
 
 0.10.2 - 20110106
 =================
