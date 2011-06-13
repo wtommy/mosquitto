@@ -20,6 +20,7 @@
 - Always close persistent DB file after restoring.
 - Return error code when exiting the clients.
 - mosquitto_publish() now returns MOSQ_ERR_INVAL if the topic contains + or #
+- mosquitto now silently rejects published messages with + or # in the topic.
 
 0.10.2 - 20110106
 =================

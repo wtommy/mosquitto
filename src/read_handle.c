@@ -164,6 +164,11 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 	if(!strlen(topic)){
 		return 1;
 	}
+	if(index(topic, '+') || index(topic, '#')){
+		/* Invalid publish topic, just swallow it. */
+		_mosquitto_free(topic);
+		return MOSQ_ERR_SUCCESS;
+	}
 
 	if(qos > 0){
 		if(_mosquitto_read_uint16(&context->core.in_packet, &mid)){
