@@ -43,8 +43,20 @@ int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 
 int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload)
 {
+	int len;
+
 	if(!context || context->core.sock == -1 || !topic) return MOSQ_ERR_INVAL;
-	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBLISH to %s (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", context->core.id, dup, qos, retain, mid, topic, (long)payloadlen);
+
+	if(context->mount_point){
+		len = strlen(context->mount_point);
+		if(len > strlen(topic)){
+			topic += strlen(context->mount_point);
+		}else{
+			/* Invalid topic string. Should never happen, but silently swallow the message anyway. */
+			return MOSQ_ERR_SUCCESS;
+		}
+	}
+	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBLISH to %s (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", context->core.id, dup, qos, retain, mid, topic, (long)payloadlen);
 	return _mosquitto_send_real_publish(&context->core, mid, topic, payloadlen, payload, qos, retain, dup);
 }
 
