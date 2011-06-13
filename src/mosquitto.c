@@ -106,8 +106,12 @@ int drop_privileges(mqtt3_config *config)
 
 void disconnect_client(mosquitto_db *db, int context_index)
 {
-	if(db->contexts[context_index]->core.state != mosq_cs_disconnecting){
-		mqtt3_db_client_will_queue(db, db->contexts[context_index]);
+	mqtt3_context *ctxt;
+
+	ctxt = db->contexts[context_index];
+	if(ctxt->core.state != mosq_cs_disconnecting && ctxt->core.will){
+		/* Unexpected disconnect, queue the client will. */
+		mqtt3_db_messages_easy_queue(db, ctxt, ctxt->core.will->topic, ctxt->core.will->qos, ctxt->core.will->payloadlen, ctxt->core.will->payload, ctxt->core.will->retain);
 	}
 
 	/* Bridges don't get cleaned up because they will reconnect later. */

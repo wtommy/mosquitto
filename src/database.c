@@ -199,18 +199,6 @@ int mqtt3_db_close(mosquitto_db *db)
 	return MOSQ_ERR_SUCCESS;
 }
 
-/* Called on client death to add a will to the message queue if the will exists.
- * Returns 1 on failure (context or context->core.id is NULL)
- * Returns 0 on success (will queued or will not found)
- */
-int mqtt3_db_client_will_queue(mosquitto_db *db, mqtt3_context *context)
-{
-	if(!context || !context->core.id) return MOSQ_ERR_INVAL;
-	if(!context->core.will) return MOSQ_ERR_SUCCESS;
-
-	return mqtt3_db_messages_easy_queue(db, context, context->core.will->topic, context->core.will->qos, context->core.will->payloadlen, context->core.will->payload, context->core.will->retain);
-}
-
 /* Returns the number of client currently in the database.
  * This includes inactive clients.
  * Returns 1 on failure (count is NULL)
