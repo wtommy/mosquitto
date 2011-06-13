@@ -65,6 +65,7 @@ void mqtt3_net_set_max_connections(int max)
 int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 {
 	int i;
+	int j;
 	int new_sock = -1;
 	mqtt3_context **tmp_contexts = NULL;
 	mqtt3_context *new_context;
@@ -112,8 +113,11 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 			return -1;
 		}
 		for(i=0; i<db->config->listener_count; i++){
-			if(db->config->listeners[i].fd == listensock){
-				new_context->mount_point = db->config->listeners[i].mount_point;
+			for(j=0; j<db->config->listeners[i].sock_count; j++){
+				if(db->config->listeners[i].socks[j] == listensock){
+					new_context->mount_point = db->config->listeners[i].mount_point;
+					break;
+				}
 			}
 		}
 
@@ -144,7 +148,7 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
  * Returns 1 on failure
  * Returns 0 on success.
  */
-int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_count)
+int mqtt3_socket_listen(struct _mqtt3_listener *listener)
 {
 	int sock = -1;
 	struct addrinfo hints;
@@ -157,16 +161,18 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 	char ss_opt = 1;
 #endif
 
-	snprintf(service, 10, "%d", port);
+	if(!listener) return MOSQ_ERR_INVAL;
+
+	snprintf(service, 10, "%d", listener->port);
 	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = PF_UNSPEC;
 	hints.ai_flags = AI_PASSIVE;
 	hints.ai_socktype = SOCK_STREAM;
 
-	if(getaddrinfo(host, service, &hints, &ainfo)) return INVALID_SOCKET;
+	if(getaddrinfo(listener->host, service, &hints, &ainfo)) return INVALID_SOCKET;
 
-	*sock_count = 0;
-	*socks = NULL;
+	listener->sock_count = 0;
+	listener->socks = NULL;
 
 	for(rp = ainfo; rp; rp = rp->ai_next){
 		if(rp->ai_family == AF_INET){
@@ -182,13 +188,13 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 			mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: %s", strerror(errno));
 			continue;
 		}
-		(*sock_count)++;
-		*socks = _mosquitto_realloc(*socks, sizeof(int)*(*sock_count));
-		if(!(*socks)){
+		listener->sock_count++;
+		listener->socks = _mosquitto_realloc(listener->socks, sizeof(int)*listener->sock_count);
+		if(!listener->socks){
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
 			return MOSQ_ERR_NOMEM;
 		}
-		(*socks)[(*sock_count)-1] = sock;
+		listener->socks[listener->sock_count-1] = sock;
 
 		ss_opt = 1;
 		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &ss_opt, sizeof(ss_opt));
@@ -226,7 +232,7 @@ int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_
 	freeaddrinfo(ainfo);
 
 	/* We need to have at least one working socket. */
-	if(*sock_count > 0){
+	if(listener->sock_count > 0){
 		return 0;
 	}else{
 		return 1;

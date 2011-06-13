@@ -79,6 +79,8 @@ struct _mqtt3_listener {
 	uint16_t port;
 	int max_connections;
 	char *mount_point;
+	int *socks;
+	int sock_count;
 };
 
 typedef struct {
@@ -253,7 +255,7 @@ int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, 
  * Network functions
  * ============================================================ */
 int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock);
-int mqtt3_socket_listen(const char *host, uint16_t port, int **socks, int *sock_count);
+int mqtt3_socket_listen(struct _mqtt3_listener *listener);
 
 int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *packet);
 int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context);

@@ -352,7 +352,6 @@ int main(int argc, char *argv[])
 	int *listensock = NULL;
 	int listensock_count = 0;
 	int listensock_index = 0;
-	int *socks, sock_count;
 	mqtt3_config config;
 	char buf[1024];
 	int i, j;
@@ -447,7 +446,7 @@ int main(int argc, char *argv[])
 	listener_max = -1;
 	listensock_index = 0;
 	for(i=0; i<config.listener_count; i++){
-		if(mqtt3_socket_listen(config.listeners[i].host, config.listeners[i].port, &socks, &sock_count)){
+		if(mqtt3_socket_listen(&config.listeners[i])){
 			_mosquitto_free(int_db.contexts);
 			mqtt3_db_close(&int_db);
 			if(config.pid_file){
@@ -455,7 +454,7 @@ int main(int argc, char *argv[])
 			}
 			return 1;
 		}
-		listensock_count += sock_count;
+		listensock_count += config.listeners[i].sock_count;
 		listensock = _mosquitto_realloc(listensock, sizeof(int)*listensock_count);
 		if(!listensock){
 			_mosquitto_free(int_db.contexts);
@@ -465,8 +464,8 @@ int main(int argc, char *argv[])
 			}
 			return 1;
 		}
-		for(j=0; j<sock_count; j++){
-			if(socks[j] < 0){
+		for(j=0; j<config.listeners[i].sock_count; j++){
+			if(config.listeners[i].socks[j] < 0){
 				_mosquitto_free(int_db.contexts);
 				mqtt3_db_close(&int_db);
 				if(config.pid_file){
@@ -474,13 +473,12 @@ int main(int argc, char *argv[])
 				}
 				return 1;
 			}
-			listensock[listensock_index] = socks[j];
+			listensock[listensock_index] = config.listeners[i].socks[j];
 			if(listensock[listensock_index] > listener_max){
 				listener_max = listensock[listensock_index];
 			}
 			listensock_index++;
 		}
-		_mosquitto_free(socks);
 	}
 
 	signal(SIGINT, handle_sigint);

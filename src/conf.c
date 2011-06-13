@@ -50,6 +50,9 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->daemon = false;
 	config->default_listener.host = NULL;
 	config->default_listener.port = 0;
+	config->default_listener.mount_point = NULL;
+	config->default_listener.socks = NULL;
+	config->default_listener.sock_count = 0;
 	config->listeners = NULL;
 	config->listener_count = 0;
 #ifndef WIN32
@@ -136,6 +139,11 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 			config->listeners[config->listener_count-1].host = config->default_listener.host;
 		}else{
 			config->listeners[config->listener_count-1].host = NULL;
+		}
+		if(config->default_listener.mount_point){
+			config->listeners[config->listener_count-1].mount_point = config->default_listener.host;
+		}else{
+			config->listeners[config->listener_count-1].mount_point = NULL;
 		}
 		
 	}
@@ -303,6 +311,8 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						}
 						config->listeners[config->listener_count-1].mount_point = NULL;
 						config->listeners[config->listener_count-1].port = port_tmp;
+						config->listeners[config->listener_count-1].socks = NULL;
+						config->listeners[config->listener_count-1].sock_count = 0;
 						token = strtok(NULL, " ");
 						if(token){
 							config->listeners[config->listener_count-1].host = _mosquitto_strdup(token);
