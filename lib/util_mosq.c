@@ -127,3 +127,15 @@ uint16_t _mosquitto_mid_generate(struct _mosquitto_core *core)
 	
 	return core->last_mid;
 }
+
+/* Search for + or # in a string. Return true if found. */
+bool _mosquitto_wildcard_check(const char *str)
+{
+	while(str){
+		if(str[0] == '+' || str[0] == '#'){
+			return true;
+		}
+		str = &str[1];
+	}
+	return false;
+}

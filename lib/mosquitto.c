@@ -275,7 +275,7 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 	if(!mosq || !topic || qos<0 || qos>2) return MOSQ_ERR_INVAL;
 	if(payloadlen > 268435455) return MOSQ_ERR_PAYLOAD_SIZE;
 
-	if(index(topic, '+') || index(topic, '#')){
+	if(_mosquitto_wildcard_check(topic)){
 		return MOSQ_ERR_INVAL;
 	}
 

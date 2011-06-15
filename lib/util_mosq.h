@@ -35,5 +35,6 @@ int _mosquitto_packet_alloc(struct _mosquitto_packet *packet);
 void _mosquitto_check_keepalive(struct mosquitto *mosq);
 int _mosquitto_fix_sub_topic(char **subtopic);
 uint16_t _mosquitto_mid_generate(struct _mosquitto_core *core);
+bool _mosquitto_wildcard_check(const char *str);
 
 #endif
