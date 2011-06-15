@@ -49,6 +49,13 @@ if (${INC_MEMTRACK} STREQUAL ON)
 	add_definitions("-DWITH_MEMORY_TRACKING")
 endif (${INC_MEMTRACK} STREQUAL ON)
 
+option(WITH_PERSISTENCE
+	"Include persistence support?" ON)
+if (${WITH_PERSISTENCE} STREQUAL ON)
+	add_definitions("-DWITH_PERSISTENCE")
+endif (${WITH_PERSISTENCE} STREQUAL ON)
+
+
 option(WITH_EXTERNAL_SECURITY_CHECKS
 	"Use external security checks (needs additional code)?" OFF)
 if (${WITH_EXTERNAL_SECURITY_CHECKS} STREQUAL ON)
