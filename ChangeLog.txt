@@ -4,6 +4,8 @@
 - Removed all old sqlite code.
 - Remove client id limit in clients.
 - Implemented $SYS/broker/heap/maximum size
+- Implemented $SYS/broker/clients/inactive to show the number of disconnected
+  non-clean session clients.
 - $SYS/broker/heap/current size and maximum size messages now include "bytes"
   to match rsmb message format.
 - Implemented the retained_persistence config file option - a synonym of the

@@ -204,15 +204,21 @@ int mqtt3_db_close(mosquitto_db *db)
  * Returns 1 on failure (count is NULL)
  * Returns 0 on success.
  */
-int mqtt3_db_client_count(mosquitto_db *db, int *count)
+int mqtt3_db_client_count(mosquitto_db *db, int *count, int *inactive_count)
 {
 	int i;
 
-	if(!db || !count) return MOSQ_ERR_INVAL;
+	if(!db || !count || !inactive_count) return MOSQ_ERR_INVAL;
 
 	*count = 0;
+	*inactive_count = 0;
 	for(i=0; i<db->context_count; i++){
-		if(db->contexts[i] && db->contexts[i]->core.sock != -1) (*count)++;
+		if(db->contexts[i]){
+			(*count)++;
+			if(db->contexts[i]->core.sock < 0){
+				(*inactive_count)++;
+			}
+		}
 	}
 
 	return MOSQ_ERR_SUCCESS;
@@ -769,11 +775,13 @@ void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time)
 	time_t now = time(NULL);
 	char buf[100];
 	int value;
+	int inactive;
 	unsigned long value_ul;
 	unsigned long long value_ull;
 
 	static int msg_store_count = -1;
 	static int client_count = -1;
+	static int inactive_count = -1;
 #ifdef REAL_WITH_MEMORY_TRACKING
 	static unsigned long current_heap = -1;
 	static unsigned long max_heap = -1;
@@ -793,11 +801,16 @@ void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time)
 			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/stored", 2, strlen(buf), (uint8_t *)buf, 1);
 		}
 
-		if(!mqtt3_db_client_count(db, &value)){
+		if(!mqtt3_db_client_count(db, &value, &inactive)){
 			if(client_count != value){
 				client_count = value;
 				snprintf(buf, 100, "%d", client_count);
 				mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/clients/total", 2, strlen(buf), (uint8_t *)buf, 1);
+			}
+			if(inactive_count != inactive){
+				inactive_count = inactive;
+				snprintf(buf, 100, "%d", inactive_count);
+				mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/clients/inactive", 2, strlen(buf), (uint8_t *)buf, 1);
 			}
 		}
 

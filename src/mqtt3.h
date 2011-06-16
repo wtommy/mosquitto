@@ -295,7 +295,7 @@ int mqtt3_db_close(mosquitto_db *db);
 int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown);
 int mqtt3_db_restore(mosquitto_db *db);
 #endif
-int mqtt3_db_client_count(mosquitto_db *db, int *count);
+int mqtt3_db_client_count(mosquitto_db *db, int *count, int *inactive_count);
 void mqtt3_db_limits_set(int inflight, int queued);
 /* Return the number of in-flight messages in count. */
 int mqtt3_db_message_count(int *count);
