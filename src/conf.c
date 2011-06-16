@@ -53,6 +53,7 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->default_listener.mount_point = NULL;
 	config->default_listener.socks = NULL;
 	config->default_listener.sock_count = 0;
+	config->default_listener.max_connections = -1;
 	config->listeners = NULL;
 	config->listener_count = 0;
 #ifndef WIN32
@@ -62,7 +63,6 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->log_dest = MQTT3_LOG_SYSLOG;
 	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING;
 #endif
-	config->max_connections = -1;
 	config->password_file = NULL;
 	config->persistence = false;
 	config->persistence_location = NULL;
@@ -145,7 +145,7 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 		}else{
 			config->listeners[config->listener_count-1].mount_point = NULL;
 		}
-		
+		config->listeners[config->listener_count-1].max_connections = config->default_listener.max_connections;
 	}
 
 	return MOSQ_ERR_SUCCESS;
@@ -371,8 +371,13 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 				}else if(!strcmp(token, "max_connections")){
 					token = strtok(NULL, " ");
 					if(token){
-						config->max_connections = atoi(token);
-						if(config->max_connections < 0) config->max_connections = -1;
+						if(config->listener_count > 0){
+							config->listeners[config->listener_count-1].max_connections = atoi(token);
+							if(config->listeners[config->listener_count-1].max_connections < 0) config->listeners[config->listener_count-1].max_connections = -1;
+						}else{
+							config->default_listener.max_connections = atoi(token);
+							if(config->default_listener.max_connections < 0) config->default_listener.max_connections = -1;
+						}
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty max_connections value in configuration.");
 					}
@@ -564,7 +569,6 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	fclose(fptr);
 
 	mqtt3_db_limits_set(max_inflight_messages, max_queued_messages);
-	mqtt3_net_set_max_connections(config->max_connections);
 
 	for(i=0; i<config->bridge_count; i++){
 		if(!config->bridges[i].name || !config->bridges[i].address || !config->bridges[i].port || !config->bridges[i].topic_count){
