@@ -47,10 +47,10 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 
 	if(!context || context->core.sock == -1 || !topic) return MOSQ_ERR_INVAL;
 
-	if(context->mount_point){
-		len = strlen(context->mount_point);
+	if(context->listener->mount_point){
+		len = strlen(context->listener->mount_point);
 		if(len > strlen(topic)){
-			topic += strlen(context->mount_point);
+			topic += strlen(context->listener->mount_point);
 		}else{
 			/* Invalid topic string. Should never happen, but silently swallow the message anyway. */
 			return MOSQ_ERR_SUCCESS;

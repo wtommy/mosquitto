@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2009,2010, Roger Light <roger@atchoo.org>
+Copyright (c) 2009-2011 Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -178,14 +178,14 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 	}
 
 	payloadlen = context->core.in_packet.remaining_length - context->core.in_packet.pos;
-	if(context->mount_point){
-		len = strlen(context->mount_point) + strlen(topic) + 1;
+	if(context->listener->mount_point){
+		len = strlen(context->listener->mount_point) + strlen(topic) + 1;
 		topic_mount = _mosquitto_calloc(len, sizeof(char));
 		if(!topic_mount){
 			_mosquitto_free(topic);
 			return MOSQ_ERR_NOMEM;
 		}
-		snprintf(topic_mount, len, "%s%s", context->mount_point, topic);
+		snprintf(topic_mount, len, "%s%s", context->listener->mount_point, topic);
 		_mosquitto_free(topic);
 		topic = topic_mount;
 	}

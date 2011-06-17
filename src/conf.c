@@ -50,6 +50,7 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->daemon = false;
 	config->default_listener.host = NULL;
 	config->default_listener.port = 0;
+	config->default_listener.max_connections = -1;
 	config->default_listener.mount_point = NULL;
 	config->default_listener.socks = NULL;
 	config->default_listener.sock_count = 0;

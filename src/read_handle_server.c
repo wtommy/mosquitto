@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2009,2010, Roger Light <roger@atchoo.org>
+Copyright (c) 2009-2011 Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -302,15 +302,15 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 				if(payload) _mosquitto_free(payload);
 				return 1;
 			}
-			if(context->mount_point){
-				len = strlen(context->mount_point) + strlen(sub) + 1;
+			if(context->listener->mount_point){
+				len = strlen(context->listener->mount_point) + strlen(sub) + 1;
 				sub_mount = _mosquitto_calloc(len, sizeof(char));
 				if(!sub_mount){
 					_mosquitto_free(sub);
 					if(payload) _mosquitto_free(payload);
 					return MOSQ_ERR_NOMEM;
 				}
-				snprintf(sub_mount, len, "%s%s", context->mount_point, sub);
+				snprintf(sub_mount, len, "%s%s", context->listener->mount_point, sub);
 				_mosquitto_free(sub);
 				sub = sub_mount;
 

@@ -81,6 +81,7 @@ struct _mqtt3_listener {
 	char *mount_point;
 	int *socks;
 	int sock_count;
+	int client_count;
 };
 
 typedef struct {
@@ -94,7 +95,6 @@ typedef struct {
 	int listener_count;
 	int log_dest;
 	int log_type;
-	int max_connections;
 	char *password_file;
 	bool persistence;
 	char *persistence_location;
@@ -213,7 +213,7 @@ typedef struct _mqtt3_context{
 	struct _mqtt3_bridge *bridge;
 	mosquitto_client_msg *msgs;
 	struct _mosquitto_acl_user *acl_list;
-	char *mount_point;
+	struct _mqtt3_listener *listener;
 } mqtt3_context;
 
 /* ============================================================
@@ -261,7 +261,6 @@ int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *pac
 int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context);
 int mqtt3_net_write(mqtt3_context *context);
 
-void mqtt3_net_set_max_connections(int max);
 uint64_t mqtt3_net_bytes_total_received(void);
 uint64_t mqtt3_net_bytes_total_sent(void);
 unsigned long mqtt3_net_msgs_total_received(void);

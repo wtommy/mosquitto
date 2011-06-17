@@ -55,12 +55,6 @@ static uint64_t bytes_received = 0;
 static uint64_t bytes_sent = 0;
 static unsigned long msgs_received = 0;
 static unsigned long msgs_sent = 0;
-static int max_connections = -1;
-
-void mqtt3_net_set_max_connections(int max)
-{
-	max_connections = max;
-}
 
 int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 {
@@ -77,10 +71,6 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 	new_sock = accept(listensock, NULL, 0);
 	if(new_sock < 0) return -1;
 
-	if(max_connections > 0 && db->context_count >= max_connections){
-		COMPAT_CLOSE(new_sock);
-		return -1;
-	}
 #ifndef WIN32
 	/* Set non-blocking */
 	opt = fcntl(new_sock, F_GETFL, 0);
@@ -115,12 +105,20 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 		for(i=0; i<db->config->listener_count; i++){
 			for(j=0; j<db->config->listeners[i].sock_count; j++){
 				if(db->config->listeners[i].socks[j] == listensock){
-					new_context->mount_point = db->config->listeners[i].mount_point;
+					new_context->listener = &db->config->listeners[i];
 					break;
 				}
 			}
 		}
+		if(!new_context->listener){
+			COMPAT_CLOSE(new_sock);
+			return -1;
+		}
 
+		if(new_context->listener->max_connections > 0 && new_context->listener->client_count >= new_context->listener->max_connections){
+			COMPAT_CLOSE(new_sock);
+			return -1;
+		}
 		mqtt3_log_printf(MOSQ_LOG_NOTICE, "New client connected from %s.", new_context->core.address);
 		for(i=0; i<db->context_count; i++){
 			if(db->contexts[i] == NULL){
@@ -134,6 +132,7 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 				db->context_count++;
 				db->contexts = tmp_contexts;
 				db->contexts[db->context_count-1] = new_context;
+				new_context->listener->client_count++;
 			}else{
 				mqtt3_context_cleanup(NULL, new_context, true);
 			}
