@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 
+#include <assert.h>
 #include <string.h>
 
 #include <mqtt3.h>
@@ -76,6 +77,11 @@ void mqtt3_check_keepalive(mqtt3_context *context)
 		if(context->core.state == mosq_cs_connected){
 			mqtt3_raw_pingreq(context);
 		}else{
+			if(context->listener){
+				context->listener->client_count--;
+				assert(context->listener->client_count >= 0);
+			}
+			context->listener = NULL;
 			_mosquitto_socket_close(&context->core);
 		}
 	}

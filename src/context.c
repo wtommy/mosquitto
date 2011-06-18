@@ -27,6 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <assert.h>
 #ifndef WIN32
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -106,7 +107,12 @@ void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_fre
 	if(!context) return;
 
 	if(context->core.sock != -1){
+		if(context->listener){
+			context->listener->client_count--;
+			assert(context->listener->client_count >= 0);
+		}
 		_mosquitto_socket_close(&context->core);
+		context->listener = NULL;
 	}
 	if(context->core.clean_session && db){
 		mqtt3_subs_clean_session(context, &db->subs);
@@ -158,10 +164,15 @@ void mqtt3_context_disconnect(mosquitto_db *db, int context_index)
 	}
 
 	/* Bridges don't get cleaned up because they will reconnect later. */
-	if(db->contexts[context_index]->bridge || db->contexts[context_index]->core.clean_session == false){
-		_mosquitto_socket_close(&db->contexts[context_index]->core);
+	if(ctxt->bridge || ctxt->core.clean_session == false){
+		if(ctxt->listener){
+			ctxt->listener->client_count--;
+			assert(ctxt->listener->client_count >= 0);
+		}
+		_mosquitto_socket_close(&ctxt->core);
+		ctxt->listener = NULL;
 	}else{
-		mqtt3_context_cleanup(db, db->contexts[context_index], true);
+		mqtt3_context_cleanup(db, ctxt, true);
 		db->contexts[context_index] = NULL;
 	}
 }
