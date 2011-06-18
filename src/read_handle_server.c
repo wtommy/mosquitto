@@ -38,7 +38,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <send_mosq.h>
 #include <util_mosq.h>
 
-int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
+int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 {
 	char *protocol_name;
 	uint8_t protocol_version;
@@ -52,32 +52,35 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	int i;
 	int rc;
 	struct _mosquitto_acl_user *acl_tail;
+	mqtt3_context *context;
+
+	context = db->contexts[context_index];
 	
 	/* Don't accept multiple CONNECT commands. */
 	if(context->core.state != mosq_cs_new){
-		_mosquitto_socket_close(&context->core);
+		mqtt3_context_disconnect(db, context_index);
 		return MOSQ_ERR_PROTOCOL;
 	}
 
 	if(_mosquitto_read_string(&context->core.in_packet, &protocol_name)){
-		_mosquitto_socket_close(&context->core);
+		mqtt3_context_disconnect(db, context_index);
 		return 1;
 	}
 	if(!protocol_name){
-		_mosquitto_socket_close(&context->core);
+		mqtt3_context_disconnect(db, context_index);
 		return 3;
 	}
 	if(strcmp(protocol_name, PROTOCOL_NAME)){
 		mqtt3_log_printf(MOSQ_LOG_INFO, "Invalid protocol \"%s\" in CONNECT from %s.",
 				protocol_name, context->core.address);
 		_mosquitto_free(protocol_name);
-		_mosquitto_socket_close(&context->core);
+		mqtt3_context_disconnect(db, context_index);
 		return MOSQ_ERR_PROTOCOL;
 	}
 	_mosquitto_free(protocol_name);
 
 	if(_mosquitto_read_byte(&context->core.in_packet, &protocol_version)){
-		_mosquitto_socket_close(&context->core);
+		mqtt3_context_disconnect(db, context_index);
 		return 1;
 	}
 	if(protocol_version != PROTOCOL_VERSION){
@@ -85,12 +88,12 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 				protocol_version, context->core.address);
 		_mosquitto_free(protocol_name);
 		mqtt3_raw_connack(context, 1);
-		_mosquitto_socket_close(&context->core);
+		mqtt3_context_disconnect(db, context_index);
 		return MOSQ_ERR_PROTOCOL;
 	}
 
 	if(_mosquitto_read_byte(&context->core.in_packet, &connect_flags)){
-		_mosquitto_socket_close(&context->core);
+		mqtt3_context_disconnect(db, context_index);
 		return 1;
 	}
 	clean_session = connect_flags & 0x02;
@@ -101,12 +104,12 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	username_flag = connect_flags & 0x80;
 
 	if(_mosquitto_read_uint16(&context->core.in_packet, &(context->core.keepalive))){
-		_mosquitto_socket_close(&context->core);
+		mqtt3_context_disconnect(db, context_index);
 		return 1;
 	}
 
 	if(_mosquitto_read_string(&context->core.in_packet, &client_id)){
-		_mosquitto_socket_close(&context->core);
+		mqtt3_context_disconnect(db, context_index);
 		return 1;
 	}
 
@@ -114,7 +117,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	if(db->config->clientid_prefixes){
 		if(strncmp(db->config->clientid_prefixes, client_id, strlen(db->config->clientid_prefixes))){
 			mqtt3_raw_connack(context, 2);
-			_mosquitto_socket_close(&context->core);
+			mqtt3_context_disconnect(db, context_index);
 			return MOSQ_ERR_SUCCESS;
 		}
 	}
@@ -122,15 +125,15 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	if(will){
 		will_struct = _mosquitto_calloc(1, sizeof(struct mosquitto_message));
 		if(!will_struct){
-			_mosquitto_socket_close(&context->core);
+			mqtt3_context_disconnect(db, context_index);
 			return MOSQ_ERR_NOMEM;
 		}
 		if(_mosquitto_read_string(&context->core.in_packet, &will_topic)){
-			_mosquitto_socket_close(&context->core);
+			mqtt3_context_disconnect(db, context_index);
 			return 1;
 		}
 		if(_mosquitto_read_string(&context->core.in_packet, &will_message)){
-			_mosquitto_socket_close(&context->core);
+			mqtt3_context_disconnect(db, context_index);
 			return 1;
 		}
 	}
@@ -151,7 +154,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 			rc = mosquitto_unpwd_check(db, username, password);
 			if(rc == MOSQ_ERR_AUTH){
 				mqtt3_raw_connack(context, 2);
-				_mosquitto_socket_close(&context->core);
+				mqtt3_context_disconnect(db, context_index);
 				return MOSQ_ERR_SUCCESS;
 			}else if(rc == MOSQ_ERR_INVAL){
 				return MOSQ_ERR_INVAL;
@@ -166,7 +169,7 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 
 	if(!username_flag && db->config->allow_anonymous == false){
 		mqtt3_raw_connack(context, 2);
-		_mosquitto_socket_close(&context->core);
+		mqtt3_context_disconnect(db, context_index);
 		return MOSQ_ERR_SUCCESS;
 	}
 
@@ -237,8 +240,12 @@ int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context)
 	return mqtt3_raw_connack(context, 0);
 }
 
-int mqtt3_handle_disconnect(mqtt3_context *context)
+int mqtt3_handle_disconnect(mosquitto_db *db, int context_index)
 {
+	mqtt3_context *context;
+
+	context = db->contexts[context_index];
+
 	if(!context){
 		return MOSQ_ERR_INVAL;
 	}
@@ -247,7 +254,7 @@ int mqtt3_handle_disconnect(mqtt3_context *context)
 	}
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received DISCONNECT from %s", context->core.id);
 	context->core.state = mosq_cs_disconnecting;
-	_mosquitto_socket_close(&context->core);
+	mqtt3_context_disconnect(db, context_index);
 	return MOSQ_ERR_SUCCESS;
 }
 

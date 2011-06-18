@@ -271,8 +271,8 @@ unsigned long mqtt3_net_msgs_total_sent(void);
  * ============================================================ */
 int mqtt3_packet_handle(mosquitto_db *db, int context_index);
 int mqtt3_handle_connack(mqtt3_context *context);
-int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context);
-int mqtt3_handle_disconnect(mqtt3_context *context);
+int mqtt3_handle_connect(mosquitto_db *db, int context_index);
+int mqtt3_handle_disconnect(mosquitto_db *db, int context_index);
 int mqtt3_handle_pingreq(mqtt3_context *context);
 int mqtt3_handle_pingresp(mqtt3_context *context);
 int mqtt3_handle_puback(mqtt3_context *context);
