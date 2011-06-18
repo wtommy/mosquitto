@@ -37,8 +37,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <util_mosq.h>
 
-int mqtt3_packet_handle(mosquitto_db *db, mqtt3_context *context)
+int mqtt3_packet_handle(mosquitto_db *db, int context_index)
 {
+	mqtt3_context *context;
+
+	if(context_index < 0 || context_index >= db->context_count) return MOSQ_ERR_INVAL;
+	context = db->contexts[context_index];
 	if(!context) return MOSQ_ERR_INVAL;
 
 	switch((context->core.in_packet.command)&0xF0){

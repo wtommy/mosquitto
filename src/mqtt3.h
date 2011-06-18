@@ -258,7 +258,7 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock);
 int mqtt3_socket_listen(struct _mqtt3_listener *listener);
 
 int mqtt3_net_packet_queue(mqtt3_context *context, struct _mosquitto_packet *packet);
-int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context);
+int mqtt3_net_read(mosquitto_db *db, int context_index);
 int mqtt3_net_write(mqtt3_context *context);
 
 uint64_t mqtt3_net_bytes_total_received(void);
@@ -269,7 +269,7 @@ unsigned long mqtt3_net_msgs_total_sent(void);
 /* ============================================================
  * Read handling functions
  * ============================================================ */
-int mqtt3_packet_handle(mosquitto_db *db, mqtt3_context *context);
+int mqtt3_packet_handle(mosquitto_db *db, int context_index);
 int mqtt3_handle_connack(mqtt3_context *context);
 int mqtt3_handle_connect(mosquitto_db *db, mqtt3_context *context);
 int mqtt3_handle_disconnect(mqtt3_context *context);

@@ -316,7 +316,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 		}
 		if(int_db.contexts[i] && int_db.contexts[i]->core.sock >= 0){
 			if(pollfds[int_db.contexts[i]->core.sock].revents & POLLIN){
-				if(mqtt3_net_read(&int_db, int_db.contexts[i])){
+				if(mqtt3_net_read(&int_db, i)){
 					if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket read error on client %s, disconnecting.", int_db.contexts[i]->core.id);
 					}else{

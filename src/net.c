@@ -238,11 +238,15 @@ int mqtt3_socket_listen(struct _mqtt3_listener *listener)
 	}
 }
 
-int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context)
+int mqtt3_net_read(mosquitto_db *db, int context_index)
 {
 	uint8_t byte;
 	ssize_t read_length;
 	int rc = 0;
+	mqtt3_context *context;
+
+	if(context_index < 0 || context_index >= db->context_count) return MOSQ_ERR_INVAL;
+	context = db->contexts[context_index];
 
 	if(!context || context->core.sock == -1) return MOSQ_ERR_INVAL;
 	/* This gets called if pselect() indicates that there is network data
@@ -339,7 +343,7 @@ int mqtt3_net_read(mosquitto_db *db, mqtt3_context *context)
 	msgs_received++;
 	/* All data for this packet is read. */
 	context->core.in_packet.pos = 0;
-	rc = mqtt3_packet_handle(db, context);
+	rc = mqtt3_packet_handle(db, context_index);
 
 	/* Free data and reset values */
 	_mosquitto_packet_cleanup(&context->core.in_packet);
