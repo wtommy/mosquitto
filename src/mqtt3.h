@@ -329,6 +329,7 @@ int mqtt3_subs_clean_session(struct _mqtt3_context *context, struct _mosquitto_s
  * ============================================================ */
 mqtt3_context *mqtt3_context_init(int sock);
 void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_free);
+void mqtt3_context_disconnect(mosquitto_db *db, int context_index);
 
 /* ============================================================
  * Logging functions

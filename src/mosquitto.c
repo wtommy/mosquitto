@@ -104,25 +104,6 @@ int drop_privileges(mqtt3_config *config)
 	return MOSQ_ERR_SUCCESS;
 }
 
-void disconnect_client(mosquitto_db *db, int context_index)
-{
-	mqtt3_context *ctxt;
-
-	ctxt = db->contexts[context_index];
-	if(ctxt->core.state != mosq_cs_disconnecting && ctxt->core.will){
-		/* Unexpected disconnect, queue the client will. */
-		mqtt3_db_messages_easy_queue(db, ctxt, ctxt->core.will->topic, ctxt->core.will->qos, ctxt->core.will->payloadlen, ctxt->core.will->payload, ctxt->core.will->retain);
-	}
-
-	/* Bridges don't get cleaned up because they will reconnect later. */
-	if(db->contexts[context_index]->bridge || db->contexts[context_index]->core.clean_session == false){
-		_mosquitto_socket_close(&db->contexts[context_index]->core);
-	}else{
-		mqtt3_context_cleanup(db, db->contexts[context_index], true);
-		db->contexts[context_index] = NULL;
-	}
-}
-
 int loop(mqtt3_config *config, int *listensock, int listensock_count, int listener_max)
 {
 	time_t start_time = time(NULL);
@@ -203,12 +184,12 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 								}
 							}
 						}else{
-							disconnect_client(&int_db, i);
+							mqtt3_context_disconnect(&int_db, i);
 						}
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", int_db.contexts[i]->core.id);
 						/* Client has exceeded keepalive*1.5 */
-						disconnect_client(&int_db, i);
+						mqtt3_context_disconnect(&int_db, i);
 					}
 				}else{
 #ifdef WITH_BRIDGE
@@ -290,7 +271,7 @@ static void loop_handle_errors(struct pollfd *pollfds)
 				}else{
 					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", int_db.contexts[i]->core.id);
 				}
-				disconnect_client(&int_db, i);
+				mqtt3_context_disconnect(&int_db, i);
 			}
 		}
 	}
@@ -310,7 +291,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", int_db.contexts[i]->core.id);
 					}
 					/* Write error or other that means we should disconnect */
-					disconnect_client(&int_db, i);
+					mqtt3_context_disconnect(&int_db, i);
 				}
 			}
 		}
@@ -323,7 +304,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", int_db.contexts[i]->core.id);
 					}
 					/* Read error or other that means we should disconnect */
-					disconnect_client(&int_db, i);
+					mqtt3_context_disconnect(&int_db, i);
 				}
 			}
 		}
