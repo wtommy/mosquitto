@@ -1,4 +1,4 @@
-0.11 - 2011xxxx
+0.11 - 20110619
 ===============
 
 - Removed all old sqlite code.
