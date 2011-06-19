@@ -152,10 +152,12 @@
 			<varlistentry>
 				<term><option>max_connections</option></term>
 				<listitem>
-					<para>Limit the total number of clients connected. Set to
-					<literal>-1</literal> to have "unlimited" connections. Note that other limits
-					may be imposed that are outside the control of mosquitto.
-					See e.g. <citerefentry><refentrytitle>limits.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
+					<para>Limit the total number of clients connected for the
+					current listener. Set to <literal>-1</literal> to have
+					"unlimited" connections. Note that other limits may be
+					imposed that are outside the control of mosquitto.  See
+					e.g.
+					<citerefentry><refentrytitle>limits.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
