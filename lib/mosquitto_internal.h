@@ -30,9 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef _MOSQUITTO_INTERNAL_H_
 #define _MOSQUITTO_INTERNAL_H_
 
-#ifndef CMAKE
 #include <config.h>
-#endif
 
 #ifdef WITH_SSL
 #include <openssl/ssl.h>

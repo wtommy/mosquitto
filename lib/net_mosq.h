@@ -39,6 +39,12 @@ typedef int ssize_t;
 #include <mosquitto_internal.h>
 #include <mosquitto.h>
 
+#ifdef WIN32
+#  define COMPAT_CLOSE(a) closesocket(a)
+#else
+#  define COMPAT_CLOSE(a) close(a)
+#endif
+
 /* For when not using winsock libraries. */
 #ifndef INVALID_SOCKET
 #define INVALID_SOCKET -1

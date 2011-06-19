@@ -31,7 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 #include <mosquitto.h>
-#include <logging_mosq.h>
+#include <mosquitto_internal.h>
 #include <memory_mosq.h>
 #include <mqtt3_protocol.h>
 #include <net_mosq.h>
@@ -91,3 +91,40 @@ int _mosquitto_send_simple_command(struct _mosquitto_core *core, uint8_t command
 	return MOSQ_ERR_SUCCESS;
 }
 
+int _mosquitto_send_real_publish(struct _mosquitto_core *core, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain, bool dup)
+{
+	struct _mosquitto_packet *packet = NULL;
+	int packetlen;
+	int rc;
+
+	assert(core);
+	assert(topic);
+
+	packetlen = 2+strlen(topic) + payloadlen;
+	if(qos > 0) packetlen += 2; /* For message id */
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
+	if(!packet) return MOSQ_ERR_NOMEM;
+
+	packet->mid = mid;
+	packet->command = PUBLISH | ((dup&0x1)<<3) | (qos<<1) | retain;
+	packet->remaining_length = packetlen;
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
+		_mosquitto_free(packet);
+		return rc;
+	}
+	/* Variable header (topic string) */
+	_mosquitto_write_string(packet, topic, strlen(topic));
+	if(qos > 0){
+		_mosquitto_write_uint16(packet, mid);
+	}
+
+	/* Payload */
+	if(payloadlen){
+		_mosquitto_write_bytes(packet, payload, payloadlen);
+	}
+
+	_mosquitto_packet_queue(core, packet);
+
+	return MOSQ_ERR_SUCCESS;
+}

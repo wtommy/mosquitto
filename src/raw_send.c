@@ -29,16 +29,11 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <string.h>
 
-#ifndef CMAKE
 #include <config.h>
-#endif
 
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
-#include <memory_mosq.h>
-#include <net_mosq.h>
 #include <send_mosq.h>
-#include <util_mosq.h>
 
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 {
@@ -48,43 +43,21 @@ int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
 
 int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload)
 {
-	struct _mosquitto_packet *packet = NULL;
-	int packetlen;
-	int rc;
+	int len;
 
 	if(!context || context->core.sock == -1 || !topic) return MOSQ_ERR_INVAL;
 
-	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBLISH to %s (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", context->core.id, dup, qos, retain, mid, topic, (long)payloadlen);
-
-	packetlen = 2+strlen(topic) + payloadlen;
-	if(qos > 0) packetlen += 2; /* For message id */
-	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
-	if(!packet){
-		mqtt3_log_printf(MOSQ_LOG_DEBUG, "PUBLISH failed allocating packet memory.");
-		return MOSQ_ERR_NOMEM;
+	if(context->listener->mount_point){
+		len = strlen(context->listener->mount_point);
+		if(len > strlen(topic)){
+			topic += strlen(context->listener->mount_point);
+		}else{
+			/* Invalid topic string. Should never happen, but silently swallow the message anyway. */
+			return MOSQ_ERR_SUCCESS;
+		}
 	}
-
-	packet->command = PUBLISH | ((dup&0x1)<<3) | (qos<<1) | retain;
-	packet->remaining_length = packetlen;
-	rc = _mosquitto_packet_alloc(packet);
-	if(rc){
-		_mosquitto_free(packet);
-		return rc;
-	}
-	/* Variable header (topic string) */
-	_mosquitto_write_string(packet, topic, strlen(topic));
-	if(qos > 0){
-		_mosquitto_write_uint16(packet, mid);
-	}
-
-	/* Payload */
-	if(payloadlen){
-		_mosquitto_write_bytes(packet, payload, payloadlen);
-	}
-
-	_mosquitto_packet_queue(&context->core, packet);
-
-	return MOSQ_ERR_SUCCESS;
+	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBLISH to %s (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", context->core.id, dup, qos, retain, mid, topic, (long)payloadlen);
+	return _mosquitto_send_real_publish(&context->core, mid, topic, payloadlen, payload, qos, retain, dup);
 }
 
 int mqtt3_raw_pubcomp(mqtt3_context *context, uint16_t mid)

@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <string.h>
 #ifndef WIN32
+#include <sys/select.h>
 #include <unistd.h>
 #else
 #include <winsock2.h>
@@ -51,6 +52,10 @@ typedef int ssize_t;
 
 #ifndef ECONNRESET
 #define ECONNRESET 104
+#endif
+
+#if !defined(WIN32) && defined(__SYMBIAN32__)
+#define HAVE_PSELECT
 #endif
 
 void mosquitto_lib_version(int *major, int *minor, int *revision)
@@ -270,6 +275,10 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 	if(!mosq || !topic || qos<0 || qos>2) return MOSQ_ERR_INVAL;
 	if(payloadlen > 268435455) return MOSQ_ERR_PAYLOAD_SIZE;
 
+	if(_mosquitto_wildcard_check(topic)){
+		return MOSQ_ERR_INVAL;
+	}
+
 	local_mid = _mosquitto_mid_generate(&mosq->core);
 	if(mid){
 		*mid = local_mid;
@@ -355,7 +364,7 @@ int mosquitto_ssl_set(struct mosquitto *mosq, const char *pemfile, const char *p
 
 int mosquitto_loop(struct mosquitto *mosq, int timeout)
 {
-#ifndef WIN32
+#ifdef HAVE_PSELECT
 	struct timespec local_timeout;
 #else
 	struct timeval local_timeout;
@@ -379,21 +388,21 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	}
 	if(timeout >= 0){
 		local_timeout.tv_sec = timeout/1000;
-#ifndef WIN32
+#ifdef HAVE_PSELECT
 		local_timeout.tv_nsec = (timeout-local_timeout.tv_sec*1000)*1e6;
 #else
 		local_timeout.tv_usec = (timeout-local_timeout.tv_sec*1000)*1000;
 #endif
 	}else{
 		local_timeout.tv_sec = 1;
-#ifndef WIN32
+#ifdef HAVE_PSELECT
 		local_timeout.tv_nsec = 0;
 #else
 		local_timeout.tv_usec = 0;
 #endif
 	}
 
-#ifndef WIN32
+#ifdef HAVE_PSELECT
 	fdcount = pselect(mosq->core.sock+1, &readfds, &writefds, NULL, &local_timeout, NULL);
 #else
 	fdcount = select(mosq->core.sock+1, &readfds, &writefds, NULL, &local_timeout);
@@ -406,13 +415,12 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 			if(rc){
 				_mosquitto_socket_close(&mosq->core);
 				if(mosq->core.state == mosq_cs_disconnecting){
-					if(mosq->on_disconnect){
-						mosq->on_disconnect(mosq->obj);
-					}
-					return MOSQ_ERR_SUCCESS;
-				}else{
-					return rc;
+					rc = MOSQ_ERR_SUCCESS;
 				}
+				if(mosq->on_disconnect){
+					mosq->on_disconnect(mosq->obj);
+				}
+				return rc;
 			}
 		}
 		if(FD_ISSET(mosq->core.sock, &writefds)){
@@ -420,13 +428,12 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 			if(rc){
 				_mosquitto_socket_close(&mosq->core);
 				if(mosq->core.state == mosq_cs_disconnecting){
-					if(mosq->on_disconnect){
-						mosq->on_disconnect(mosq->obj);
-					}
-					return MOSQ_ERR_SUCCESS;
-				}else{
-					return rc;
+					rc = MOSQ_ERR_SUCCESS;
 				}
+				if(mosq->on_disconnect){
+					mosq->on_disconnect(mosq->obj);
+				}
+				return rc;
 			}
 		}
 	}

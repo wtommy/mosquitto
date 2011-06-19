@@ -27,14 +27,10 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef CMAKE
 #include <config.h>
-#endif
 
 #include <mqtt3.h>
 #include <send_mosq.h>
-
-void (*client_connack_callback)(int) = NULL;
 
 int mqtt3_handle_connack(mqtt3_context *context)
 {
@@ -51,9 +47,6 @@ int mqtt3_handle_connack(mqtt3_context *context)
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNACK");
 	if(_mosquitto_read_byte(&context->core.in_packet, &byte)) return 1; // Reserved byte, not used
 	if(_mosquitto_read_byte(&context->core.in_packet, &rc)) return 1;
-	if(client_connack_callback){
-		client_connack_callback(rc);
-	}
 	switch(rc){
 		case 0:
 			if(context->bridge){

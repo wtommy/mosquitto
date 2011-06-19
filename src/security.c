@@ -27,15 +27,15 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef CMAKE
 #include <config.h>
-#endif
 
 #include <stdio.h>
 #include <string.h>
 
 #include <memory_mosq.h>
 #include <mqtt3.h>
+
+#ifndef WITH_EXTERNAL_SECURITY_CHECKS
 
 int _add_acl(struct _mosquitto_db *db, const char *user, const char *topic, int access)
 {
@@ -160,7 +160,7 @@ int _add_acl(struct _mosquitto_db *db, const char *user, const char *topic, int 
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_acl_check(struct _mosquitto_db *db, mqtt3_context *context, const char *topic, int access)
+int mosquitto_acl_check(struct _mosquitto_db *db, mqtt3_context *context, const char *topic, int access)
 {
 	char *local_topic;
 	char *token;
@@ -360,7 +360,7 @@ int mqtt3_pwfile_parse(struct _mosquitto_db *db)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_unpwd_check(struct _mosquitto_db *db, const char *username, const char *password)
+int mosquitto_unpwd_check(struct _mosquitto_db *db, const char *username, const char *password)
 {
 	struct _mosquitto_unpwd *tail;
 
@@ -387,7 +387,7 @@ int mqtt3_unpwd_check(struct _mosquitto_db *db, const char *username, const char
 	return MOSQ_ERR_AUTH;
 }
 
-int mqtt3_unpwd_cleanup(struct _mosquitto_db *db)
+int mosquitto_unpwd_cleanup(struct _mosquitto_db *db)
 {
 	struct _mosquitto_unpwd *tail;
 
@@ -404,3 +404,4 @@ int mqtt3_unpwd_cleanup(struct _mosquitto_db *db)
 	return MOSQ_ERR_SUCCESS;
 }
 
+#endif

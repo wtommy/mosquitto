@@ -5,6 +5,10 @@
  * easily in restrictive environments by removing features.
  * ============================================================ */
 
+#ifndef CMAKE
+/* Only use the compile time options defined here from the standard Makefile. */
+
+
 /* Uncomment to compile with tcpd/libwrap support. */
 //#define WITH_WRAP
 
@@ -33,6 +37,18 @@
  * CPU time.
  */
 #define WITH_BRIDGE
+
+/* Use the username/password and ACL checks defined in security_external.c
+ * This is empty by default, but gives a more straightforward way of adding
+ * support for existing username/password databases to mosquitto.
+ * Uncommenting without adding your own code to security_external.c will
+ * result in all access being denied.
+ * It also enables the db_* config options in mosquitto.conf.
+ * Get in touch with the authors if you need help adding support for your
+ * system.
+ */
+//#define WITH_EXTERNAL_SECURITY_CHECKS
+#endif
 
 /* ============================================================
  * Compatibility defines

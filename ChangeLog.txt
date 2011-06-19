@@ -1,8 +1,49 @@
-0.11 - 2011xxxx
+0.11 - 20110619
 ===============
 
 - Removed all old sqlite code.
 - Remove client id limit in clients.
+- Implemented $SYS/broker/heap/maximum size
+- Implemented $SYS/broker/clients/inactive to show the number of disconnected
+  non-clean session clients.
+- $SYS/broker/heap/current size and maximum size messages now include "bytes"
+  to match rsmb message format.
+- Implemented the retained_persistence config file option - a synonym of the
+  "persistence" option.
+- Added security_external.c to broker source to make it easier for third
+  parties to add support for their existing username/password and ACL database
+  for security checks. See external_security_checks.txt.
+- $SYS messages are now only republished when their value changes.
+- Windows native broker now responds to command line arguments.
+- Simplify client disconnecting so wills gets sent in all cases (bug #792468).
+- Clients now have a --quiet option.
+- The on_disconnect() callback will always be called now, even if the client
+  has disconnected unexpectedly.
+- Always close persistent DB file after restoring.
+- Return error code when exiting the clients.
+- mosquitto_publish() now returns MOSQ_ERR_INVAL if the topic contains + or #
+- mosquitto now silently rejects published messages with + or # in the topic.
+- max_connections is now a per-listener setting instead of global.
+- Connection count is now reduced when clients disconnect (bug #797983).
+
+0.10.2 - 20110106
+=================
+
+- Don't abort when connecting if the first connection fails. This is important
+  on e.g. Windows 7, where IPV6 is offered as the first choice but may not be
+  available.
+- Deal with long logging messages properly (bug #785882).
+- Fix library compilation on Symbian - no pselect() available.
+- Don't stop processing subscriptions on received messages after a
+  subscription with # matches. (bug #791206).
+
+0.10.1 - 20110512
+=================
+
+- Fix Windows compilation.
+- Fix mosquitto.py on Windows - call lib init/cleanup.
+- Don't abort when connecting if given an unknown address type (assuming an
+  IPv4 or IPv6 address is given).
 
 0.10 - 20110429
 ===============

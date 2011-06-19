@@ -32,6 +32,9 @@
 				<arg><option>-q</option> <replaceable>message QoS</replaceable></arg>
 			</group>
 			<group choice='opt'>
+				<arg><option>--quiet</option></arg>
+			</group>
+			<group choice='opt'>
 				<arg><option>-r</option></arg>
 			</group>
 			<group choice='req'>
@@ -158,6 +161,15 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>--quiet</option></term>
+				<listitem>
+					<para>If this argument is given, no runtime errors will be
+					printed. This excludes any error messages given in case of
+					invalid user input (e.g. using --port without a
+					port).</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>-r</option></term>
 				<term><option>--retain</option></term>
 				<listitem>
@@ -264,7 +276,7 @@
 
 	<refsect1>
 		<title>Bugs</title>
-		<para><command>mosquitto_pub</command> bug information can be found at <uri type="webpage">http://launchpad.net/mosquitto</uri>.</para>
+		<para><command>mosquitto_pub</command> bug information can be found at <uri type="webpage">http://launchpad.net/mosquitto</uri></para>
 	</refsect1>
 
 	<refsect1>

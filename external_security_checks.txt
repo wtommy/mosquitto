@@ -1,0 +1,71 @@
+Mosquitto is now easier to integrate with existing username/password
+databases. It doesn't do any of this for you, but it does provide access
+points to help.
+
+At the moment mosquitto doesn't support encrypted network connections so you
+should be wary of exposing your existing username/passwords.
+
+If you wish to do this, uncomment the WITH_EXTERNAL_SECURITY_CHECKS line in
+config.h, or enable the option when configuring the build options with cmake.
+
+You should now edit src/security_external.c to fit your system. If you need to
+link extra libraries, add them to src/Makefile or src/CMakeLists.txt.
+
+All functions below have access to the additional config variables db_host,
+db_port, db_name, db_username and db_password. They can be accessed via
+db->config->db_*.
+
+The functions you need to implement are:
+
+
+int mosquitto_unpwd_init(struct _mosquitto_db *db)
+
+* Called at mosquitto startup. This is used to open database connections/files
+* or anything else that needs to be done once and is related to username and
+* password checks.
+* Should return MOSQ_ERR_SUCCESS on success, or anything else on error. See
+* lib/mosquitto.h for currently defined errors, or use MOSQ_ERR_UNKNOWN.
+
+
+int mosquitto_unpwd_cleanup(struct _mosquitto_db *db)
+
+* Called when the broker is shutting down. This is used to close database
+* connections/files or anything else that needs to be done onc and is related
+* to username and password checks.
+* Should return MOSQ_ERR_SUCCESS on success, or anything else on error. See
+* lib/mosquitto.h for currently defined errors, or use MOSQ_ERR_UNKNOWN.
+
+
+int mosquitto_unpwd_check(struct _mosquitto_db *db, const char *username, const char *password)
+
+* Called each time a username and/or password needs to be checked.
+* Should return MOSQ_ERR_SUCCESS on success, MOSQ_ERR_AUTH for authentication
+* errors (username/password invalid) or anything else for other errors. See
+* lib/mosquitto.h for currently defined errors, or use MOSQ_ERR_UNKNOWN.
+
+
+int mosquitto_acl_init(struct _mosquitto_db *db)
+
+* Called at mosquitto startup. This is used to open database connections/files
+* or anything else that needs to be done once and is related to access control
+* list checks.
+* Should return MOSQ_ERR_SUCCESS on success, or anything else on error. See
+* lib/mosquitto.h for currently defined errors, or use MOSQ_ERR_UNKNOWN.
+
+
+void mosquitto_acl_cleanup(struct _mosquitto_db *db)
+
+* Called when the broker is shutting down. This is used to close database
+* connections/files or anything else that needs to be done onc and is related
+* to username and password checks.
+* Should return MOSQ_ERR_SUCCESS on success, or anything else on error. See
+* lib/mosquitto.h for currently defined errors, or use MOSQ_ERR_UNKNOWN.
+
+
+int mosquitto_acl_check(struct _mosquitto_db *db, mqtt3_context *context, const char *topic, int access)
+
+* Called each time a topic access control list should be checked.
+* Should return MOSQ_ERR_SUCCESS on success, MOSQ_ERR_ACL_DENIED for ACL
+* denials or anything else for other errors. See lib/mosquitto.h for currently
+* defined errors, or use MOSQ_ERR_UNKNOWN.
+

@@ -27,6 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <assert.h>
 #ifndef WIN32
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -34,9 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <ws2tcpip.h>
 #endif
 
-#ifndef CMAKE
 #include <config.h>
-#endif
 
 #include <mqtt3.h>
 #include <memory_mosq.h>
@@ -52,7 +51,6 @@ mqtt3_context *mqtt3_context_init(int sock)
 	if(!context) return NULL;
 	
 	context->core.state = mosq_cs_new;
-	context->duplicate = false;
 	context->core.sock = sock;
 	context->core.last_msg_in = time(NULL);
 	context->core.last_msg_out = time(NULL);
@@ -63,6 +61,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context->core.will = NULL;
 	context->core.username = NULL;
 	context->core.password = NULL;
+	context->listener = NULL;
 
 	context->core.in_packet.payload = NULL;
 	_mosquitto_packet_cleanup(&context->core.in_packet);
@@ -108,9 +107,14 @@ void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_fre
 	if(!context) return;
 
 	if(context->core.sock != -1){
+		if(context->listener){
+			context->listener->client_count--;
+			assert(context->listener->client_count >= 0);
+		}
 		_mosquitto_socket_close(&context->core);
+		context->listener = NULL;
 	}
-	if(context->core.clean_session && !context->duplicate && db){
+	if(context->core.clean_session && db){
 		mqtt3_subs_clean_session(context, &db->subs);
 		mqtt3_db_messages_delete(context);
 	}
@@ -146,6 +150,30 @@ void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_fre
 	}
 	if(do_free){
 		_mosquitto_free(context);
+	}
+}
+
+void mqtt3_context_disconnect(mosquitto_db *db, int context_index)
+{
+	mqtt3_context *ctxt;
+
+	ctxt = db->contexts[context_index];
+	if(ctxt->core.state != mosq_cs_disconnecting && ctxt->core.will){
+		/* Unexpected disconnect, queue the client will. */
+		mqtt3_db_messages_easy_queue(db, ctxt, ctxt->core.will->topic, ctxt->core.will->qos, ctxt->core.will->payloadlen, ctxt->core.will->payload, ctxt->core.will->retain);
+	}
+
+	/* Bridges don't get cleaned up because they will reconnect later. */
+	if(ctxt->bridge || ctxt->core.clean_session == false){
+		if(ctxt->listener){
+			ctxt->listener->client_count--;
+			assert(ctxt->listener->client_count >= 0);
+		}
+		_mosquitto_socket_close(&ctxt->core);
+		ctxt->listener = NULL;
+	}else{
+		mqtt3_context_cleanup(db, ctxt, true);
+		db->contexts[context_index] = NULL;
 	}
 }
 

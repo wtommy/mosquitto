@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2009,2010, Roger Light <roger@atchoo.org>
+Copyright (c) 2009-2011 Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -27,19 +27,22 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <stdio.h>
 #include <string.h>
 
-#ifndef CMAKE
 #include <config.h>
-#endif
 
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
 #include <memory_mosq.h>
 #include <util_mosq.h>
 
-int mqtt3_packet_handle(mosquitto_db *db, mqtt3_context *context)
+int mqtt3_packet_handle(mosquitto_db *db, int context_index)
 {
+	mqtt3_context *context;
+
+	if(context_index < 0 || context_index >= db->context_count) return MOSQ_ERR_INVAL;
+	context = db->contexts[context_index];
 	if(!context) return MOSQ_ERR_INVAL;
 
 	switch((context->core.in_packet.command)&0xF0){
@@ -58,9 +61,9 @@ int mqtt3_packet_handle(mosquitto_db *db, mqtt3_context *context)
 		case PUBREL:
 			return mqtt3_handle_pubrel(db, context);
 		case CONNECT:
-			return mqtt3_handle_connect(db, context);
+			return mqtt3_handle_connect(db, context_index);
 		case DISCONNECT:
-			return mqtt3_handle_disconnect(context);
+			return mqtt3_handle_disconnect(db, context_index);
 		case SUBSCRIBE:
 			return mqtt3_handle_subscribe(db, context);
 		case UNSUBSCRIBE:
@@ -153,6 +156,8 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 	uint8_t header = context->core.in_packet.command;
 	int res = 0;
 	struct mosquitto_msg_store *stored = NULL;
+	int len;
+	char *topic_mount;
 
 	dup = (header & 0x08)>>3;
 	qos = (header & 0x06)>>1;
@@ -163,6 +168,11 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 	if(!strlen(topic)){
 		return 1;
 	}
+	if(_mosquitto_wildcard_check(topic)){
+		/* Invalid publish topic, just swallow it. */
+		_mosquitto_free(topic);
+		return MOSQ_ERR_SUCCESS;
+	}
 
 	if(qos > 0){
 		if(_mosquitto_read_uint16(&context->core.in_packet, &mid)){
@@ -172,6 +182,18 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 	}
 
 	payloadlen = context->core.in_packet.remaining_length - context->core.in_packet.pos;
+	if(context->listener->mount_point){
+		len = strlen(context->listener->mount_point) + strlen(topic) + 1;
+		topic_mount = _mosquitto_calloc(len, sizeof(char));
+		if(!topic_mount){
+			_mosquitto_free(topic);
+			return MOSQ_ERR_NOMEM;
+		}
+		snprintf(topic_mount, len, "%s%s", context->listener->mount_point, topic);
+		_mosquitto_free(topic);
+		topic = topic_mount;
+	}
+
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received PUBLISH from %s (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", context->core.id, dup, qos, retain, mid, topic, (long)payloadlen);
 	if(payloadlen){
 		payload = _mosquitto_calloc(payloadlen+1, sizeof(uint8_t));
@@ -182,7 +204,7 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 	}
 
 	/* Check for topic access */
-	rc = mqtt3_acl_check(db, context, topic, MOSQ_ACL_WRITE);
+	rc = mosquitto_acl_check(db, context, topic, MOSQ_ACL_WRITE);
 	if(rc == MOSQ_ERR_ACL_DENIED){
 		_mosquitto_free(topic);
 		if(payload) _mosquitto_free(payload);

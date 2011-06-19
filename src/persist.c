@@ -27,9 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef CMAKE
 #include <config.h>
-#endif
 
 #ifdef WITH_PERSISTENCE
 
@@ -722,6 +720,8 @@ int mqtt3_db_restore(mosquitto_db *db)
 		rc = 1;
 	}
 #undef read_e
+
+	close(fd);
 
 	return rc;
 error:

@@ -27,9 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef CMAKE
 #include <config.h>
-#endif
 
 #ifndef WIN32
 #include <poll.h>
@@ -176,26 +174,22 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 					}
 #endif
 					if(!(int_db.contexts[i]->core.keepalive) || now - int_db.contexts[i]->core.last_msg_in < (time_t)(int_db.contexts[i]->core.keepalive)*3/2){
-						if(mqtt3_db_message_write(int_db.contexts[i])){
-							_mosquitto_socket_close(&int_db.contexts[i]->core);
-						}
-						if(int_db.contexts[i]->core.sock < pollfd_count){
-							pollfds[int_db.contexts[i]->core.sock].fd = int_db.contexts[i]->core.sock;
-							pollfds[int_db.contexts[i]->core.sock].events = POLLIN;
-							pollfds[int_db.contexts[i]->core.sock].revents = 0;
-							if(int_db.contexts[i]->core.out_packet){
-								pollfds[int_db.contexts[i]->core.sock].events |= POLLOUT;
+						if(mqtt3_db_message_write(int_db.contexts[i]) == MOSQ_ERR_SUCCESS){
+							if(int_db.contexts[i]->core.sock < pollfd_count){
+								pollfds[int_db.contexts[i]->core.sock].fd = int_db.contexts[i]->core.sock;
+								pollfds[int_db.contexts[i]->core.sock].events = POLLIN;
+								pollfds[int_db.contexts[i]->core.sock].revents = 0;
+								if(int_db.contexts[i]->core.out_packet){
+									pollfds[int_db.contexts[i]->core.sock].events |= POLLOUT;
+								}
 							}
+						}else{
+							mqtt3_context_disconnect(&int_db, i);
 						}
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", int_db.contexts[i]->core.id);
 						/* Client has exceeded keepalive*1.5 */
-						if(int_db.contexts[i]->bridge || int_db.contexts[i]->core.clean_session == false){
-							_mosquitto_socket_close(&int_db.contexts[i]->core);
-						}else{
-							mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
-							int_db.contexts[i] = NULL;
-						}
+						mqtt3_context_disconnect(&int_db, i);
 					}
 				}else{
 #ifdef WITH_BRIDGE
@@ -239,7 +233,7 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 			for(i=0; i<listensock_count; i++){
 				if(pollfds[listensock[i]].revents & (POLLIN | POLLPRI)){
 					new_clients = 1;
-					while(mqtt3_socket_accept(&int_db.contexts, &int_db.context_count, listensock[i]) != -1){
+					while(mqtt3_socket_accept(&int_db, listensock[i]) != -1){
 					}
 				}
 			}
@@ -274,16 +268,10 @@ static void loop_handle_errors(struct pollfd *pollfds)
 			if(pollfds[int_db.contexts[i]->core.sock].revents & POLLHUP){
 				if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
 					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket error on client %s, disconnecting.", int_db.contexts[i]->core.id);
-					mqtt3_db_client_will_queue(&int_db, int_db.contexts[i]);
 				}else{
 					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", int_db.contexts[i]->core.id);
 				}
-				if(int_db.contexts[i]->bridge || int_db.contexts[i]->core.clean_session == false){
-					_mosquitto_socket_close(&int_db.contexts[i]->core);
-				}else{
-					mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
-					int_db.contexts[i] = NULL;
-				}
+				mqtt3_context_disconnect(&int_db, i);
 			}
 		}
 	}
@@ -299,38 +287,24 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 				if(mqtt3_net_write(int_db.contexts[i])){
 					if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket write error on client %s, disconnecting.", int_db.contexts[i]->core.id);
-						mqtt3_db_client_will_queue(&int_db, int_db.contexts[i]);
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", int_db.contexts[i]->core.id);
 					}
 					/* Write error or other that means we should disconnect */
-					/* Bridges don't get cleaned up because they will reconnect later. */
-					if(int_db.contexts[i]->bridge || int_db.contexts[i]->core.clean_session == false){
-						_mosquitto_socket_close(&int_db.contexts[i]->core);
-					}else{
-						mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
-						int_db.contexts[i] = NULL;
-					}
+					mqtt3_context_disconnect(&int_db, i);
 				}
 			}
 		}
 		if(int_db.contexts[i] && int_db.contexts[i]->core.sock >= 0){
 			if(pollfds[int_db.contexts[i]->core.sock].revents & POLLIN){
-				if(mqtt3_net_read(&int_db, int_db.contexts[i])){
+				if(mqtt3_net_read(&int_db, i)){
 					if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket read error on client %s, disconnecting.", int_db.contexts[i]->core.id);
-						mqtt3_db_client_will_queue(&int_db, int_db.contexts[i]);
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", int_db.contexts[i]->core.id);
 					}
 					/* Read error or other that means we should disconnect */
-					/* Bridges don't get cleaned up because they will reconnect later. */
-					if(int_db.contexts[i]->bridge || int_db.contexts[i]->core.clean_session == false){
-						_mosquitto_socket_close(&int_db.contexts[i]->core);
-					}else{
-						mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
-						int_db.contexts[i] = NULL;
-					}
+					mqtt3_context_disconnect(&int_db, i);
 				}
 			}
 		}
@@ -363,7 +337,6 @@ int main(int argc, char *argv[])
 	int *listensock = NULL;
 	int listensock_count = 0;
 	int listensock_index = 0;
-	int *socks, sock_count;
 	mqtt3_config config;
 	char buf[1024];
 	int i, j;
@@ -415,6 +388,19 @@ int main(int argc, char *argv[])
 	mqtt3_log_init(config.log_type, config.log_dest);
 	mqtt3_log_printf(MOSQ_LOG_INFO, "mosquitto version %s (build date %s) starting", VERSION, TIMESTAMP);
 
+#ifdef WITH_EXTERNAL_SECURITY_CHECKS
+	rc = mosquitto_unpwd_init(&int_db);
+	if(rc){
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising passwords.");
+		return rc;
+	}
+
+	rc = mosquitto_acl_init(&int_db);
+	if(rc){
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising ACLs.");
+		return rc;
+	}
+#else
 	/* Load username/password data if required. */
 	if(config.password_file){
 		rc = mqtt3_pwfile_parse(&int_db);
@@ -432,6 +418,7 @@ int main(int argc, char *argv[])
 			return rc;
 		}
 	}
+#endif
 
 	/* Set static $SYS messages */
 	snprintf(buf, 1024, "mosquitto version %s", VERSION);
@@ -444,7 +431,7 @@ int main(int argc, char *argv[])
 	listener_max = -1;
 	listensock_index = 0;
 	for(i=0; i<config.listener_count; i++){
-		if(mqtt3_socket_listen(config.listeners[i].host, config.listeners[i].port, &socks, &sock_count)){
+		if(mqtt3_socket_listen(&config.listeners[i])){
 			_mosquitto_free(int_db.contexts);
 			mqtt3_db_close(&int_db);
 			if(config.pid_file){
@@ -452,7 +439,7 @@ int main(int argc, char *argv[])
 			}
 			return 1;
 		}
-		listensock_count += sock_count;
+		listensock_count += config.listeners[i].sock_count;
 		listensock = _mosquitto_realloc(listensock, sizeof(int)*listensock_count);
 		if(!listensock){
 			_mosquitto_free(int_db.contexts);
@@ -462,8 +449,8 @@ int main(int argc, char *argv[])
 			}
 			return 1;
 		}
-		for(j=0; j<sock_count; j++){
-			if(socks[j] < 0){
+		for(j=0; j<config.listeners[i].sock_count; j++){
+			if(config.listeners[i].socks[j] < 0){
 				_mosquitto_free(int_db.contexts);
 				mqtt3_db_close(&int_db);
 				if(config.pid_file){
@@ -471,13 +458,12 @@ int main(int argc, char *argv[])
 				}
 				return 1;
 			}
-			listensock[listensock_index] = socks[j];
+			listensock[listensock_index] = config.listeners[i].socks[j];
 			if(listensock[listensock_index] > listener_max){
 				listener_max = listensock[listensock_index];
 			}
 			listensock_index++;
 		}
-		_mosquitto_free(socks);
 	}
 
 	signal(SIGINT, handle_sigint);
@@ -531,7 +517,10 @@ int main(int argc, char *argv[])
 		_mosquitto_free(listensock);
 	}
 
-	mqtt3_unpwd_cleanup(&int_db);
+#ifdef WITH_EXTERNAL_SECURITY_CHECKS
+	mosquitto_acl_cleanup(&int_db);
+#endif
+	mosquitto_unpwd_cleanup(&int_db);
 
 	if(config.pid_file){
 		remove(config.pid_file);
@@ -545,7 +534,26 @@ int main(int argc, char *argv[])
 #ifdef WIN32
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	char *argv = "mosquitto";
-	return main(1, &argv);
+	char **argv;
+	int argc = 1;
+	char *token;
+	int rc;
+
+	argv = _mosquitto_malloc(sizeof(char *)*1);
+	argv[0] = "mosquitto";
+	token = strtok(lpCmdLine, " ");
+	while(token){
+		argc++;
+		argv = _mosquitto_realloc(argv, sizeof(char *)*argc);
+		if(!argv){
+			fprintf(stderr, "Error: Out of memory.\n");
+			return MOSQ_ERR_NOMEM;
+		}
+		argv[argc-1] = token;
+		token = strtok(NULL, " ");
+	}
+	rc = main(argc, argv);
+	_mosquitto_free(argv);
+	return rc;
 }
 #endif

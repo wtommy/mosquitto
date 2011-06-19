@@ -138,6 +138,7 @@ class Mosquitto:
 		else:
 			self.obj = obj
 
+		_mosquitto_lib_init()
 		self._mosq = _mosquitto_new(id, None)
 
 		#==================================================
@@ -170,6 +171,9 @@ class Mosquitto:
 		# End configure callbacks
 		#==================================================
 
+	def __del__(self):
+		_mosquitto_lib_cleanup()
+		
 	def __del__(self):
 		if self._mosq:
 			_mosquitto_destroy(self._mosq)
@@ -406,6 +410,15 @@ class MosquittoMessage:
 # Library loading
 #==================================================
 _libmosq = cdll.LoadLibrary(find_library("mosquitto"))
+
+_mosquitto_lib_init = _libmosq.mosquitto_lib_init
+_mosquitto_lib_init.argtypes = None
+_mosquitto_lib_init.restype = c_int
+
+_mosquitto_lib_cleanup = _libmosq.mosquitto_lib_cleanup
+_mosquitto_lib_cleanup.argtypes = None
+_mosquitto_lib_cleanup.restype = c_int
+
 _mosquitto_new = _libmosq.mosquitto_new
 _mosquitto_new.argtypes = [c_char_p, c_void_p]
 _mosquitto_new.restype = c_void_p

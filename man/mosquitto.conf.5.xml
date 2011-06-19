@@ -119,7 +119,8 @@
 					listener to be bound to a specific ip address/hostname. If
 					this variable is used and neither bind_address nor port are
 					used then the default listener will not be started. This
-					option may be specified multiple times.</para>
+					option may be specified multiple times. See also the
+					mount_point option.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -151,10 +152,12 @@
 			<varlistentry>
 				<term><option>max_connections</option></term>
 				<listitem>
-					<para>Limit the total number of clients connected. Set to
-					<literal>-1</literal> to have "unlimited" connections. Note that other limits
-					may be imposed that are outside the control of mosquitto.
-					See e.g. <citerefentry><refentrytitle>limits.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
+					<para>Limit the total number of clients connected for the
+					current listener. Set to <literal>-1</literal> to have
+					"unlimited" connections. Note that other limits may be
+					imposed that are outside the control of mosquitto.  See
+					e.g.
+					<citerefentry><refentrytitle>limits.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -175,6 +178,20 @@
 					the queue above those messages that are currently in
 					flight. Defaults to 100. Set to 0 for no maximum (not
 					recommended).</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>mount_point</option></term>
+				<listitem>
+					<para>This option is used with the listener option to
+					isolate groups of clients. When a client connects to a
+					listener which uses this option, the string argument is
+					attached to the start of all topics for this client. This
+					prefix is removed when any messages are sent to the client.
+					This means a client connected to a listener with mount
+					point <option>example</option> can only see messages that
+					are published in the topic hierarchy
+					<option>example</option> and above.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -239,6 +256,13 @@
 				<listitem>
 					<para>Set the network port for the default listener to
 					listen on. Defaults to 1883.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>retained_persistence</option></term>
+				<listitem>
+					<para>This is a synonym of the <option>persistence</option>
+					option.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -389,6 +413,45 @@
 	</refsect1>
 
 	<refsect1>
+		<title>External Security Checks</title>
+		<para>The following options are available when external security checks
+		have been compiled in. Unless you have done this yourself it is
+		unlikely to exist.</para>
+		<variablelist>
+			<varlistentry>
+				<term><option>db_host</option> <replaceable>hostname</replaceable></term>
+				<listitem>
+					<para>Database host name.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>db_port</option> <replaceable>port</replaceable></term>
+				<listitem>
+					<para>Database port.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>db_name</option> <replaceable>name</replaceable></term>
+				<listitem>
+					<para>Database name.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>db_username</option> <replaceable>username</replaceable></term>
+				<listitem>
+					<para>Database username.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>db_password</option> <replaceable>password</replaceable></term>
+				<listitem>
+					<para>Database password.</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsect1>
+
+	<refsect1>
 		<title>Files</title>
 		<para>mosquitto.conf</para>
 	</refsect1>
@@ -396,7 +459,7 @@
 	<refsect1>
 		<title>Bugs</title>
 		<para><command>mosquitto</command> bug information can be found at <uri
-		type="webpage">http://launchpad.net/mosquitto</uri>.</para>
+		type="webpage">http://launchpad.net/mosquitto</uri></para>
 	</refsect1>
 
 	<refsect1>
@@ -405,6 +468,10 @@
 			<citerefentry>
 				<refentrytitle>mosquitto</refentrytitle>
 				<manvolnum>8</manvolnum>
+			</citerefentry>
+			<citerefentry>
+				<refentrytitle>mqtt</refentrytitle>
+				<manvolnum>7</manvolnum>
 			</citerefentry>
 			<citerefentry>
 				<refentrytitle>limits.conf</refentrytitle>

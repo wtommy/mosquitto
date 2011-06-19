@@ -1,35 +1,21 @@
 /usr/sbin/mosquitto {
+	#include <abstractions/base>
+	#include <abstractions/nameserver>
+
 	/usr/sbin/mosquitto r,
 	/etc/mosquitto/mosquitto.conf r,
 	/var/lib/mosquitto/ r,
 	/var/lib/mosquitto/mosquitto.db rwk,
+	/var/run/mosquitto.pid
 
 	network inet stream,
 	network inet6 stream,
 	network inet dgram,
 	network inet6 dgram,
 
-	# Base
-	/dev/urandom r,
-	/etc/gai.conf r,
-	/etc/ld.so.cache rm,
-	/etc/localtime r,
-	/lib{,32,64}/tls/i686/cmov/libc-*.so rm,
-	/lib{,32,64}/tls/i686/cmov/libdl-*.so rm,
-	/lib{,32,64}/tls/i686/cmov/libnsl-*.so rm,
-	/lib{,32,64}/tls/i686/cmov/libpthread-*.so rm,
-	/lib{,32,64}/libc-*.so rm,
-	/lib{,32,64}/libdl-*.so rm,
-	/lib{,32,64}/libnsl-*.so rm,
-	/lib{,32,64}/libpthread-*.so rm,
-
 	# For drop privileges
 	capability setgid,
 	capability setuid,
-	/etc/nsswitch.conf r,
-	/etc/passwd r,
-	/lib{,32,64}/tls/i686/cmov/libnss_*-*.so rm,
-	/lib{,32,64}/libnss_*-*.so rm,
 
 	# For tcp-wrappers
 	/lib{,32,64}/libwrap.so*  rm,

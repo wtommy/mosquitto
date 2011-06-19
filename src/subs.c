@@ -27,9 +27,12 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <config.h>
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+
 #include <mqtt3.h>
 #include <memory_mosq.h>
 #include <util_mosq.h>
@@ -67,7 +70,7 @@ static int _subs_process(struct _mosquitto_db *db, struct _mosquitto_subhier *hi
 			continue;
 		}
 		/* Check for ACL topic access. */
-		rc2 = mqtt3_acl_check(db, leaf->context, topic, MOSQ_ACL_READ);
+		rc2 = mosquitto_acl_check(db, leaf->context, topic, MOSQ_ACL_READ);
 		if(rc2 == MOSQ_ERR_ACL_DENIED){
 			leaf = leaf->next;
 			continue;
@@ -259,9 +262,10 @@ static int _sub_search(struct _mosquitto_db *db, struct _mosquitto_subhier *subh
 			}
 		}else if(!strcmp(branch->topic, "#") && !branch->children){
 			/* The topic matches due to a # wildcard - process the
-			 * subscriptions and return. */
+			 * subscriptions but *don't* return. Although this branch has ended
+			 * there may still be other subscriptions to deal with.
+			 */
 			_subs_process(db, branch, source_id, topic, qos, retain, stored);
-			break;
 		}
 		branch = branch->next;
 	}
@@ -521,7 +525,7 @@ static int _retain_process(struct _mosquitto_db *db, struct mosquitto_msg_store 
 	int qos;
 	uint16_t mid;
 
-	rc = mqtt3_acl_check(db, context, retained->msg.topic, MOSQ_ACL_READ);
+	rc = mosquitto_acl_check(db, context, retained->msg.topic, MOSQ_ACL_READ);
 	if(rc == MOSQ_ERR_ACL_DENIED){
 		return MOSQ_ERR_SUCCESS;
 	}else if(rc != MOSQ_ERR_SUCCESS){
