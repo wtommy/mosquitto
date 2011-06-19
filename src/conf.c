@@ -314,6 +314,7 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 						config->listeners[config->listener_count-1].port = port_tmp;
 						config->listeners[config->listener_count-1].socks = NULL;
 						config->listeners[config->listener_count-1].sock_count = 0;
+						config->listeners[config->listener_count-1].client_count = 0;
 						token = strtok(NULL, " ");
 						if(token){
 							config->listeners[config->listener_count-1].host = _mosquitto_strdup(token);

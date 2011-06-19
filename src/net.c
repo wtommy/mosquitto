@@ -132,11 +132,11 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 				db->context_count++;
 				db->contexts = tmp_contexts;
 				db->contexts[db->context_count-1] = new_context;
-				new_context->listener->client_count++;
 			}else{
 				mqtt3_context_cleanup(NULL, new_context, true);
 			}
 		}
+		new_context->listener->client_count++;
 #ifdef WITH_WRAP
 	}
 #endif
