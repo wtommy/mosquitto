@@ -131,7 +131,7 @@ uint16_t _mosquitto_mid_generate(struct _mosquitto_core *core)
 /* Search for + or # in a string. Return true if found. */
 bool _mosquitto_wildcard_check(const char *str)
 {
-	while(str){
+	while(str && str[0]){
 		if(str[0] == '+' || str[0] == '#'){
 			return true;
 		}

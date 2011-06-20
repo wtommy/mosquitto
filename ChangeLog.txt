@@ -1,3 +1,8 @@
+0.11.1 - 20110620
+=================
+
+- Fix buffer overrun when checking for + and # in topics.
+
 0.11 - 20110619
 ===============
 
