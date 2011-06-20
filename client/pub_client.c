@@ -68,20 +68,25 @@ static bool quiet = false;
 void my_connect_callback(void *obj, int result)
 {
 	struct mosquitto *mosq = obj;
+	int rc = MOSQ_ERR_SUCCESS;
 
 	if(!result){
 		switch(mode){
 			case MSGMODE_CMD:
 			case MSGMODE_FILE:
 			case MSGMODE_STDIN_FILE:
-				mosquitto_publish(mosq, &mid_sent, topic, msglen, (uint8_t *)message, qos, retain);
+				rc = mosquitto_publish(mosq, &mid_sent, topic, msglen, (uint8_t *)message, qos, retain);
 				break;
 			case MSGMODE_NULL:
-				mosquitto_publish(mosq, &mid_sent, topic, 0, NULL, qos, retain);
+				rc = mosquitto_publish(mosq, &mid_sent, topic, 0, NULL, qos, retain);
 				break;
 			case MSGMODE_STDIN_LINE:
 				status = STATUS_CONNACK_RECVD;
 				break;
+		}
+		if(rc){
+			if(!quiet) fprintf(stderr, "Error: Publish returned %d, disconnecting.\n", rc);
+			mosquitto_disconnect(mosq);
 		}
 	}else{
 		switch(result){
@@ -231,6 +236,7 @@ int main(int argc, char *argv[])
 	bool debug = false;
 	struct mosquitto *mosq = NULL;
 	int rc;
+	int rc2;
 
 	uint8_t *will_payload = NULL;
 	long will_payloadlen = 0;
@@ -478,7 +484,11 @@ int main(int argc, char *argv[])
 		if(mode == MSGMODE_STDIN_LINE && status == STATUS_CONNACK_RECVD){
 			if(fgets(buf, 1024, stdin)){
 				buf[strlen(buf)-1] = '\0';
-				mosquitto_publish(mosq, &mid_sent, topic, strlen(buf), (uint8_t *)buf, qos, retain);
+				rc2 = mosquitto_publish(mosq, &mid_sent, topic, strlen(buf), (uint8_t *)buf, qos, retain);
+				if(rc2){
+					if(!quiet) fprintf(stderr, "Error: Publish returned %d, disconnecting.\n", rc2);
+					mosquitto_disconnect(mosq);
+				}
 			}else if(feof(stdin) && disconnect_sent == false){
 				mosquitto_disconnect(mosq);
 				disconnect_sent = true;
