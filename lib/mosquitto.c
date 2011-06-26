@@ -221,8 +221,8 @@ void mosquitto_destroy(struct mosquitto *mosq)
 	if(mosq->core.will){
 		if(mosq->core.will->topic) _mosquitto_free(mosq->core.will->topic);
 		if(mosq->core.will->payload) _mosquitto_free(mosq->core.will->payload);
+		_mosquitto_free(mosq->core.will);
 	}
-	_mosquitto_free(mosq->core.will);
 #ifdef WITH_SSL
 	if(mosq->core.ssl){
 		if(mosq->core.ssl->ssl){
