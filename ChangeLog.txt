@@ -1,3 +1,9 @@
+0.11.2 - 20110626
+=================
+
+- Don't free contexts in mqtt3_context_disconnect() (bug #799688 / #801678).
+- Only free will if present when freeing a client context.
+
 0.11.1 - 20110620
 =================
 
