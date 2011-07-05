@@ -1,3 +1,8 @@
+0.11.3 - 201107xx
+=================
+
+- Don't complain and quit if persistence_file option is given (bug #802423).
+
 0.11.2 - 20110626
 =================
 

@@ -67,7 +67,7 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->password_file = NULL;
 	config->persistence = false;
 	config->persistence_location = NULL;
-	config->persistence_file = "mosquitto.db";
+	config->persistence_file = NULL;
 	config->pid_file = NULL;
 	config->retry_interval = 20;
 	config->store_clean_interval = 10;
@@ -569,6 +569,10 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 		}
 	}
 	fclose(fptr);
+
+	if(!config->persistence_file){
+		config->persistence_file = "mosquitto.db";
+	}
 
 	mqtt3_db_limits_set(max_inflight_messages, max_queued_messages);
 
