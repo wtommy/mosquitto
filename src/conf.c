@@ -54,7 +54,7 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->default_listener.mount_point = NULL;
 	config->default_listener.socks = NULL;
 	config->default_listener.sock_count = 0;
-	config->default_listener.max_connections = -1;
+	config->default_listener.client_count = 0;
 	config->listeners = NULL;
 	config->listener_count = 0;
 #ifndef WIN32
@@ -147,6 +147,10 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 			config->listeners[config->listener_count-1].mount_point = NULL;
 		}
 		config->listeners[config->listener_count-1].max_connections = config->default_listener.max_connections;
+		config->listeners[config->listener_count-1].client_count = 0;
+		config->listeners[config->listener_count-1].socks = NULL;
+		config->listeners[config->listener_count-1].sock_count = 0;
+		config->listeners[config->listener_count-1].client_count = 0;
 	}
 
 	return MOSQ_ERR_SUCCESS;

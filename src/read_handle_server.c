@@ -189,6 +189,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 			db->contexts[i]->core.state = mosq_cs_connected;
 			db->contexts[i]->core.address = _mosquitto_strdup(context->core.address);
 			db->contexts[i]->core.sock = context->core.sock;
+			db->contexts[i]->listener = context->listener;
 			context->core.sock = -1;
 			context->core.state = mosq_cs_disconnecting;
 			context = db->contexts[i];
@@ -309,7 +310,7 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 				if(payload) _mosquitto_free(payload);
 				return 1;
 			}
-			if(context->listener->mount_point){
+			if(context->listener && context->listener->mount_point){
 				len = strlen(context->listener->mount_point) + strlen(sub) + 1;
 				sub_mount = _mosquitto_calloc(len, sizeof(char));
 				if(!sub_mount){
