@@ -72,7 +72,7 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->retry_interval = 20;
 	config->store_clean_interval = 10;
 	config->sys_interval = 10;
-	config->user = "mosquitto";
+	config->user = NULL;
 #ifdef WITH_BRIDGE
 	config->bridges = NULL;
 	config->bridge_count = 0;
@@ -576,6 +576,9 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 
 	if(!config->persistence_file){
 		config->persistence_file = "mosquitto.db";
+	}
+	if(!config->user){
+		config->user = "mosquitto";
 	}
 
 	mqtt3_db_limits_set(max_inflight_messages, max_queued_messages);
