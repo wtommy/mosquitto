@@ -2,6 +2,7 @@
 ===============
 
 - Python callbacks can now be used with class member functions.
+- Memory tracking is no longer compiled in the client library.
 
 0.11.2 - 20110626
 =================
