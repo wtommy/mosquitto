@@ -5,6 +5,7 @@
 - Initialise listeners correctly when clients with duplicate client ids
   connect. Bug #801678.
 - Memory tracking is now disabled for Symbian builds due to lack of malloc.h.
+- Fix memory tracking compilation for kFreeBSD.
 
 0.11.2 - 20110626
 =================
