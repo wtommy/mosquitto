@@ -4,6 +4,7 @@
 - Don't complain and quit if persistence_file option is given (bug #802423).
 - Initialise listeners correctly when clients with duplicate client ids
   connect. Bug #801678.
+- Memory tracking is now disabled for Symbian builds due to lack of malloc.h.
 
 0.11.2 - 20110626
 =================
