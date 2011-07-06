@@ -86,6 +86,18 @@ void mqtt3_config_init(mqtt3_config *config)
 #endif
 }
 
+static void print_usage(void)
+{
+	printf("mosquitto is an MQTT v3.1 broker.\n\n");
+	printf("Usage: mosquitto [-c config_file] [-d] [-h] [-p port]\n\n");
+	printf(" -c : specify the broker config file.\n");
+	printf(" -d : put the broker into the background after starting.\n");
+	printf(" -h : display this help.\n");
+	printf(" -p : start the broker listening on the specified port.\n");
+	printf("      Not recommended in conjunction with the -c option.\n");
+	printf("\nSee http://mosquitto.org/ for more information.\n\n");
+}
+
 int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 {
 	int i;
@@ -105,6 +117,9 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 			i++;
 		}else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--daemon")){
 			config->daemon = true;
+		}else if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")){
+			print_usage();
+			return MOSQ_ERR_INVAL;
 		}else if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
 			if(i<argc-1){
 				port_tmp = atoi(argv[i+1]);
