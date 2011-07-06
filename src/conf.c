@@ -136,6 +136,11 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: -p argument given, but no port specified.");
 				return MOSQ_ERR_INVAL;
 			}
+			i++;
+		}else{
+			fprintf(stderr, "Error: Unknown option '%s'.\n",argv[i]);
+			print_usage();
+			return 1;
 		}
 	}
 
