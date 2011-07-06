@@ -32,7 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <sys/types.h>
 
-#if defined(WITH_MEMORY_TRACKING) && !defined(WIN32) && !defined(__SYMBIAN32__)
+#if defined(WITH_MEMORY_TRACKING) && defined(WITH_BROKER) && !defined(WIN32) && !defined(__SYMBIAN32__)
 #define REAL_WITH_MEMORY_TRACKING
 #endif
 
