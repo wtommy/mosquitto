@@ -462,7 +462,6 @@ static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
 	read_e(db_fd, &dup, sizeof(uint8_t));
 #undef read_e
 
-	close(db_fd);
 	rc = _db_client_msg_restore(db, client_id, mid, qos, retain, direction, state, dup, store_id);
 	_mosquitto_free(client_id);
 
