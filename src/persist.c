@@ -127,19 +127,19 @@ static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_con
 		write_e(db_fd, &i16temp, sizeof(uint16_t));
 
 		i8temp = (uint8_t )cmsg->qos;
-		write_e(db_fd, &i8temp, sizeof(uint16_t));
+		write_e(db_fd, &i8temp, sizeof(uint8_t));
 
 		i8temp = (uint8_t )cmsg->retain;
-		write_e(db_fd, &i8temp, sizeof(uint16_t));
+		write_e(db_fd, &i8temp, sizeof(uint8_t));
 
 		i8temp = (uint8_t )cmsg->direction;
-		write_e(db_fd, &i8temp, sizeof(uint16_t));
+		write_e(db_fd, &i8temp, sizeof(uint8_t));
 
 		i8temp = (uint8_t )cmsg->state;
-		write_e(db_fd, &i8temp, sizeof(uint16_t));
+		write_e(db_fd, &i8temp, sizeof(uint8_t));
 
 		i8temp = (uint8_t )cmsg->dup;
-		write_e(db_fd, &i8temp, sizeof(uint16_t));
+		write_e(db_fd, &i8temp, sizeof(uint8_t));
 
 		cmsg = cmsg->next;
 	}
@@ -462,7 +462,6 @@ static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
 	read_e(db_fd, &dup, sizeof(uint8_t));
 #undef read_e
 
-	close(db_fd);
 	rc = _db_client_msg_restore(db, client_id, mid, qos, retain, direction, state, dup, store_id);
 	_mosquitto_free(client_id);
 

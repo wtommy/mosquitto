@@ -331,7 +331,7 @@ class Mosquitto:
 
 			if argcount == 1:
 				self.on_connect(rc)
-			elif argcount == 2:
+			elif argcount == 2 or argcount == 3:
 				self.on_connect(self.obj, rc)
 
 	def _internal_on_disconnect(self, obj):
@@ -340,7 +340,7 @@ class Mosquitto:
 
 			if argcount == 0:
 				self.on_disconnect()
-			elif argcount == 1:
+			elif argcount == 1 or argcount == 2:
 				self.on_disconnect(self.obj)
 
 	def _internal_on_message(self, obj, message):
@@ -354,7 +354,7 @@ class Mosquitto:
 
 			if argcount == 1:
 				self.on_message(msg)
-			elif argcount == 2:
+			elif argcount == 2 or argcount == 3:
 				self.on_message(self.obj, msg)
 
 	def _internal_on_publish(self, obj, mid):
@@ -363,7 +363,7 @@ class Mosquitto:
 
 			if argcount == 1:
 				self.on_publish(mid)
-			elif argcount == 2:
+			elif argcount == 2 or argcount == 3:
 				self.on_publish(self.obj, mid)
 
 	def _internal_on_subscribe(self, obj, mid, qos_count, granted_qos):
@@ -375,7 +375,7 @@ class Mosquitto:
 
 			if argcount == 2:
 				self.on_subscribe(mid, qos_list)
-			elif argcount == 3:
+			elif argcount == 3 or argcount == 4:
 				self.on_subscribe(self.obj, mid, qos_list)
 
 	def _internal_on_unsubscribe(self, obj, mid):
@@ -384,7 +384,7 @@ class Mosquitto:
 
 			if argcount == 1:
 				self.on_unsubscribe(mid)
-			elif argcount == 2:
+			elif argcount == 2 or argcount == 3:
 				self.on_unsubscribe(self.obj, mid)
 
 class c_MosquittoMessage(Structure):
