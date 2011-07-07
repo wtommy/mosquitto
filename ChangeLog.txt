@@ -7,6 +7,8 @@
 - Memory tracking is now disabled for Symbian builds due to lack of malloc.h.
 - Fix memory tracking compilation for kFreeBSD.
 - Python callbacks can now be used with class member functions.
+- Fix persistent database writing of client message chunks which caused
+  errors when restoring (bug #798164).
 
 0.11.2 - 20110626
 =================

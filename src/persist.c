@@ -127,19 +127,19 @@ static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_con
 		write_e(db_fd, &i16temp, sizeof(uint16_t));
 
 		i8temp = (uint8_t )cmsg->qos;
-		write_e(db_fd, &i8temp, sizeof(uint16_t));
+		write_e(db_fd, &i8temp, sizeof(uint8_t));
 
 		i8temp = (uint8_t )cmsg->retain;
-		write_e(db_fd, &i8temp, sizeof(uint16_t));
+		write_e(db_fd, &i8temp, sizeof(uint8_t));
 
 		i8temp = (uint8_t )cmsg->direction;
-		write_e(db_fd, &i8temp, sizeof(uint16_t));
+		write_e(db_fd, &i8temp, sizeof(uint8_t));
 
 		i8temp = (uint8_t )cmsg->state;
-		write_e(db_fd, &i8temp, sizeof(uint16_t));
+		write_e(db_fd, &i8temp, sizeof(uint8_t));
 
 		i8temp = (uint8_t )cmsg->dup;
-		write_e(db_fd, &i8temp, sizeof(uint16_t));
+		write_e(db_fd, &i8temp, sizeof(uint8_t));
 
 		cmsg = cmsg->next;
 	}
