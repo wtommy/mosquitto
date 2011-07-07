@@ -35,10 +35,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 
 #ifdef REAL_WITH_MEMORY_TRACKING
-#  if defined(__linux__) || defined(__CYGWIN__)
-#    include <malloc.h>
-#  else
+#  if defined(__APPLE__)
 #    define malloc_usable_size malloc_good_size
+#  else
+#    include <malloc.h>
 #  endif
 #endif
 

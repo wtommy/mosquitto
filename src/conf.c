@@ -54,7 +54,7 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->default_listener.mount_point = NULL;
 	config->default_listener.socks = NULL;
 	config->default_listener.sock_count = 0;
-	config->default_listener.max_connections = -1;
+	config->default_listener.client_count = 0;
 	config->listeners = NULL;
 	config->listener_count = 0;
 #ifndef WIN32
@@ -67,12 +67,12 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->password_file = NULL;
 	config->persistence = false;
 	config->persistence_location = NULL;
-	config->persistence_file = "mosquitto.db";
+	config->persistence_file = NULL;
 	config->pid_file = NULL;
 	config->retry_interval = 20;
 	config->store_clean_interval = 10;
 	config->sys_interval = 10;
-	config->user = "mosquitto";
+	config->user = NULL;
 #ifdef WITH_BRIDGE
 	config->bridges = NULL;
 	config->bridge_count = 0;
@@ -167,6 +167,10 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 			config->listeners[config->listener_count-1].mount_point = NULL;
 		}
 		config->listeners[config->listener_count-1].max_connections = config->default_listener.max_connections;
+		config->listeners[config->listener_count-1].client_count = 0;
+		config->listeners[config->listener_count-1].socks = NULL;
+		config->listeners[config->listener_count-1].sock_count = 0;
+		config->listeners[config->listener_count-1].client_count = 0;
 	}
 
 	return MOSQ_ERR_SUCCESS;
@@ -589,6 +593,13 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 		}
 	}
 	fclose(fptr);
+
+	if(!config->persistence_file){
+		config->persistence_file = "mosquitto.db";
+	}
+	if(!config->user){
+		config->user = "mosquitto";
+	}
 
 	mqtt3_db_limits_set(max_inflight_messages, max_queued_messages);
 
