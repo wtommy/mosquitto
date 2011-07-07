@@ -182,7 +182,7 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 	}
 
 	payloadlen = context->core.in_packet.remaining_length - context->core.in_packet.pos;
-	if(context->listener->mount_point){
+	if(context->listener && context->listener->mount_point){
 		len = strlen(context->listener->mount_point) + strlen(topic) + 1;
 		topic_mount = _mosquitto_calloc(len, sizeof(char));
 		if(!topic_mount){
