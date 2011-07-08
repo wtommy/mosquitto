@@ -178,7 +178,7 @@
 				<listitem>
 					<para>If this argument is given, no runtime errors will be
 					printed. This excludes any error messages given in case of
-					invalid user input (e.g. using --port without a
+					invalid user input (e.g. using <option>--port</option> without a
 					port).</para>
 				</listitem>
 			</varlistentry>

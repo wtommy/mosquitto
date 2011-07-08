@@ -167,7 +167,7 @@
 					<para>Provide a password to be used for authenticating with
 					the broker. Using this argument without also specifying a
 					username is invalid. This requires a broker that supports
-					MQTT v3.1.  See also the --username option.</para>
+					MQTT v3.1.  See also the <option>--username</option> option.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -182,7 +182,7 @@
 				<listitem>
 					<para>If this argument is given, no runtime errors will be
 					printed. This excludes any error messages given in case of
-					invalid user input (e.g. using --port without a
+					invalid user input (e.g. using <option>--port</option> without a
 					port).</para>
 				</listitem>
 			</varlistentry>
@@ -213,7 +213,7 @@
 				<listitem>
 					<para>Provide a username to be used for authenticating with
 					the broker. This requires a broker that supports MQTT v3.1.
-					See also the --pw argument.</para>
+					See also the <option>--pw</option> argument.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -221,14 +221,14 @@
 				<listitem>
 					<para>Specify a message that will be stored by the broker
 					and sent out if this client disconnects unexpectedly. This
-					must be used in conjunction with --will-topic.</para>
+					must be used in conjunction with <option>--will-topic</option>.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>--will-qos</option></term>
 				<listitem>
 					<para>The QoS to use for the Will. Defaults to 0. This must
-					be used in conjunction with --will-topic.</para>
+					be used in conjunction with <option>--will-topic</option>.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -236,7 +236,7 @@
 				<listitem>
 					<para>If given, if the client disconnects unexpectedly the
 					message sent out will be treated as a retained message.
-					This must be used in conjunction with --will-topic.</para>
+					This must be used in conjunction with <option>--will-topic</option>.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
