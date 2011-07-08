@@ -46,6 +46,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <tcpd.h>
 #endif
 
+#ifdef __QNX__
+#include <netinet/in.h>
+#include <net/netbyte.h>
+#include <sys/socket.h>
+#endif
+
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
 #include <memory_mosq.h>

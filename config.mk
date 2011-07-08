@@ -5,6 +5,14 @@ TIMESTAMP:=$(shell date "+%F %T%z")
 #MANCOUNTRIES=en_GB
 
 CFLAGS=-I. -I.. -ggdb -Wall -O2 -I../lib
+
+UNAME:=$(shell uname -s)
+ifeq ($(UNAME),QNX)
+	LIBS=-lsocket
+else
+	LIBS=
+endif
+
 LDFLAGS=
 # Add -lwrap to LDFLAGS if compiling with tcp wrappers support.
 
