@@ -29,6 +29,9 @@
 				<arg><option>-i</option> <replaceable>client_id</replaceable></arg>
 			</group>
 			<group choice='opt'>
+				<arg><option>-I</option> <replaceable>client id prefix</replaceable></arg>
+			</group>
+			<group choice='opt'>
 				<arg><option>-k</option> <replaceable>keepalive time</replaceable></arg>
 			</group>
 			<group choice='opt'>
@@ -118,7 +121,19 @@
 				<listitem>
 					<para>The id to use for this client. If not given, defaults
 					to mosquitto_sub_ appended with the process id of the
-					client.</para>
+					client. Cannot be used at the same time as the
+					<option>--id-prefix</option> argument.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-I</option></term>
+				<term><option>--id-prefix</option></term>
+				<listitem>
+					<para>Provide a prefix that the client id will be built
+					from by appending the process id of the client. This is
+					useful where the broker is using the clientid_prefixes
+					option. Cannot be used at the same time as the
+					<option>--id</option> argument.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

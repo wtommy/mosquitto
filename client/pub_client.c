@@ -196,7 +196,8 @@ int load_file(const char *filename)
 void print_usage(void)
 {
 	printf("mosquitto_pub is a simple mqtt client that will publish a message on a single topic and exit.\n\n");
-	printf("Usage: mosquitto_pub [-h host] [-i id] [-p port] [-q qos] [-r] {-f file | -l | -n | -m message} -t topic\n");
+	printf("Usage: mosquitto_pub [-h host] [-p port] [-q qos] [-r] {-f file | -l | -n | -m message} -t topic\n");
+	printf("                     [-i id] [-I id_prefix]\n");
 	printf("                     [-d] [--quiet]\n");
 	printf("                     [-u username [--pw password]]\n");
 	printf("                     [--will-topic [--will-payload payload] [--will-qos qos] [--will-retain]]\n\n");
@@ -204,6 +205,8 @@ void print_usage(void)
 	printf(" -f : send the contents of a file as the message.\n");
 	printf(" -h : mqtt host to connect to. Defaults to localhost.\n");
 	printf(" -i : id to use for this client. Defaults to mosquitto_pub_ appended with the process id.\n");
+	printf(" -I : define the client id as id_prefix appended with the process id. Useful for when the\n");
+	printf("      broker is using the clientid_prefixes option.\n");
 	printf(" -l : read messages from stdin, sending a separate message for each line.\n");
 	printf(" -m : message payload to send.\n");
 	printf(" -n : send a null (zero length) message.\n");
@@ -227,6 +230,7 @@ void print_usage(void)
 int main(int argc, char *argv[])
 {
 	char *id = NULL;
+	char *id_prefix = NULL;
 	int i;
 	char *host = "localhost";
 	int port = 1883;
@@ -284,12 +288,31 @@ int main(int argc, char *argv[])
 			}
 			i++;
 		}else if(!strcmp(argv[i], "-i") || !strcmp(argv[i], "--id")){
+			if(id_prefix){
+				fprintf(stderr, "Error: -i and -I argument cannot be used together.\n\n");
+				print_usage();
+				return 1;
+			}
 			if(i==argc-1){
 				fprintf(stderr, "Error: -i argument given but no id specified.\n\n");
 				print_usage();
 				return 1;
 			}else{
 				id = argv[i+1];
+			}
+			i++;
+		}else if(!strcmp(argv[i], "-I") || !strcmp(argv[i], "--id-prefix")){
+			if(id){
+				fprintf(stderr, "Error: -i and -I argument cannot be used together.\n\n");
+				print_usage();
+				return 1;
+			}
+			if(i==argc-1){
+				fprintf(stderr, "Error: -I argument given but no id prefix specified.\n\n");
+				print_usage();
+				return 1;
+			}else{
+				id_prefix = argv[i+1];
 			}
 			i++;
 		}else if(!strcmp(argv[i], "-l") || !strcmp(argv[i], "--stdin-line")){
@@ -423,7 +446,14 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
-	if(!id){
+	if(id_prefix){
+		id = malloc(strlen(id_prefix)+10);
+		if(!id){
+			if(!quiet) fprintf(stderr, "Error: Out of memory.\n");
+			return 1;
+		}
+		snprintf(id, strlen(id_prefix)+10, "%s%d", id_prefix, getpid());
+	}else if(!id){
 		id = malloc(30);
 		if(!id){
 			if(!quiet) fprintf(stderr, "Error: Out of memory.\n");
