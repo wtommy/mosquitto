@@ -114,7 +114,7 @@ void print_usage(void)
 	printf("Usage: mosquitto_sub [-c] [-h host] [-k keepalive] [-p port] [-q qos] [-v] -t topic ...\n");
 	printf("                     [-i id] [-I id_prefix]\n");
 	printf("                     [-d] [--quiet]\n");
-	printf("                     [-u username [--pw password]]\n");
+	printf("                     [-u username [-P password]]\n");
 	printf("                     [--will-topic [--will-payload payload] [--will-qos qos] [--will-retain]]\n\n");
 	printf(" -c : disable 'clean session' (store subscription and pending messages when client disconnects).\n");
 	printf(" -d : enable debug messages.\n");
@@ -128,7 +128,7 @@ void print_usage(void)
 	printf(" -t : mqtt topic to subscribe to. May be repeated multiple times.\n");
 	printf(" -u : provide a username (requires MQTT 3.1 broker)\n");
 	printf(" -v : print published messages verbosely.\n");
-	printf(" --pw : provide a password (requires MQTT 3.1 broker)\n");
+	printf(" -P : provide a password (requires MQTT 3.1 broker)\n");
 	printf(" --quiet : don't print error messages.\n");
 	printf(" --will-payload : payload for the client Will, which is sent by the broker in case of\n");
 	printf("                  unexpected disconnection. If not given and will-topic is set, a zero\n");
@@ -266,9 +266,9 @@ int main(int argc, char *argv[])
 			i++;
 		}else if(!strcmp(argv[i], "-v") || !strcmp(argv[i], "--verbose")){
 			verbose = 1;
-		}else if(!strcmp(argv[i], "--pw")){
+		}else if(!strcmp(argv[i], "-P") || !strcmp(argv[i], "--pw")){
 			if(i==argc-1){
-				fprintf(stderr, "Error: --pw argument given but no password specified.\n\n");
+				fprintf(stderr, "Error: -P argument given but no password specified.\n\n");
 				print_usage();
 				return 1;
 			}else{

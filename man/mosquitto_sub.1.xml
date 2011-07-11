@@ -52,7 +52,7 @@
 						<arg><option>-u</option> <replaceable>username</replaceable></arg>
 					</group>
 					<group choice='opt'>
-						<arg><option>--pw</option> <replaceable>password</replaceable></arg>
+						<arg><option>-P</option> <replaceable>password</replaceable></arg>
 					</group>
 				</arg>
 			</group>
@@ -153,6 +153,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>-P</option></term>
 				<term><option>--pw</option></term>
 				<listitem>
 					<para>Provide a password to be used for authenticating with

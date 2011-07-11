@@ -199,7 +199,7 @@ void print_usage(void)
 	printf("Usage: mosquitto_pub [-h host] [-p port] [-q qos] [-r] {-f file | -l | -n | -m message} -t topic\n");
 	printf("                     [-i id] [-I id_prefix]\n");
 	printf("                     [-d] [--quiet]\n");
-	printf("                     [-u username [--pw password]]\n");
+	printf("                     [-u username [-P password]]\n");
 	printf("                     [--will-topic [--will-payload payload] [--will-qos qos] [--will-retain]]\n\n");
 	printf(" -d : enable debug messages.\n");
 	printf(" -f : send the contents of a file as the message.\n");
@@ -216,7 +216,7 @@ void print_usage(void)
 	printf(" -s : read message from stdin, sending the entire input as a message.\n");
 	printf(" -t : mqtt topic to publish to.\n");
 	printf(" -u : provide a username (requires MQTT 3.1 broker)\n");
-	printf(" --pw : provide a password (requires MQTT 3.1 broker)\n");
+	printf(" -P : provide a password (requires MQTT 3.1 broker)\n");
 	printf(" --quiet : don't print error messages.\n");
 	printf(" --will-payload : payload for the client Will, which is sent by the broker in case of\n");
 	printf("                  unexpected disconnection. If not given and will-topic is set, a zero\n");
@@ -397,9 +397,9 @@ int main(int argc, char *argv[])
 				username = argv[i+1];
 			}
 			i++;
-		}else if(!strcmp(argv[i], "--pw")){
+		}else if(!strcmp(argv[i], "-P") || !strcmp(argv[i], "--pw")){
 			if(i==argc-1){
-				fprintf(stderr, "Error: --pw argument given but no password specified.\n\n");
+				fprintf(stderr, "Error: -P argument given but no password specified.\n\n");
 				print_usage();
 				return 1;
 			}else{
