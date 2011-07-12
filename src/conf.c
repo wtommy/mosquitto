@@ -289,7 +289,12 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
 #endif
 				}else if(!strcmp(token, "clientid_prefixes")){
-					if(reload) continue; // FIXME
+					if(reload){
+						if(config->clientid_prefixes){
+							_mosquitto_free(config->clientid_prefixes);
+							config->clientid_prefixes = NULL;
+						}
+					}
 					if(_mqtt3_conf_parse_string(&token, "clientid_prefixes", &config->clientid_prefixes)) return 1;
 				}else if(!strcmp(token, "connection")){
 #ifdef WITH_BRIDGE
@@ -337,7 +342,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
 #endif
 				}else if(!strcmp(token, "listener")){
-					if(reload) continue; // FIXME
+					if(reload) continue; // Listeners not valid for reloading.
 					token = strtok(NULL, " ");
 					if(token){
 						config->listener_count++;
@@ -412,7 +417,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty log_type value in configuration.");
 					}
 				}else if(!strcmp(token, "max_connections")){
-					if(reload) continue; // FIXME
+					if(reload) continue; // Listeners not valid for reloading.
 					token = strtok(NULL, " ");
 					if(token){
 						if(config->listener_count > 0){
@@ -442,7 +447,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty max_queued_messages value in configuration.");
 					}
 				}else if(!strcmp(token, "mount_point")){
-					if(reload) continue; // FIXME
+					if(reload) continue; // Listeners not valid for reloading.
 					if(config->listener_count == 0){
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: You must use create a listener before using the mount_point option in the configuration file.");
 						return MOSQ_ERR_INVAL;
@@ -485,10 +490,10 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 					if(reload) continue; // FIXME
 					if(_mqtt3_conf_parse_string(&token, "persistence_location", &config->persistence_location)) return 1;
 				}else if(!strcmp(token, "pid_file")){
-					if(reload) continue;
+					if(reload) continue; // pid file not valid for reloading.
 					if(_mqtt3_conf_parse_string(&token, "pid_file", &config->pid_file)) return 1;
 				}else if(!strcmp(token, "port")){
-					if(reload) continue;
+					if(reload) continue; // Listener not valid for reloading.
 					if(config->default_listener.port){
 						mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Default listener port specified multiple times. Only the latest will be used.");
 					}
@@ -559,7 +564,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
 #endif
 				}else if(!strcmp(token, "user")){
-					if(reload) continue;
+					if(reload) continue; // Drop privileges user not valid for reloading.
 					if(_mqtt3_conf_parse_string(&token, "user", &config->user)) return 1;
 				}else if(!strcmp(token, "username")){
 #ifdef WITH_BRIDGE
