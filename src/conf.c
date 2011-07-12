@@ -47,6 +47,7 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->allow_anonymous = true;
 	config->autosave_interval = 1800;
 	config->clientid_prefixes = NULL;
+	config->config_file = NULL;
 	config->daemon = false;
 	config->default_listener.host = NULL;
 	config->default_listener.port = 0;
@@ -106,6 +107,12 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 	for(i=1; i<argc; i++){
 		if(!strcmp(argv[i], "-c") || !strcmp(argv[i], "--config-file")){
 			if(i<argc-1){
+				config->config_file = _mosquitto_strdup(argv[i+1]);
+				if(!config->config_file){
+					mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+					return MOSQ_ERR_NOMEM;
+				}
+
 				if(mqtt3_config_read(config, argv[i+1])){
 					mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to open configuration file.");
 					return 1;

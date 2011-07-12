@@ -85,6 +85,7 @@ struct _mqtt3_listener {
 };
 
 typedef struct {
+	char *config_file;
 	char *acl_file;
 	bool allow_anonymous;
 	int autosave_interval;
