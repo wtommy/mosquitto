@@ -113,7 +113,7 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 					return MOSQ_ERR_NOMEM;
 				}
 
-				if(mqtt3_config_read(config, argv[i+1])){
+				if(mqtt3_config_read(config, false)){
 					mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to open configuration file.");
 					return 1;
 				}
@@ -183,7 +183,7 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_config_read(mqtt3_config *config, const char *filename)
+int mqtt3_config_read(mqtt3_config *config, bool reload)
 {
 	int rc = MOSQ_ERR_SUCCESS;
 	FILE *fptr = NULL;
@@ -199,7 +199,8 @@ int mqtt3_config_read(mqtt3_config *config, const char *filename)
 	int max_inflight_messages = 20;
 	int max_queued_messages = 100;
 	
-	fptr = fopen(filename, "rt");
+	if(!config->config_file) return 0;
+	fptr = fopen(config->config_file, "rt");
 	if(!fptr) return 1;
 
 	while(fgets(buf, 1024, fptr)){

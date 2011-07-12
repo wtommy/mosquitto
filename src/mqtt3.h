@@ -231,10 +231,11 @@ void mqtt3_check_keepalive(mqtt3_context *context);
 void mqtt3_config_init(mqtt3_config *config);
 /* Parse command line options into config. */
 int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[]);
-/* Read configuration data from filename into config.
+/* Read configuration data from config->config_file into config.
+ * If reload is true, don't process config options that shouldn't be reloaded (listeners etc)
  * Returns 0 on success, 1 if there is a configuration error or if a file cannot be opened.
  */
-int mqtt3_config_read(mqtt3_config *config, const char *filename);
+int mqtt3_config_read(mqtt3_config *config, bool reload);
 
 /* ============================================================
  * Raw send functions - just construct the packet and send 
