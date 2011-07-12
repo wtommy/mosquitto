@@ -146,11 +146,11 @@ class Mosquitto:
 		#==================================================
 		self._internal_on_connect_cast = _MOSQ_CONNECT_FUNC(self._internal_on_connect)
 		_mosquitto_connect_callback_set(self._mosq, self._internal_on_connect_cast)
-		self._on_connect = None
+		self.on_connect = None
 	
 		self._internal_on_disconnect_cast = _MOSQ_DISCONNECT_FUNC(self._internal_on_disconnect)
 		_mosquitto_disconnect_callback_set(self._mosq, self._internal_on_disconnect_cast)
-		self._on_disconnect = None
+		self.on_disconnect = None
 	
 		self._internal_on_message_cast = _MOSQ_MESSAGE_FUNC(self._internal_on_message)
 		_mosquitto_message_callback_set(self._mosq, self._internal_on_message_cast)
