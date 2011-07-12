@@ -394,7 +394,7 @@ class c_MosquittoMessage(Structure):
 	Don't use."""
 	_fields_ = [("mid", c_uint16),
 				("topic", c_char_p),
-				("payload", c_char_p),
+				("payload", POINTER(c_uint8)),
 				("payloadlen", c_uint32),
 				("qos", c_int),
 				("retain", c_bool)]
@@ -405,6 +405,7 @@ class MosquittoMessage:
 		self.topic = topic
 		self.payloadlen = payloadlen
 		self.payload = payload
+		self.payload_str = cast(self.payload, c_char_p).value
 		self.qos = qos
 		self.retain = retain
 
