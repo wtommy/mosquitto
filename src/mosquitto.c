@@ -311,6 +311,12 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 	}
 }
 
+/* Signal handler for SIGHUP - reload config. */
+void handle_sighup(int signal)
+{
+	mqtt3_config_read(int_db.config, true);
+}
+
 /* Signal handler for SIGINT and SIGTERM - just stop gracefully. */
 void handle_sigint(int signal)
 {
@@ -466,6 +472,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	signal(SIGHUP, handle_sighup);
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
 #ifndef WIN32

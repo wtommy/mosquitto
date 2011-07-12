@@ -210,6 +210,18 @@
 		<title>Signals</title>
 		<variablelist>
 			<varlistentry>
+				<term>SIGHUP</term>
+				<listitem>
+					<para>Upon receiving the SIGHUP signal, mosquitto will
+					attempt to reload configuration file data, assuming that
+					the <option>-c</option> argument was provided when
+					mosquitto was started. Not all configuration parameters can
+					be reloaded without restarting. See
+					<citerefentry><refentrytitle>mosquitto.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+					for details.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term>SIGUSR1</term>
 				<listitem>
 					<para>Upon receiving the SIGUSR1 signal, mosquitto will write the persistence database to disk. This signal is only acted upon if persistence is enabled.</para>
