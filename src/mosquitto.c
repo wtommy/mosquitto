@@ -51,7 +51,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <memory_mosq.h>
 
-static bool do_reload = false;
+static bool flag_reload = false;
+#ifdef WITH_PERSISTENCE
+static bool flag_db_backup = false;
+#endif
 static int run;
 #ifdef WITH_WRAP
 #include <syslog.h>
@@ -297,9 +300,15 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 			mqtt3_db_store_clean(&int_db);
 			last_store_clean = time(NULL);
 		}
-		if(do_reload){
+#ifdef WITH_PERSISTENCE
+		if(flag_db_backup){
+			mqtt3_db_backup(&int_db, false, false);
+			flag_db_backup = false;
+		}
+#endif
+		if(flag_reload){
 			mqtt3_config_read(int_db.config, true);
-			do_reload = false;
+			flag_reload = false;
 		}
 	}
 
@@ -365,7 +374,7 @@ static void loop_handle_reads_writes(struct pollfd *pollfds)
 /* Signal handler for SIGHUP - flag a config reload. */
 void handle_sighup(int signal)
 {
-	do_reload = true;
+	flag_reload = true;
 }
 
 /* Signal handler for SIGINT and SIGTERM - just stop gracefully. */
@@ -377,9 +386,7 @@ void handle_sigint(int signal)
 /* Signal handler for SIGUSR1 - backup the db. */
 void handle_sigusr1(int signal)
 {
-#ifdef WITH_PERSISTENCE
-	mqtt3_db_backup(&int_db, false, false);
-#endif
+	flag_db_backup = true;
 }
 
 /* Signal handler for SIGUSR2 - vacuum the db. */
