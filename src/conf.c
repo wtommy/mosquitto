@@ -211,7 +211,12 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 			token = strtok(buf, " ");
 			if(token){
 				if(!strcmp(token, "acl_file")){
-					if(reload) continue; // FIXME
+					if(reload){
+						if(config->acl_file){
+							_mosquitto_free(config->acl_file);
+							config->acl_file = NULL;
+						}
+					}
 					if(_mqtt3_conf_parse_string(&token, "acl_file", &config->acl_file)) return 1;
 				}else if(!strcmp(token, "address") || !strcmp(token, "addresses")){
 #ifdef WITH_BRIDGE
@@ -254,7 +259,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 					if(_mqtt3_conf_parse_int(&token, "autosave_interval", &config->autosave_interval)) return 1;
 					if(config->autosave_interval < 0) config->autosave_interval = 0;
 				}else if(!strcmp(token, "bind_address")){
-					if(reload) continue; // FIXME
+					if(reload) continue; // Listener not valid for reloading.
 					if(_mqtt3_conf_parse_string(&token, "default listener bind_address", &config->default_listener.host)) return 1;
 				}else if(!strcmp(token, "clientid")){
 					if(reload) continue; // FIXME
@@ -479,7 +484,11 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
 #endif
 				}else if(!strcmp(token, "password_file")){
-					if(reload) continue; // FIXME
+					if(reload){
+						if(config->password_file){
+							_mosquitto_free(config->password_file);
+							config->password_file = NULL;
+						}
 					if(_mqtt3_conf_parse_string(&token, "password_file", &config->password_file)) return 1;
 				}else if(!strcmp(token, "persistence") || !strcmp(token, "retained_persistence")){
 					if(_mqtt3_conf_parse_bool(&token, token, &config->persistence)) return 1;
@@ -593,19 +602,38 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 #endif
 #ifdef WITH_EXTERNAL_SECURITY_CHECKS
 				}else if(!strcmp(token, "db_host")){
-					if(reload) continue; // FIXME
+					if(reload){
+						if(config->db_host){
+							_mosquitto_free(config->db_host);
+							config->db_host = NULL;
+						}
+					}
 					if(_mqtt3_conf_parse_string(&token, "db_host", &config->db_host)) return 1;
 				}else if(!strcmp(token, "db_name")){
-					if(reload) continue; // FIXME
+					if(reload){
+						if(config->db_name){
+							_mosquitto_free(config->db_name);
+							config->db_name = NULL;
+						}
+					}
 					if(_mqtt3_conf_parse_string(&token, "db_name", &config->db_name)) return 1;
 				}else if(!strcmp(token, "db_username")){
-					if(reload) continue; // FIXME
+					if(reload){
+						if(config->db_username){
+							_mosquitto_free(config->db_username);
+							config->db_username = NULL;
+						}
+					}
 					if(_mqtt3_conf_parse_string(&token, "db_username", &config->db_username)) return 1;
 				}else if(!strcmp(token, "db_password")){
-					if(reload) continue; // FIXME
+					if(reload){
+						if(config->db_password){
+							_mosquitto_free(config->db_password);
+							config->db_password = NULL;
+						}
+					}
 					if(_mqtt3_conf_parse_string(&token, "db_password", &config->db_password)) return 1;
 				}else if(!strcmp(token, "db_port")){
-					if(reload) continue; // FIXME
 					if(_mqtt3_conf_parse_int(&token, "db_port", &config->db_port)) return 1;
 #endif
 				}else if(!strcmp(token, "autosave_on_changes")
