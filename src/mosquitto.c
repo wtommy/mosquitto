@@ -68,6 +68,52 @@ void handle_sigusr2(int signal);
 static void loop_handle_errors(struct pollfd *pollfds);
 static void loop_handle_reads_writes(struct pollfd *pollfds);
 
+static int _security_init(mosquitto_db *db)
+{
+	int rc;
+
+#ifdef WITH_EXTERNAL_SECURITY_CHECKS
+	rc = mosquitto_unpwd_init(db);
+	if(rc){
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising passwords.");
+		return rc;
+	}
+
+	rc = mosquitto_acl_init(db);
+	if(rc){
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising ACLs.");
+		return rc;
+	}
+#else
+	/* Load username/password data if required. */
+	if(db->config->password_file){
+		rc = mqtt3_pwfile_parse(db);
+		if(rc){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening password file.");
+			return rc;
+		}
+	}
+
+	/* Load acl data if required. */
+	if(db->config->acl_file){
+		rc = mqtt3_aclfile_parse(db);
+		if(rc){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening acl file.");
+			return rc;
+		}
+	}
+#endif
+	return MOSQ_ERR_SUCCESS;
+}
+
+static void _security_cleanup(mosquitto_db *db)
+{
+#ifdef WITH_EXTERNAL_SECURITY_CHECKS
+	mosquitto_acl_cleanup(db);
+#endif
+	mosquitto_unpwd_cleanup(db);
+}
+
 /* mosquitto shouldn't run as root.
  * This function will attempt to change to an unprivileged user and group if
  * running as root. The user is given in config->user.
@@ -399,37 +445,8 @@ int main(int argc, char *argv[])
 	mqtt3_log_init(config.log_type, config.log_dest);
 	mqtt3_log_printf(MOSQ_LOG_INFO, "mosquitto version %s (build date %s) starting", VERSION, TIMESTAMP);
 
-#ifdef WITH_EXTERNAL_SECURITY_CHECKS
-	rc = mosquitto_unpwd_init(&int_db);
-	if(rc){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising passwords.");
-		return rc;
-	}
-
-	rc = mosquitto_acl_init(&int_db);
-	if(rc){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising ACLs.");
-		return rc;
-	}
-#else
-	/* Load username/password data if required. */
-	if(config.password_file){
-		rc = mqtt3_pwfile_parse(&int_db);
-		if(rc){
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening password file.");
-			return rc;
-		}
-	}
-
-	/* Load acl data if required. */
-	if(config.acl_file){
-		rc = mqtt3_aclfile_parse(&int_db);
-		if(rc){
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening acl file.");
-			return rc;
-		}
-	}
-#endif
+	rc = _security_init(&int_db);
+	if(rc) return rc;
 
 	/* Set static $SYS messages */
 	snprintf(buf, 1024, "mosquitto version %s", VERSION);
@@ -529,10 +546,7 @@ int main(int argc, char *argv[])
 		_mosquitto_free(listensock);
 	}
 
-#ifdef WITH_EXTERNAL_SECURITY_CHECKS
-	mosquitto_acl_cleanup(&int_db);
-#endif
-	mosquitto_unpwd_cleanup(&int_db);
+	_security_cleanup(&int_db);
 
 	if(config.pid_file){
 		remove(config.pid_file);
