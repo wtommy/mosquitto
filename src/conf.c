@@ -262,6 +262,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 					if(reload) continue; // Listener not valid for reloading.
 					if(_mqtt3_conf_parse_string(&token, "default listener bind_address", &config->default_listener.host)) return 1;
 				}else if(!strcmp(token, "clientid")){
+#ifdef WITH_BRIDGE
 					if(reload) continue; // FIXME
 					if(!cur_bridge){
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
@@ -282,6 +283,9 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty clientid value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
+#else
+					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "cleansession")){
 #ifdef WITH_BRIDGE
 					if(reload) continue; // FIXME
@@ -489,6 +493,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 							_mosquitto_free(config->password_file);
 							config->password_file = NULL;
 						}
+					}
 					if(_mqtt3_conf_parse_string(&token, "password_file", &config->password_file)) return 1;
 				}else if(!strcmp(token, "persistence") || !strcmp(token, "retained_persistence")){
 					if(_mqtt3_conf_parse_bool(&token, token, &config->persistence)) return 1;
