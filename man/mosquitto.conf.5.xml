@@ -65,6 +65,9 @@
 
 					<para>The username referred to here is the same as in
 					password_file. It is not the clientid.</para>
+					<para>Reloaded on reload signal. The currently loaded ACLs will be
+					freed and reloaded. Existing subscriptions will be affected
+					after the reload.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -75,6 +78,7 @@
 					connect. If set to false then a password file should be
 					created (see the password_file option) to control
 					authenticated client access. Defaults to true.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -87,6 +91,7 @@
 					SIGUSR1 signal. Note that this setting only has an 
 					effect if persistence is enabled.  Defaults to 1800 
 					seconds (30 minutes).</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -98,6 +103,7 @@
 					access to mosquitto to the local host only, use "bind_address
 					localhost". This only applies to the default listener. Use
 					the listener variable to control other listeners.</para>
+					<para>Not reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -109,6 +115,8 @@
 					would mean a client "secure-client" could connect but
 					another with clientid "mqtt" couldn't. By default, all
 					client ids are valid.</para>
+					<para>Reloaded on reload signal. Note that currently connected
+					clients will be unaffected by any changes.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -121,6 +129,7 @@
 					used then the default listener will not be started. This
 					option may be specified multiple times. See also the
 					mount_point option.</para>
+					<para>Not reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -136,6 +145,7 @@
 					notice and information. Use "log_dest none" if you wish to
 					disable logging. Defaults to stderr. This option
 					may be specified multiple times.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -147,6 +157,7 @@
 					be specified multiple times. Note that the debug type (used
 					for decoding incoming network packets) is never logged in
 					syslog or topics.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -158,6 +169,7 @@
 					imposed that are outside the control of mosquitto.  See
 					e.g.
 					<citerefentry><refentrytitle>limits.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
+					<para>Not reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -169,6 +181,7 @@
 					messages that are being retried. Defaults to 20. Set to 0
 					for no maximum. If set to 1, this will guarantee in-order
 					delivery of messages.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -178,6 +191,7 @@
 					the queue above those messages that are currently in
 					flight. Defaults to 100. Set to 0 for no maximum (not
 					recommended).</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -192,6 +206,7 @@
 					point <option>example</option> can only see messages that
 					are published in the topic hierarchy
 					<option>example</option> and above.</para>
+					<para>Not reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -207,6 +222,9 @@
 					is defined is valid and could be used with acl_file to have
 					e.g. read only guest/anonymous accounts and defined users
 					that can publish.</para>
+					<para>Reloaded on reload signal. The currently loaded username and
+					password data will be freed and reloaded. Clients that are
+					already connected will not be affected.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -222,6 +240,7 @@
 					of the persistence database may also be forced by sending
 					mosquitto the SIGUSR1 signal. If false, the data will be
 					stored in memory only. Defaults to false.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -249,6 +268,7 @@
 					init script it will usually be required to write a pid
 					file. This should then be configured as
 					/var/run/mosquitto.pid</para>
+					<para>Not reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -256,6 +276,7 @@
 				<listitem>
 					<para>Set the network port for the default listener to
 					listen on. Defaults to 1883.</para>
+					<para>Not reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -263,6 +284,7 @@
 				<listitem>
 					<para>This is a synonym of the <option>persistence</option>
 					option.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -272,6 +294,7 @@
 					message has been sent that mosquitto will wait before
 					retrying when no response is received. If unset, defaults
 					to 20 seconds.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -284,6 +307,7 @@
 					opposite effect. Setting a value of 0 means the
 					unreferenced messages will be disposed of as quickly as
 					possible. Defaults to 10 seconds.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -293,6 +317,7 @@
 					$SYS subscription hierarchy, which provides status
 					information about the broker. If unset, defaults to 10
 					seconds.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -307,6 +332,7 @@
 					<para>This setting has no effect on Windows and so you
 					should run mosquitto as the user you wish it to run
 					as.</para>
+					<para>Not reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 		</variablelist>
@@ -316,6 +342,7 @@
 		<title>Configuring Bridges</title>
 		<para>Multiple bridges (connections to other brokers) can be configured
 		using the following variables.</para>
+		<para>Bridges cannot currently be reloaded on reload signal.</para>
 		<variablelist>
 			<varlistentry>
 				<term><option>address</option> <replaceable>address[:port]</replaceable></term>
@@ -422,30 +449,35 @@
 				<term><option>db_host</option> <replaceable>hostname</replaceable></term>
 				<listitem>
 					<para>Database host name.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>db_port</option> <replaceable>port</replaceable></term>
 				<listitem>
 					<para>Database port.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>db_name</option> <replaceable>name</replaceable></term>
 				<listitem>
 					<para>Database name.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>db_username</option> <replaceable>username</replaceable></term>
 				<listitem>
 					<para>Database username.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>db_password</option> <replaceable>password</replaceable></term>
 				<listitem>
 					<para>Database password.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 		</variablelist>
