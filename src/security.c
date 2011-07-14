@@ -455,4 +455,32 @@ int mosquitto_unpwd_cleanup(struct _mosquitto_db *db)
 	return MOSQ_ERR_SUCCESS;
 }
 
+/* Apply security settings after a reload.
+ * Includes:
+ * - Disconnecting anonymous users if appropriate
+ * - FIXME Disconnecting users with invalid passwords
+ * - FIXME Reapplying ACLs
+ */
+int mosquitto_security_apply(struct _mosquitto_db *db)
+{
+	bool allow_anonymous;
+	int i;
+
+	if(!db) return MOSQ_ERR_INVAL;
+
+	allow_anonymous = db->config->allow_anonymous;
+	
+	if(db->contexts){
+		for(i=0; i<db->context_count; i++){
+			if(db->contexts[i]){
+				if(!allow_anonymous && !db->contexts[i]->core.username){
+					db->contexts[i]->core.state = mosq_cs_disconnecting;
+					_mosquitto_socket_close(&db->contexts[i]->core);
+				}
+			}
+		}
+	}
+	return MOSQ_ERR_SUCCESS;
+}
+
 #endif

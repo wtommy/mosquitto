@@ -356,6 +356,7 @@ int mosquitto_acl_init(struct _mosquitto_db *db);
 #else
 int mqtt3_aclfile_parse(struct _mosquitto_db *db);
 int mqtt3_pwfile_parse(struct _mosquitto_db *db);
+int mosquitto_security_apply(struct _mosquitto_db *db);
 #endif
 
 int mosquitto_acl_check(struct _mosquitto_db *db, mqtt3_context *context, const char *topic, int access);

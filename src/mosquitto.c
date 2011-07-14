@@ -309,6 +309,7 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 			mqtt3_config_read(int_db.config, true);
 			_security_cleanup(&int_db);
 			_security_init(&int_db);
+			mosquitto_security_apply(&int_db);
 			flag_reload = false;
 		}
 	}
