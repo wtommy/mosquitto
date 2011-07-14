@@ -692,10 +692,10 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 			config->persistence_file = _mosquitto_strdup("mosquitto.db");
 			if(!config->persistence_file) return MOSQ_ERR_NOMEM;
 		}
+		if(config->persistence_filepath){
+			_mosquitto_free(config->persistence_filepath);
+		}
 		if(config->persistence_location && strlen(config->persistence_location)){
-			if(config->persistence_filepath){
-				_mosquitto_free(config->persistence_filepath);
-			}
 			config->persistence_filepath = _mosquitto_malloc(strlen(config->persistence_location) + strlen(config->persistence_file) + 1);
 			if(!config->persistence_filepath) return MOSQ_ERR_NOMEM;
 			sprintf(config->persistence_filepath, "%s%s", config->persistence_location, config->persistence_file);
