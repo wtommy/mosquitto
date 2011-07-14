@@ -40,13 +40,49 @@ static int _mqtt3_conf_parse_bool(char **token, const char *name, bool *value);
 static int _mqtt3_conf_parse_int(char **token, const char *name, int *value);
 static int _mqtt3_conf_parse_string(char **token, const char *name, char **value);
 
-void mqtt3_config_init(mqtt3_config *config)
+static void _config_init_reload(mqtt3_config *config)
 {
 	/* Set defaults */
+	if(config->acl_file) _mosquitto_free(config->acl_file);
 	config->acl_file = NULL;
 	config->allow_anonymous = true;
 	config->autosave_interval = 1800;
+	if(config->clientid_prefixes) _mosquitto_free(config->clientid_prefixes);
 	config->clientid_prefixes = NULL;
+#ifndef WIN32
+	config->log_dest = MQTT3_LOG_STDERR;
+	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING | MOSQ_LOG_NOTICE | MOSQ_LOG_INFO;
+#else
+	config->log_dest = MQTT3_LOG_SYSLOG;
+	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING;
+#endif
+	if(config->password_file) _mosquitto_free(config->password_file);
+	config->password_file = NULL;
+	config->persistence = false;
+	if(config->persistence_location) _mosquitto_free(config->persistence_location);
+	config->persistence_location = NULL;
+	if(config->persistence_file) _mosquitto_free(config->persistence_file);
+	config->persistence_file = NULL;
+	config->retry_interval = 20;
+	config->store_clean_interval = 10;
+	config->sys_interval = 10;
+#ifdef WITH_EXTERNAL_SECURITY_CHECKS
+	if(config->db_host) _mosquitto_free(config->db_host);
+	config->db_host = NULL;
+	config->db_port = 0;
+	if(config->db_name) _mosquitto_free(config->db_name);
+	config->db_name = NULL;
+	if(config->db_username) _mosquitto_free(config->db_username);
+	config->db_username = NULL;
+	if(config->db_password) _mosquitto_free(config->db_password);
+	config->db_password = NULL;
+#endif
+}
+
+void mqtt3_config_init(mqtt3_config *config)
+{
+	memset(config, 0, sizeof(mqtt3_config));
+	_config_init_reload(config);
 	config->config_file = NULL;
 	config->daemon = false;
 	config->default_listener.host = NULL;
@@ -58,32 +94,11 @@ void mqtt3_config_init(mqtt3_config *config)
 	config->default_listener.client_count = 0;
 	config->listeners = NULL;
 	config->listener_count = 0;
-#ifndef WIN32
-	config->log_dest = MQTT3_LOG_STDERR;
-	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING | MOSQ_LOG_NOTICE | MOSQ_LOG_INFO;
-#else
-	config->log_dest = MQTT3_LOG_SYSLOG;
-	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING;
-#endif
-	config->password_file = NULL;
-	config->persistence = false;
-	config->persistence_location = NULL;
-	config->persistence_file = NULL;
 	config->pid_file = NULL;
-	config->retry_interval = 20;
-	config->store_clean_interval = 10;
-	config->sys_interval = 10;
 	config->user = NULL;
 #ifdef WITH_BRIDGE
 	config->bridges = NULL;
 	config->bridge_count = 0;
-#endif
-#ifdef WITH_EXTERNAL_SECURITY_CHECKS
-	config->db_host = NULL;
-	config->db_port = 0;
-	config->db_name = NULL;
-	config->db_username = NULL;
-	config->db_password = NULL;
 #endif
 }
 
@@ -200,6 +215,12 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 	int max_queued_messages = 100;
 	
 	if(!config->config_file) return 0;
+
+	if(reload){
+		/* Re-initialise appropriate config vars to default for reload. */
+		_config_init_reload(config);
+	}
+
 	fptr = fopen(config->config_file, "rt");
 	if(!fptr) return 1;
 
