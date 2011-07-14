@@ -339,7 +339,6 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 	write_e(db_fd, &crc, sizeof(uint32_t));
 	write_e(db_fd, &db_version, sizeof(uint32_t));
 
-	/* FIXME - what more config is needed? */
 	/* DB config */
 	i16temp = htons(DB_CHUNK_CFG);
 	write_e(db_fd, &i16temp, sizeof(uint16_t));
@@ -363,7 +362,6 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 	mqtt3_db_client_write(db, db_fd);
 	mqtt3_db_subs_retain_write(db, db_fd);
 
-	/* FIXME - needs implementing */
 	close(db_fd);
 	return rc;
 error:
