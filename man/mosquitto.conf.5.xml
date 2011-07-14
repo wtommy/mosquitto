@@ -247,6 +247,7 @@
 				<term><option>persistence_file</option></term>
 				<listitem>
 					<para>The filename to use for the persistent database. Defaults to mosquitto.db.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -255,6 +256,7 @@
 					<para>The path where the persistence database should be
 					stored. Must end in a trailing slash. If not given, then
 					the current directory is used.</para>
+					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

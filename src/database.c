@@ -146,17 +146,8 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 	db->unpwd = NULL;
 
 #ifdef WITH_PERSISTENCE
-	if(config->persistence){
-		if(config->persistence_location && strlen(config->persistence_location)){
-			db->filepath = _mosquitto_malloc(strlen(config->persistence_location) + strlen(config->persistence_file) + 1);
-			if(!db->filepath) return MOSQ_ERR_NOMEM;
-			sprintf(db->filepath, "%s%s", config->persistence_location, config->persistence_file);
-			if(mqtt3_db_restore(db)) return 1;
-		}else{
-			db->filepath = _mosquitto_strdup(config->persistence_file);
-			if(!db->filepath) return MOSQ_ERR_NOMEM;
-			if(mqtt3_db_restore(db)) return 1;
-		}
+	if(config->persistence && config->persistence_filepath){
+		if(mqtt3_db_restore(db)) return 1;
 	}
 #endif
 
@@ -193,8 +184,6 @@ int mqtt3_db_close(mosquitto_db *db)
 {
 	subhier_clean(db->subs.children);
 	mqtt3_db_store_clean(db);
-
-	if(db->filepath) _mosquitto_free(db->filepath);
 
 	return MOSQ_ERR_SUCCESS;
 }

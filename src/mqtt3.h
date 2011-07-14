@@ -100,6 +100,7 @@ typedef struct {
 	bool persistence;
 	char *persistence_location;
 	char *persistence_file;
+	char *persistence_filepath;
 	int retry_interval;
 	int store_clean_interval;
 	int sys_interval;
@@ -180,7 +181,6 @@ typedef struct _mosquitto_db{
 	int context_count;
 	struct mosquitto_msg_store *msg_store;
 	int msg_store_count;
-	char *filepath;
 	mqtt3_config *config;
 } mosquitto_db;
 
