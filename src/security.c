@@ -416,6 +416,7 @@ int mosquitto_unpwd_check(struct _mosquitto_db *db, const char *username, const 
 	struct _mosquitto_unpwd *tail;
 
 	if(!db || !username) return MOSQ_ERR_INVAL;
+	if(!db->unpwd) return MOSQ_ERR_SUCCESS;
 
 	tail = db->unpwd;
 	while(tail){
