@@ -414,6 +414,7 @@ int main(int argc, char *argv[])
 
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
+	int_db.config = &config;
 
 	if(config.daemon){
 #ifndef WIN32
@@ -447,7 +448,6 @@ int main(int argc, char *argv[])
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Couldn't open database.");
 		return 1;
 	}
-	int_db.config = &config;
 
 	/* Initialise logging only after initialising the database in case we're
 	 * logging to topics */

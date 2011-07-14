@@ -463,8 +463,10 @@ int mosquitto_unpwd_cleanup(struct _mosquitto_db *db)
  */
 int mosquitto_security_apply(struct _mosquitto_db *db)
 {
+	struct _mosquitto_unpwd *unpwd_tail;
 	bool allow_anonymous;
 	int i;
+	bool unpwd_ok;
 
 	if(!db) return MOSQ_ERR_INVAL;
 
@@ -473,9 +475,42 @@ int mosquitto_security_apply(struct _mosquitto_db *db)
 	if(db->contexts){
 		for(i=0; i<db->context_count; i++){
 			if(db->contexts[i]){
+				/* Check for anonymous clients when allow_anonymous is false */
 				if(!allow_anonymous && !db->contexts[i]->core.username){
 					db->contexts[i]->core.state = mosq_cs_disconnecting;
 					_mosquitto_socket_close(&db->contexts[i]->core);
+					continue;
+				}
+				/* Check for connected clients that are no longer authorised */
+				if(db->unpwd && db->contexts[i]->core.username){
+					unpwd_ok = false;
+					unpwd_tail = db->unpwd;
+					while(unpwd_tail){
+						if(!strcmp(db->contexts[i]->core.username, unpwd_tail->username)){
+							if(unpwd_tail->password){
+								if(!db->contexts[i]->core.password 
+										|| strcmp(db->contexts[i]->core.password, unpwd_tail->password)){
+
+									/* Non matching password to username. */
+									db->contexts[i]->core.state = mosq_cs_disconnecting;
+									_mosquitto_socket_close(&db->contexts[i]->core);
+									continue;
+								}else{
+									/* Username matches, password matches. */
+									unpwd_ok = true;
+								}
+							}else{
+								/* Username matches, password not in password file. */
+								unpwd_ok = true;
+							}
+						}
+						unpwd_tail = unpwd_tail->next;
+					}
+					if(!unpwd_ok){
+						db->contexts[i]->core.state = mosq_cs_disconnecting;
+						_mosquitto_socket_close(&db->contexts[i]->core);
+						continue;
+					}
 				}
 			}
 		}
