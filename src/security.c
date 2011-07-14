@@ -459,11 +459,12 @@ int mosquitto_unpwd_cleanup(struct _mosquitto_db *db)
 /* Apply security settings after a reload.
  * Includes:
  * - Disconnecting anonymous users if appropriate
- * - FIXME Disconnecting users with invalid passwords
- * - FIXME Reapplying ACLs
+ * - Disconnecting users with invalid passwords
+ * - Reapplying ACLs
  */
 int mosquitto_security_apply(struct _mosquitto_db *db)
 {
+	struct _mosquitto_acl_user *acl_user_tail;
 	struct _mosquitto_unpwd *unpwd_tail;
 	bool allow_anonymous;
 	int i;
@@ -511,6 +512,26 @@ int mosquitto_security_apply(struct _mosquitto_db *db)
 						db->contexts[i]->core.state = mosq_cs_disconnecting;
 						_mosquitto_socket_close(&db->contexts[i]->core);
 						continue;
+					}
+				}
+				/* Check for ACLs and apply to user. */
+				if(db->acl_list){
+  					acl_user_tail = db->acl_list;
+					while(acl_user_tail){
+						if(acl_user_tail->username){
+							if(db->contexts[i]->core.username){
+								if(!strcmp(acl_user_tail->username, db->contexts[i]->core.username)){
+									db->contexts[i]->acl_list = acl_user_tail;
+									break;
+								}
+							}
+						}else{
+							if(!db->contexts[i]->core.username){
+								db->contexts[i]->acl_list = acl_user_tail;
+								break;
+							}
+						}
+						acl_user_tail = acl_user_tail->next;
 					}
 				}
 			}
