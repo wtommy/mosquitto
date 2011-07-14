@@ -10,6 +10,7 @@
 - Fix python MosquittoMessage payload parameter. This is now returned as a
   pointer to an array of c_uint8 values so binary data is handled correctly.
   If a string is needed, use msg.payload_str
+- Fix memory leaks on client authentication.
 
 0.11.3 - 20110707
 =================

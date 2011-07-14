@@ -110,12 +110,14 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 
 	if(_mosquitto_read_string(&context->core.in_packet, &client_id)){
 		mqtt3_context_disconnect(db, context_index);
+		_mosquitto_free(client_id);
 		return 1;
 	}
 
 	/* clientid_prefixes check */
 	if(db->config->clientid_prefixes){
 		if(strncmp(db->config->clientid_prefixes, client_id, strlen(db->config->clientid_prefixes))){
+			_mosquitto_free(client_id);
 			mqtt3_raw_connack(context, 2);
 			mqtt3_context_disconnect(db, context_index);
 			return MOSQ_ERR_SUCCESS;
@@ -125,26 +127,30 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 	if(will){
 		will_struct = _mosquitto_calloc(1, sizeof(struct mosquitto_message));
 		if(!will_struct){
+			_mosquitto_free(client_id);
 			mqtt3_context_disconnect(db, context_index);
 			return MOSQ_ERR_NOMEM;
 		}
 		if(_mosquitto_read_string(&context->core.in_packet, &will_topic)){
+			_mosquitto_free(client_id);
 			mqtt3_context_disconnect(db, context_index);
 			return 1;
 		}
 		if(_mosquitto_read_string(&context->core.in_packet, &will_message)){
+			_mosquitto_free(client_id);
 			mqtt3_context_disconnect(db, context_index);
 			return 1;
 		}
 	}
 
-	/* FIXME - sort memory leaks from auth failures. */
 	if(username_flag){
 		rc = _mosquitto_read_string(&context->core.in_packet, &username);
 		if(rc == MOSQ_ERR_SUCCESS){
 			if(password_flag){
 				rc = _mosquitto_read_string(&context->core.in_packet, &password);
 				if(rc == MOSQ_ERR_NOMEM){
+					_mosquitto_free(username);
+					_mosquitto_free(client_id);
 					return MOSQ_ERR_NOMEM;
 				}else if(rc == MOSQ_ERR_PROTOCOL){
 					/* Password flag given, but no password. Ignore. */
@@ -152,14 +158,19 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 				}
 			}
 			rc = mosquitto_unpwd_check(db, username, password);
+			_mosquitto_free(username);
+			_mosquitto_free(password);
 			if(rc == MOSQ_ERR_AUTH){
 				mqtt3_raw_connack(context, 2);
 				mqtt3_context_disconnect(db, context_index);
+				_mosquitto_free(client_id);
 				return MOSQ_ERR_SUCCESS;
 			}else if(rc == MOSQ_ERR_INVAL){
+				_mosquitto_free(client_id);
 				return MOSQ_ERR_INVAL;
 			}
 		}else if(rc == MOSQ_ERR_NOMEM){
+			_mosquitto_free(client_id);
 			return MOSQ_ERR_NOMEM;
 		}else{
 			/* Username flag given, but no username. Ignore. */
@@ -170,6 +181,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 	if(!username_flag && db->config->allow_anonymous == false){
 		mqtt3_raw_connack(context, 2);
 		mqtt3_context_disconnect(db, context_index);
+		_mosquitto_free(client_id);
 		return MOSQ_ERR_SUCCESS;
 	}
 
