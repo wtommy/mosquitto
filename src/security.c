@@ -307,9 +307,60 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 		}
 	}
 
+	if(user) _mosquitto_free(user);
 	fclose(aclfile);
 
 	return MOSQ_ERR_SUCCESS;
+}
+
+static void _free_acl(struct _mosquitto_acl *acl)
+{
+	if(!acl) return;
+
+	if(acl->child){
+		_free_acl(acl->child);
+	}
+	if(acl->next){
+		_free_acl(acl->next);
+	}
+	if(acl->topic){
+		_mosquitto_free(acl->topic);
+	}
+	_mosquitto_free(acl);
+}
+
+void mosquitto_acl_cleanup(struct _mosquitto_db *db)
+{
+	int i;
+	struct _mosquitto_acl_user *user_tail;
+
+	if(!db || !db->acl_list) return;
+
+	/* As we're freeing ACLs, we must clear context->acl_list to ensure no
+	 * invalid memory accesses take place later.
+	 * This *requires* the ACLs to be reapplied after mosquitto_acl_cleanup()
+	 * is called if we are reloading the config. If this is not done, all 
+	 * access will be denied to currently connected clients.
+	 */
+	if(db->contexts){
+		for(i=0; i<db->context_count; i++){
+			if(db->contexts[i] && db->contexts[i]->acl_list){
+				db->contexts[i]->acl_list = NULL;
+			}
+		}
+	}
+
+	while(db->acl_list){
+		user_tail = db->acl_list->next;
+
+		_free_acl(db->acl_list->acl);
+		if(db->acl_list->username){
+			_mosquitto_free(db->acl_list->username);
+		}
+		_mosquitto_free(db->acl_list);
+		
+		db->acl_list = user_tail;
+	}
 }
 
 int mqtt3_pwfile_parse(struct _mosquitto_db *db)

@@ -111,9 +111,7 @@ static int _security_init(mosquitto_db *db)
 
 static void _security_cleanup(mosquitto_db *db)
 {
-#ifdef WITH_EXTERNAL_SECURITY_CHECKS
 	mosquitto_acl_cleanup(db);
-#endif
 	mosquitto_unpwd_cleanup(db);
 }
 
@@ -307,7 +305,10 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 		}
 #endif
 		if(flag_reload){
+			mqtt3_log_printf(MOSQ_LOG_INFO, "Reloading config.");
 			mqtt3_config_read(int_db.config, true);
+			_security_cleanup(&int_db);
+			_security_init(&int_db);
 			flag_reload = false;
 		}
 	}
