@@ -158,8 +158,8 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 				}
 			}
 			rc = mosquitto_unpwd_check(db, username, password);
-			_mosquitto_free(username);
-			_mosquitto_free(password);
+			context->core.username = username;
+			context->core.password = password;
 			if(rc == MOSQ_ERR_AUTH){
 				mqtt3_raw_connack(context, 2);
 				mqtt3_context_disconnect(db, context_index);
@@ -231,7 +231,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 		acl_tail = db->acl_list;
 		while(acl_tail){
 			if(context->core.username){
-				if(!strcmp(context->core.username, acl_tail->username)){
+				if(acl_tail->username && !strcmp(context->core.username, acl_tail->username)){
 					context->acl_list = acl_tail;
 					break;
 				}
