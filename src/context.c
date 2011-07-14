@@ -107,6 +107,14 @@ void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_fre
 	mosquitto_client_msg *msg, *next;
 	if(!context) return;
 
+	if(context->core.username){
+		_mosquitto_free(context->core.username);
+		context->core.username = NULL;
+	}
+	if(context->core.password){
+		_mosquitto_free(context->core.password);
+		context->core.password = NULL;
+	}
 	if(context->core.sock != -1){
 		if(context->listener){
 			context->listener->client_count--;
