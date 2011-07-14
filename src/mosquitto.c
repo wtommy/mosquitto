@@ -562,6 +562,7 @@ int main(int argc, char *argv[])
 	}
 
 	_mosquitto_net_cleanup();
+	mqtt3_config_cleanup(int_db.config);
 
 	return rc;
 }

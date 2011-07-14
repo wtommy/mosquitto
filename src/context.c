@@ -62,6 +62,7 @@ mqtt3_context *mqtt3_context_init(int sock)
 	context->core.username = NULL;
 	context->core.password = NULL;
 	context->listener = NULL;
+	context->acl_list = NULL;
 
 	context->core.in_packet.payload = NULL;
 	_mosquitto_packet_cleanup(&context->core.in_packet);

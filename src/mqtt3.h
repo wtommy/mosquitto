@@ -236,6 +236,8 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[]);
  * Returns 0 on success, 1 if there is a configuration error or if a file cannot be opened.
  */
 int mqtt3_config_read(mqtt3_config *config, bool reload);
+/* Free all config data. */
+void mqtt3_config_cleanup(mqtt3_config *config);
 
 /* ============================================================
  * Raw send functions - just construct the packet and send 

@@ -102,6 +102,52 @@ void mqtt3_config_init(mqtt3_config *config)
 #endif
 }
 
+void mqtt3_config_cleanup(mqtt3_config *config)
+{
+	int i, j;
+
+	/* FIXME - free listeners and bridges */
+	if(config->acl_file) _mosquitto_free(config->acl_file);
+	if(config->clientid_prefixes) _mosquitto_free(config->clientid_prefixes);
+	if(config->config_file) _mosquitto_free(config->config_file);
+	if(config->password_file) _mosquitto_free(config->password_file);
+	if(config->persistence_location) _mosquitto_free(config->persistence_location);
+	if(config->persistence_file) _mosquitto_free(config->persistence_file);
+	if(config->persistence_filepath) _mosquitto_free(config->persistence_filepath);
+	if(config->listeners){
+		for(i=0; i<config->listener_count; i++){
+			if(config->listeners[i].host) _mosquitto_free(config->listeners[i].host);
+			if(config->listeners[i].mount_point) _mosquitto_free(config->listeners[i].mount_point);
+			if(config->listeners[i].socks) _mosquitto_free(config->listeners[i].socks);
+		}
+		_mosquitto_free(config->listeners);
+	}
+#ifdef WITH_BRIDGE
+	if(config->bridges){
+		for(i=0; i<config->bridge_count; i++){
+			if(config->bridges[i].name) _mosquitto_free(config->bridges[i].name);
+			if(config->bridges[i].address) _mosquitto_free(config->bridges[i].address);
+			if(config->bridges[i].clientid) _mosquitto_free(config->bridges[i].clientid);
+			if(config->bridges[i].username) _mosquitto_free(config->bridges[i].username);
+			if(config->bridges[i].password) _mosquitto_free(config->bridges[i].password);
+			if(config->bridges[i].topics){
+				for(j=0; j<config->bridges[i].topic_count; j++){
+					if(config->bridges[i].topics[j].topic) _mosquitto_free(config->bridges[i].topics[j].topic);
+				}
+				_mosquitto_free(config->bridges[i].topics);
+			}
+		}
+		_mosquitto_free(config->bridges);
+	}
+#endif
+#ifdef WITH_EXTERNAL_SECURITY_CHECKS
+	if(config->db_host) _mosquitto_free(config->db_host);
+	if(config->db_name) _mosquitto_free(config->db_name);
+	if(config->db_username) _mosquitto_free(config->db_username);
+	if(config->db_password) _mosquitto_free(config->db_password);
+#endif
+}
+
 static void print_usage(void)
 {
 	printf("mosquitto is an MQTT v3.1 broker.\n\n");
