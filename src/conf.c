@@ -106,7 +106,6 @@ void mqtt3_config_cleanup(mqtt3_config *config)
 {
 	int i, j;
 
-	/* FIXME - free listeners and bridges */
 	if(config->acl_file) _mosquitto_free(config->acl_file);
 	if(config->clientid_prefixes) _mosquitto_free(config->clientid_prefixes);
 	if(config->config_file) _mosquitto_free(config->config_file);
