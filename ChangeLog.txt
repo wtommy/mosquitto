@@ -13,6 +13,7 @@
 - Fix memory leaks on client authentication.
 - If password_file is not defined then clients can now connect even if they
   use a username/password.
+- Add mosquitto_reconnect() to the client library.
 
 0.11.3 - 20110707
 =================

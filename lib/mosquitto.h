@@ -309,8 +309,26 @@ libmosq_EXPORT int mosquitto_username_pw_set(struct mosquitto *mosq, const char 
  * Returns:
  * 	MOSQ_ERR_SUCCESS - on success.
  * 	MOSQ_ERR_INVAL -   if the input parameters were invalid.
+ *
+ * See Also:
+ * 	<mosquitto_reconnect>, <mosquitto_disconnect>
  */
 libmosq_EXPORT int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session);
+
+/*
+ * Function: mosquitto_reconnect
+ *
+ * Reconnect to a broker.
+ *
+ * This function provides an easy way of reconnecting to a broker after a
+ * connection has been lost. It uses the values provided in the
+ * <mosquitto_connect> call and so must not be called before
+ * <mosquitto_connect>.
+ *
+ * See Also:
+ * 	<mosquitto_connect>, <mosquitto_disconnect>
+ */
+libmosq_EXPORT int mosquitto_reconnect(struct mosquitto *mosq);
 
 /*
  * Function: mosquitto_disconnect
