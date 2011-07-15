@@ -255,7 +255,9 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 	int log_type = MOSQ_LOG_NONE;
 	int log_type_set = 0;
 	int i;
+#ifdef WITH_BRIDGE
 	struct _mqtt3_bridge *cur_bridge = NULL;
+#endif
 	int max_inflight_messages = 20;
 	int max_queued_messages = 100;
 	
@@ -756,12 +758,14 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 
 	mqtt3_db_limits_set(max_inflight_messages, max_queued_messages);
 
+#ifdef WITH_BRIDGE
 	for(i=0; i<config->bridge_count; i++){
 		if(!config->bridges[i].name || !config->bridges[i].address || !config->bridges[i].port || !config->bridges[i].topic_count){
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
 			return MOSQ_ERR_INVAL;
 		}
 	}
+#endif
 
 	if(log_dest_set){
 		config->log_dest = log_dest;

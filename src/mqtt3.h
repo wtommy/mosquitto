@@ -106,8 +106,10 @@ typedef struct {
 	int sys_interval;
 	char *pid_file;
 	char *user;
+#ifdef WITH_BRIDGE
 	struct _mqtt3_bridge *bridges;
 	int bridge_count;
+#endif
 #ifdef WITH_EXTERNAL_SECURITY_CHECKS
 	char *db_host;
 	int db_port;
@@ -350,9 +352,11 @@ int mqtt3_log_printf(int level, const char *fmt, ...) __attribute__((format(prin
 /* ============================================================
  * Bridge functions
  * ============================================================ */
+#ifdef WITH_BRIDGE
 int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge);
 int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context);
 void mqtt3_bridge_packet_cleanup(mqtt3_context *context);
+#endif
 
 /* ============================================================
  * Security related functions
