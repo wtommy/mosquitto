@@ -352,6 +352,8 @@ void mqtt3_bridge_packet_cleanup(mqtt3_context *context);
 /* ============================================================
  * Security related functions
  * ============================================================ */
+int mosquitto_security_init(mosquitto_db *db);
+void mosquitto_security_cleanup(mosquitto_db *db);
 #ifdef WITH_EXTERNAL_SECURITY_CHECKS
 int mosquitto_unpwd_init(struct _mosquitto_db *db);
 int mosquitto_acl_init(struct _mosquitto_db *db);

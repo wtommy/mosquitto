@@ -35,6 +35,50 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <mqtt3.h>
 
+int mosquitto_security_init(mosquitto_db *db)
+{
+	int rc;
+
+#ifdef WITH_EXTERNAL_SECURITY_CHECKS
+	rc = mosquitto_unpwd_init(db);
+	if(rc){
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising passwords.");
+		return rc;
+	}
+
+	rc = mosquitto_acl_init(db);
+	if(rc){
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising ACLs.");
+		return rc;
+	}
+#else
+	/* Load username/password data if required. */
+	if(db->config->password_file){
+		rc = mqtt3_pwfile_parse(db);
+		if(rc){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening password file.");
+			return rc;
+		}
+	}
+
+	/* Load acl data if required. */
+	if(db->config->acl_file){
+		rc = mqtt3_aclfile_parse(db);
+		if(rc){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening acl file.");
+			return rc;
+		}
+	}
+#endif
+	return MOSQ_ERR_SUCCESS;
+}
+
+void mosquitto_security_cleanup(mosquitto_db *db)
+{
+	mosquitto_acl_cleanup(db);
+	mosquitto_unpwd_cleanup(db);
+}
+
 #ifndef WITH_EXTERNAL_SECURITY_CHECKS
 
 int _add_acl(struct _mosquitto_db *db, const char *user, const char *topic, int access)

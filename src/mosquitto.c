@@ -71,50 +71,6 @@ void handle_sigusr2(int signal);
 static void loop_handle_errors(struct pollfd *pollfds);
 static void loop_handle_reads_writes(struct pollfd *pollfds);
 
-static int _security_init(mosquitto_db *db)
-{
-	int rc;
-
-#ifdef WITH_EXTERNAL_SECURITY_CHECKS
-	rc = mosquitto_unpwd_init(db);
-	if(rc){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising passwords.");
-		return rc;
-	}
-
-	rc = mosquitto_acl_init(db);
-	if(rc){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising ACLs.");
-		return rc;
-	}
-#else
-	/* Load username/password data if required. */
-	if(db->config->password_file){
-		rc = mqtt3_pwfile_parse(db);
-		if(rc){
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening password file.");
-			return rc;
-		}
-	}
-
-	/* Load acl data if required. */
-	if(db->config->acl_file){
-		rc = mqtt3_aclfile_parse(db);
-		if(rc){
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening acl file.");
-			return rc;
-		}
-	}
-#endif
-	return MOSQ_ERR_SUCCESS;
-}
-
-static void _security_cleanup(mosquitto_db *db)
-{
-	mosquitto_acl_cleanup(db);
-	mosquitto_unpwd_cleanup(db);
-}
-
 /* mosquitto shouldn't run as root.
  * This function will attempt to change to an unprivileged user and group if
  * running as root. The user is given in config->user.
@@ -307,8 +263,8 @@ int loop(mqtt3_config *config, int *listensock, int listensock_count, int listen
 		if(flag_reload){
 			mqtt3_log_printf(MOSQ_LOG_INFO, "Reloading config.");
 			mqtt3_config_read(int_db.config, true);
-			_security_cleanup(&int_db);
-			_security_init(&int_db);
+			mosquitto_security_cleanup(&int_db);
+			mosquitto_security_init(&int_db);
 			mosquitto_security_apply(&int_db);
 			flag_reload = false;
 		}
@@ -454,7 +410,7 @@ int main(int argc, char *argv[])
 	mqtt3_log_init(config.log_type, config.log_dest);
 	mqtt3_log_printf(MOSQ_LOG_INFO, "mosquitto version %s (build date %s) starting", VERSION, TIMESTAMP);
 
-	rc = _security_init(&int_db);
+	rc = mosquitto_security_init(&int_db);
 	if(rc) return rc;
 
 	/* Set static $SYS messages */
@@ -555,7 +511,7 @@ int main(int argc, char *argv[])
 		_mosquitto_free(listensock);
 	}
 
-	_security_cleanup(&int_db);
+	mosquitto_security_cleanup(&int_db);
 
 	if(config.pid_file){
 		remove(config.pid_file);
