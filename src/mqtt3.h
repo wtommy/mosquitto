@@ -218,6 +218,11 @@ typedef struct _mqtt3_context{
 } mqtt3_context;
 
 /* ============================================================
+ * Main functions
+ * ============================================================ */
+int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count, int listener_max);
+
+/* ============================================================
  * Utility functions
  * ============================================================ */
 /* Return a string that corresponds to the MQTT command number (left shifted 4 bits). */
