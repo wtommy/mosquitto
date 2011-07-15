@@ -105,6 +105,11 @@ int mosquittopp::connect(const char *host, int port, int keepalive, bool clean_s
 	return mosquitto_connect(mosq, host, port, keepalive, clean_session);
 }
 
+int mosquittopp::reconnect()
+{
+	return mosquitto_reconnect(mosq);
+}
+
 int mosquittopp::disconnect()
 {
 	return mosquitto_disconnect(mosq);
