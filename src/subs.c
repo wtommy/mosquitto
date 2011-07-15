@@ -1,5 +1,6 @@
 /*
 Copyright (c) 2010,2011 Roger Light <roger@atchoo.org>
+Copyright (c) 2011 Sang Kyeong Nam
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
