@@ -201,6 +201,11 @@ class Mosquitto:
 		"""
 		return _mosquitto_connect(self._mosq, hostname, port, keepalive, clean_session)
 
+	def reconnect(self):
+		"""Reconnect to a broker. This uses the saved parameters from the
+		connect() call to reconnect to a broker after a disconnect."""
+		return _mosquitto_reconnect(self._mosq)
+
 	def disconnect(self):
 		"""Disconnect a connected client from the broker."""
 		return _mosquitto_disconnect(self._mosq)
@@ -433,6 +438,10 @@ _mosquitto_destroy.restype = None
 _mosquitto_connect = _libmosq.mosquitto_connect
 _mosquitto_connect.argtypes = [c_void_p, c_char_p, c_int, c_int, c_bool]
 _mosquitto_connect.restype = c_int
+
+_mosquitto_reconnect = _libmosq.mosquitto_reconnect
+_mosquitto_reconnect.argtypes = [c_void_p]
+_mosquitto_reconnect.restype = c_int
 
 _mosquitto_disconnect = _libmosq.mosquitto_disconnect
 _mosquitto_disconnect.argtypes = [c_void_p]
