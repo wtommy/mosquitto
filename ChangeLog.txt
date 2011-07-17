@@ -1,6 +1,7 @@
 0.12 - 201107xx
 ===============
 
+- Reload (most) configuration on SIGHUP.
 - Memory tracking is no longer compiled in the client library.
 - Add --help option to mosquitto to display usage.
 - Add --id-prefix option to clients to allow easier use with brokers that are
