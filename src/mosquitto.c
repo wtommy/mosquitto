@@ -104,11 +104,13 @@ int drop_privileges(mqtt3_config *config)
 	return MOSQ_ERR_SUCCESS;
 }
 
+#ifdef SIGHUP
 /* Signal handler for SIGHUP - flag a config reload. */
 void handle_sighup(int signal)
 {
 	flag_reload = true;
 }
+#endif
 
 /* Signal handler for SIGINT and SIGTERM - just stop gracefully. */
 void handle_sigint(int signal)
@@ -237,9 +239,11 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	signal(SIGHUP, handle_sighup);
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
+#ifdef SIGHUP
+	signal(SIGHUP, handle_sighup);
+#endif
 #ifndef WIN32
 	signal(SIGUSR1, handle_sigusr1);
 	signal(SIGUSR2, handle_sigusr2);
