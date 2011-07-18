@@ -119,7 +119,9 @@ void handle_sigint(int signal)
 /* Signal handler for SIGUSR1 - backup the db. */
 void handle_sigusr1(int signal)
 {
+#ifdef WITH_PERSISTENCE
 	flag_db_backup = true;
+#endif
 }
 
 /* Signal handler for SIGUSR2 - vacuum the db. */
