@@ -553,7 +553,7 @@ static int _retain_search(struct _mosquitto_db *db, struct _mosquitto_subhier *s
 		/* Subscriptions with wildcards in aren't really valid topics to publish to
 		 * so they can't have retained messages.
 		 */
-		if(strcmp(branch->topic, "+") && strcmp(branch->topic, "#")){
+		if(_mosquitto_wildcard_check(branch->topic)){
 			if(!strcmp(tokens->topic, "#") && !tokens->next){
 				if(branch->retained){
 					_retain_process(db, branch->retained, context, sub, sub_qos);
