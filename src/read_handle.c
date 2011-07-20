@@ -89,9 +89,11 @@ int mqtt3_handle_puback(mqtt3_context *context)
 	if(!context){
 		return MOSQ_ERR_INVAL;
 	}
+#ifdef WITH_STRICT_PROTOCOL
 	if(context->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
 	}
+#endif
 	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received PUBACK from %s (Mid: %d)", context->core.id, mid);
 
@@ -106,9 +108,11 @@ int mqtt3_handle_pingreq(mqtt3_context *context)
 	if(!context){
 		return MOSQ_ERR_INVAL;
 	}
+#ifdef WITH_STRICT_PROTOCOL
 	if(context->core.in_packet.remaining_length != 0){
 		return MOSQ_ERR_PROTOCOL;
 	}
+#endif
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received PINGREQ from %s", context->core.id);
 	return mqtt3_raw_pingresp(context);
 }
@@ -118,9 +122,11 @@ int mqtt3_handle_pingresp(mqtt3_context *context)
 	if(!context){
 		return MOSQ_ERR_INVAL;
 	}
+#ifdef WITH_STRICT_PROTOCOL
 	if(context->core.in_packet.remaining_length != 0){
 		return MOSQ_ERR_PROTOCOL;
 	}
+#endif
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received PINGRESP from %s", context->core.id);
 	return MOSQ_ERR_SUCCESS;
 }
@@ -132,9 +138,11 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 	if(!context){
 		return MOSQ_ERR_INVAL;
 	}
+#ifdef WITH_STRICT_PROTOCOL
 	if(context->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
 	}
+#endif
 
 	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received PUBCOMP from %s (Mid: %d)", context->core.id, mid);

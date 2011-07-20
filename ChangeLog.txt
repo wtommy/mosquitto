@@ -15,6 +15,8 @@
 - If password_file is not defined then clients can now connect even if they
   use a username/password.
 - Add mosquitto_reconnect() to the client library.
+- Add option for compiling with liberal protocol compliance support (enabled
+   by default). 
 
 0.11.3 - 20110707
 =================
