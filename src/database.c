@@ -514,7 +514,7 @@ int mqtt3_db_message_store_find(mosquitto_db *db, const char *source, uint16_t m
 	*stored = NULL;
 	tail = db->msg_store;
 	while(tail){
-		if(tail->source_mid == mid && !strcmp(tail->source_id, source)){
+		if(tail->source_id && tail->source_mid == mid && !strcmp(tail->source_id, source)){
 			*stored = tail;
 			return MOSQ_ERR_SUCCESS;
 		}
