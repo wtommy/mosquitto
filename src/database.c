@@ -507,15 +507,17 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_db_message_store_find(mosquitto_db *db, const char *source, uint16_t mid, struct mosquitto_msg_store **stored)
+int mqtt3_db_message_store_find(mqtt3_context *context, uint16_t mid, struct mosquitto_msg_store **stored)
 {
-	struct mosquitto_msg_store *tail;
+	mosquitto_client_msg *tail;
+
+	if(!context) return MOSQ_ERR_INVAL;
 
 	*stored = NULL;
-	tail = db->msg_store;
+	tail = context->msgs;
 	while(tail){
-		if(tail->source_id && tail->source_mid == mid && !strcmp(tail->source_id, source)){
-			*stored = tail;
+		if(tail->store->source_mid == mid && tail->direction == mosq_md_in){
+			*stored = tail->store;
 			return MOSQ_ERR_SUCCESS;
 		}
 		tail = tail->next;

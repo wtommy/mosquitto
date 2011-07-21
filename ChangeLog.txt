@@ -16,7 +16,9 @@
   use a username/password.
 - Add mosquitto_reconnect() to the client library.
 - Add option for compiling with liberal protocol compliance support (enabled
-   by default). 
+  by default). 
+- Fix problems with clients reconnecting and old messages remaining in the
+  message store.
 
 0.11.3 - 20110707
 =================

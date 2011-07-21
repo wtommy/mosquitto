@@ -224,7 +224,7 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 	}
 
 	if(qos > 0){
-		mqtt3_db_message_store_find(db, context->core.id, mid, &stored);
+		mqtt3_db_message_store_find(context, mid, &stored);
 	}
 	if(!stored){
 		dup = 0;
