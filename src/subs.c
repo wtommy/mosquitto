@@ -559,7 +559,7 @@ static int _retain_search(struct _mosquitto_db *db, struct _mosquitto_subhier *s
 					_retain_process(db, branch->retained, context, sub, sub_qos);
 				}
 				_retain_search(db, branch, tokens, context, sub, sub_qos);
-			}else if(!strcmp(branch->topic, tokens->topic) || !strcmp(branch->topic, "+")){
+			}else if(!strcmp(branch->topic, tokens->topic) || !strcmp(tokens->topic, "+")){
 				if(tokens->next){
 					_retain_search(db, branch, tokens->next, context, sub, sub_qos);
 				}else{
