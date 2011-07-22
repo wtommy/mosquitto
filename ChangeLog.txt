@@ -22,6 +22,7 @@
 - Display both ip and client id in the log message when a client connects.
   Change the socket connection message to make it more obvious that it is just
   a socket connection being made (bug #801135).
+- Fix retained message delivery where a subscription contains a +.
 
 0.11.3 - 20110707
 =================
