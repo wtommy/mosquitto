@@ -247,7 +247,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 		context->acl_list = NULL;
 	}
 
-	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNECT from %s as %s", context->core.address, client_id);
+	mqtt3_log_printf(MOSQ_LOG_NOTICE, "New client connected from %s as %s.", context->core.address, client_id);
 
 	context->core.state = mosq_cs_connected;
 	return mqtt3_raw_connack(context, 0);

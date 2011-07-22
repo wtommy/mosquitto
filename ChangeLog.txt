@@ -19,6 +19,9 @@
   by default). 
 - Fix problems with clients reconnecting and old messages remaining in the
   message store.
+- Display both ip and client id in the log message when a client connects.
+  Change the socket connection message to make it more obvious that it is just
+  a socket connection being made (bug #801135).
 
 0.11.3 - 20110707
 =================
