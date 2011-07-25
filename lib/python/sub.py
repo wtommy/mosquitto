@@ -33,7 +33,7 @@ def on_connect(rc):
 	print "rc: ", rc
 
 def on_message(msg):
-	print msg.topic,msg.qos,msg.payload
+	print msg.topic,msg.qos,msg.payload_str
 
 def on_publish(mid):
 	print "mid:", mid
@@ -48,7 +48,7 @@ mqttc.on_connect = on_connect
 mqttc.on_publish = on_publish
 mqttc.on_subscribe = on_subscribe
 mqttc.connect("127.0.0.1", 1883, 60, True)
-mqttc.subscribe("power/+", 0)
+mqttc.subscribe("$SYS/#", 0)
 
 rc = 0
 while rc == 0:

@@ -29,6 +29,9 @@
 				<arg><option>-i</option> <replaceable>client_id</replaceable></arg>
 			</group>
 			<group choice='opt'>
+				<arg><option>-I</option> <replaceable>client id prefix</replaceable></arg>
+			</group>
+			<group choice='opt'>
 				<arg><option>-k</option> <replaceable>keepalive time</replaceable></arg>
 			</group>
 			<group choice='opt'>
@@ -49,7 +52,7 @@
 						<arg><option>-u</option> <replaceable>username</replaceable></arg>
 					</group>
 					<group choice='opt'>
-						<arg><option>--pw</option> <replaceable>password</replaceable></arg>
+						<arg><option>-P</option> <replaceable>password</replaceable></arg>
 					</group>
 				</arg>
 			</group>
@@ -118,7 +121,19 @@
 				<listitem>
 					<para>The id to use for this client. If not given, defaults
 					to mosquitto_sub_ appended with the process id of the
-					client.</para>
+					client. Cannot be used at the same time as the
+					<option>--id-prefix</option> argument.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-I</option></term>
+				<term><option>--id-prefix</option></term>
+				<listitem>
+					<para>Provide a prefix that the client id will be built
+					from by appending the process id of the client. This is
+					useful where the broker is using the clientid_prefixes
+					option. Cannot be used at the same time as the
+					<option>--id</option> argument.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -138,6 +153,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>-P</option></term>
 				<term><option>--pw</option></term>
 				<listitem>
 					<para>Provide a password to be used for authenticating with
@@ -163,7 +179,7 @@
 				<listitem>
 					<para>If this argument is given, no runtime errors will be
 					printed. This excludes any error messages given in case of
-					invalid user input (e.g. using --port without a
+					invalid user input (e.g. using <option>--port</option> without a
 					port).</para>
 				</listitem>
 			</varlistentry>

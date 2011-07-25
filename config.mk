@@ -1,10 +1,18 @@
 # Also bump lib/mosquitto.h, lib/python/setup.py, CMakeLists.txt
-VERSION=0.11.3
+VERSION=0.12
 TIMESTAMP:=$(shell date "+%F %T%z")
 
 #MANCOUNTRIES=en_GB
 
 CFLAGS=-I. -I.. -ggdb -Wall -O2 -I../lib
+
+UNAME:=$(shell uname -s)
+ifeq ($(UNAME),QNX)
+	LIBS=-lsocket
+else
+	LIBS=
+endif
+
 LDFLAGS=
 # Add -lwrap to LDFLAGS if compiling with tcp wrappers support.
 

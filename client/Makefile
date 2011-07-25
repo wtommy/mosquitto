@@ -8,11 +8,14 @@ prefix=/usr/local
 
 all : mosquitto_pub mosquitto_sub
 
-mosquitto_pub : pub_client.o
-	${CC} $^ -o $@ ${LDFLAGS}
+mosquitto_pub : pub_client.o ../lib/libmosquitto.so.0
+	${CC} $< -o $@ ${LDFLAGS}
 
-mosquitto_sub : sub_client.o
-	${CC} $^ -o $@ ${LDFLAGS}
+mosquitto_sub : sub_client.o ../lib/libmosquitto.so.0
+	${CC} $< -o $@ ${LDFLAGS}
+
+../lib/libmosquitto.so.0 :
+	$(MAKE) -C ../lib
 
 install : all
 	$(INSTALL) -d ${DESTDIR}$(prefix)/bin

@@ -42,9 +42,11 @@ int _mosquitto_handle_connack(struct mosquitto *mosq)
 	int rc;
 
 	assert(mosq);
+#ifdef WITH_STRICT_PROTOCOL
 	if(mosq->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
 	}
+#endif
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received CONNACK");
 	rc = _mosquitto_read_byte(&mosq->core.in_packet, &byte); // Reserved byte, not used
 	if(rc) return rc;
@@ -106,9 +108,11 @@ int _mosquitto_handle_unsuback(struct mosquitto *mosq)
 	int rc;
 
 	assert(mosq);
+#ifdef WITH_STRICT_PROTOCOL
 	if(mosq->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
 	}
+#endif
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received UNSUBACK");
 	rc = _mosquitto_read_uint16(&mosq->core.in_packet, &mid);
 	if(rc) return rc;

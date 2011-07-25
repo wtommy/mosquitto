@@ -146,11 +146,11 @@ class Mosquitto:
 		#==================================================
 		self._internal_on_connect_cast = _MOSQ_CONNECT_FUNC(self._internal_on_connect)
 		_mosquitto_connect_callback_set(self._mosq, self._internal_on_connect_cast)
-		self._on_connect = None
+		self.on_connect = None
 	
 		self._internal_on_disconnect_cast = _MOSQ_DISCONNECT_FUNC(self._internal_on_disconnect)
 		_mosquitto_disconnect_callback_set(self._mosq, self._internal_on_disconnect_cast)
-		self._on_disconnect = None
+		self.on_disconnect = None
 	
 		self._internal_on_message_cast = _MOSQ_MESSAGE_FUNC(self._internal_on_message)
 		_mosquitto_message_callback_set(self._mosq, self._internal_on_message_cast)
@@ -200,6 +200,11 @@ class Mosquitto:
 		Returns >0 on error.
 		"""
 		return _mosquitto_connect(self._mosq, hostname, port, keepalive, clean_session)
+
+	def reconnect(self):
+		"""Reconnect to a broker. This uses the saved parameters from the
+		connect() call to reconnect to a broker after a disconnect."""
+		return _mosquitto_reconnect(self._mosq)
 
 	def disconnect(self):
 		"""Disconnect a connected client from the broker."""
@@ -346,10 +351,11 @@ class Mosquitto:
 	def _internal_on_message(self, obj, message):
 		if self.on_message:
 			topic = message.contents.topic
+			payloadlen = message.contents.payloadlen
 			payload = message.contents.payload
 			qos = message.contents.qos
 			retain = message.contents.retain
-			msg = MosquittoMessage(topic, payload, qos, retain)
+			msg = MosquittoMessage(topic, payloadlen, payload, qos, retain)
 			argcount = self.on_message.func_code.co_argcount
 
 			if argcount == 1:
@@ -393,16 +399,18 @@ class c_MosquittoMessage(Structure):
 	Don't use."""
 	_fields_ = [("mid", c_uint16),
 				("topic", c_char_p),
-				("payload", c_char_p),
+				("payload", POINTER(c_uint8)),
 				("payloadlen", c_uint32),
 				("qos", c_int),
 				("retain", c_bool)]
 
 class MosquittoMessage:
 	"""MQTT message class"""
-	def __init__(self, topic, payload, qos, retain):
+	def __init__(self, topic, payloadlen, payload, qos, retain):
 		self.topic = topic
+		self.payloadlen = payloadlen
 		self.payload = payload
+		self.payload_str = cast(self.payload, c_char_p).value
 		self.qos = qos
 		self.retain = retain
 
@@ -430,6 +438,10 @@ _mosquitto_destroy.restype = None
 _mosquitto_connect = _libmosq.mosquitto_connect
 _mosquitto_connect.argtypes = [c_void_p, c_char_p, c_int, c_int, c_bool]
 _mosquitto_connect.restype = c_int
+
+_mosquitto_reconnect = _libmosq.mosquitto_reconnect
+_mosquitto_reconnect.argtypes = [c_void_p]
+_mosquitto_reconnect.restype = c_int
 
 _mosquitto_disconnect = _libmosq.mosquitto_disconnect
 _mosquitto_disconnect.argtypes = [c_void_p]

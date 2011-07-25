@@ -322,13 +322,13 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 	uint16_t i16temp;
 	uint8_t i8temp;
 
-	if(!db || !db->filepath) return MOSQ_ERR_INVAL;
-	mqtt3_log_printf(MOSQ_LOG_INFO, "Saving in-memory database to %s.", db->filepath);
+	if(!db || !db->config || !db->config->persistence_filepath) return MOSQ_ERR_INVAL;
+	mqtt3_log_printf(MOSQ_LOG_INFO, "Saving in-memory database to %s.", db->config->persistence_filepath);
 	if(cleanup){
 		mqtt3_db_store_clean(db);
 	}
 
-	db_fd = open(db->filepath, O_WRONLY|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR);
+	db_fd = open(db->config->persistence_filepath, O_WRONLY|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR);
 	if(db_fd < 0){
 		goto error;
 	}
@@ -339,7 +339,6 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 	write_e(db_fd, &crc, sizeof(uint32_t));
 	write_e(db_fd, &db_version, sizeof(uint32_t));
 
-	/* FIXME - what more config is needed? */
 	/* DB config */
 	i16temp = htons(DB_CHUNK_CFG);
 	write_e(db_fd, &i16temp, sizeof(uint16_t));
@@ -363,7 +362,6 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 	mqtt3_db_client_write(db, db_fd);
 	mqtt3_db_subs_retain_write(db, db_fd);
 
-	/* FIXME - needs implementing */
 	close(db_fd);
 	return rc;
 error:
@@ -592,11 +590,6 @@ static int _db_retain_chunk_restore(mosquitto_db *db, int db_fd)
 		}
 		store = store->next;
 	}
-	if(!store){
-		close(db_fd);
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error restoring persistent database, message store corrupt.");
-		return 1;
-	}
 	return MOSQ_ERR_SUCCESS;
 }
 
@@ -656,10 +649,11 @@ int mqtt3_db_restore(mosquitto_db *db)
 	ssize_t rlen;
 
 	assert(db);
-	assert(db->filepath);
+	assert(db->config);
+	assert(db->config->persistence_filepath);
 
 #define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
-	fd = open(db->filepath, O_RDONLY);
+	fd = open(db->config->persistence_filepath, O_RDONLY);
 	if(fd < 0) return MOSQ_ERR_SUCCESS;
 	read_e(fd, &header, 15);
 	if(!memcmp(header, magic, 15)){

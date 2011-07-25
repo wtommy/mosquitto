@@ -47,7 +47,7 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain,
 
 	if(!context || context->core.sock == -1 || !topic) return MOSQ_ERR_INVAL;
 
-	if(context->listener->mount_point){
+	if(context->listener && context->listener->mount_point){
 		len = strlen(context->listener->mount_point);
 		if(len > strlen(topic)){
 			topic += strlen(context->listener->mount_point);

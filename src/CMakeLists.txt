@@ -7,6 +7,7 @@ set (MOSQ_SRCS
 	context.c
 	database.c
 	logging.c
+	loop.c
 	../lib/memory_mosq.c ../lib/memory_mosq.h
 	mosquitto.c
 	mqtt3.h

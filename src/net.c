@@ -1,5 +1,6 @@
 /*
 Copyright (c) 2009-2011 Roger Light <roger@atchoo.org>
+Copyright (c) 2011 Yuvraaj Kelkar <yuvraaj@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -44,6 +45,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #ifdef WITH_WRAP
 #include <tcpd.h>
+#endif
+
+#ifdef __QNX__
+#include <netinet/in.h>
+#include <net/netbyte.h>
+#include <sys/socket.h>
 #endif
 
 #include <mqtt3.h>
@@ -119,7 +126,7 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 			COMPAT_CLOSE(new_sock);
 			return -1;
 		}
-		mqtt3_log_printf(MOSQ_LOG_NOTICE, "New client connected from %s.", new_context->core.address);
+		mqtt3_log_printf(MOSQ_LOG_NOTICE, "New connection from %s.", new_context->core.address);
 		for(i=0; i<db->context_count; i++){
 			if(db->contexts[i] == NULL){
 				db->contexts[i] = new_context;

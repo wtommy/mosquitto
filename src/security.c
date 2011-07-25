@@ -35,6 +35,50 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <mqtt3.h>
 
+int mosquitto_security_init(mosquitto_db *db)
+{
+	int rc;
+
+#ifdef WITH_EXTERNAL_SECURITY_CHECKS
+	rc = mosquitto_unpwd_init(db);
+	if(rc){
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising passwords.");
+		return rc;
+	}
+
+	rc = mosquitto_acl_init(db);
+	if(rc){
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising ACLs.");
+		return rc;
+	}
+#else
+	/* Load username/password data if required. */
+	if(db->config->password_file){
+		rc = mqtt3_pwfile_parse(db);
+		if(rc){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening password file.");
+			return rc;
+		}
+	}
+
+	/* Load acl data if required. */
+	if(db->config->acl_file){
+		rc = mqtt3_aclfile_parse(db);
+		if(rc){
+			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening acl file.");
+			return rc;
+		}
+	}
+#endif
+	return MOSQ_ERR_SUCCESS;
+}
+
+void mosquitto_security_cleanup(mosquitto_db *db)
+{
+	mosquitto_acl_cleanup(db);
+	mosquitto_unpwd_cleanup(db);
+}
+
 #ifndef WITH_EXTERNAL_SECURITY_CHECKS
 
 int _add_acl(struct _mosquitto_db *db, const char *user, const char *topic, int access)
@@ -307,9 +351,60 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 		}
 	}
 
+	if(user) _mosquitto_free(user);
 	fclose(aclfile);
 
 	return MOSQ_ERR_SUCCESS;
+}
+
+static void _free_acl(struct _mosquitto_acl *acl)
+{
+	if(!acl) return;
+
+	if(acl->child){
+		_free_acl(acl->child);
+	}
+	if(acl->next){
+		_free_acl(acl->next);
+	}
+	if(acl->topic){
+		_mosquitto_free(acl->topic);
+	}
+	_mosquitto_free(acl);
+}
+
+void mosquitto_acl_cleanup(struct _mosquitto_db *db)
+{
+	int i;
+	struct _mosquitto_acl_user *user_tail;
+
+	if(!db || !db->acl_list) return;
+
+	/* As we're freeing ACLs, we must clear context->acl_list to ensure no
+	 * invalid memory accesses take place later.
+	 * This *requires* the ACLs to be reapplied after mosquitto_acl_cleanup()
+	 * is called if we are reloading the config. If this is not done, all 
+	 * access will be denied to currently connected clients.
+	 */
+	if(db->contexts){
+		for(i=0; i<db->context_count; i++){
+			if(db->contexts[i] && db->contexts[i]->acl_list){
+				db->contexts[i]->acl_list = NULL;
+			}
+		}
+	}
+
+	while(db->acl_list){
+		user_tail = db->acl_list->next;
+
+		_free_acl(db->acl_list->acl);
+		if(db->acl_list->username){
+			_mosquitto_free(db->acl_list->username);
+		}
+		_mosquitto_free(db->acl_list);
+		
+		db->acl_list = user_tail;
+	}
 }
 
 int mqtt3_pwfile_parse(struct _mosquitto_db *db)
@@ -365,6 +460,7 @@ int mosquitto_unpwd_check(struct _mosquitto_db *db, const char *username, const 
 	struct _mosquitto_unpwd *tail;
 
 	if(!db || !username) return MOSQ_ERR_INVAL;
+	if(!db->unpwd) return MOSQ_ERR_SUCCESS;
 
 	tail = db->unpwd;
 	while(tail){
@@ -401,6 +497,90 @@ int mosquitto_unpwd_cleanup(struct _mosquitto_db *db)
 		db->unpwd = tail;
 	}
 
+	return MOSQ_ERR_SUCCESS;
+}
+
+/* Apply security settings after a reload.
+ * Includes:
+ * - Disconnecting anonymous users if appropriate
+ * - Disconnecting users with invalid passwords
+ * - Reapplying ACLs
+ */
+int mosquitto_security_apply(struct _mosquitto_db *db)
+{
+	struct _mosquitto_acl_user *acl_user_tail;
+	struct _mosquitto_unpwd *unpwd_tail;
+	bool allow_anonymous;
+	int i;
+	bool unpwd_ok;
+
+	if(!db) return MOSQ_ERR_INVAL;
+
+	allow_anonymous = db->config->allow_anonymous;
+	
+	if(db->contexts){
+		for(i=0; i<db->context_count; i++){
+			if(db->contexts[i]){
+				/* Check for anonymous clients when allow_anonymous is false */
+				if(!allow_anonymous && !db->contexts[i]->core.username){
+					db->contexts[i]->core.state = mosq_cs_disconnecting;
+					_mosquitto_socket_close(&db->contexts[i]->core);
+					continue;
+				}
+				/* Check for connected clients that are no longer authorised */
+				if(db->unpwd && db->contexts[i]->core.username){
+					unpwd_ok = false;
+					unpwd_tail = db->unpwd;
+					while(unpwd_tail){
+						if(!strcmp(db->contexts[i]->core.username, unpwd_tail->username)){
+							if(unpwd_tail->password){
+								if(!db->contexts[i]->core.password 
+										|| strcmp(db->contexts[i]->core.password, unpwd_tail->password)){
+
+									/* Non matching password to username. */
+									db->contexts[i]->core.state = mosq_cs_disconnecting;
+									_mosquitto_socket_close(&db->contexts[i]->core);
+									continue;
+								}else{
+									/* Username matches, password matches. */
+									unpwd_ok = true;
+								}
+							}else{
+								/* Username matches, password not in password file. */
+								unpwd_ok = true;
+							}
+						}
+						unpwd_tail = unpwd_tail->next;
+					}
+					if(!unpwd_ok){
+						db->contexts[i]->core.state = mosq_cs_disconnecting;
+						_mosquitto_socket_close(&db->contexts[i]->core);
+						continue;
+					}
+				}
+				/* Check for ACLs and apply to user. */
+				if(db->acl_list){
+  					acl_user_tail = db->acl_list;
+					while(acl_user_tail){
+						if(acl_user_tail->username){
+							if(db->contexts[i]->core.username){
+								if(!strcmp(acl_user_tail->username, db->contexts[i]->core.username)){
+									db->contexts[i]->acl_list = acl_user_tail;
+									break;
+								}
+							}
+						}else{
+							if(!db->contexts[i]->core.username){
+								db->contexts[i]->acl_list = acl_user_tail;
+								break;
+							}
+						}
+						acl_user_tail = acl_user_tail->next;
+					}
+				}
+			}
+		}
+	}
 	return MOSQ_ERR_SUCCESS;
 }
 

@@ -85,6 +85,7 @@ struct _mqtt3_listener {
 };
 
 typedef struct {
+	char *config_file;
 	char *acl_file;
 	bool allow_anonymous;
 	int autosave_interval;
@@ -99,13 +100,16 @@ typedef struct {
 	bool persistence;
 	char *persistence_location;
 	char *persistence_file;
+	char *persistence_filepath;
 	int retry_interval;
 	int store_clean_interval;
 	int sys_interval;
 	char *pid_file;
 	char *user;
+#ifdef WITH_BRIDGE
 	struct _mqtt3_bridge *bridges;
 	int bridge_count;
+#endif
 #ifdef WITH_EXTERNAL_SECURITY_CHECKS
 	char *db_host;
 	int db_port;
@@ -179,7 +183,6 @@ typedef struct _mosquitto_db{
 	int context_count;
 	struct mosquitto_msg_store *msg_store;
 	int msg_store_count;
-	char *filepath;
 	mqtt3_config *config;
 } mosquitto_db;
 
@@ -217,6 +220,11 @@ typedef struct _mqtt3_context{
 } mqtt3_context;
 
 /* ============================================================
+ * Main functions
+ * ============================================================ */
+int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count, int listener_max);
+
+/* ============================================================
  * Utility functions
  * ============================================================ */
 /* Return a string that corresponds to the MQTT command number (left shifted 4 bits). */
@@ -230,10 +238,13 @@ void mqtt3_check_keepalive(mqtt3_context *context);
 void mqtt3_config_init(mqtt3_config *config);
 /* Parse command line options into config. */
 int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[]);
-/* Read configuration data from filename into config.
+/* Read configuration data from config->config_file into config.
+ * If reload is true, don't process config options that shouldn't be reloaded (listeners etc)
  * Returns 0 on success, 1 if there is a configuration error or if a file cannot be opened.
  */
-int mqtt3_config_read(mqtt3_config *config, const char *filename);
+int mqtt3_config_read(mqtt3_config *config, bool reload);
+/* Free all config data. */
+void mqtt3_config_cleanup(mqtt3_config *config);
 
 /* ============================================================
  * Raw send functions - just construct the packet and send 
@@ -307,7 +318,7 @@ int mqtt3_db_messages_delete(mqtt3_context *context);
 int mqtt3_db_messages_easy_queue(mosquitto_db *db, mqtt3_context *context, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain);
 int mqtt3_db_messages_queue(mosquitto_db *db, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored);
 int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source_mid, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain, struct mosquitto_msg_store **stored, dbid_t store_id);
-int mqtt3_db_message_store_find(mosquitto_db *db, const char *source, uint16_t mid, struct mosquitto_msg_store **stored);
+int mqtt3_db_message_store_find(mqtt3_context *context, uint16_t mid, struct mosquitto_msg_store **stored);
 /* Check all messages waiting on a client reply and resend if timeout has been exceeded. */
 int mqtt3_db_message_timeout_check(mosquitto_db *db, unsigned int timeout);
 int mqtt3_retain_queue(mosquitto_db *db, mqtt3_context *context, const char *sub, int sub_qos);
@@ -341,23 +352,28 @@ int mqtt3_log_printf(int level, const char *fmt, ...) __attribute__((format(prin
 /* ============================================================
  * Bridge functions
  * ============================================================ */
+#ifdef WITH_BRIDGE
 int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge);
 int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context);
 void mqtt3_bridge_packet_cleanup(mqtt3_context *context);
+#endif
 
 /* ============================================================
  * Security related functions
  * ============================================================ */
+int mosquitto_security_init(mosquitto_db *db);
+void mosquitto_security_cleanup(mosquitto_db *db);
 #ifdef WITH_EXTERNAL_SECURITY_CHECKS
 int mosquitto_unpwd_init(struct _mosquitto_db *db);
 int mosquitto_acl_init(struct _mosquitto_db *db);
-void mosquitto_acl_cleanup(struct _mosquitto_db *db);
 #else
 int mqtt3_aclfile_parse(struct _mosquitto_db *db);
 int mqtt3_pwfile_parse(struct _mosquitto_db *db);
+int mosquitto_security_apply(struct _mosquitto_db *db);
 #endif
 
 int mosquitto_acl_check(struct _mosquitto_db *db, mqtt3_context *context, const char *topic, int access);
+void mosquitto_acl_cleanup(struct _mosquitto_db *db);
 int mosquitto_unpwd_check(struct _mosquitto_db *db, const char *username, const char *password);
 int mosquitto_unpwd_cleanup(struct _mosquitto_db *db);
 

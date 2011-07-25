@@ -38,6 +38,15 @@
  */
 #define WITH_BRIDGE
 
+/* Compile with strict protocol support. This means that both the client
+ * library and the broker will be very strict about protocol compliance on
+ * incoming data. Neither of them will return an error on incorrect "remaining
+ * length" values if this is commented out. The old behaviour (prior to 0.12)
+ * is equivalent to compiling with WITH_STRICT_PROTOCOL defined and means that
+ * clients will be immediately disconnected from the broker on non-compliance.
+ */
+//#define WITH_STRICT_PROTOCOL
+
 /* Use the username/password and ACL checks defined in security_external.c
  * This is empty by default, but gives a more straightforward way of adding
  * support for existing username/password databases to mosquitto.

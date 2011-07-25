@@ -30,9 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <config.h>
 
 #ifndef WIN32
-#include <poll.h>
 #include <pwd.h>
-#include <unistd.h>
 #else
 #include <process.h>
 #include <winsock2.h>
@@ -43,7 +41,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/stat.h>
 #ifdef WITH_WRAP
 #include <tcpd.h>
 #endif
@@ -51,21 +48,24 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <memory_mosq.h>
 
-static int run;
+mosquitto_db int_db;
+
+bool flag_reload = false;
+#ifdef WITH_PERSISTENCE
+bool flag_db_backup = false;
+#endif
+bool flag_tree_print = false;
+int run;
 #ifdef WITH_WRAP
 #include <syslog.h>
 int allow_severity = LOG_INFO;
 int deny_severity = LOG_INFO;
 #endif
 
-mosquitto_db int_db;
-
 int drop_privileges(mqtt3_config *config);
 void handle_sigint(int signal);
 void handle_sigusr1(int signal);
 void handle_sigusr2(int signal);
-static void loop_handle_errors(struct pollfd *pollfds);
-static void loop_handle_reads_writes(struct pollfd *pollfds);
 
 /* mosquitto shouldn't run as root.
  * This function will attempt to change to an unprivileged user and group if
@@ -104,212 +104,13 @@ int drop_privileges(mqtt3_config *config)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int loop(mqtt3_config *config, int *listensock, int listensock_count, int listener_max)
+#ifdef SIGHUP
+/* Signal handler for SIGHUP - flag a config reload. */
+void handle_sighup(int signal)
 {
-	time_t start_time = time(NULL);
-	time_t last_backup = time(NULL);
-	time_t last_store_clean = time(NULL);
-	time_t now;
-	int fdcount;
-#ifndef WIN32
-	sigset_t sigblock, origsig;
-#endif
-	int i;
-	struct pollfd *pollfds = NULL;
-	unsigned int pollfd_count = 0;
-	int new_clients = 1;
-	int client_max = 0;
-	unsigned int sock_max = 0;
-
-#ifndef WIN32
-	sigemptyset(&sigblock);
-	sigaddset(&sigblock, SIGINT);
-#endif
-
-	while(run){
-		mqtt3_db_sys_update(&int_db, config->sys_interval, start_time);
-
-		if(new_clients){
-			client_max = -1;
-			for(i=0; i<int_db.context_count; i++){
-				if(int_db.contexts[i] && int_db.contexts[i]->core.sock >= 0 && int_db.contexts[i]->core.sock > sock_max){
-					client_max = int_db.contexts[i]->core.sock;
-				}
-			}
-			new_clients = 0;
-		}
-
-		if(client_max > listener_max){
-			sock_max = client_max;
-		}else{
-			sock_max = listener_max;
-		}
-		if(sock_max+1 > pollfd_count){
-			pollfd_count = sock_max+1;
-			pollfds = _mosquitto_realloc(pollfds, sizeof(struct pollfd)*pollfd_count);
-			if(!pollfds){
-				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-				return MOSQ_ERR_NOMEM;
-			}
-		}
-
-		memset(pollfds, -1, sizeof(struct pollfd)*pollfd_count);
-
-		for(i=0; i<listensock_count; i++){
-			pollfds[listensock[i]].fd = listensock[i];
-			pollfds[listensock[i]].events = POLLIN;
-			pollfds[listensock[i]].revents = 0;
-		}
-
-		now = time(NULL);
-		for(i=0; i<int_db.context_count; i++){
-			if(int_db.contexts[i]){
-				if(int_db.contexts[i]->core.sock >= 0){
-					if(int_db.contexts[i]->core.sock > sock_max){
-						sock_max = int_db.contexts[i]->core.sock;
-					}
-#ifdef WITH_BRIDGE
-					if(int_db.contexts[i]->bridge){
-						mqtt3_check_keepalive(int_db.contexts[i]);
-					}
-#endif
-					if(!(int_db.contexts[i]->core.keepalive) || now - int_db.contexts[i]->core.last_msg_in < (time_t)(int_db.contexts[i]->core.keepalive)*3/2){
-						if(mqtt3_db_message_write(int_db.contexts[i]) == MOSQ_ERR_SUCCESS){
-							if(int_db.contexts[i]->core.sock < pollfd_count){
-								pollfds[int_db.contexts[i]->core.sock].fd = int_db.contexts[i]->core.sock;
-								pollfds[int_db.contexts[i]->core.sock].events = POLLIN;
-								pollfds[int_db.contexts[i]->core.sock].revents = 0;
-								if(int_db.contexts[i]->core.out_packet){
-									pollfds[int_db.contexts[i]->core.sock].events |= POLLOUT;
-								}
-							}
-						}else{
-							mqtt3_context_disconnect(&int_db, i);
-						}
-					}else{
-						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", int_db.contexts[i]->core.id);
-						/* Client has exceeded keepalive*1.5 */
-						mqtt3_context_disconnect(&int_db, i);
-					}
-				}else{
-#ifdef WITH_BRIDGE
-					if(int_db.contexts[i]->bridge){
-						/* Want to try to restart the bridge connection */
-						if(!int_db.contexts[i]->bridge->restart_t){
-							int_db.contexts[i]->bridge->restart_t = time(NULL)+30;
-						}else{
-							if(time(NULL) > int_db.contexts[i]->bridge->restart_t){
-								int_db.contexts[i]->bridge->restart_t = 0;
-								mqtt3_bridge_connect(&int_db, int_db.contexts[i]);
-							}
-						}
-					}else{
-#endif
-						if(int_db.contexts[i]->core.clean_session == true){
-							mqtt3_context_cleanup(&int_db, int_db.contexts[i], true);
-							int_db.contexts[i] = NULL;
-						}
-#ifdef WITH_BRIDGE
-					}
-#endif
-				}
-			}
-		}
-
-		mqtt3_db_message_timeout_check(&int_db, config->retry_interval);
-
-#ifndef WIN32
-		sigprocmask(SIG_SETMASK, &sigblock, &origsig);
-		fdcount = poll(pollfds, pollfd_count, 1000);
-		sigprocmask(SIG_SETMASK, &origsig, NULL);
-#else
-		fdcount = WSAPoll(pollfds, pollfd_count, 1000);
-#endif
-		if(fdcount == -1){
-			loop_handle_errors(pollfds);
-		}else{
-			loop_handle_reads_writes(pollfds);
-
-			for(i=0; i<listensock_count; i++){
-				if(pollfds[listensock[i]].revents & (POLLIN | POLLPRI)){
-					new_clients = 1;
-					while(mqtt3_socket_accept(&int_db, listensock[i]) != -1){
-					}
-				}
-			}
-		}
-#ifdef WITH_PERSISTENCE
-		if(config->persistence && config->autosave_interval){
-			if(last_backup + config->autosave_interval < now){
-				mqtt3_db_backup(&int_db, false, false);
-				last_backup = time(NULL);
-			}
-		}
-#endif
-		if(!config->store_clean_interval || last_store_clean + config->store_clean_interval < now){
-			mqtt3_db_store_clean(&int_db);
-			last_store_clean = time(NULL);
-		}
-	}
-
-	if(pollfds) _mosquitto_free(pollfds);
-	return MOSQ_ERR_SUCCESS;
+	flag_reload = true;
 }
-
-/* Error ocurred, probably an fd has been closed. 
- * Loop through and check them all.
- */
-static void loop_handle_errors(struct pollfd *pollfds)
-{
-	int i;
-
-	for(i=0; i<int_db.context_count; i++){
-		if(int_db.contexts[i] && int_db.contexts[i]->core.sock >= 0){
-			if(pollfds[int_db.contexts[i]->core.sock].revents & POLLHUP){
-				if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
-					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket error on client %s, disconnecting.", int_db.contexts[i]->core.id);
-				}else{
-					mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", int_db.contexts[i]->core.id);
-				}
-				mqtt3_context_disconnect(&int_db, i);
-			}
-		}
-	}
-}
-
-static void loop_handle_reads_writes(struct pollfd *pollfds)
-{
-	int i;
-
-	for(i=0; i<int_db.context_count; i++){
-		if(int_db.contexts[i] && int_db.contexts[i]->core.sock >= 0){
-			if(pollfds[int_db.contexts[i]->core.sock].revents & POLLOUT){
-				if(mqtt3_net_write(int_db.contexts[i])){
-					if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
-						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket write error on client %s, disconnecting.", int_db.contexts[i]->core.id);
-					}else{
-						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", int_db.contexts[i]->core.id);
-					}
-					/* Write error or other that means we should disconnect */
-					mqtt3_context_disconnect(&int_db, i);
-				}
-			}
-		}
-		if(int_db.contexts[i] && int_db.contexts[i]->core.sock >= 0){
-			if(pollfds[int_db.contexts[i]->core.sock].revents & POLLIN){
-				if(mqtt3_net_read(&int_db, i)){
-					if(int_db.contexts[i]->core.state != mosq_cs_disconnecting){
-						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket read error on client %s, disconnecting.", int_db.contexts[i]->core.id);
-					}else{
-						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client %s disconnected.", int_db.contexts[i]->core.id);
-					}
-					/* Read error or other that means we should disconnect */
-					mqtt3_context_disconnect(&int_db, i);
-				}
-			}
-		}
-	}
-}
+#endif
 
 /* Signal handler for SIGINT and SIGTERM - just stop gracefully. */
 void handle_sigint(int signal)
@@ -321,15 +122,14 @@ void handle_sigint(int signal)
 void handle_sigusr1(int signal)
 {
 #ifdef WITH_PERSISTENCE
-	mqtt3_db_backup(&int_db, false, false);
+	flag_db_backup = true;
 #endif
 }
 
 /* Signal handler for SIGUSR2 - vacuum the db. */
 void handle_sigusr2(int signal)
 {
-	//mqtt3_db_vacuum();
-	mqtt3_sub_tree_print(&int_db.subs, 0);
+	flag_tree_print = true;
 }
 
 int main(int argc, char *argv[])
@@ -344,10 +144,13 @@ int main(int argc, char *argv[])
 	int listener_max;
 	int rc;
 
+	memset(&int_db, 0, sizeof(mosquitto_db));
+
 	_mosquitto_net_init();
 
 	mqtt3_config_init(&config);
 	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
+	int_db.config = &config;
 
 	if(config.daemon){
 #ifndef WIN32
@@ -381,44 +184,14 @@ int main(int argc, char *argv[])
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Couldn't open database.");
 		return 1;
 	}
-	int_db.config = &config;
 
 	/* Initialise logging only after initialising the database in case we're
 	 * logging to topics */
 	mqtt3_log_init(config.log_type, config.log_dest);
 	mqtt3_log_printf(MOSQ_LOG_INFO, "mosquitto version %s (build date %s) starting", VERSION, TIMESTAMP);
 
-#ifdef WITH_EXTERNAL_SECURITY_CHECKS
-	rc = mosquitto_unpwd_init(&int_db);
-	if(rc){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising passwords.");
-		return rc;
-	}
-
-	rc = mosquitto_acl_init(&int_db);
-	if(rc){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising ACLs.");
-		return rc;
-	}
-#else
-	/* Load username/password data if required. */
-	if(config.password_file){
-		rc = mqtt3_pwfile_parse(&int_db);
-		if(rc){
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening password file.");
-			return rc;
-		}
-	}
-
-	/* Load acl data if required. */
-	if(config.acl_file){
-		rc = mqtt3_aclfile_parse(&int_db);
-		if(rc){
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening acl file.");
-			return rc;
-		}
-	}
-#endif
+	rc = mosquitto_security_init(&int_db);
+	if(rc) return rc;
 
 	/* Set static $SYS messages */
 	snprintf(buf, 1024, "mosquitto version %s", VERSION);
@@ -468,6 +241,9 @@ int main(int argc, char *argv[])
 
 	signal(SIGINT, handle_sigint);
 	signal(SIGTERM, handle_sigint);
+#ifdef SIGHUP
+	signal(SIGHUP, handle_sighup);
+#endif
 #ifndef WIN32
 	signal(SIGUSR1, handle_sigusr1);
 	signal(SIGUSR2, handle_sigusr2);
@@ -484,7 +260,7 @@ int main(int argc, char *argv[])
 #endif
 
 	run = 1;
-	rc = loop(&config, listensock, listensock_count, listener_max);
+	rc = mosquitto_main_loop(&int_db, listensock, listensock_count, listener_max);
 
 	mqtt3_log_printf(MOSQ_LOG_INFO, "mosquitto version %s terminating", VERSION);
 	mqtt3_log_close();
@@ -517,16 +293,14 @@ int main(int argc, char *argv[])
 		_mosquitto_free(listensock);
 	}
 
-#ifdef WITH_EXTERNAL_SECURITY_CHECKS
-	mosquitto_acl_cleanup(&int_db);
-#endif
-	mosquitto_unpwd_cleanup(&int_db);
+	mosquitto_security_cleanup(&int_db);
 
 	if(config.pid_file){
 		remove(config.pid_file);
 	}
 
 	_mosquitto_net_cleanup();
+	mqtt3_config_cleanup(int_db.config);
 
 	return rc;
 }

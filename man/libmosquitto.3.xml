@@ -142,6 +142,10 @@
 			<paramdef><parameter>bool clean_session</parameter></paramdef>
 			</funcprototype></funcsynopsis>
 
+			<funcsynopsis><funcprototype><funcdef>void <function>mosquitto_reconnect</function></funcdef>
+			<paramdef><parameter>struct mosquitto *mosq</parameter></paramdef>
+			</funcprototype></funcsynopsis>
+
 			<funcsynopsis><funcprototype><funcdef>int <function>mosquitto_disconnect</function></funcdef>
 			<paramdef><parameter>struct mosquitto *mosq</parameter></paramdef>
 			</funcprototype></funcsynopsis>

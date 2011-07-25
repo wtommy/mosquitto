@@ -146,17 +146,8 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 	db->unpwd = NULL;
 
 #ifdef WITH_PERSISTENCE
-	if(config->persistence){
-		if(config->persistence_location && strlen(config->persistence_location)){
-			db->filepath = _mosquitto_malloc(strlen(config->persistence_location) + strlen(config->persistence_file) + 1);
-			if(!db->filepath) return MOSQ_ERR_NOMEM;
-			sprintf(db->filepath, "%s%s", config->persistence_location, config->persistence_file);
-			if(mqtt3_db_restore(db)) return 1;
-		}else{
-			db->filepath = _mosquitto_strdup(config->persistence_file);
-			if(!db->filepath) return MOSQ_ERR_NOMEM;
-			if(mqtt3_db_restore(db)) return 1;
-		}
+	if(config->persistence && config->persistence_filepath){
+		if(mqtt3_db_restore(db)) return 1;
 	}
 #endif
 
@@ -193,8 +184,6 @@ int mqtt3_db_close(mosquitto_db *db)
 {
 	subhier_clean(db->subs.children);
 	mqtt3_db_store_clean(db);
-
-	if(db->filepath) _mosquitto_free(db->filepath);
 
 	return MOSQ_ERR_SUCCESS;
 }
@@ -518,15 +507,17 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_db_message_store_find(mosquitto_db *db, const char *source, uint16_t mid, struct mosquitto_msg_store **stored)
+int mqtt3_db_message_store_find(mqtt3_context *context, uint16_t mid, struct mosquitto_msg_store **stored)
 {
-	struct mosquitto_msg_store *tail;
+	mosquitto_client_msg *tail;
+
+	if(!context) return MOSQ_ERR_INVAL;
 
 	*stored = NULL;
-	tail = db->msg_store;
+	tail = context->msgs;
 	while(tail){
-		if(tail->source_mid == mid && !strcmp(tail->source_id, source)){
-			*stored = tail;
+		if(tail->store->source_mid == mid && tail->direction == mosq_md_in){
+			*stored = tail->store;
 			return MOSQ_ERR_SUCCESS;
 		}
 		tail = tail->next;

@@ -115,6 +115,8 @@ struct mosquitto *mosquitto_new(const char *id, void *obj)
 		mosq->on_unsubscribe = NULL;
 		mosq->log_destinations = MOSQ_LOG_NONE;
 		mosq->log_priorities = MOSQ_LOG_ERR | MOSQ_LOG_WARNING | MOSQ_LOG_NOTICE | MOSQ_LOG_INFO;
+		mosq->host = NULL;
+		mosq->port = 1883;
 #ifdef WITH_SSL
 		mosq->core.ssl = NULL;
 #endif
@@ -223,6 +225,9 @@ void mosquitto_destroy(struct mosquitto *mosq)
 		if(mosq->core.will->payload) _mosquitto_free(mosq->core.will->payload);
 		_mosquitto_free(mosq->core.will);
 	}
+	if(mosq->host){
+		_mosquitto_free(mosq->host);
+	}
 #ifdef WITH_SSL
 	if(mosq->core.ssl){
 		if(mosq->core.ssl->ssl){
@@ -245,16 +250,32 @@ int mosquitto_socket(struct mosquitto *mosq)
 
 int mosquitto_connect(struct mosquitto *mosq, const char *host, int port, int keepalive, bool clean_session)
 {
+	if(!mosq) return MOSQ_ERR_INVAL;
+	if(!host || port <= 0) return MOSQ_ERR_INVAL;
+
+	if(mosq->host) _mosquitto_free(mosq->host);
+	mosq->host = _mosquitto_strdup(host);
+	if(!mosq->host) return MOSQ_ERR_NOMEM;
+	mosq->port = port;
+
+	mosq->core.keepalive = keepalive;
+	mosq->core.clean_session = clean_session;
+
+	return mosquitto_reconnect(mosq);
+}
+
+int mosquitto_reconnect(struct mosquitto *mosq)
+{
 	int rc;
 	if(!mosq) return MOSQ_ERR_INVAL;
-	if(!host || !port) return MOSQ_ERR_INVAL;
+	if(!mosq->host || mosq->port <= 0) return MOSQ_ERR_INVAL;
 
-	rc = _mosquitto_socket_connect(&mosq->core, host, port);
+	rc = _mosquitto_socket_connect(&mosq->core, mosq->host, mosq->port);
 	if(rc){
 		return rc;
 	}
 
-	return _mosquitto_send_connect(&mosq->core, keepalive, clean_session);
+	return _mosquitto_send_connect(&mosq->core, mosq->core.keepalive, mosq->core.clean_session);
 }
 
 int mosquitto_disconnect(struct mosquitto *mosq)

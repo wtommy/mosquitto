@@ -1,5 +1,6 @@
 /*
 Copyright (c) 2010,2011 Roger Light <roger@atchoo.org>
+Copyright (c) 2011 Sang Kyeong Nam
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -552,13 +553,13 @@ static int _retain_search(struct _mosquitto_db *db, struct _mosquitto_subhier *s
 		/* Subscriptions with wildcards in aren't really valid topics to publish to
 		 * so they can't have retained messages.
 		 */
-		if(strcmp(branch->topic, "+") && strcmp(branch->topic, "#")){
+		if(!_mosquitto_wildcard_check(branch->topic)){
 			if(!strcmp(tokens->topic, "#") && !tokens->next){
 				if(branch->retained){
 					_retain_process(db, branch->retained, context, sub, sub_qos);
 				}
 				_retain_search(db, branch, tokens, context, sub, sub_qos);
-			}else if(!strcmp(branch->topic, tokens->topic) || !strcmp(branch->topic, "+")){
+			}else if(!strcmp(branch->topic, tokens->topic) || !strcmp(tokens->topic, "+")){
 				if(tokens->next){
 					_retain_search(db, branch, tokens->next, context, sub, sub_qos);
 				}else{

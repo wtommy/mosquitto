@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2009,2010, Roger Light <roger@atchoo.org>
+Copyright (c) 2009-2011 Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -41,9 +41,11 @@ int mqtt3_handle_connack(mqtt3_context *context)
 	if(!context){
 		return MOSQ_ERR_INVAL;
 	}
+#ifdef WITH_STRICT_PROTOCOL
 	if(context->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
 	}
+#endif
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNACK");
 	if(_mosquitto_read_byte(&context->core.in_packet, &byte)) return 1; // Reserved byte, not used
 	if(_mosquitto_read_byte(&context->core.in_packet, &rc)) return 1;
@@ -96,9 +98,11 @@ int mqtt3_handle_unsuback(mqtt3_context *context)
 	if(!context){
 		return MOSQ_ERR_INVAL;
 	}
+#ifdef WITH_STRICT_PROTOCOL
 	if(context->core.in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
 	}
+#endif
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received UNSUBACK");
 	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;
 
