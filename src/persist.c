@@ -590,11 +590,6 @@ static int _db_retain_chunk_restore(mosquitto_db *db, int db_fd)
 		}
 		store = store->next;
 	}
-	if(!store){
-		close(db_fd);
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error restoring persistent database, message store corrupt.");
-		return 1;
-	}
 	return MOSQ_ERR_SUCCESS;
 }
 
