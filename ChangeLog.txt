@@ -1,4 +1,4 @@
-0.12 - 201107xx
+0.12 - 20110725
 ===============
 
 - Reload (most) configuration on SIGHUP.
