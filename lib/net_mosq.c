@@ -41,6 +41,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <ws2tcpip.h>
 #endif
 
+#ifdef __SYMBIAN32__
+#include <netinet.in.h>
+#endif
+
 #ifdef __QNX__
 #ifndef AI_ADDRCONFIG
 #define AI_ADDRCONFIG 0
