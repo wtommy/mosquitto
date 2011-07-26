@@ -1,3 +1,8 @@
+0.13 - 2011xxxx
+===============
+
+- Expose message id in Python MosquittoMessage.
+
 0.12 - 20110725
 ===============
 

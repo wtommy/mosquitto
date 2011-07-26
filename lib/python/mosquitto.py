@@ -350,12 +350,13 @@ class Mosquitto:
 
 	def _internal_on_message(self, obj, message):
 		if self.on_message:
+			mid = message.contents.mid
 			topic = message.contents.topic
 			payloadlen = message.contents.payloadlen
 			payload = message.contents.payload
 			qos = message.contents.qos
 			retain = message.contents.retain
-			msg = MosquittoMessage(topic, payloadlen, payload, qos, retain)
+			msg = MosquittoMessage(mid, topic, payloadlen, payload, qos, retain)
 			argcount = self.on_message.func_code.co_argcount
 
 			if argcount == 1:
@@ -406,7 +407,8 @@ class c_MosquittoMessage(Structure):
 
 class MosquittoMessage:
 	"""MQTT message class"""
-	def __init__(self, topic, payloadlen, payload, qos, retain):
+	def __init__(self, mid, topic, payloadlen, payload, qos, retain):
+		self.mid = mid
 		self.topic = topic
 		self.payloadlen = payloadlen
 		self.payload = payload
