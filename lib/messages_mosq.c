@@ -48,7 +48,7 @@ void _mosquitto_message_cleanup(struct mosquitto_message_all **message)
 	if(msg->msg.topic) _mosquitto_free(msg->msg.topic);
 	if(msg->msg.payload) _mosquitto_free(msg->msg.payload);
 	_mosquitto_free(msg);
-};
+}
 
 void _mosquitto_message_cleanup_all(struct mosquitto *mosq)
 {
@@ -61,7 +61,7 @@ void _mosquitto_message_cleanup_all(struct mosquitto *mosq)
 		_mosquitto_message_cleanup(&mosq->messages);
 		mosq->messages = tmp;
 	}
-};
+}
 
 int mosquitto_message_copy(struct mosquitto_message *dst, const struct mosquitto_message *src)
 {
