@@ -367,14 +367,14 @@ int mqtt3_sub_remove(mqtt3_context *context, const char *sub, struct _mosquitto_
 	return rc;
 }
 
-int mqtt3_sub_search(struct _mosquitto_db *db, struct _mosquitto_subhier *root, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
+int mqtt3_db_messages_queue(struct _mosquitto_db *db, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored)
 {
 	int rc = 0;
 	int tree;
 	struct _mosquitto_subhier *subhier;
 	struct _sub_token *tokens = NULL, *tail;
 
-	assert(root);
+	assert(db);
 	assert(topic);
 
 	if(!strncmp(topic, "$SYS/", 5)){
@@ -388,7 +388,7 @@ int mqtt3_sub_search(struct _mosquitto_db *db, struct _mosquitto_subhier *root, 
 		if(_sub_topic_tokenise(topic, &tokens)) return 1;
 	}
 
-	subhier = root->children;
+	subhier = db->subs.children;
 	while(subhier){
 		if(!strcmp(subhier->topic, "") && tree == 0){
 			if(retain){

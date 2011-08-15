@@ -585,7 +585,7 @@ static int _db_retain_chunk_restore(mosquitto_db *db, int db_fd)
 	store = db->msg_store;
 	while(store){
 		if(store->db_id == store_id){
-			mqtt3_sub_search(db, &db->subs, NULL, store->msg.topic, store->msg.qos, store->msg.retain, store);
+			mqtt3_db_messages_queue(db, NULL, store->msg.topic, store->msg.qos, store->msg.retain, store);
 			break;
 		}
 		store = store->next;
