@@ -2,6 +2,8 @@
 ===============
 
 - Expose message id in Python MosquittoMessage.
+- Python MosquittoMessage payload parameter is now a Python string, not a
+  ctypes object which makes it much easier to use.
 
 0.12 - 20110725
 ===============

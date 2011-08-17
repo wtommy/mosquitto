@@ -410,9 +410,7 @@ class MosquittoMessage:
 	def __init__(self, mid, topic, payloadlen, payload, qos, retain):
 		self.mid = mid
 		self.topic = topic
-		self.payloadlen = payloadlen
-		self.payload = payload
-		self.payload_str = cast(self.payload, c_char_p).value
+		self.payload = string_at(payload, payloadlen)
 		self.qos = qos
 		self.retain = retain
 
