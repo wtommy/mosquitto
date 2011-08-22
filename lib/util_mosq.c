@@ -93,6 +93,7 @@ int _mosquitto_fix_sub_topic(char **subtopic)
 {
 	char *fixed = NULL;
 	char *token;
+	char *saveptr = NULL;
 
 	assert(subtopic);
 	assert(*subtopic);
@@ -105,11 +106,11 @@ int _mosquitto_fix_sub_topic(char **subtopic)
 	if((*subtopic)[0] == '/'){
 		fixed[0] = '/';
 	}
-	token = strtok(*subtopic, "/");
+	token = strtok_r(*subtopic, "/", &saveptr);
 	while(token){
 		strcat(fixed, token);
 		strcat(fixed, "/");
-		token = strtok(NULL, "/");
+		token = strtok_r(NULL, "/", &saveptr);
 	}
 
 	fixed[strlen(fixed)-1] = '\0';
