@@ -143,6 +143,7 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 	struct addrinfo hints;
 	struct addrinfo *ainfo, *rp;
 	int s;
+	char err[1024];
 #ifdef WIN32
 	uint32_t val = 1;
 #endif
@@ -178,7 +179,8 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 		COMPAT_CLOSE(sock);
 	}
 	if(!rp){
-		fprintf(stderr, "Error: %s\n", strerror(errno));
+		strerror_r(errno, err, 1024);
+		fprintf(stderr, "Error: %s\n", err);
 		COMPAT_CLOSE(sock);
 		return MOSQ_ERR_UNKNOWN;
 	}
