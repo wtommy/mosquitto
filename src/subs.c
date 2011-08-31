@@ -93,7 +93,7 @@ static int _subs_process(struct _mosquitto_db *db, struct _mosquitto_subhier *hi
 		if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, msg_qos, false, stored) == 1) rc = 1;
 		leaf = leaf->next;
 	}
-	return MOSQ_ERR_SUCCESS;
+	return rc;
 }
 
 static int _sub_topic_tokenise(const char *subtopic, struct _sub_token **topics)
