@@ -463,6 +463,10 @@ _mosquitto_loop = _libmosq.mosquitto_loop
 _mosquitto_loop.argtypes = [c_void_p, c_int]
 _mosquitto_loop.restype = c_int
 
+_mosquitto_username_pw_set = _libmosq.mosquitto_username_pw_set
+_mosquitto_username_pw_set.argtypes = [c_void_p, c_char_p, c_char_p]
+_mosquitto_username_pw_set.restype = c_int
+
 _mosquitto_will_set = _libmosq.mosquitto_will_set
 _mosquitto_will_set.argtypes = [c_void_p, c_bool, c_char_p, c_uint32, POINTER(c_uint8), c_int, c_bool]
 _mosquitto_will_set.restype = c_int
