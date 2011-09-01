@@ -96,6 +96,7 @@ typedef struct {
 	int listener_count;
 	int log_dest;
 	int log_type;
+	bool log_timestamp;
 	char *password_file;
 	bool persistence;
 	char *persistence_location;

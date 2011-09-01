@@ -56,6 +56,7 @@ static void _config_init_reload(mqtt3_config *config)
 	config->log_dest = MQTT3_LOG_SYSLOG;
 	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING;
 #endif
+	config->log_timestamp = true;
 	if(config->password_file) _mosquitto_free(config->password_file);
 	config->password_file = NULL;
 	config->persistence = false;
@@ -470,6 +471,8 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty log_dest value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "log_timestamp")){
+					if(_mqtt3_conf_parse_bool(&token, token, &config->log_timestamp)) return 1;
 				}else if(!strcmp(token, "log_type")){
 					token = strtok(NULL, " ");
 					if(token){

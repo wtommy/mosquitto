@@ -149,6 +149,14 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>log_timestamp</option></term>
+				<listitem>
+					<para>Boolean value, if set to true a timestamp value will
+					be added to each log entry. The default is true.</para>
+					<para>Reloaded on reload signal.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>log_type</option></term>
 				<listitem>
 					<para>Choose types of messages to log. Possible types are:

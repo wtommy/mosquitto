@@ -97,12 +97,14 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 {
 	va_list va;
 	char *s;
+	char *st;
 	int len;
 #ifdef WIN32
 	char *sp;
 #endif
 	const char *topic;
 	int syslog_priority;
+	time_t now = time(NULL);
 
 	if((log_priorities & priority) && log_destinations != MQTT3_LOG_NONE){
 		switch(priority){
@@ -164,11 +166,19 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 		s[len-1] = '\0'; /* Ensure string is null terminated. */
 
 		if(log_destinations & MQTT3_LOG_STDOUT){
-			fprintf(stdout, "%s\n", s);
+			if(int_db.config->log_timestamp){
+				fprintf(stdout, "%d: %s\n", (int)now, s);
+			}else{
+				fprintf(stdout, "%s\n", s);
+			}
 			fflush(stdout);
 		}
 		if(log_destinations & MQTT3_LOG_STDERR){
-			fprintf(stderr, "%s\n", s);
+			if(int_db.config->log_timestamp){
+				fprintf(stderr, "%d: %s\n", (int)now, s);
+			}else{
+				fprintf(stderr, "%s\n", s);
+			}
 			fflush(stderr);
 		}
 		if(log_destinations & MQTT3_LOG_SYSLOG){
@@ -180,7 +190,19 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 #endif
 		}
 		if(log_destinations & MQTT3_LOG_TOPIC && priority != MOSQ_LOG_DEBUG){
-			mqtt3_db_messages_easy_queue(&int_db, NULL, topic, 2, strlen(s), (uint8_t *)s, 0);
+			if(int_db.config->log_timestamp){
+				len += 30;
+				st = _mosquitto_malloc(len*sizeof(char));
+				if(!st){
+					_mosquitto_free(s);
+					return MOSQ_ERR_NOMEM;
+				}
+				snprintf(st, len, "%d: %s", (int)now, s);
+				mqtt3_db_messages_easy_queue(&int_db, NULL, topic, 2, strlen(st), (uint8_t *)st, 0);
+				_mosquitto_free(st);
+			}else{
+				mqtt3_db_messages_easy_queue(&int_db, NULL, topic, 2, strlen(s), (uint8_t *)s, 0);
+			}
 		}
 		_mosquitto_free(s);
 	}
