@@ -202,6 +202,8 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 			db->contexts[i]->core.address = _mosquitto_strdup(context->core.address);
 			db->contexts[i]->core.sock = context->core.sock;
 			db->contexts[i]->listener = context->listener;
+			db->contexts[i]->core.last_msg_in = time(NULL);
+			db->contexts[i]->core.last_msg_out = time(NULL);
 			context->core.sock = -1;
 			context->core.state = mosq_cs_disconnecting;
 			context = db->contexts[i];

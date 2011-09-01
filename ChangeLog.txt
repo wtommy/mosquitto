@@ -6,6 +6,8 @@
   ctypes object which makes it much easier to use.
 - C++ library is now in its own namespace, mosquittopp.
 - Fix missing mosquitto_username_pw_set() python binding.
+- Fix keepalive timeout for reconnecting non clean-session clients. Prevents
+  immediate disconnection on reconnection.
 
 0.12 - 20110725
 ===============
