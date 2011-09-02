@@ -117,22 +117,6 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 		return MOSQ_ERR_NOMEM;
 	}
 	child->next = NULL;
-	child->topic = _mosquitto_strdup("/");
-	if(!child->topic){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-		return MOSQ_ERR_NOMEM;
-	}
-	child->subs = NULL;
-	child->children = NULL;
-	child->retained = NULL;
-	db->subs.children->next = child;
-
-	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
-	if(!child){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
-		return MOSQ_ERR_NOMEM;
-	}
-	child->next = NULL;
 	child->topic = _mosquitto_strdup("$SYS");
 	if(!child->topic){
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
@@ -141,7 +125,7 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 	child->subs = NULL;
 	child->children = NULL;
 	child->retained = NULL;
-	db->subs.children->next->next = child;
+	db->subs.children->next = child;
 
 	db->unpwd = NULL;
 

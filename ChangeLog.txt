@@ -9,6 +9,8 @@
 - Fix missing mosquitto_username_pw_set() python binding.
 - Fix keepalive timeout for reconnecting non clean-session clients. Prevents
   immediate disconnection on reconnection.
+- Fix subscription wildcard matching - a subscription of +/+ will now match
+  against /foo
 
 0.12 - 20110725
 ===============
