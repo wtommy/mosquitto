@@ -68,6 +68,7 @@ static mqtt3_context *_db_find_or_add_context(mosquitto_db *db, const char *clie
 	}
 	if(!context){
 		context = mqtt3_context_init(-1);
+		context->core.clean_session = false;
 
 		for(i=0; i<db->context_count; i++){
 			if(!db->contexts[i]){
