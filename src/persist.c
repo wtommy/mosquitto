@@ -395,6 +395,7 @@ static int _db_client_msg_restore(mosquitto_db *db, const char *client_id, uint1
 	while(store){
 		if(store->db_id == store_id){
 			cmsg->store = store;
+			cmsg->store->ref_count++;
 			break;
 		}
 		store = store->next;
