@@ -13,6 +13,7 @@
   against /foo
 - When restoring persistent database, clients should be set to non
   clean-session or their subscriptions will be immediately removed.
+- Fix SUBACK payload for multiple topic subscriptions.
 
 0.12 - 20110725
 ===============

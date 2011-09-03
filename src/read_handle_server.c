@@ -353,17 +353,17 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 			if(mqtt3_retain_queue(db, context, sub, qos)) rc = 1;
 #endif
 			_mosquitto_free(sub);
-		}
 
-		tmp_payload = _mosquitto_realloc(payload, payloadlen + 1);
-		if(tmp_payload){
-			payload = tmp_payload;
-			payload[payloadlen] = qos;
-			payloadlen++;
-		}else{
-			if(payload) _mosquitto_free(payload);
+			tmp_payload = _mosquitto_realloc(payload, payloadlen + 1);
+			if(tmp_payload){
+				payload = tmp_payload;
+				payload[payloadlen] = qos;
+				payloadlen++;
+			}else{
+				if(payload) _mosquitto_free(payload);
 
-			return MOSQ_ERR_NOMEM;
+				return MOSQ_ERR_NOMEM;
+			}
 		}
 	}
 
