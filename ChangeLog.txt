@@ -14,6 +14,8 @@
 - When restoring persistent database, clients should be set to non
   clean-session or their subscriptions will be immediately removed.
 - Fix SUBACK payload for multiple topic subscriptions.
+- Don't send retained messages when a client subscribes to a topic it is
+  already subscribed to.
 
 0.12 - 20110725
 ===============
