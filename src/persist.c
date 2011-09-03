@@ -52,6 +52,7 @@ const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','
 /* End DB read/write */
 
 #define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
+#define write_e(a, b, c) if(write(a, b, c) != c){ goto error; }
 
 static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *sub, int qos);
 
@@ -105,8 +106,6 @@ static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_con
 	assert(db_fd >= 0);
 	assert(context);
 
-#define write_e(a, b, c) if(write(a, b, c) != c){ return 1; }
-
 	cmsg = context->msgs;
 	while(cmsg){
 		slen = strlen(context->core.id);
@@ -147,9 +146,10 @@ static int mqtt3_db_client_messages_write(mosquitto_db *db, int db_fd, mqtt3_con
 		cmsg = cmsg->next;
 	}
 
-#undef write_e
-
 	return MOSQ_ERR_SUCCESS;
+error:
+	mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
+	return 1;
 }
 
 
@@ -164,8 +164,6 @@ static int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 
 	assert(db);
 	assert(db_fd >= 0);
-
-#define write_e(a, b, c) if(write(a, b, c) != c){ return 1; }
 
 	stored = db->msg_store;
 	while(stored){
@@ -214,9 +212,10 @@ static int mqtt3_db_message_store_write(mosquitto_db *db, int db_fd)
 		stored = stored->next;
 	}
 
-#undef write_e
-
 	return MOSQ_ERR_SUCCESS;
+error:
+	mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
+	return 1;
 }
 
 static int mqtt3_db_client_write(mosquitto_db *db, int db_fd)
@@ -256,7 +255,6 @@ static int _db_subs_retain_write(mosquitto_db *db, int db_fd, struct _mosquitto_
 		snprintf(thistopic, slen, "%s", node->topic);
 	}
 
-#define write_e(a, b, c) if(write(a, b, c) != c){ return 1; }
 	sub = node->subs;
 	while(sub){
 		if(sub->context->core.clean_session == false){
@@ -290,7 +288,6 @@ static int _db_subs_retain_write(mosquitto_db *db, int db_fd, struct _mosquitto_
 		i64temp = node->retained->db_id;
 		write_e(db_fd, &i64temp, sizeof(dbid_t));
 	}
-#undef write_e
 
 	subhier = node->children;
 	while(subhier){
@@ -299,6 +296,9 @@ static int _db_subs_retain_write(mosquitto_db *db, int db_fd, struct _mosquitto_
 	}
 	_mosquitto_free(thistopic);
 	return MOSQ_ERR_SUCCESS;
+error:
+	mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
+	return 1;
 }
 
 static int mqtt3_db_subs_retain_write(mosquitto_db *db, int db_fd)
@@ -336,7 +336,6 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 		goto error;
 	}
 
-#define write_e(a, b, c) if(write(a, b, c) != c){ goto error; }
 	/* Header */
 	write_e(db_fd, magic, 15);
 	write_e(db_fd, &crc, sizeof(uint32_t));
@@ -356,7 +355,6 @@ int mqtt3_db_backup(mosquitto_db *db, bool cleanup, bool shutdown)
 	/* last db mid */
 	i64temp = db->last_db_id;
 	write_e(db_fd, &i64temp, sizeof(dbid_t));
-#undef write_e
 
 	if(mqtt3_db_message_store_write(db, db_fd)){
 		goto error;
@@ -731,7 +729,5 @@ static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *
 	if(!context) return 1;
 	return mqtt3_sub_add(context, sub, qos, &db->subs);
 }
-
-#undef read_e
 
 #endif

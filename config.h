@@ -19,7 +19,7 @@
 /* Compile with memory tracking support? If disabled, mosquitto won't track
  * heap memory usage nor export '$SYS/broker/heap/current size', but will use
  * slightly less memory and CPU time. */
-#define WITH_MEMORY_TRACKING
+//#define WITH_MEMORY_TRACKING
 
 /* Compile with persistent database support. This allows the broker to store
  * retained messages and durable subscriptions to a file periodically and on
