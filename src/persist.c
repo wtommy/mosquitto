@@ -51,6 +51,8 @@ const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','
 #define DB_CHUNK_SUB 5
 /* End DB read/write */
 
+#define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
+
 static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *sub, int qos);
 
 static mqtt3_context *_db_find_or_add_context(mosquitto_db *db, const char *client_id)
@@ -433,7 +435,6 @@ static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
 	char *client_id = NULL;
 	int rc;
 
-#define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
 	read_e(db_fd, &i16temp, sizeof(uint16_t));
 	slen = ntohs(i16temp);
 	if(!slen){
@@ -460,7 +461,6 @@ static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
 	read_e(db_fd, &direction, sizeof(uint8_t));
 	read_e(db_fd, &state, sizeof(uint8_t));
 	read_e(db_fd, &dup, sizeof(uint8_t));
-#undef read_e
 
 	rc = _db_client_msg_restore(db, client_id, mid, qos, retain, direction, state, dup, store_id);
 	_mosquitto_free(client_id);
@@ -484,7 +484,6 @@ static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 	int rc = 0;
 	struct mosquitto_msg_store *stored = NULL;
 
-#define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
 	read_e(db_fd, &i64temp, sizeof(dbid_t));
 	store_id = i64temp;
 
@@ -558,7 +557,6 @@ static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 		}
 	}
 
-#undef read_e
 	rc = mqtt3_db_message_store(db, source_id, source_mid, topic, qos, payloadlen, payload, retain, &stored, store_id);
 	_mosquitto_free(source_id);
 	_mosquitto_free(topic);
@@ -603,7 +601,6 @@ static int _db_sub_chunk_restore(mosquitto_db *db, int db_fd)
 	char *topic;
 	int rc = 0;
 
-#define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
 	read_e(db_fd, &i16temp, sizeof(uint16_t));
 	slen = ntohs(i16temp);
 	client_id = _mosquitto_calloc(slen+1, sizeof(char));
@@ -627,7 +624,6 @@ static int _db_sub_chunk_restore(mosquitto_db *db, int db_fd)
 	if(_db_restore_sub(db, client_id, topic, qos)){
 		rc = 1;
 	}
-#undef read_e
 	_mosquitto_free(client_id);
 	_mosquitto_free(topic);
 
@@ -654,7 +650,6 @@ int mqtt3_db_restore(mosquitto_db *db)
 	assert(db->config);
 	assert(db->config->persistence_filepath);
 
-#define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
 	fd = open(db->config->persistence_filepath, O_RDONLY);
 	if(fd < 0) return MOSQ_ERR_SUCCESS;
 	read_e(fd, &header, 15);
@@ -714,7 +709,6 @@ int mqtt3_db_restore(mosquitto_db *db)
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to restore persistent database. Unrecognised file format.");
 		rc = 1;
 	}
-#undef read_e
 
 	close(fd);
 
@@ -737,5 +731,7 @@ static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *
 	if(!context) return 1;
 	return mqtt3_sub_add(context, sub, qos, &db->subs);
 }
+
+#undef read_e
 
 #endif
