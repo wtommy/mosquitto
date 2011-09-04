@@ -49,6 +49,7 @@ const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','
 #define DB_CHUNK_CLIENT_MSG 3
 #define DB_CHUNK_RETAIN 4
 #define DB_CHUNK_SUB 5
+#define DB_CHUNK_CLIENT 6
 /* End DB read/write */
 
 #define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
@@ -56,7 +57,7 @@ const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','
 
 static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *sub, int qos);
 
-static mqtt3_context *_db_find_or_add_context(mosquitto_db *db, const char *client_id)
+static mqtt3_context *_db_find_or_add_context(mosquitto_db *db, const char *client_id, uint16_t last_mid)
 {
 	mqtt3_context *context;
 	mqtt3_context **tmp_contexts;
@@ -90,6 +91,9 @@ static mqtt3_context *_db_find_or_add_context(mosquitto_db *db, const char *clie
 			}
 		}
 		context->core.id = _mosquitto_strdup(client_id);
+	}
+	if(last_mid){
+		context->core.last_mid = last_mid;
 	}
 	return context;
 }
@@ -222,6 +226,8 @@ static int mqtt3_db_client_write(mosquitto_db *db, int db_fd)
 {
 	int i;
 	mqtt3_context *context;
+	uint16_t i16temp, slen;
+	uint32_t length;
 
 	assert(db);
 	assert(db_fd >= 0);
@@ -229,11 +235,27 @@ static int mqtt3_db_client_write(mosquitto_db *db, int db_fd)
 	for(i=0; i<db->context_count; i++){
 		context = db->contexts[i];
 		if(context && context->core.clean_session == false){
+			length = htonl(2+strlen(context->core.id) + sizeof(uint16_t));
+
+			i16temp = htons(DB_CHUNK_CLIENT);
+			write_e(db_fd, &i16temp, sizeof(uint16_t));
+			write_e(db_fd, &length, sizeof(uint32_t));
+
+			slen = strlen(context->core.id);
+			i16temp = htons(slen);
+			write_e(db_fd, &i16temp, sizeof(uint16_t));
+			write_e(db_fd, context->core.id, slen);
+			i16temp = htons(context->core.last_mid);
+			write_e(db_fd, &i16temp, sizeof(uint16_t));
+
 			if(mqtt3_db_client_messages_write(db, db_fd, context)) return 1;
 		}
 	}
 
 	return MOSQ_ERR_SUCCESS;
+error:
+	mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
+	return 1;
 }
 
 static int _db_subs_retain_write(mosquitto_db *db, int db_fd, struct _mosquitto_subhier *node, const char *topic)
@@ -405,7 +427,7 @@ static int _db_client_msg_restore(mosquitto_db *db, const char *client_id, uint1
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error restoring persistent database, message store corrupt.");
 		return 1;
 	}
-	context = _db_find_or_add_context(db, client_id);
+	context = _db_find_or_add_context(db, client_id, 0);
 	if(!context){
 		_mosquitto_free(cmsg);
 		mqtt3_log_printf(MOSQ_LOG_ERR, "Error restoring persistent database, message store corrupt.");
@@ -423,6 +445,44 @@ static int _db_client_msg_restore(mosquitto_db *db, const char *client_id, uint1
 	cmsg->next = NULL;
 
 	return MOSQ_ERR_SUCCESS;
+}
+
+static int _db_client_chunk_restore(mosquitto_db *db, int db_fd)
+{
+	uint16_t i16temp, slen, last_mid;
+	char *client_id = NULL;
+	int rc = 0;
+	mqtt3_context *context;
+
+	read_e(db_fd, &i16temp, sizeof(uint16_t));
+	slen = ntohs(i16temp);
+	if(!slen){
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Corrupt persistent database.");
+		close(db_fd);
+		return 1;
+	}
+	client_id = _mosquitto_calloc(slen+1, sizeof(char));
+	if(!client_id){
+		close(db_fd);
+		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+		return MOSQ_ERR_NOMEM;
+	}
+	read_e(db_fd, client_id, slen);
+
+	read_e(db_fd, &i16temp, sizeof(uint16_t));
+	last_mid = ntohs(i16temp);
+
+	context = _db_find_or_add_context(db, client_id, last_mid);
+	if(!context) rc = 1;
+
+	_mosquitto_free(client_id);
+
+	return rc;
+error:
+	mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
+	if(db_fd >= 0) close(db_fd);
+	if(client_id) _mosquitto_free(client_id);
+	return 1;
 }
 
 static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
@@ -656,7 +716,10 @@ int mqtt3_db_restore(mosquitto_db *db)
 		read_e(fd, &crc, sizeof(uint32_t));
 		read_e(fd, &i32temp, sizeof(uint32_t));
 		db_version = ntohl(i32temp);
-		if(db_version != MOSQ_DB_VERSION && db_version != 0){
+		/* IMPORTANT - this is where compatibility checks are made.
+		 * Is your DB change still compatible with previous versions?
+		 */
+		if(db_version > MOSQ_DB_VERSION && db_version != 0){
 			close(fd);
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unsupported persistent database format version %d (need version %d).", db_version, MOSQ_DB_VERSION);
 			return 1;
@@ -696,6 +759,10 @@ int mqtt3_db_restore(mosquitto_db *db)
 					if(_db_sub_chunk_restore(db, fd)) return 1;
 					break;
 
+				case DB_CHUNK_CLIENT:
+					if(_db_client_chunk_restore(db, fd)) return 1;
+					break;
+
 				default:
 					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Unsupported chunk \"%d\" in persistent database file. Ignoring.", chunk);
 					lseek(fd, length, SEEK_CUR);
@@ -725,7 +792,7 @@ static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *
 	assert(client_id);
 	assert(sub);
 
-	context = _db_find_or_add_context(db, client_id);
+	context = _db_find_or_add_context(db, client_id, 0);
 	if(!context) return 1;
 	return mqtt3_sub_add(context, sub, qos, &db->subs);
 }
