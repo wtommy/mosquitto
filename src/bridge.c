@@ -38,6 +38,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <mosquitto.h>
 #include <send_mosq.h>
+#include <util_mosq.h>
+#include <will_mosq.h>
 
 #ifdef WITH_BRIDGE
 
@@ -104,6 +106,9 @@ int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 {
 	int rc;
 	int i;
+	char *notification_topic;
+	int notification_topic_len;
+	uint8_t notification_payload[2];
 
 	if(!context || !context->bridge) return MOSQ_ERR_INVAL;
 
@@ -124,8 +129,41 @@ int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 	}
 
 	context->core.last_msg_in = time(NULL);
+
+	if(context->bridge->notifications){
+		notification_topic_len = strlen(context->core.id)+strlen("$SYS/broker/connection//state");
+		notification_topic = _mosquitto_malloc(sizeof(char)*(notification_topic_len+1));
+		if(!notification_topic) return 1;
+
+		snprintf(notification_topic, notification_topic_len+1, "$SYS/broker/connection/%s/state", context->core.id);
+		notification_payload[0] = '0';
+		notification_payload[1] = '\0';
+		if(_mosquitto_will_set(&context->core, true, notification_topic, 2, (uint8_t *)&notification_payload, 1, true)){
+			_mosquitto_free(notification_topic);
+			return 1;
+		}
+		_mosquitto_free(notification_topic);
+	}
+
 	if(_mosquitto_send_connect(&context->core, context->core.keepalive, context->core.clean_session)){
 		return 1;
+	}
+
+	if(context->bridge->notifications){
+		notification_topic_len = strlen(context->core.id)+strlen("$SYS/broker/connection//state");
+		notification_topic = _mosquitto_malloc(sizeof(char)*(notification_topic_len+1));
+		if(!notification_topic) return 1;
+
+		snprintf(notification_topic, notification_topic_len+1, "$SYS/broker/connection/%s/state", context->core.id);
+		notification_payload[0] = '1';
+		notification_payload[1] = '\0';
+		if(_mosquitto_send_real_publish(&context->core, _mosquitto_mid_generate(&context->core),
+				notification_topic, 2, (uint8_t *)&notification_payload, 1, true, 0)){
+
+			_mosquitto_free(notification_topic);
+			return 1;
+		}
+		_mosquitto_free(notification_topic);
 	}
 
 	for(i=0; i<context->bridge->topic_count; i++){
