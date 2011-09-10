@@ -17,7 +17,8 @@ add_library(libmosquitto SHARED
 	send_base_mosq.c
 	send_client_mosq.c
 	send_mosq.c send_mosq.h
-	util_mosq.c util_mosq.h)
+	util_mosq.c util_mosq.h
+	will_mosq.c will_mosq.h)
 
 if (WIN32)
 	target_link_libraries(libmosquitto ws2_32 ${OPENSSL_LIBRARIES})
