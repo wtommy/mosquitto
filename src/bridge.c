@@ -149,23 +149,6 @@ int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 		return 1;
 	}
 
-	if(context->bridge->notifications){
-		notification_topic_len = strlen(context->core.id)+strlen("$SYS/broker/connection//state");
-		notification_topic = _mosquitto_malloc(sizeof(char)*(notification_topic_len+1));
-		if(!notification_topic) return 1;
-
-		snprintf(notification_topic, notification_topic_len+1, "$SYS/broker/connection/%s/state", context->core.id);
-		notification_payload[0] = '1';
-		notification_payload[1] = '\0';
-		if(_mosquitto_send_real_publish(&context->core, _mosquitto_mid_generate(&context->core),
-				notification_topic, 2, (uint8_t *)&notification_payload, 1, true, 0)){
-
-			_mosquitto_free(notification_topic);
-			return 1;
-		}
-		_mosquitto_free(notification_topic);
-	}
-
 	for(i=0; i<context->bridge->topic_count; i++){
 		if(context->bridge->topics[i].direction == bd_out || context->bridge->topics[i].direction == bd_both){
 			if(mqtt3_sub_add(context, context->bridge->topics[i].topic, 2, &db->subs)) return 1;

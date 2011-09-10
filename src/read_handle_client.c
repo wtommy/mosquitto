@@ -28,15 +28,22 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <config.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <mqtt3.h>
+#include <memory_mosq.h>
 #include <send_mosq.h>
+#include <util_mosq.h>
 
 int mqtt3_handle_connack(mqtt3_context *context)
 {
 	uint8_t byte;
 	uint8_t rc;
 	int i;
+	char *notification_topic;
+	int notification_topic_len;
+	uint8_t notification_payload[2];
 
 	if(!context){
 		return MOSQ_ERR_INVAL;
@@ -52,6 +59,22 @@ int mqtt3_handle_connack(mqtt3_context *context)
 	switch(rc){
 		case 0:
 			if(context->bridge){
+				if(context->bridge->notifications){
+					notification_topic_len = strlen(context->core.id)+strlen("$SYS/broker/connection//state");
+					notification_topic = _mosquitto_malloc(sizeof(char)*(notification_topic_len+1));
+					if(!notification_topic) return 1;
+
+					snprintf(notification_topic, notification_topic_len+1, "$SYS/broker/connection/%s/state", context->core.id);
+					notification_payload[0] = '1';
+					notification_payload[1] = '\0';
+					if(_mosquitto_send_real_publish(&context->core, _mosquitto_mid_generate(&context->core),
+							notification_topic, 2, (uint8_t *)&notification_payload, 1, true, 0)){
+
+						_mosquitto_free(notification_topic);
+						return 1;
+					}
+					_mosquitto_free(notification_topic);
+				}
 				for(i=0; i<context->bridge->topic_count; i++){
 					if(context->bridge->topics[i].direction == bd_in || context->bridge->topics[i].direction == bd_both){
 						if(_mosquitto_send_subscribe(&context->core, NULL, false, context->bridge->topics[i].topic, 2)){
