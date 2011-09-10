@@ -210,6 +210,7 @@ struct _mqtt3_bridge{
 	time_t restart_t;
 	char *username;
 	char *password;
+	bool notifications;
 };
 
 typedef struct _mqtt3_context{

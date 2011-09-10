@@ -397,6 +397,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						cur_bridge->restart_t = 0;
 						cur_bridge->username = NULL;
 						cur_bridge->password = NULL;
+						cur_bridge->notifications = true;
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty connection value in configuration.");
 						return MOSQ_ERR_INVAL;
@@ -533,6 +534,17 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						return MOSQ_ERR_INVAL;
 					}
 					if(_mqtt3_conf_parse_string(&token, "mount_point", &config->listeners[config->listener_count-1].mount_point)) return 1;
+				}else if(!strcmp(token, "notifications")){
+#ifdef WITH_BRIDGE
+					if(reload) continue; // FIXME
+					if(!cur_bridge){
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					if(_mqtt3_conf_parse_bool(&token, "notifications", &cur_bridge->notifications)) return 1;
+#else
+					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "password")){
 #ifdef WITH_BRIDGE
 					if(reload) continue; // FIXME
