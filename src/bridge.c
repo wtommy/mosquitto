@@ -138,6 +138,7 @@ int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 		snprintf(notification_topic, notification_topic_len+1, "$SYS/broker/connection/%s/state", context->core.id);
 		notification_payload[0] = '0';
 		notification_payload[1] = '\0';
+		mqtt3_db_messages_easy_queue(db, context, notification_topic, 1, 2, (uint8_t *)&notification_payload, 1);
 		if(_mosquitto_will_set(&context->core, true, notification_topic, 2, (uint8_t *)&notification_payload, 1, true)){
 			_mosquitto_free(notification_topic);
 			return 1;
