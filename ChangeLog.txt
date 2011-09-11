@@ -1,6 +1,7 @@
 0.13 - 2011xxxx
 ===============
 
+- Implement bridge state notification messages.
 - Save client last used mid in persistent database (DB version number bumped).
 - Expose message id in Python MosquittoMessage.
 - Python MosquittoMessage payload parameter is now a Python string, not a
