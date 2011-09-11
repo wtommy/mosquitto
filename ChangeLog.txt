@@ -13,6 +13,8 @@
   immediate disconnection on reconnection.
 - Fix subscription wildcard matching - a subscription of +/+ will now match
   against /foo
+- Fix subscription wildcard matching - a subscription of foo/# will now match
+  against foo
 - When restoring persistent database, clients should be set to non
   clean-session or their subscriptions will be immediately removed.
 - Fix SUBACK payload for multiple topic subscriptions.
