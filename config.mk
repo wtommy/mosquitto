@@ -4,7 +4,7 @@ TIMESTAMP:=$(shell date "+%F %T%z")
 
 #MANCOUNTRIES=en_GB
 
-CFLAGS=-I. -I.. -ggdb -Wall -O2 -I../lib -pg
+CFLAGS=-I. -I.. -ggdb -Wall -O2 -I../lib
 
 UNAME:=$(shell uname -s)
 ifeq ($(UNAME),QNX)
@@ -13,7 +13,7 @@ else
 	LIBS=
 endif
 
-LDFLAGS=-pg -nopie
+LDFLAGS=
 # Add -lwrap to LDFLAGS if compiling with tcp wrappers support.
 
 CC=gcc

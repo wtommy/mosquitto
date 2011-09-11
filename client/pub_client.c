@@ -33,11 +33,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <string.h>
 #ifndef WIN32
-#include <pthread.h>
 #include <unistd.h>
 #else
 #include <process.h>
-#include <winpthreads.h>
 #define snprintf sprintf_s
 #endif
 
@@ -66,8 +64,6 @@ static char *username = NULL;
 static char *password = NULL;
 static bool disconnect_sent = false;
 static bool quiet = false;
-static pthread_mutex_t connected_mutex;
-static pthread_mutex_t status_mutex;
 
 void my_connect_callback(void *obj, int result)
 {
@@ -85,9 +81,7 @@ void my_connect_callback(void *obj, int result)
 				rc = mosquitto_publish(mosq, &mid_sent, topic, 0, NULL, qos, retain);
 				break;
 			case MSGMODE_STDIN_LINE:
-				pthread_mutex_lock(&status_mutex);
 				status = STATUS_CONNACK_RECVD;
-				pthread_mutex_unlock(&status_mutex);
 				break;
 		}
 		if(rc){
@@ -120,9 +114,7 @@ void my_connect_callback(void *obj, int result)
 
 void my_disconnect_callback(void *obj)
 {
-	pthread_mutex_lock(&connected_mutex);
 	connected = false;
-	pthread_mutex_unlock(&connected_mutex);
 }
 
 void my_publish_callback(void *obj, uint16_t mid)
@@ -518,13 +510,9 @@ int main(int argc, char *argv[])
 		return rc;
 	}
 
-	pthread_mutex_init(&connected_mutex, NULL);
-	pthread_mutex_init(&status_mutex, NULL);
 	rc = mosquitto_loop_start(mosq);
 	do{
-		pthread_mutex_lock(&status_mutex);
 		if(mode == MSGMODE_STDIN_LINE && status == STATUS_CONNACK_RECVD){
-			pthread_mutex_unlock(&status_mutex);
 			if(fgets(buf, 1024, stdin)){
 				buf[strlen(buf)-1] = '\0';
 				rc2 = mosquitto_publish(mosq, &mid_sent, topic, strlen(buf), (uint8_t *)buf, qos, retain);
@@ -536,20 +524,9 @@ int main(int argc, char *argv[])
 				mosquitto_disconnect(mosq);
 				disconnect_sent = true;
 			}
-		}else{
-			pthread_mutex_unlock(&status_mutex);
 		}
-		pthread_mutex_lock(&connected_mutex);
-		if(!connected){
-			pthread_mutex_unlock(&connected_mutex);
-			break;
-		}
-		pthread_mutex_unlock(&connected_mutex);
-	}while(1);
-
-	pthread_mutex_destroy(&connected_mutex);
-	pthread_mutex_destroy(&status_mutex);
-	mosquitto_loop_stop(mosq);
+		rc = mosquitto_loop(mosq, -1);
+	}while(rc == MOSQ_ERR_SUCCESS && connected);
 
 	if(message && mode == MSGMODE_FILE){
 		free(message);

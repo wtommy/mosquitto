@@ -1,6 +1,6 @@
 CC=cc
-CFLAGS=-I../lib -Wall -ggdb -pg
-LDFLAGS=-L../lib ../lib/libmosquitto.so.0 -pg -nopie
+CFLAGS=-I../lib -Wall -ggdb
+LDFLAGS=-L../lib ../lib/libmosquitto.so.0
 INSTALL=install
 prefix=/usr/local
 
@@ -9,7 +9,7 @@ prefix=/usr/local
 all : mosquitto_pub mosquitto_sub
 
 mosquitto_pub : pub_client.o ../lib/libmosquitto.so.0
-	${CC} $< -o $@ ${LDFLAGS} -lpthread
+	${CC} $< -o $@ ${LDFLAGS}
 
 mosquitto_sub : sub_client.o ../lib/libmosquitto.so.0
 	${CC} $< -o $@ ${LDFLAGS}
