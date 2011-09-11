@@ -266,15 +266,16 @@ static int _sub_search(struct _mosquitto_db *db, struct _mosquitto_subhier *subh
 {
 	/* FIXME - need to take into account source_id if the client is a bridge */
 	struct _mosquitto_subhier *branch;
+	int flag = 0;
+	int rc;
 
 	branch = subhier->children;
 	while(branch){
-		if(!strcmp(branch->topic, tokens->topic) || !strcmp(branch->topic, "+")){
+		if(tokens && tokens->topic && (!strcmp(branch->topic, tokens->topic) || !strcmp(branch->topic, "+"))){
 			/* The topic matches this subscription.
 			 * Doesn't include # wildcards */
-			if(tokens->next){
-				_sub_search(db, branch, tokens->next, source_id, topic, qos, retain, stored);
-			}else{
+			rc = _sub_search(db, branch, tokens->next, source_id, topic, qos, retain, stored);
+			if(rc == -1 || !tokens->next){
 				_subs_process(db, branch, source_id, topic, qos, retain, stored);
 			}
 		}else if(!strcmp(branch->topic, "#") && !branch->children){
@@ -283,10 +284,11 @@ static int _sub_search(struct _mosquitto_db *db, struct _mosquitto_subhier *subh
 			 * there may still be other subscriptions to deal with.
 			 */
 			_subs_process(db, branch, source_id, topic, qos, retain, stored);
+			flag = -1;
 		}
 		branch = branch->next;
 	}
-	return MOSQ_ERR_SUCCESS;
+	return flag;
 }
 
 int mqtt3_sub_add(mqtt3_context *context, const char *sub, int qos, struct _mosquitto_subhier *root)
@@ -398,6 +400,10 @@ int mqtt3_db_messages_queue(struct _mosquitto_db *db, const char *source_id, con
 				_sub_add(NULL, 0, subhier, tokens);
 			}
 			rc = _sub_search(db, subhier, tokens, source_id, topic, qos, retain, stored);
+			if(rc == -1){
+				_subs_process(db, subhier, source_id, topic, qos, retain, stored);
+				rc = 0;
+			}
 		}else if(!strcmp(subhier->topic, "$SYS") && tree == 2){
 			if(retain){
 				/* We have a message that needs to be retained, so ensure that the subscription
@@ -406,6 +412,10 @@ int mqtt3_db_messages_queue(struct _mosquitto_db *db, const char *source_id, con
 				_sub_add(NULL, 0, subhier, tokens);
 			}
 			rc = _sub_search(db, subhier, tokens, source_id, topic, qos, retain, stored);
+			if(rc == -1){
+				_subs_process(db, subhier, source_id, topic, qos, retain, stored);
+				rc = 0;
+			}
 		}
 		subhier = subhier->next;
 	}
