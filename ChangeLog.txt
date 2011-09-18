@@ -6,6 +6,8 @@
 - Expose message id in Python MosquittoMessage.
 - Python MosquittoMessage payload parameter is now a Python string, not a
   ctypes object which makes it much easier to use.
+- Fix queueing of messages for disconnected clients. The max_queued_messages
+  option is now obeyed.
 - C++ library is now in its own namespace, mosquittopp.
 - Add support for adding log message timestamps in the broker.
 - Fix missing mosquitto_username_pw_set() python binding.

@@ -291,6 +291,10 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 	assert(stored);
 	if(!context) return MOSQ_ERR_INVAL;
 
+	if(context->core.sock == INVALID_SOCKET){
+		/* Client is not connected only queue messages with QoS>0. */
+		if(qos == 0) return 2;
+	}
 	if(context->msgs){
 		tail = context->msgs;
 		msg_count = 1;
@@ -302,33 +306,41 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 		}
 	}
 
-	if(qos == 0 || max_inflight == 0 || msg_count < max_inflight){
-		if(dir == mosq_md_out){
-			switch(qos){
-				case 0:
-					state = ms_publish;
-					break;
-				case 1:
-					state = ms_publish_puback;
-					break;
-				case 2:
-					state = ms_publish_pubrec;
-					break;
-			}
-		}else{
-			if(qos == 2){
-				state = ms_wait_pubrec;
+	if(context->core.sock != INVALID_SOCKET){
+		if(qos == 0 || max_inflight == 0 || msg_count < max_inflight){
+			if(dir == mosq_md_out){
+				switch(qos){
+					case 0:
+						state = ms_publish;
+						break;
+					case 1:
+						state = ms_publish_puback;
+						break;
+					case 2:
+						state = ms_publish_pubrec;
+						break;
+				}
 			}else{
-				return 1;
+				if(qos == 2){
+					state = ms_wait_pubrec;
+				}else{
+					return 1;
+				}
 			}
+		}else if(max_queued == 0 || msg_count-max_inflight < max_queued){
+			state = ms_queued;
+			rc = 2;
+		}else{
+			/* Dropping message due to full queue.
+		 	* FIXME - should this be logged? */
+			return 2;
 		}
-	}else if(max_queued == 0 || msg_count-max_inflight < max_queued){
-		state = ms_queued;
-		rc = 2;
 	}else{
-		/* Dropping message due to full queue.
-		 * FIXME - should this be logged? */
-		return 2;
+		if(msg_count >= max_queued){
+			return 2;
+		}else{
+			state = ms_queued;
+		}
 	}
 	assert(state != ms_invalid);
 
