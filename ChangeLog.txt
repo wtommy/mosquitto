@@ -4,6 +4,7 @@
 - Implement bridge state notification messages.
 - Save client last used mid in persistent database (DB version number bumped).
 - Expose message id in Python MosquittoMessage.
+- It is now possible to set the topic QoS level for bridges.
 - Python MosquittoMessage payload parameter is now a Python string, not a
   ctypes object which makes it much easier to use.
 - Fix queueing of messages for disconnected clients. The max_queued_messages

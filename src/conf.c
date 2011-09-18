@@ -640,6 +640,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 							return MOSQ_ERR_NOMEM;
 						}
 						cur_bridge->topics[cur_bridge->topic_count-1].direction = bd_out;
+						cur_bridge->topics[cur_bridge->topic_count-1].qos = 2;
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty topic value in configuration.");
 						return MOSQ_ERR_INVAL;
@@ -655,6 +656,14 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						}else{
 							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge topic direction '%s'.", token);
 							return MOSQ_ERR_INVAL;
+						}
+						token = strtok(NULL, " ");
+						if(token){
+							cur_bridge->topics[cur_bridge->topic_count-1].qos = atoi(token);
+							if(cur_bridge->topics[cur_bridge->topic_count-1].qos < 0 || cur_bridge->topics[cur_bridge->topic_count-1].qos > 2){
+								mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge QoS level '%s'.", token);
+								return MOSQ_ERR_INVAL;
+							}
 						}
 					}
 #else

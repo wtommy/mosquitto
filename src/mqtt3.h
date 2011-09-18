@@ -195,6 +195,7 @@ enum mqtt3_bridge_direction{
 
 struct _mqtt3_bridge_topic{
 	char *topic;
+	int qos;
 	enum mqtt3_bridge_direction direction;
 };
 

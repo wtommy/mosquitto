@@ -166,7 +166,7 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 		s[len-1] = '\0'; /* Ensure string is null terminated. */
 
 		if(log_destinations & MQTT3_LOG_STDOUT){
-			if(int_db.config->log_timestamp){
+			if(int_db.config && int_db.config->log_timestamp){
 				fprintf(stdout, "%d: %s\n", (int)now, s);
 			}else{
 				fprintf(stdout, "%s\n", s);
@@ -174,7 +174,7 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 			fflush(stdout);
 		}
 		if(log_destinations & MQTT3_LOG_STDERR){
-			if(int_db.config->log_timestamp){
+			if(int_db.config && int_db.config->log_timestamp){
 				fprintf(stderr, "%d: %s\n", (int)now, s);
 			}else{
 				fprintf(stderr, "%s\n", s);
@@ -190,7 +190,7 @@ int mqtt3_log_printf(int priority, const char *fmt, ...)
 #endif
 		}
 		if(log_destinations & MQTT3_LOG_TOPIC && priority != MOSQ_LOG_DEBUG){
-			if(int_db.config->log_timestamp){
+			if(int_db.config && int_db.config->log_timestamp){
 				len += 30;
 				st = _mosquitto_malloc(len*sizeof(char));
 				if(!st){

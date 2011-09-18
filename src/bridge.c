@@ -152,7 +152,7 @@ int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 
 	for(i=0; i<context->bridge->topic_count; i++){
 		if(context->bridge->topics[i].direction == bd_out || context->bridge->topics[i].direction == bd_both){
-			if(mqtt3_sub_add(context, context->bridge->topics[i].topic, 2, &db->subs)) return 1;
+			if(mqtt3_sub_add(context, context->bridge->topics[i].topic, context->bridge->topics[i].qos, &db->subs)) return 1;
 		}
 	}
 
