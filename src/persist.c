@@ -41,19 +41,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <memory_mosq.h>
 #include <mqtt3.h>
-
-/* DB read/write */
-const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','t','o',' ','d','b'};
-#define DB_CHUNK_CFG 1
-#define DB_CHUNK_MSG_STORE 2
-#define DB_CHUNK_CLIENT_MSG 3
-#define DB_CHUNK_RETAIN 4
-#define DB_CHUNK_SUB 5
-#define DB_CHUNK_CLIENT 6
-/* End DB read/write */
-
-#define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
-#define write_e(a, b, c) if(write(a, b, c) != c){ goto error; }
+#include <persist.h>
 
 static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *sub, int qos);
 

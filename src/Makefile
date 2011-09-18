@@ -1,6 +1,6 @@
 include ../config.mk
 
-CFLAGS_FINAL=${CFLAGS} -DVERSION="\"${VERSION}\"" -DTIMESTAMP="\"${TIMESTAMP}\"" -DWITH_BROKER
+CFLAGS_FINAL=${CFLAGS} -I. -DVERSION="\"${VERSION}\"" -DTIMESTAMP="\"${TIMESTAMP}\"" -DWITH_BROKER
 
 .PHONY: all install uninstall clean reallyclean
 
@@ -39,7 +39,7 @@ net.o : net.c mqtt3.h
 net_mosq.o : ../lib/net_mosq.c ../lib/net_mosq.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 	
-persist.o : persist.c mqtt3.h
+persist.o : persist.c persist.h mqtt3.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 	
 raw_send.o : raw_send.c mqtt3.h
