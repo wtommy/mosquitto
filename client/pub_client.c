@@ -510,7 +510,6 @@ int main(int argc, char *argv[])
 		return rc;
 	}
 
-	rc = mosquitto_loop_start(mosq);
 	do{
 		if(mode == MSGMODE_STDIN_LINE && status == STATUS_CONNACK_RECVD){
 			if(fgets(buf, 1024, stdin)){
