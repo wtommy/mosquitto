@@ -41,7 +41,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 /* Database macros */
-#define MOSQ_DB_VERSION 1
+#define MOSQ_DB_VERSION 2
 
 /* Log destinations */
 #define MQTT3_LOG_NONE 0x00
@@ -96,6 +96,7 @@ typedef struct {
 	int listener_count;
 	int log_dest;
 	int log_type;
+	bool log_timestamp;
 	char *password_file;
 	bool persistence;
 	char *persistence_location;
@@ -194,6 +195,7 @@ enum mqtt3_bridge_direction{
 
 struct _mqtt3_bridge_topic{
 	char *topic;
+	int qos;
 	enum mqtt3_bridge_direction direction;
 };
 
@@ -209,6 +211,7 @@ struct _mqtt3_bridge{
 	time_t restart_t;
 	char *username;
 	char *password;
+	bool notifications;
 };
 
 typedef struct _mqtt3_context{
@@ -257,7 +260,7 @@ int mqtt3_raw_pingreq(mqtt3_context *context);
 int mqtt3_raw_pingresp(mqtt3_context *context);
 int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid);
 int mqtt3_raw_pubcomp(mqtt3_context *context, uint16_t mid);
-int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, bool retain, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload);
+int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, bool retain);
 int mqtt3_raw_pubrec(mqtt3_context *context, uint16_t mid);
 int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid, bool dup);
 int mqtt3_raw_suback(mqtt3_context *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload);

@@ -44,6 +44,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <time.h>
 #include <mosquitto.h>
 
+namespace mosquittopp {
+
 /*
  * Class: mosquittopp
  *
@@ -86,4 +88,5 @@ class mosqpp_EXPORT mosquittopp {
 		virtual void on_error() {return;};
 };
 
+}
 #endif

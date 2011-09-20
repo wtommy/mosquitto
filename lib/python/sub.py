@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Copyright (c) 2010, Roger Light <roger@atchoo.org>
+# Copyright (c) 2010,2011 Roger Light <roger@atchoo.org>
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@ def on_connect(rc):
 	print "rc: ", rc
 
 def on_message(msg):
-	print msg.topic,msg.qos,msg.payload_str
+	print msg.topic,msg.qos,msg.payload
 
 def on_publish(mid):
 	print "mid:", mid

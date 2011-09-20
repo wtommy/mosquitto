@@ -31,6 +31,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mosquitto.h>
 #include <mosquittopp.h>
 
+namespace mosquittopp {
+
 static void on_connect_wrapper(void *obj, int rc)
 {
 	class mosquittopp *m = (class mosquittopp *)obj;
@@ -175,3 +177,4 @@ int mosquittopp::loop_write()
 	return mosquitto_loop_write(mosq);
 }
 
+}

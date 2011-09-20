@@ -202,6 +202,8 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 			db->contexts[i]->core.address = _mosquitto_strdup(context->core.address);
 			db->contexts[i]->core.sock = context->core.sock;
 			db->contexts[i]->listener = context->listener;
+			db->contexts[i]->core.last_msg_in = time(NULL);
+			db->contexts[i]->core.last_msg_out = time(NULL);
 			context->core.sock = -1;
 			context->core.state = mosq_cs_disconnecting;
 			context = db->contexts[i];
@@ -275,6 +277,7 @@ int mqtt3_handle_disconnect(mosquitto_db *db, int context_index)
 int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 {
 	int rc = 0;
+	int rc2;
 	uint16_t mid;
 	char *sub;
 	uint8_t qos;
@@ -347,21 +350,25 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 				rc = 1;
 			}
 #else
-			mqtt3_sub_add(context, sub, qos, &db->subs);
-			if(mqtt3_retain_queue(db, context, sub, qos)) rc = 1;
+			rc2 = mqtt3_sub_add(context, sub, qos, &db->subs);
+			if(rc2 == MOSQ_ERR_SUCCESS){
+				if(mqtt3_retain_queue(db, context, sub, qos)) rc = 1;
+			}else if(rc2 != -1){
+				rc = rc2;
+			}
 #endif
 			_mosquitto_free(sub);
-		}
 
-		tmp_payload = _mosquitto_realloc(payload, payloadlen + 1);
-		if(tmp_payload){
-			payload = tmp_payload;
-			payload[payloadlen] = qos;
-			payloadlen++;
-		}else{
-			if(payload) _mosquitto_free(payload);
+			tmp_payload = _mosquitto_realloc(payload, payloadlen + 1);
+			if(tmp_payload){
+				payload = tmp_payload;
+				payload[payloadlen] = qos;
+				payloadlen++;
+			}else{
+				if(payload) _mosquitto_free(payload);
 
-			return MOSQ_ERR_NOMEM;
+				return MOSQ_ERR_NOMEM;
+			}
 		}
 	}
 

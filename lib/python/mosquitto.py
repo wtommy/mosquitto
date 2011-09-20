@@ -350,12 +350,13 @@ class Mosquitto:
 
 	def _internal_on_message(self, obj, message):
 		if self.on_message:
+			mid = message.contents.mid
 			topic = message.contents.topic
 			payloadlen = message.contents.payloadlen
 			payload = message.contents.payload
 			qos = message.contents.qos
 			retain = message.contents.retain
-			msg = MosquittoMessage(topic, payloadlen, payload, qos, retain)
+			msg = MosquittoMessage(mid, topic, payloadlen, payload, qos, retain)
 			argcount = self.on_message.func_code.co_argcount
 
 			if argcount == 1:
@@ -406,11 +407,10 @@ class c_MosquittoMessage(Structure):
 
 class MosquittoMessage:
 	"""MQTT message class"""
-	def __init__(self, topic, payloadlen, payload, qos, retain):
+	def __init__(self, mid, topic, payloadlen, payload, qos, retain):
+		self.mid = mid
 		self.topic = topic
-		self.payloadlen = payloadlen
-		self.payload = payload
-		self.payload_str = cast(self.payload, c_char_p).value
+		self.payload = string_at(payload, payloadlen)
 		self.qos = qos
 		self.retain = retain
 
@@ -462,6 +462,10 @@ _mosquitto_unsubscribe.restype = c_int
 _mosquitto_loop = _libmosq.mosquitto_loop
 _mosquitto_loop.argtypes = [c_void_p, c_int]
 _mosquitto_loop.restype = c_int
+
+_mosquitto_username_pw_set = _libmosq.mosquitto_username_pw_set
+_mosquitto_username_pw_set.argtypes = [c_void_p, c_char_p, c_char_p]
+_mosquitto_username_pw_set.restype = c_int
 
 _mosquitto_will_set = _libmosq.mosquitto_will_set
 _mosquitto_will_set.argtypes = [c_void_p, c_bool, c_char_p, c_uint32, POINTER(c_uint8), c_int, c_bool]

@@ -49,6 +49,7 @@ typedef int ssize_t;
 #include <read_handle.h>
 #include <send_mosq.h>
 #include <util_mosq.h>
+#include <will_mosq.h>
 
 #ifndef ECONNRESET
 #define ECONNRESET 104
@@ -126,61 +127,8 @@ struct mosquitto *mosquitto_new(const char *id, void *obj)
 
 int mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
-	int rc = MOSQ_ERR_SUCCESS;
-
-	if(!mosq || (will && !topic)) return MOSQ_ERR_INVAL;
-	if(payloadlen > 268435455) return MOSQ_ERR_PAYLOAD_SIZE;
-
-	if(mosq->core.will){
-		if(mosq->core.will->topic){
-			_mosquitto_free(mosq->core.will->topic);
-			mosq->core.will->topic = NULL;
-		}
-		if(mosq->core.will->payload){
-			_mosquitto_free(mosq->core.will->payload);
-			mosq->core.will->payload = NULL;
-		}
-		_mosquitto_free(mosq->core.will);
-		mosq->core.will = NULL;
-	}
-
-	if(will){
-		mosq->core.will = _mosquitto_calloc(1, sizeof(struct mosquitto_message));
-		if(!mosq->core.will) return MOSQ_ERR_NOMEM;
-		mosq->core.will->topic = _mosquitto_strdup(topic);
-		if(!mosq->core.will->topic){
-			rc = MOSQ_ERR_NOMEM;
-			goto cleanup;
-		}
-		mosq->core.will->payloadlen = payloadlen;
-		if(mosq->core.will->payloadlen > 0){
-			if(!payload){
-				rc = MOSQ_ERR_INVAL;
-				goto cleanup;
-			}
-			mosq->core.will->payload = _mosquitto_malloc(sizeof(uint8_t)*mosq->core.will->payloadlen);
-			if(!mosq->core.will->payload){
-				rc = MOSQ_ERR_NOMEM;
-				goto cleanup;
-			}
-
-			memcpy(mosq->core.will->payload, payload, payloadlen);
-		}
-		mosq->core.will->qos = qos;
-		mosq->core.will->retain = retain;
-	}
-
-	return MOSQ_ERR_SUCCESS;
-
-cleanup:
-	if(mosq->core.will){
-		if(mosq->core.will->topic) _mosquitto_free(mosq->core.will->topic);
-		if(mosq->core.will->payload) _mosquitto_free(mosq->core.will->payload);
-	}
-	_mosquitto_free(mosq->core.will);
-	mosq->core.will = NULL;
-
-	return rc;
+	if(!mosq) return MOSQ_ERR_INVAL;
+	return _mosquitto_will_set(&mosq->core, will, topic, payloadlen, payload, qos, retain);
 }
 
 int mosquitto_username_pw_set(struct mosquitto *mosq, const char *username, const char *password)

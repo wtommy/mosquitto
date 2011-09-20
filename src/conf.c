@@ -56,6 +56,7 @@ static void _config_init_reload(mqtt3_config *config)
 	config->log_dest = MQTT3_LOG_SYSLOG;
 	config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING;
 #endif
+	config->log_timestamp = true;
 	if(config->password_file) _mosquitto_free(config->password_file);
 	config->password_file = NULL;
 	config->persistence = false;
@@ -396,6 +397,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						cur_bridge->restart_t = 0;
 						cur_bridge->username = NULL;
 						cur_bridge->password = NULL;
+						cur_bridge->notifications = true;
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty connection value in configuration.");
 						return MOSQ_ERR_INVAL;
@@ -470,6 +472,8 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty log_dest value in configuration.");
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "log_timestamp")){
+					if(_mqtt3_conf_parse_bool(&token, token, &config->log_timestamp)) return 1;
 				}else if(!strcmp(token, "log_type")){
 					token = strtok(NULL, " ");
 					if(token){
@@ -530,6 +534,17 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						return MOSQ_ERR_INVAL;
 					}
 					if(_mqtt3_conf_parse_string(&token, "mount_point", &config->listeners[config->listener_count-1].mount_point)) return 1;
+				}else if(!strcmp(token, "notifications")){
+#ifdef WITH_BRIDGE
+					if(reload) continue; // FIXME
+					if(!cur_bridge){
+						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					if(_mqtt3_conf_parse_bool(&token, "notifications", &cur_bridge->notifications)) return 1;
+#else
+					mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "password")){
 #ifdef WITH_BRIDGE
 					if(reload) continue; // FIXME
@@ -625,6 +640,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 							return MOSQ_ERR_NOMEM;
 						}
 						cur_bridge->topics[cur_bridge->topic_count-1].direction = bd_out;
+						cur_bridge->topics[cur_bridge->topic_count-1].qos = 2;
 					}else{
 						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty topic value in configuration.");
 						return MOSQ_ERR_INVAL;
@@ -640,6 +656,14 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						}else{
 							mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge topic direction '%s'.", token);
 							return MOSQ_ERR_INVAL;
+						}
+						token = strtok(NULL, " ");
+						if(token){
+							cur_bridge->topics[cur_bridge->topic_count-1].qos = atoi(token);
+							if(cur_bridge->topics[cur_bridge->topic_count-1].qos < 0 || cur_bridge->topics[cur_bridge->topic_count-1].qos > 2){
+								mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid bridge QoS level '%s'.", token);
+								return MOSQ_ERR_INVAL;
+							}
 						}
 					}
 #else
@@ -714,7 +738,6 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						|| !strcmp(token, "trace_level")
 						|| !strcmp(token, "addresses")
 						|| !strcmp(token, "idle_timeout")
-						|| !strcmp(token, "notifications")
 						|| !strcmp(token, "notification_topic")
 						|| !strcmp(token, "round_robin")
 						|| !strcmp(token, "start_type")

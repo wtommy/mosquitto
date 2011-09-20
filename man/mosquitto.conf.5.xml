@@ -41,7 +41,7 @@
 		<title>Variables</title>
 		<variablelist>
 			<varlistentry>
-				<term><option>acl_file</option></term>
+				<term><option>acl_file</option> <replaceable>file path</replaceable></term>
 				<listitem>
 					<para>Set the path to an access control list file. If
 					defined, the contents of the file are used to control
@@ -71,7 +71,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>allow_anonymous</option></term>
+				<term><option>allow_anonymous</option> [ true | false ]</term>
 				<listitem>
 					<para>Boolean value that determines whether clients that
 					connect without providing a username are allowed to
@@ -82,7 +82,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>autosave_interval</option></term>
+				<term><option>autosave_interval</option> <replaceable>seconds</replaceable></term>
 				<listitem>
 					<para>The number of seconds that mosquitto will wait 
 					between each time it saves the in-memory database to 
@@ -95,7 +95,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>bind_address</option></term>
+				<term><option>bind_address</option> <replaceable>address</replaceable></term>
 				<listitem>
 					<para>Listen for incoming network connections on the
 					specified IP address/hostname only. This is useful to
@@ -107,7 +107,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>clientid_prefixes</option></term>
+				<term><option>clientid_prefixes</option> <replaceable>prefix</replaceable></term>
 				<listitem>
 					<para>If defined, only clients that have a clientid with a
 					prefix that matches clientid_prefixes will be allowed to
@@ -120,7 +120,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>listener</option></term>
+				<term><option>listener</option> <replaceable>port</replaceable></term>
 				<listitem>
 					<para>Listen for incoming network connection on the
 					specified port. A second optional argument allows the
@@ -133,7 +133,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>log_dest</option></term>
+				<term><option>log_dest</option> <replaceable>destinations</replaceable></term>
 				<listitem>
 					<para>Send log messages to a particular destination.
 					Possible destinations are: stdout stderr syslog topic.
@@ -149,7 +149,15 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>log_type</option></term>
+				<term><option>log_timestamp</option> [ true | false ]</term>
+				<listitem>
+					<para>Boolean value, if set to true a timestamp value will
+					be added to each log entry. The default is true.</para>
+					<para>Reloaded on reload signal.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>log_type</option> <replaceable>types</replaceable></term>
 				<listitem>
 					<para>Choose types of messages to log. Possible types are:
 					debug, error, warning, notice, information, none. Defaults
@@ -161,7 +169,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>max_connections</option></term>
+				<term><option>max_connections</option> <replaceable>count</replaceable></term>
 				<listitem>
 					<para>Limit the total number of clients connected for the
 					current listener. Set to <literal>-1</literal> to have
@@ -173,7 +181,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>max_inflight_messages</option></term>
+				<term><option>max_inflight_messages</option> <replaceable>count</replaceable></term>
 				<listitem>
 					<para>The maximum number of QoS 1 or 2 messages that can be
 					in the process of being transmitted simultaneously.  This
@@ -185,7 +193,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>max_queued_messages</option></term>
+				<term><option>max_queued_messages</option> <replaceable>count</replaceable></term>
 				<listitem>
 					<para>The maximum number of QoS 1 or 2 messages to hold in
 					the queue above those messages that are currently in
@@ -195,7 +203,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>mount_point</option></term>
+				<term><option>mount_point</option> <replaceable>topic prefix</replaceable></term>
 				<listitem>
 					<para>This option is used with the listener option to
 					isolate groups of clients. When a client connects to a
@@ -210,7 +218,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>password_file</option></term>
+				<term><option>password_file</option> <replaceable>file path</replaceable></term>
 				<listitem>
 					<para>Set the path to a password file. If defined, the
 					contents of the file are used to control client access to
@@ -228,7 +236,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>persistence</option></term>
+				<term><option>persistence</option> [ true | false ]</term>
 				<listitem>
 					<para>Can be true or false. If true, connection,
 					subscription and message data will be written to the disk
@@ -244,14 +252,14 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>persistence_file</option></term>
+				<term><option>persistence_file</option> <replaceable>file name</replaceable></term>
 				<listitem>
 					<para>The filename to use for the persistent database. Defaults to mosquitto.db.</para>
 					<para>Reloaded on reload signal.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>persistence_location</option></term>
+				<term><option>persistence_location</option> <replaceable>path</replaceable></term>
 				<listitem>
 					<para>The path where the persistence database should be
 					stored. Must end in a trailing slash. If not given, then
@@ -260,7 +268,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>pid_file</option></term>
+				<term><option>pid_file</option> <replaceable>file path</replaceable></term>
 				<listitem>
 					<para>Write a pid file to the file specified. If not given
 					(the default), no pid file will be written. If the pid file
@@ -274,7 +282,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>port</option></term>
+				<term><option>port</option> <replaceable>port number</replaceable></term>
 				<listitem>
 					<para>Set the network port for the default listener to
 					listen on. Defaults to 1883.</para>
@@ -282,7 +290,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>retained_persistence</option></term>
+				<term><option>retained_persistence</option> [ true | false ]</term>
 				<listitem>
 					<para>This is a synonym of the <option>persistence</option>
 					option.</para>
@@ -290,7 +298,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>retry_interval</option></term>
+				<term><option>retry_interval</option> <replaceable>seconds</replaceable></term>
 				<listitem>
 					<para>The integer number of seconds after a QoS=1 or QoS=2
 					message has been sent that mosquitto will wait before
@@ -300,7 +308,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>store_clean_interval</option></term>
+				<term><option>store_clean_interval</option> <replaceable>seconds</replaceable></term>
 				<listitem>
 					<para>The integer number of seconds between the internal
 					message store being cleaned of messages that are no longer
@@ -313,7 +321,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>sys_interval</option></term>
+				<term><option>sys_interval</option> <replaceable>seconds</replaceable></term>
 				<listitem>
 					<para>The integer number of seconds between updates of the
 					$SYS subscription hierarchy, which provides status
@@ -323,7 +331,7 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>user</option></term>
+				<term><option>user</option> <replaceable>username</replaceable></term>
 				<listitem>
 					<para>When run as root, change to this user and its primary
 					group on startup.  If mosquitto is unable to change to this
@@ -397,6 +405,17 @@
 					should send a ping if no other traffic has occurred.
 					Defaults to 60. A minimum value of 5 seconds
 					isallowed.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>notifications</option> [ true | false ]</term>
+				<listitem>
+					<para>If set to true, publish notification messages to the
+					local and remote brokers giving information about the state
+					of the bridge connection. Retained messages are published
+					to the topic $SYS/bridge/connection/&lt;clientid&gt;/state.
+					If the message is 1 then the connection is active, or 0 if
+					the connection has failed. Defaults to true.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
