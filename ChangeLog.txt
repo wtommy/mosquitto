@@ -1,4 +1,4 @@
-0.13 - 2011xxxx
+0.13 - 20110920
 ===============
 
 - Implement bridge state notification messages.
