@@ -25,11 +25,8 @@
  * retained messages and durable subscriptions to a file periodically and on
  * shutdown. This is usually desirable (and is suggested by the MQTT spec), but
  * it can be disabled by commenting out this define if required.
- * Not available on Windows.
  */
-#ifndef WIN32
 #define WITH_PERSISTENCE
-#endif
 
 /* Compile with bridge support included. This allow the broker to connect to
  * other brokers and subscribe/publish to topics. You probably want to leave
