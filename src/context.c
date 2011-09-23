@@ -171,6 +171,11 @@ void mqtt3_context_disconnect(mosquitto_db *db, int context_index)
 		/* Unexpected disconnect, queue the client will. */
 		mqtt3_db_messages_easy_queue(db, ctxt, ctxt->core.will->topic, ctxt->core.will->qos, ctxt->core.will->payloadlen, ctxt->core.will->payload, ctxt->core.will->retain);
 	}
+	if(ctxt->listener){
+		ctxt->listener->client_count--;
+		assert(ctxt->listener->client_count >= 0);
+		ctxt->listener = NULL;
+	}
 	_mosquitto_socket_close(&ctxt->core);
 }
 

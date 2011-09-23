@@ -1,3 +1,9 @@
+0.14 - 2011xxxx
+===============
+
+- Fix client count for listeners. When clients disconnect, decrement the
+  count. Allow max_connections to work again.
+
 0.13 - 20110920
 ===============
 
