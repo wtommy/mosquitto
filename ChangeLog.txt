@@ -3,6 +3,10 @@
 
 - Fix client count for listeners. When clients disconnect, decrement the
   count. Allow max_connections to work again.
+- Send CONNACK packet immediately rather than in loop() - this means clients
+  refused actually get the packet.
+- Log IP address when reporting CONNACK packets if the client id isn't yet
+  known.
 
 0.13 - 20110920
 ===============

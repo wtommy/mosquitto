@@ -39,7 +39,13 @@ int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 	struct _mosquitto_packet *packet = NULL;
 	int rc;
 
-	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending CONNACK to %s (%d)", context->core.id, result);
+	if(context){
+		if(context->core.id){
+			mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending CONNACK to %s (%d)", context->core.id, result);
+		}else{
+			mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending CONNACK to %s (%d)", context->core.address, result);
+		}
+	}
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return MOSQ_ERR_NOMEM;
