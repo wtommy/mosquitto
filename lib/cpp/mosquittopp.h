@@ -31,13 +31,13 @@ POSSIBILITY OF SUCH DAMAGE.
 #define _MOSQUITTOPP_H_
 
 #ifdef _WIN32
-#ifdef mosquittopp_EXPORTS
-#define mosqpp_EXPORT  __declspec(dllexport)
+#	ifdef mosquittopp_EXPORTS
+#		define mosqpp_EXPORT  __declspec(dllexport)
+#	else
+#		define mosqpp_EXPORT  __declspec(dllimport)
+#	endif
 #else
-#define mosqpp_EXPORT  __declspec(dllimport)
-#endif
-#else
-#define mosqpp_EXPORT
+#	define mosqpp_EXPORT
 #endif
 
 #include <cstdlib>
