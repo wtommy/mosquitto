@@ -61,6 +61,7 @@ void __stdcall ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 	int argc = 1;
 	char *token;
 	int rc;
+	SERVICE_STATUS service_status;
 
 	service_handle = RegisterServiceCtrlHandler("mosquitto", ServiceHandler);
 	if(service_handle){
@@ -70,8 +71,18 @@ void __stdcall ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 		argv[2] = NULL; //FIXME path to mosquitto.conf - get from env var
 		argc = 3;
 
+		service_status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+		service_status.dwCurrentState = SERVICE_RUNNING;
+		service_status.dwControlsAccepted = SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_STOP;
+		service_status.dwWin32ExitCode = NO_ERROR;
+		service_status.dwCheckPoint = 0;
+		SetServiceStatus(service_handle, &service_status);
+
 		main(argc, argv);
 		_mosquitto_free(argv);
+
+		service_status.dwCurrentState = SERVICE_STOPPED;
+		SetServiceStatus(service_handle, &service_status);
 	}
 }
 
