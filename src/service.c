@@ -33,6 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 extern int run;
 static SERVICE_STATUS_HANDLE service_handle;
+static SERVICE_STATUS service_status;
 int main(int argc, char *argv[]);
 
 /* Service control callback */
@@ -49,6 +50,8 @@ void __stdcall ServiceHandler(DWORD fdwControl)
 			/* System is shutting down. */
 		case SERVICE_CONTROL_STOP:
 			/* Service should stop. */
+			service_status.dwCurrentState = SERVICE_STOP_PENDING;
+			SetServiceStatus(service_handle, &service_status);
 			run = 0;
 			break;
 	}
@@ -61,7 +64,6 @@ void __stdcall ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 	int argc = 1;
 	char *token;
 	int rc;
-	SERVICE_STATUS service_status;
 
 	service_handle = RegisterServiceCtrlHandler("mosquitto", ServiceHandler);
 	if(service_handle){
