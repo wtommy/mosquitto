@@ -71,7 +71,7 @@ endif (${WITH_EXTERNAL_SECURITY_CHECKS} STREQUAL ON)
 
 add_definitions (-DWITH_BROKER)
 
-add_executable(mosquitto WIN32 ${MOSQ_SRCS})
+add_executable(mosquitto ${MOSQ_SRCS})
 
 if (NOT WIN32)
 	target_link_libraries(mosquitto ${MOSQ_LIBS})

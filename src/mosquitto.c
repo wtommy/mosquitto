@@ -144,6 +144,21 @@ int main(int argc, char *argv[])
 	int listener_max;
 	int rc;
 
+#ifdef WIN32
+	if(argc == 2){
+		if(!strcmp(argv[1], "run")){
+			service_run();
+			return 0;
+		}else if(!strcmp(argv[1], "install")){
+			service_install();
+			return 0;
+		}else if(!strcmp(argv[1], "uninstall")){
+			service_uninstall();
+			return 0;
+		}
+	}
+#endif
+
 	memset(&int_db, 0, sizeof(mosquitto_db));
 
 	_mosquitto_net_init();

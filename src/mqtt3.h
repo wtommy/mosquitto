@@ -380,4 +380,13 @@ void mosquitto_acl_cleanup(struct _mosquitto_db *db);
 int mosquitto_unpwd_check(struct _mosquitto_db *db, const char *username, const char *password);
 int mosquitto_unpwd_cleanup(struct _mosquitto_db *db);
 
+/* ============================================================
+ * Window service related functions
+ * ============================================================ */
+#ifdef WIN32
+void service_install(void);
+void service_uninstall(void);
+void service_run(void);
+#endif
+
 #endif
