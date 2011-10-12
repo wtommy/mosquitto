@@ -29,8 +29,30 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef WIN32
 
+#include <windows.h>
+
 extern int run;
+static SERVICE_STATUS_HANDLE service_handle;
 int main(int argc, char *argv[]);
+
+/* Service control callback */
+void __stdcall ServiceHandler(DWORD fdwControl)
+{
+	switch(fdwControl){
+		case SERVICE_CONTROL_CONTINUE:
+			/* Continue from Paused state. */
+			break;
+		case SERVICE_CONTROL_PAUSE:
+			/* Pause service. */
+			break;
+		case SERVICE_CONTROL_SHUTDOWN:
+			/* System is shutting down. */
+		case SERVICE_CONTROL_STOP:
+			/* Service should stop. */
+			run = 0;
+			break;
+	}
+}
 
 /* Function called when started as a service. */
 void __stdcall ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
@@ -40,14 +62,17 @@ void __stdcall ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 	char *token;
 	int rc;
 
-	argv = _mosquitto_malloc(sizeof(char *)*3);
-	argv[0] = "mosquitto";
-	argv[1] = "-c";
-	argv[2] = NULL; //FIXME path to mosquitto.conf - get from env var
-	argc = 3;
+	service_handle = RegisterServiceCtrlHandler("mosquitto", ServiceHandler);
+	if(service_handle){
+		argv = _mosquitto_malloc(sizeof(char *)*3);
+		argv[0] = "mosquitto";
+		argv[1] = "-c";
+		argv[2] = NULL; //FIXME path to mosquitto.conf - get from env var
+		argc = 3;
 
-	main(argc, argv);
-	_mosquitto_free(argv);
+		main(argc, argv);
+		_mosquitto_free(argv);
+	}
 }
 
 #endif
