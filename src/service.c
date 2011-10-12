@@ -96,9 +96,7 @@ void service_install(void)
 	GetModuleFileName(NULL, exe_path, MAX_PATH);
 	strcat(exe_path, " run");
 
-	printf("path: %s\n", exe_path);
 	sc_manager = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
-	printf("scm: %p\n", sc_manager);
 	if(sc_manager){
 		svc_handle = CreateService(sc_manager, "mosquitto", "mosquitto", 
 				SERVICE_START | SERVICE_STOP,
