@@ -31,6 +31,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <windows.h>
 
+#include <memory_mosq.h>
+
 extern int run;
 static SERVICE_STATUS_HANDLE service_handle;
 static SERVICE_STATUS service_status;
@@ -62,8 +64,6 @@ void __stdcall service_main(DWORD dwArgc, LPTSTR *lpszArgv)
 {
 	char **argv;
 	int argc = 1;
-	char *token;
-	int rc;
 
 	service_handle = RegisterServiceCtrlHandler("mosquitto", service_handler);
 	if(service_handle){
@@ -86,6 +86,60 @@ void __stdcall service_main(DWORD dwArgc, LPTSTR *lpszArgv)
 		service_status.dwCurrentState = SERVICE_STOPPED;
 		SetServiceStatus(service_handle, &service_status);
 	}
+}
+
+void service_install(void)
+{
+	SC_HANDLE sc_manager, svc_handle;
+	char exe_path[MAX_PATH + 5];
+
+	GetModuleFileName(NULL, exe_path, MAX_PATH);
+	strcat(exe_path, " run");
+
+	printf("path: %s\n", exe_path);
+	sc_manager = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
+	printf("scm: %p\n", sc_manager);
+	if(sc_manager){
+		svc_handle = CreateService(sc_manager, "mosquitto", "mosquitto", 
+				SERVICE_START | SERVICE_STOP,
+				SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
+				exe_path, NULL, NULL, NULL, NULL, NULL);
+
+		if(svc_handle){
+			CloseServiceHandle(svc_handle);
+		}
+		CloseServiceHandle(sc_manager);
+	}
+}
+
+void service_uninstall(void)
+{
+	SC_HANDLE sc_manager, svc_handle;
+	SERVICE_STATUS status;
+
+	sc_manager = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_CONNECT);
+	if(sc_manager){
+		svc_handle = OpenService(sc_manager, "mosquitto", SERVICE_QUERY_STATUS | DELETE);
+		if(svc_handle){
+			if(QueryServiceStatus(svc_handle, &status)){
+				if(status.dwCurrentState == SERVICE_STOPPED){
+					DeleteService(svc_handle);
+				}
+			}
+			CloseServiceHandle(svc_handle);
+		}
+		CloseServiceHandle(sc_manager);
+	}
+}
+
+void service_run(void)
+{
+	SERVICE_TABLE_ENTRY ste[] = {
+		{ "mosquitto", service_main },
+		{ NULL, NULL }
+	};
+
+	StartServiceCtrlDispatcher(ste);
 }
 
 #endif
