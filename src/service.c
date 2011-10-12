@@ -37,7 +37,7 @@ static SERVICE_STATUS service_status;
 int main(int argc, char *argv[]);
 
 /* Service control callback */
-void __stdcall ServiceHandler(DWORD fdwControl)
+void __stdcall service_handler(DWORD fdwControl)
 {
 	switch(fdwControl){
 		case SERVICE_CONTROL_CONTINUE:
@@ -58,14 +58,14 @@ void __stdcall ServiceHandler(DWORD fdwControl)
 }
 
 /* Function called when started as a service. */
-void __stdcall ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
+void __stdcall service_main(DWORD dwArgc, LPTSTR *lpszArgv)
 {
 	char **argv;
 	int argc = 1;
 	char *token;
 	int rc;
 
-	service_handle = RegisterServiceCtrlHandler("mosquitto", ServiceHandler);
+	service_handle = RegisterServiceCtrlHandler("mosquitto", service_handler);
 	if(service_handle){
 		argv = _mosquitto_malloc(sizeof(char *)*3);
 		argv[0] = "mosquitto";
