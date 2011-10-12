@@ -59,6 +59,9 @@ if (NOT WIN32)
 	endif (${WITH_PERSISTENCE} STREQUAL ON)
 endif (NOT WIN32)
 
+if (WIN32)
+	set (MOSQ_SRCS ${MOSQ_SRCS} service.c)
+endif (WIN32)
 
 option(WITH_EXTERNAL_SECURITY_CHECKS
 	"Use external security checks (needs additional code)?" OFF)
