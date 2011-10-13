@@ -15,9 +15,11 @@ InstallDir "$PROGRAMFILES\mosquitto"
 ;--------------------------------
 ; Installer pages
 !insertmacro MUI_PAGE_WELCOME
+!insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
+
 
 ;--------------------------------
 ; Uninstaller pages
@@ -34,7 +36,8 @@ InstallDir "$PROGRAMFILES\mosquitto"
 ;--------------------------------
 ; Installer sections
 
-Section "Install" SecInstall
+Section "Files" SecInstall
+	SectionIn RO
 	SetOutPath "$INSTDIR"
 	File "..\build\src\Release\mosquitto.exe"
 	File "..\build\client\Release\mosquitto_pub.exe"
@@ -59,7 +62,6 @@ Section "Install" SecInstall
 	File "..\lib\python\setup.py"
 	File "..\lib\python\sub.py"
 	
-	ExecWait '"$INSTDIR\mosquitto.exe" install'
 	WriteUninstaller "$INSTDIR\Uninstall.exe"
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Mosquitto" "DisplayName" "Mosquitto MQTT broker"
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Mosquitto" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
@@ -72,6 +74,10 @@ Section "Install" SecInstall
 
 	WriteRegExpandStr ${env_hklm} MOSQUITTO_DIR $INSTDIR
 	SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
+SectionEnd
+
+Section "Service" SecService
+	ExecWait '"$INSTDIR\mosquitto.exe" install'
 SectionEnd
 
 Section "Uninstall"
@@ -104,3 +110,11 @@ Section "Uninstall"
 	DeleteRegValue ${env_hklm} MOSQUITTO_DIR
 	SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
 SectionEnd
+
+LangString DESC_SecInstall ${LANG_ENGLISH} "The main installation."
+LangString DESC_SecService ${LANG_ENGLISH} "Install mosquitto as a Windows service?"
+!insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
+	!insertmacro MUI_DESCRIPTION_TEXT ${SecInstall} $(DESC_SecInstall)
+	!insertmacro MUI_DESCRIPTION_TEXT ${SecService} $(DESC_SecService)
+!insertmacro MUI_FUNCTION_DESCRIPTION_END
+
