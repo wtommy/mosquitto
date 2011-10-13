@@ -7,6 +7,8 @@
   refused actually get the packet.
 - Log IP address when reporting CONNACK packets if the client id isn't yet
   known.
+- Fix payload length calculation in python will_set function.
+- Fix Python publish and will_set functions for payload=None.
 
 0.13 - 20110920
 ===============
