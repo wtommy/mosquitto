@@ -92,20 +92,21 @@ void service_install(void)
 {
 	SC_HANDLE sc_manager, svc_handle;
 	char exe_path[MAX_PATH + 5];
+	SERVICE_DESCRIPTION svc_desc;
 
 	GetModuleFileName(NULL, exe_path, MAX_PATH);
 	strcat(exe_path, " run");
 
-	printf("path: %s\n", exe_path);
 	sc_manager = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
-	printf("scm: %p\n", sc_manager);
 	if(sc_manager){
-		svc_handle = CreateService(sc_manager, "mosquitto", "mosquitto", 
-				SERVICE_START | SERVICE_STOP,
+		svc_handle = CreateService(sc_manager, "mosquitto", "Mosquitto Broker", 
+				SERVICE_START | SERVICE_STOP | SERVICE_CHANGE_CONFIG,
 				SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
 				exe_path, NULL, NULL, NULL, NULL, NULL);
 
 		if(svc_handle){
+			svc_desc.lpDescription = "MQTT v3.1 broker";
+			ChangeServiceConfig2(svc_handle, SERVICE_CONFIG_DESCRIPTION, &svc_desc);
 			CloseServiceHandle(svc_handle);
 		}
 		CloseServiceHandle(sc_manager);
