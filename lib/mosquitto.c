@@ -548,51 +548,7 @@ int mosquitto_loop_read(struct mosquitto *mosq)
 
 int mosquitto_loop_write(struct mosquitto *mosq)
 {
-	ssize_t write_length;
-	struct _mosquitto_packet *packet;
-
-	if(!mosq) return MOSQ_ERR_INVAL;
-	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
-
-	while(mosq->core.out_packet){
-		packet = mosq->core.out_packet;
-
-		while(packet->to_process > 0){
-			write_length = _mosquitto_net_write(&mosq->core, &(packet->payload[packet->pos]), packet->to_process);
-			if(write_length > 0){
-				packet->to_process -= write_length;
-				packet->pos += write_length;
-			}else{
-#ifndef WIN32
-				if(errno == EAGAIN || errno == EWOULDBLOCK){
-#else
-				if(WSAGetLastError() == WSAEWOULDBLOCK){
-#endif
-					return MOSQ_ERR_SUCCESS;
-				}else{
-					switch(errno){
-						case ECONNRESET:
-							return MOSQ_ERR_CONN_LOST;
-						default:
-							return MOSQ_ERR_UNKNOWN;
-					}
-				}
-			}
-		}
-
-		if(((packet->command)&0xF6) == PUBLISH && mosq->on_publish){
-			/* This is a QoS=0 message */
-			mosq->on_publish(mosq->obj, packet->mid);
-		}
-
-		/* Free data and reset values */
-		mosq->core.out_packet = packet->next;
-		_mosquitto_packet_cleanup(packet);
-		_mosquitto_free(packet);
-
-		mosq->core.last_msg_out = time(NULL);
-	}
-	return MOSQ_ERR_SUCCESS;
+	return _mosquitto_packet_write(mosq);
 }
 
 void mosquitto_connect_callback_set(struct mosquitto *mosq, void (*on_connect)(void *, int))

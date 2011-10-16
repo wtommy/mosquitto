@@ -61,7 +61,7 @@ POSSIBILITY OF SUCH DAMAGE.
 static uint64_t bytes_received = 0;
 static uint64_t bytes_sent = 0;
 static unsigned long msgs_received = 0;
-static unsigned long msgs_sent = 0;
+unsigned long msgs_sent = 0;
 
 int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 {
@@ -357,47 +357,6 @@ int mqtt3_net_read(mosquitto_db *db, int context_index)
 
 	context->core.last_msg_in = time(NULL);
 	return rc;
-}
-
-int mqtt3_net_write(mqtt3_context *context)
-{
-	ssize_t write_length;
-	struct _mosquitto_packet *packet;
-
-	if(!context || context->core.sock == -1) return MOSQ_ERR_INVAL;
-
-	while(context->core.out_packet){
-		packet = context->core.out_packet;
-
-		while(packet->to_process > 0){
-			write_length = _mosquitto_net_write(&context->core, &(packet->payload[packet->pos]), packet->to_process);
-			if(write_length > 0){
-				bytes_sent += write_length;
-				packet->to_process -= write_length;
-				packet->pos += write_length;
-			}else{
-#ifndef WIN32
-				if(errno == EAGAIN || errno == EWOULDBLOCK){
-#else
-				if(WSAGetLastError() == WSAEWOULDBLOCK){
-#endif
-					return MOSQ_ERR_SUCCESS;
-				}else{
-					return 1;
-				}
-			}
-		}
-
-		msgs_sent++;
-
-		/* Free data and reset values */
-		context->core.out_packet = packet->next;
-		_mosquitto_packet_cleanup(packet);
-		_mosquitto_free(packet);
-
-		context->core.last_msg_out = time(NULL);
-	}
-	return MOSQ_ERR_SUCCESS;
 }
 
 uint64_t mqtt3_net_bytes_total_received(void)

@@ -266,7 +266,7 @@ static void loop_handle_reads_writes(mosquitto_db *db, struct pollfd *pollfds)
 	for(i=0; i<db->context_count; i++){
 		if(db->contexts[i] && db->contexts[i]->core.sock >= 0){
 			if(pollfds[db->contexts[i]->core.sock].revents & POLLOUT){
-				if(mqtt3_net_write(db->contexts[i])){
+				if(_mosquitto_packet_write(db->contexts[i])){
 					if(db->contexts[i]->core.state != mosq_cs_disconnecting){
 						mqtt3_log_printf(MOSQ_LOG_NOTICE, "Socket write error on client %s, disconnecting.", db->contexts[i]->core.id);
 					}else{

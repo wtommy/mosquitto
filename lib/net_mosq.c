@@ -53,6 +53,13 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <netinet/in.h>
 #endif
 
+#ifdef WITH_BROKER
+#  include <mqtt3.h>
+   extern unsigned long msgs_sent;
+#else
+#  include <mqtt3_protocol.h>
+#endif
+
 #include <memory_mosq.h>
 #include <net_mosq.h>
 
@@ -400,5 +407,62 @@ ssize_t _mosquitto_net_write(struct _mosquitto_core *core, void *buf, size_t cou
 #ifdef WITH_SSL
 	}
 #endif
+}
+
+#ifdef WITH_BROKER
+int _mosquitto_packet_write(struct _mqtt3_context *mosq)
+#else
+int _mosquitto_packet_write(struct mosquitto *mosq)
+#endif
+{
+	ssize_t write_length;
+	struct _mosquitto_packet *packet;
+
+	if(!mosq) return MOSQ_ERR_INVAL;
+	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
+
+	while(mosq->core.out_packet){
+		packet = mosq->core.out_packet;
+
+		while(packet->to_process > 0){
+			write_length = _mosquitto_net_write(&mosq->core, &(packet->payload[packet->pos]), packet->to_process);
+			if(write_length > 0){
+				packet->to_process -= write_length;
+				packet->pos += write_length;
+			}else{
+#ifndef WIN32
+				if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+				if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
+					return MOSQ_ERR_SUCCESS;
+				}else{
+					switch(errno){
+						case ECONNRESET:
+							return MOSQ_ERR_CONN_LOST;
+						default:
+							return MOSQ_ERR_UNKNOWN;
+					}
+				}
+			}
+		}
+
+#ifdef WITH_BROKER
+		msgs_sent++;
+#else
+		if(((packet->command)&0xF6) == PUBLISH && mosq->on_publish){
+			/* This is a QoS=0 message */
+			mosq->on_publish(mosq->obj, packet->mid);
+		}
+#endif
+
+		/* Free data and reset values */
+		mosq->core.out_packet = packet->next;
+		_mosquitto_packet_cleanup(packet);
+		_mosquitto_free(packet);
+
+		mosq->core.last_msg_out = time(NULL);
+	}
+	return MOSQ_ERR_SUCCESS;
 }
 

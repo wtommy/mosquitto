@@ -61,7 +61,7 @@ int mqtt3_raw_connack(mqtt3_context *context, uint8_t result)
 	packet->payload[packet->pos+1] = result;
 
 	_mosquitto_packet_queue(&context->core, packet);
-	mqtt3_net_write(context);
+	_mosquitto_packet_write(context);
 	return MOSQ_ERR_SUCCESS;
 }
 
