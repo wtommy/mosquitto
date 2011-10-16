@@ -29,6 +29,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef _READ_HANDLE_H_
 #define _READ_HANDLE_H_
 
+#include <mosquitto.h>
+
 int _mosquitto_packet_handle(struct mosquitto *mosq);
 int _mosquitto_handle_connack(struct mosquitto *mosq);
 int _mosquitto_handle_pingreq(struct mosquitto *mosq);

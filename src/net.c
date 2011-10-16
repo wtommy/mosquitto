@@ -58,9 +58,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <net_mosq.h>
 
-static uint64_t bytes_received = 0;
+uint64_t bytes_received = 0;
 static uint64_t bytes_sent = 0;
-static unsigned long msgs_received = 0;
+unsigned long msgs_received = 0;
 unsigned long msgs_sent = 0;
 
 int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
@@ -243,120 +243,6 @@ int mqtt3_socket_listen(struct _mqtt3_listener *listener)
 	}else{
 		return 1;
 	}
-}
-
-int mqtt3_net_read(mosquitto_db *db, int context_index)
-{
-	uint8_t byte;
-	ssize_t read_length;
-	int rc = 0;
-	mqtt3_context *context;
-
-	if(context_index < 0 || context_index >= db->context_count) return MOSQ_ERR_INVAL;
-	context = db->contexts[context_index];
-
-	if(!context || context->core.sock == -1) return MOSQ_ERR_INVAL;
-	/* This gets called if pselect() indicates that there is network data
-	 * available - ie. at least one byte.  What we do depends on what data we
-	 * already have.
-	 * If we've not got a command, attempt to read one and save it. This should
-	 * always work because it's only a single byte.
-	 * Then try to read the remaining length. This may fail because it is may
-	 * be more than one byte - will need to save data pending next read if it
-	 * does fail.
-	 * Then try to read the remaining payload, where 'payload' here means the
-	 * combined variable header and actual payload. This is the most likely to
-	 * fail due to longer length, so save current data and current position.
-	 * After all data is read, send to mqtt3_handle_packet() to deal with.
-	 * Finally, free the memory and reset everything to starting conditions.
-	 */
-	if(!context->core.in_packet.command){
-		read_length = _mosquitto_net_read(&context->core, &byte, 1);
-		if(read_length == 1){
-			bytes_received++;
-			context->core.in_packet.command = byte;
-			/* Clients must send CONNECT as their first command. */
-			if(!(context->bridge) && context->core.state == mosq_cs_new && (byte&0xF0) != CONNECT) return 1;
-		}else{
-			if(read_length == 0) return 1; /* EOF */
-#ifndef WIN32
-			if(errno == EAGAIN || errno == EWOULDBLOCK){
-#else
-			if(WSAGetLastError() == WSAEWOULDBLOCK){
-#endif
-				return MOSQ_ERR_SUCCESS;
-			}else{
-				return 1;
-			}
-		}
-	}
-	if(!context->core.in_packet.have_remaining){
-		/* Read remaining
-		 * Algorithm for decoding taken from pseudo code at
-		 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
-		 */
-		do{
-			read_length = _mosquitto_net_read(&context->core, &byte, 1);
-			if(read_length == 1){
-				context->core.in_packet.remaining_count++;
-				/* Max 4 bytes length for remaining length as defined by protocol.
-				 * Anything more likely means a broken/malicious client.
-				 */
-				if(context->core.in_packet.remaining_count > 4) return MOSQ_ERR_PROTOCOL;
-
-				bytes_received++;
-				context->core.in_packet.remaining_length += (byte & 127) * context->core.in_packet.remaining_mult;
-				context->core.in_packet.remaining_mult *= 128;
-			}else{
-				if(read_length == 0) return 1; /* EOF */
-#ifndef WIN32
-				if(errno == EAGAIN || errno == EWOULDBLOCK){
-#else
-				if(WSAGetLastError() == WSAEWOULDBLOCK){
-#endif
-					return MOSQ_ERR_SUCCESS;
-				}else{
-					return 1;
-				}
-			}
-		}while((byte & 128) != 0);
-
-		if(context->core.in_packet.remaining_length > 0){
-			context->core.in_packet.payload = _mosquitto_malloc(context->core.in_packet.remaining_length*sizeof(uint8_t));
-			if(!context->core.in_packet.payload) return MOSQ_ERR_NOMEM;
-			context->core.in_packet.to_process = context->core.in_packet.remaining_length;
-		}
-		context->core.in_packet.have_remaining = 1;
-	}
-	while(context->core.in_packet.to_process>0){
-		read_length = _mosquitto_net_read(&context->core, &(context->core.in_packet.payload[context->core.in_packet.pos]), context->core.in_packet.to_process);
-		if(read_length > 0){
-			bytes_received += read_length;
-			context->core.in_packet.to_process -= read_length;
-			context->core.in_packet.pos += read_length;
-		}else{
-#ifndef WIN32
-			if(errno == EAGAIN || errno == EWOULDBLOCK){
-#else
-			if(WSAGetLastError() == WSAEWOULDBLOCK){
-#endif
-				return MOSQ_ERR_SUCCESS;
-			}else{
-				return 1;
-			}
-		}
-	}
-
-	msgs_received++;
-	/* All data for this packet is read. */
-	context->core.in_packet.pos = 0;
-	rc = mqtt3_packet_handle(db, context_index);
-
-	/* Free data and reset values */
-	_mosquitto_packet_cleanup(&context->core.in_packet);
-
-	context->core.last_msg_in = time(NULL);
-	return rc;
 }
 
 uint64_t mqtt3_net_bytes_total_received(void)

@@ -55,12 +55,15 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef WITH_BROKER
 #  include <mqtt3.h>
+   extern uint64_t bytes_received;
+   extern unsigned long msgs_received;
    extern unsigned long msgs_sent;
 #else
-#  include <mqtt3_protocol.h>
+#  include <read_handle.h>
 #endif
 
 #include <memory_mosq.h>
+#include <mqtt3_protocol.h>
 #include <net_mosq.h>
 
 void _mosquitto_net_init(void)
@@ -464,5 +467,156 @@ int _mosquitto_packet_write(struct mosquitto *mosq)
 		mosq->core.last_msg_out = time(NULL);
 	}
 	return MOSQ_ERR_SUCCESS;
+}
+
+#ifdef WITH_BROKER
+int _mosquitto_packet_read(mosquitto_db *db, int context_index)
+#else
+int _mosquitto_packet_read(struct mosquitto *mosq)
+#endif
+{
+	uint8_t byte;
+	ssize_t read_length;
+	int rc = 0;
+#ifdef WITH_BROKER
+	mqtt3_context *mosq;
+#endif
+
+#ifdef WITH_BROKER
+	if(context_index < 0 || context_index >= db->context_count) return MOSQ_ERR_INVAL;
+	mosq = db->contexts[context_index];
+#else
+	if(!mosq) return MOSQ_ERR_INVAL;
+#endif
+	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
+	/* This gets called if pselect() indicates that there is network data
+	 * available - ie. at least one byte.  What we do depends on what data we
+	 * already have.
+	 * If we've not got a command, attempt to read one and save it. This should
+	 * always work because it's only a single byte.
+	 * Then try to read the remaining length. This may fail because it is may
+	 * be more than one byte - will need to save data pending next read if it
+	 * does fail.
+	 * Then try to read the remaining payload, where 'payload' here means the
+	 * combined variable header and actual payload. This is the most likely to
+	 * fail due to longer length, so save current data and current position.
+	 * After all data is read, send to _mosquitto_handle_packet() to deal with.
+	 * Finally, free the memory and reset everything to starting conditions.
+	 */
+	if(!mosq->core.in_packet.command){
+		/* FIXME - check command and fill in expected length if we know it.
+		 * This means we can check the client is sending valid data some times.
+		 */
+		read_length = _mosquitto_net_read(&mosq->core, &byte, 1);
+		if(read_length == 1){
+			mosq->core.in_packet.command = byte;
+#ifdef WITH_BROKER
+			bytes_received++;
+			/* Clients must send CONNECT as their first command. */
+			if(!(mosq->bridge) && mosq->core.state == mosq_cs_new && (byte&0xF0) != CONNECT) return 1;
+#endif
+		}else{
+			if(read_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */
+#ifndef WIN32
+			if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+			if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
+				return MOSQ_ERR_SUCCESS;
+			}else{
+				switch(errno){
+					case ECONNRESET:
+						return MOSQ_ERR_CONN_LOST;
+					default:
+						return MOSQ_ERR_UNKNOWN;
+				}
+			}
+		}
+	}
+	if(!mosq->core.in_packet.have_remaining){
+		/* Read remaining
+		 * Algorithm for decoding taken from pseudo code at
+		 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
+		 */
+		do{
+			read_length = _mosquitto_net_read(&mosq->core, &byte, 1);
+			if(read_length == 1){
+				mosq->core.in_packet.remaining_count++;
+				/* Max 4 bytes length for remaining length as defined by protocol.
+				 * Anything more likely means a broken/malicious client.
+				 */
+				if(mosq->core.in_packet.remaining_count > 4) return MOSQ_ERR_PROTOCOL;
+
+#ifdef WITH_BROKER
+				bytes_received++;
+#endif
+				mosq->core.in_packet.remaining_length += (byte & 127) * mosq->core.in_packet.remaining_mult;
+				mosq->core.in_packet.remaining_mult *= 128;
+			}else{
+				if(read_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */
+#ifndef WIN32
+				if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+				if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
+					return MOSQ_ERR_SUCCESS;
+				}else{
+					switch(errno){
+						case ECONNRESET:
+							return MOSQ_ERR_CONN_LOST;
+						default:
+							return MOSQ_ERR_UNKNOWN;
+					}
+				}
+			}
+		}while((byte & 128) != 0);
+
+		if(mosq->core.in_packet.remaining_length > 0){
+			mosq->core.in_packet.payload = _mosquitto_malloc(mosq->core.in_packet.remaining_length*sizeof(uint8_t));
+			if(!mosq->core.in_packet.payload) return MOSQ_ERR_NOMEM;
+			mosq->core.in_packet.to_process = mosq->core.in_packet.remaining_length;
+		}
+		mosq->core.in_packet.have_remaining = 1;
+	}
+	while(mosq->core.in_packet.to_process>0){
+		read_length = _mosquitto_net_read(&mosq->core, &(mosq->core.in_packet.payload[mosq->core.in_packet.pos]), mosq->core.in_packet.to_process);
+		if(read_length > 0){
+#ifdef WITH_BROKER
+			bytes_received += read_length;
+#endif
+			mosq->core.in_packet.to_process -= read_length;
+			mosq->core.in_packet.pos += read_length;
+		}else{
+#ifndef WIN32
+			if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+			if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
+				return MOSQ_ERR_SUCCESS;
+			}else{
+				switch(errno){
+					case ECONNRESET:
+						return MOSQ_ERR_CONN_LOST;
+					default:
+						return MOSQ_ERR_UNKNOWN;
+				}
+			}
+		}
+	}
+
+	/* All data for this packet is read. */
+	mosq->core.in_packet.pos = 0;
+#ifdef WITH_BROKER
+	msgs_received++;
+	rc = mqtt3_packet_handle(db, context_index);
+#else
+	rc = _mosquitto_packet_handle(mosq);
+#endif
+
+	/* Free data and reset values */
+	_mosquitto_packet_cleanup(&mosq->core.in_packet);
+
+	mosq->core.last_msg_in = time(NULL);
+	return rc;
 }
 

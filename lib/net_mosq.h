@@ -41,6 +41,7 @@ typedef int ssize_t;
 
 #ifdef WITH_BROKER
 struct _mqtt3_context;
+struct _mosquitto_db;
 #endif
 
 #ifdef WIN32
@@ -81,8 +82,10 @@ ssize_t _mosquitto_net_write(struct _mosquitto_core *core, void *buf, size_t cou
 
 #ifdef WITH_BROKER
 int _mosquitto_packet_write(struct _mqtt3_context *mosq);
+int _mosquitto_packet_read(struct _mosquitto_db *db, int context_index);
 #else
 int _mosquitto_packet_write(struct mosquitto *mosq);
+int _mosquitto_packet_read(struct mosquitto *mosq);
 #endif
 
 #endif
