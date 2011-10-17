@@ -504,9 +504,6 @@ int _mosquitto_packet_read(struct mosquitto *mosq)
 	 * Finally, free the memory and reset everything to starting conditions.
 	 */
 	if(!mosq->core.in_packet.command){
-		/* FIXME - check command and fill in expected length if we know it.
-		 * This means we can check the client is sending valid data some times.
-		 */
 		read_length = _mosquitto_net_read(&mosq->core, &byte, 1);
 		if(read_length == 1){
 			mosq->core.in_packet.command = byte;
