@@ -59,7 +59,7 @@ int mqtt3_packet_handle(mosquitto_db *db, int context_index)
 		case PUBLISH:
 			return mqtt3_handle_publish(db, context);
 		case PUBREC:
-			return mqtt3_handle_pubrec(context);
+			return _mosquitto_handle_pubrec(context);
 		case PUBREL:
 			return mqtt3_handle_pubrel(db, context);
 		case CONNECT:
@@ -192,25 +192,6 @@ int mqtt3_handle_publish(mosquitto_db *db, struct mosquitto *context)
 	if(payload) _mosquitto_free(payload);
 
 	return rc;
-}
-
-int mqtt3_handle_pubrec(struct mosquitto *context)
-{
-	uint16_t mid;
-
-	if(!context){
-		return MOSQ_ERR_INVAL;
-	}
-	if(context->in_packet.remaining_length != 2){
-		return MOSQ_ERR_NOMEM;
-	}
-	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
-	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received PUBREC from %s (Mid: %d)", context->id, mid);
-
-	if(mqtt3_db_message_update(context, mid, mosq_md_out, ms_wait_pubcomp)) return 1;
-	if(_mosquitto_send_pubrel(context, mid, false)) return 1;
-
-	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_handle_pubrel(mosquitto_db *db, struct mosquitto *context)

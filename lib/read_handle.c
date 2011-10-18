@@ -153,29 +153,6 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 	}
 }
 
-int _mosquitto_handle_pubrec(struct mosquitto *mosq)
-{
-	uint16_t mid;
-	int rc;
-
-	assert(mosq);
-#ifdef WITH_STRICT_PROTOCOL
-	if(mosq->in_packet.remaining_length != 2){
-		return MOSQ_ERR_PROTOCOL;
-	}
-#endif
-	rc = _mosquitto_read_uint16(&mosq->in_packet, &mid);
-	if(rc) return rc;
-	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBREC (Mid: %d)", mid);
-
-	rc = _mosquitto_message_update(mosq, mid, mosq_md_out, mosq_ms_wait_pubcomp);
-	if(rc) return rc;
-	rc = _mosquitto_send_pubrel(mosq, mid, false);
-	if(rc) return rc;
-
-	return MOSQ_ERR_SUCCESS;
-}
-
 int _mosquitto_handle_pubrel(struct mosquitto *mosq)
 {
 	uint16_t mid;
