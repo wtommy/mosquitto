@@ -115,7 +115,7 @@ int mqtt3_handle_pingreq(struct mosquitto *context)
 	}
 #endif
 	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received PINGREQ from %s", context->id);
-	return mqtt3_raw_pingresp(context);
+	return _mosquitto_send_pingresp(context);
 }
 
 int mqtt3_handle_pingresp(struct mosquitto *context)

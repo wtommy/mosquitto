@@ -251,7 +251,6 @@ void mqtt3_config_cleanup(mqtt3_config *config);
  * Returns 0 on success, 1 on error.
  */
 int mqtt3_raw_connack(struct mosquitto *context, uint8_t result);
-int mqtt3_raw_pingresp(struct mosquitto *context);
 int mqtt3_raw_publish(struct mosquitto *context, int dup, uint8_t qos, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, bool retain);
 int mqtt3_raw_suback(struct mosquitto *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload);
 

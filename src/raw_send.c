@@ -54,9 +54,3 @@ int mqtt3_raw_publish(struct mosquitto *context, int dup, uint8_t qos, uint16_t 
 	return _mosquitto_send_real_publish(context, mid, topic, payloadlen, payload, qos, retain, dup);
 }
 
-int mqtt3_raw_pingresp(struct mosquitto *context)
-{
-	if(context) _mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Sending PINGRESP to %s", context->id);
-	return _mosquitto_send_simple_command(context, PINGRESP);
-}
-
