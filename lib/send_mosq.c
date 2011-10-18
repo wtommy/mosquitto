@@ -37,6 +37,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <net_mosq.h>
 #include <send_mosq.h>
 
+#ifdef WITH_BROKER
+#include <mqtt3.h>
+#endif
+
 int _mosquitto_send_pingreq(struct mosquitto *mosq)
 {
 	assert(mosq);
@@ -80,11 +84,27 @@ int _mosquitto_send_pubcomp(struct mosquitto *mosq, uint16_t mid)
 
 int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain, bool dup)
 {
+#ifdef WITH_BROKER
+	int len;
+#endif
 	assert(mosq);
 	assert(topic);
 
 	if(mosq->sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
-	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBLISH (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", dup, qos, retain, mid, topic, (long)payloadlen);
+#ifdef WITH_BROKER
+	if(mosq->listener && mosq->listener->mount_point){
+		len = strlen(mosq->listener->mount_point);
+		if(len > strlen(topic)){
+			topic += strlen(mosq->listener->mount_point);
+		}else{
+			/* Invalid topic string. Should never happen, but silently swallow the message anyway. */
+			return MOSQ_ERR_SUCCESS;
+		}
+	}
+	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Sending PUBLISH to %s (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", mosq->id, dup, qos, retain, mid, topic, (long)payloadlen);
+#else
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBLISH (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", dup, qos, retain, mid, topic, (long)payloadlen);
+#endif
 	return _mosquitto_send_real_publish(mosq, mid, topic, payloadlen, payload, qos, retain, dup);
 }
 

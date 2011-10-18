@@ -621,7 +621,7 @@ int mqtt3_db_message_write(struct mosquitto *context)
 
 			switch(tail->state){
 				case ms_publish:
-					rc = mqtt3_raw_publish(context, retries, qos, mid, topic, payloadlen, payload, retain);
+					rc = _mosquitto_send_publish(context, mid, topic, payloadlen, payload, qos, retain, retries);
 					if(!rc){
 						if(last){
 							last->next = tail->next;
@@ -640,7 +640,7 @@ int mqtt3_db_message_write(struct mosquitto *context)
 					break;
 
 				case ms_publish_puback:
-					rc = mqtt3_raw_publish(context, retries, qos, mid, topic, payloadlen, payload, retain);
+					rc = _mosquitto_send_publish(context, mid, topic, payloadlen, payload, qos, retain, retries);
 					if(!rc){
 						tail->state = ms_wait_puback;
 					}else{
@@ -651,7 +651,7 @@ int mqtt3_db_message_write(struct mosquitto *context)
 					break;
 
 				case ms_publish_pubrec:
-					rc = mqtt3_raw_publish(context, retries, qos, mid, topic, payloadlen, payload, retain);
+					rc = _mosquitto_send_publish(context, mid, topic, payloadlen, payload, qos, retain, retries);
 					if(!rc){
 						tail->state = ms_wait_pubrec;
 					}else{
