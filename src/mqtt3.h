@@ -227,7 +227,6 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
  * ============================================================ */
 /* Return a string that corresponds to the MQTT command number (left shifted 4 bits). */
 const char *mqtt3_command_to_string(uint8_t command);
-void mqtt3_check_keepalive(struct mosquitto *context);
 
 /* ============================================================
  * Config functions

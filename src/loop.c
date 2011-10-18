@@ -43,6 +43,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mqtt3.h>
 #include <memory_mosq.h>
+#include <util_mosq.h>
 
 extern bool flag_reload;
 #ifdef WITH_PERSISTENCE
@@ -123,7 +124,7 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 					}
 #ifdef WITH_BRIDGE
 					if(db->contexts[i]->bridge){
-						mqtt3_check_keepalive(db->contexts[i]);
+						_mosquitto_check_keepalive(db->contexts[i]);
 					}
 #endif
 					if(!(db->contexts[i]->keepalive) || now - db->contexts[i]->last_msg_in < (time_t)(db->contexts[i]->keepalive)*3/2){

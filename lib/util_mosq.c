@@ -37,6 +37,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <send_mosq.h>
 #include <util_mosq.h>
 
+#ifdef WITH_BROKER
+#include <mqtt3.h>
+#endif
+
 int _mosquitto_packet_alloc(struct _mosquitto_packet *packet)
 {
 	uint8_t remaining_bytes[5], byte;
@@ -72,7 +76,6 @@ int _mosquitto_packet_alloc(struct _mosquitto_packet *packet)
 	return MOSQ_ERR_SUCCESS;
 }
 
-#ifndef WITH_BROKER
 void _mosquitto_check_keepalive(struct mosquitto *mosq)
 {
 	assert(mosq);
@@ -80,11 +83,17 @@ void _mosquitto_check_keepalive(struct mosquitto *mosq)
 		if(mosq->state == mosq_cs_connected){
 			_mosquitto_send_pingreq(mosq);
 		}else{
+#ifdef WITH_BROKER
+			if(mosq->listener){
+				mosq->listener->client_count--;
+				assert(mosq->listener->client_count >= 0);
+			}
+			mosq->listener = NULL;
+#endif
 			_mosquitto_socket_close(mosq);
 		}
 	}
 }
-#endif
 
 /* Convert ////some////over/slashed///topic/etc/etc//
  * into some/over/slashed/topic/etc/etc
