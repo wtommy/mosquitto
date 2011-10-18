@@ -73,8 +73,8 @@ const char *mqtt3_command_to_string(uint8_t command)
 
 void mqtt3_check_keepalive(struct mosquitto *context)
 {
-	if(context && context->core.sock != -1 && time(NULL) - context->core.last_msg_out >= context->core.keepalive){
-		if(context->core.state == mosq_cs_connected){
+	if(context && context->sock != -1 && time(NULL) - context->last_msg_out >= context->keepalive){
+		if(context->state == mosq_cs_connected){
 			mqtt3_raw_pingreq(context);
 		}else{
 			if(context->listener){
@@ -82,7 +82,7 @@ void mqtt3_check_keepalive(struct mosquitto *context)
 				assert(context->listener->client_count >= 0);
 			}
 			context->listener = NULL;
-			_mosquitto_socket_close(&context->core);
+			_mosquitto_socket_close(context);
 		}
 	}
 }

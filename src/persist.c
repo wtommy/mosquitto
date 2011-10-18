@@ -53,14 +53,14 @@ static struct mosquitto *_db_find_or_add_context(mosquitto_db *db, const char *c
 
 	context = NULL;
 	for(i=0; i<db->context_count; i++){
-		if(db->contexts[i] && !strcmp(db->contexts[i]->core.id, client_id)){
+		if(db->contexts[i] && !strcmp(db->contexts[i]->id, client_id)){
 			context = db->contexts[i];
 			break;
 		}
 	}
 	if(!context){
 		context = mqtt3_context_init(-1);
-		context->core.clean_session = false;
+		context->clean_session = false;
 
 		for(i=0; i<db->context_count; i++){
 			if(!db->contexts[i]){
@@ -78,10 +78,10 @@ static struct mosquitto *_db_find_or_add_context(mosquitto_db *db, const char *c
 				return NULL;
 			}
 		}
-		context->core.id = _mosquitto_strdup(client_id);
+		context->id = _mosquitto_strdup(client_id);
 	}
 	if(last_mid){
-		context->core.last_mid = last_mid;
+		context->last_mid = last_mid;
 	}
 	return context;
 }
@@ -100,7 +100,7 @@ static int mqtt3_db_client_messages_write(mosquitto_db *db, FILE *db_fptr, struc
 
 	cmsg = context->msgs;
 	while(cmsg){
-		slen = strlen(context->core.id);
+		slen = strlen(context->id);
 
 		length = htonl(sizeof(dbid_t) + sizeof(uint16_t) + sizeof(uint8_t) +
 				sizeof(uint8_t) + sizeof(uint8_t) + sizeof(uint8_t) +
@@ -112,7 +112,7 @@ static int mqtt3_db_client_messages_write(mosquitto_db *db, FILE *db_fptr, struc
 
 		i16temp = htons(slen);
 		write_e(db_fptr, &i16temp, sizeof(uint16_t));
-		write_e(db_fptr, context->core.id, slen);
+		write_e(db_fptr, context->id, slen);
 
 		i64temp = cmsg->store->db_id;
 		write_e(db_fptr, &i64temp, sizeof(dbid_t));
@@ -222,18 +222,18 @@ static int mqtt3_db_client_write(mosquitto_db *db, FILE *db_fptr)
 
 	for(i=0; i<db->context_count; i++){
 		context = db->contexts[i];
-		if(context && context->core.clean_session == false){
-			length = htonl(2+strlen(context->core.id) + sizeof(uint16_t));
+		if(context && context->clean_session == false){
+			length = htonl(2+strlen(context->id) + sizeof(uint16_t));
 
 			i16temp = htons(DB_CHUNK_CLIENT);
 			write_e(db_fptr, &i16temp, sizeof(uint16_t));
 			write_e(db_fptr, &length, sizeof(uint32_t));
 
-			slen = strlen(context->core.id);
+			slen = strlen(context->id);
 			i16temp = htons(slen);
 			write_e(db_fptr, &i16temp, sizeof(uint16_t));
-			write_e(db_fptr, context->core.id, slen);
-			i16temp = htons(context->core.last_mid);
+			write_e(db_fptr, context->id, slen);
+			i16temp = htons(context->last_mid);
 			write_e(db_fptr, &i16temp, sizeof(uint16_t));
 
 			if(mqtt3_db_client_messages_write(db, db_fptr, context)) return 1;
@@ -267,17 +267,17 @@ static int _db_subs_retain_write(mosquitto_db *db, FILE *db_fptr, struct _mosqui
 
 	sub = node->subs;
 	while(sub){
-		if(sub->context->core.clean_session == false){
-			length = htonl(2+strlen(sub->context->core.id) + 2+strlen(thistopic) + sizeof(uint8_t));
+		if(sub->context->clean_session == false){
+			length = htonl(2+strlen(sub->context->id) + 2+strlen(thistopic) + sizeof(uint8_t));
 
 			i16temp = htons(DB_CHUNK_SUB);
 			write_e(db_fptr, &i16temp, sizeof(uint16_t));
 			write_e(db_fptr, &length, sizeof(uint32_t));
 
-			slen = strlen(sub->context->core.id);
+			slen = strlen(sub->context->id);
 			i16temp = htons(slen);
 			write_e(db_fptr, &i16temp, sizeof(uint16_t));
-			write_e(db_fptr, sub->context->core.id, slen);
+			write_e(db_fptr, sub->context->id, slen);
 
 			slen = strlen(thistopic);
 			i16temp = htons(slen);

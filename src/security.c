@@ -522,24 +522,24 @@ int mosquitto_security_apply(struct _mosquitto_db *db)
 		for(i=0; i<db->context_count; i++){
 			if(db->contexts[i]){
 				/* Check for anonymous clients when allow_anonymous is false */
-				if(!allow_anonymous && !db->contexts[i]->core.username){
-					db->contexts[i]->core.state = mosq_cs_disconnecting;
-					_mosquitto_socket_close(&db->contexts[i]->core);
+				if(!allow_anonymous && !db->contexts[i]->username){
+					db->contexts[i]->state = mosq_cs_disconnecting;
+					_mosquitto_socket_close(db->contexts[i]);
 					continue;
 				}
 				/* Check for connected clients that are no longer authorised */
-				if(db->unpwd && db->contexts[i]->core.username){
+				if(db->unpwd && db->contexts[i]->username){
 					unpwd_ok = false;
 					unpwd_tail = db->unpwd;
 					while(unpwd_tail){
-						if(!strcmp(db->contexts[i]->core.username, unpwd_tail->username)){
+						if(!strcmp(db->contexts[i]->username, unpwd_tail->username)){
 							if(unpwd_tail->password){
-								if(!db->contexts[i]->core.password 
-										|| strcmp(db->contexts[i]->core.password, unpwd_tail->password)){
+								if(!db->contexts[i]->password 
+										|| strcmp(db->contexts[i]->password, unpwd_tail->password)){
 
 									/* Non matching password to username. */
-									db->contexts[i]->core.state = mosq_cs_disconnecting;
-									_mosquitto_socket_close(&db->contexts[i]->core);
+									db->contexts[i]->state = mosq_cs_disconnecting;
+									_mosquitto_socket_close(db->contexts[i]);
 									continue;
 								}else{
 									/* Username matches, password matches. */
@@ -553,8 +553,8 @@ int mosquitto_security_apply(struct _mosquitto_db *db)
 						unpwd_tail = unpwd_tail->next;
 					}
 					if(!unpwd_ok){
-						db->contexts[i]->core.state = mosq_cs_disconnecting;
-						_mosquitto_socket_close(&db->contexts[i]->core);
+						db->contexts[i]->state = mosq_cs_disconnecting;
+						_mosquitto_socket_close(db->contexts[i]);
 						continue;
 					}
 				}
@@ -563,14 +563,14 @@ int mosquitto_security_apply(struct _mosquitto_db *db)
   					acl_user_tail = db->acl_list;
 					while(acl_user_tail){
 						if(acl_user_tail->username){
-							if(db->contexts[i]->core.username){
-								if(!strcmp(acl_user_tail->username, db->contexts[i]->core.username)){
+							if(db->contexts[i]->username){
+								if(!strcmp(acl_user_tail->username, db->contexts[i]->username)){
 									db->contexts[i]->acl_list = acl_user_tail;
 									break;
 								}
 							}
 						}else{
-							if(!db->contexts[i]->core.username){
+							if(!db->contexts[i]->username){
 								db->contexts[i]->acl_list = acl_user_tail;
 								break;
 							}

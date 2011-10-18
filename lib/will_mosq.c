@@ -50,61 +50,61 @@ typedef int ssize_t;
 #include <send_mosq.h>
 #include <util_mosq.h>
 
-int _mosquitto_will_set(struct _mosquitto_core *core, bool will, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
+int _mosquitto_will_set(struct mosquitto *mosq, bool will, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain)
 {
 	int rc = MOSQ_ERR_SUCCESS;
 
-	if(!core || (will && !topic)) return MOSQ_ERR_INVAL;
+	if(!mosq || (will && !topic)) return MOSQ_ERR_INVAL;
 	if(payloadlen > 268435455) return MOSQ_ERR_PAYLOAD_SIZE;
 
-	if(core->will){
-		if(core->will->topic){
-			_mosquitto_free(core->will->topic);
-			core->will->topic = NULL;
+	if(mosq->will){
+		if(mosq->will->topic){
+			_mosquitto_free(mosq->will->topic);
+			mosq->will->topic = NULL;
 		}
-		if(core->will->payload){
-			_mosquitto_free(core->will->payload);
-			core->will->payload = NULL;
+		if(mosq->will->payload){
+			_mosquitto_free(mosq->will->payload);
+			mosq->will->payload = NULL;
 		}
-		_mosquitto_free(core->will);
-		core->will = NULL;
+		_mosquitto_free(mosq->will);
+		mosq->will = NULL;
 	}
 
 	if(will){
-		core->will = _mosquitto_calloc(1, sizeof(struct mosquitto_message));
-		if(!core->will) return MOSQ_ERR_NOMEM;
-		core->will->topic = _mosquitto_strdup(topic);
-		if(!core->will->topic){
+		mosq->will = _mosquitto_calloc(1, sizeof(struct mosquitto_message));
+		if(!mosq->will) return MOSQ_ERR_NOMEM;
+		mosq->will->topic = _mosquitto_strdup(topic);
+		if(!mosq->will->topic){
 			rc = MOSQ_ERR_NOMEM;
 			goto cleanup;
 		}
-		core->will->payloadlen = payloadlen;
-		if(core->will->payloadlen > 0){
+		mosq->will->payloadlen = payloadlen;
+		if(mosq->will->payloadlen > 0){
 			if(!payload){
 				rc = MOSQ_ERR_INVAL;
 				goto cleanup;
 			}
-			core->will->payload = _mosquitto_malloc(sizeof(uint8_t)*core->will->payloadlen);
-			if(!core->will->payload){
+			mosq->will->payload = _mosquitto_malloc(sizeof(uint8_t)*mosq->will->payloadlen);
+			if(!mosq->will->payload){
 				rc = MOSQ_ERR_NOMEM;
 				goto cleanup;
 			}
 
-			memcpy(core->will->payload, payload, payloadlen);
+			memcpy(mosq->will->payload, payload, payloadlen);
 		}
-		core->will->qos = qos;
-		core->will->retain = retain;
+		mosq->will->qos = qos;
+		mosq->will->retain = retain;
 	}
 
 	return MOSQ_ERR_SUCCESS;
 
 cleanup:
-	if(core->will){
-		if(core->will->topic) _mosquitto_free(core->will->topic);
-		if(core->will->payload) _mosquitto_free(core->will->payload);
+	if(mosq->will){
+		if(mosq->will->topic) _mosquitto_free(mosq->will->topic);
+		if(mosq->will->payload) _mosquitto_free(mosq->will->payload);
 	}
-	_mosquitto_free(core->will);
-	core->will = NULL;
+	_mosquitto_free(mosq->will);
+	mosq->will = NULL;
 
 	return rc;
 }

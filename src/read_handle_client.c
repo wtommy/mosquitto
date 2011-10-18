@@ -49,25 +49,25 @@ int mqtt3_handle_connack(struct mosquitto *context)
 		return MOSQ_ERR_INVAL;
 	}
 #ifdef WITH_STRICT_PROTOCOL
-	if(context->core.in_packet.remaining_length != 2){
+	if(context->in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
 	}
 #endif
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNACK");
-	if(_mosquitto_read_byte(&context->core.in_packet, &byte)) return 1; // Reserved byte, not used
-	if(_mosquitto_read_byte(&context->core.in_packet, &rc)) return 1;
+	if(_mosquitto_read_byte(&context->in_packet, &byte)) return 1; // Reserved byte, not used
+	if(_mosquitto_read_byte(&context->in_packet, &rc)) return 1;
 	switch(rc){
 		case 0:
 			if(context->bridge){
 				if(context->bridge->notifications){
-					notification_topic_len = strlen(context->core.id)+strlen("$SYS/broker/connection//state");
+					notification_topic_len = strlen(context->id)+strlen("$SYS/broker/connection//state");
 					notification_topic = _mosquitto_malloc(sizeof(char)*(notification_topic_len+1));
 					if(!notification_topic) return 1;
 
-					snprintf(notification_topic, notification_topic_len+1, "$SYS/broker/connection/%s/state", context->core.id);
+					snprintf(notification_topic, notification_topic_len+1, "$SYS/broker/connection/%s/state", context->id);
 					notification_payload[0] = '1';
 					notification_payload[1] = '\0';
-					if(_mosquitto_send_real_publish(&context->core, _mosquitto_mid_generate(&context->core),
+					if(_mosquitto_send_real_publish(context, _mosquitto_mid_generate(context),
 							notification_topic, 2, (uint8_t *)&notification_payload, 1, true, 0)){
 
 						_mosquitto_free(notification_topic);
@@ -77,13 +77,13 @@ int mqtt3_handle_connack(struct mosquitto *context)
 				}
 				for(i=0; i<context->bridge->topic_count; i++){
 					if(context->bridge->topics[i].direction == bd_in || context->bridge->topics[i].direction == bd_both){
-						if(_mosquitto_send_subscribe(&context->core, NULL, false, context->bridge->topics[i].topic, 2)){
+						if(_mosquitto_send_subscribe(context, NULL, false, context->bridge->topics[i].topic, 2)){
 							return 1;
 						}
 					}
 				}
 			}
-			context->core.state = mosq_cs_connected;
+			context->state = mosq_cs_connected;
 			return MOSQ_ERR_SUCCESS;
 		case 1:
 			mqtt3_log_printf(MOSQ_LOG_ERR, "Connection Refused: unacceptable protocol version");
@@ -104,11 +104,11 @@ int mqtt3_handle_suback(struct mosquitto *context)
 	uint8_t granted_qos;
 
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received SUBACK");
-	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;
+	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
 
-	while(context->core.in_packet.pos < context->core.in_packet.remaining_length){
+	while(context->in_packet.pos < context->in_packet.remaining_length){
 		/* FIXME - Need to do something with this */
-		if(_mosquitto_read_byte(&context->core.in_packet, &granted_qos)) return 1;
+		if(_mosquitto_read_byte(&context->in_packet, &granted_qos)) return 1;
 	}
 
 	return MOSQ_ERR_SUCCESS;
@@ -122,12 +122,12 @@ int mqtt3_handle_unsuback(struct mosquitto *context)
 		return MOSQ_ERR_INVAL;
 	}
 #ifdef WITH_STRICT_PROTOCOL
-	if(context->core.in_packet.remaining_length != 2){
+	if(context->in_packet.remaining_length != 2){
 		return MOSQ_ERR_PROTOCOL;
 	}
 #endif
 	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received UNSUBACK");
-	if(_mosquitto_read_uint16(&context->core.in_packet, &mid)) return 1;
+	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
 
 	return MOSQ_ERR_SUCCESS;
 }

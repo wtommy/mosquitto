@@ -50,38 +50,38 @@ struct mosquitto *mqtt3_context_init(int sock)
 	context = _mosquitto_malloc(sizeof(struct mosquitto));
 	if(!context) return NULL;
 	
-	context->core.state = mosq_cs_new;
-	context->core.sock = sock;
-	context->core.last_msg_in = time(NULL);
-	context->core.last_msg_out = time(NULL);
-	context->core.keepalive = 60; /* Default to 60s */
-	context->core.clean_session = true;
-	context->core.id = NULL;
-	context->core.last_mid = 0;
-	context->core.will = NULL;
-	context->core.username = NULL;
-	context->core.password = NULL;
+	context->state = mosq_cs_new;
+	context->sock = sock;
+	context->last_msg_in = time(NULL);
+	context->last_msg_out = time(NULL);
+	context->keepalive = 60; /* Default to 60s */
+	context->clean_session = true;
+	context->id = NULL;
+	context->last_mid = 0;
+	context->will = NULL;
+	context->username = NULL;
+	context->password = NULL;
 	context->listener = NULL;
 	context->acl_list = NULL;
 
-	context->core.in_packet.payload = NULL;
-	_mosquitto_packet_cleanup(&context->core.in_packet);
-	context->core.out_packet = NULL;
+	context->in_packet.payload = NULL;
+	_mosquitto_packet_cleanup(&context->in_packet);
+	context->out_packet = NULL;
 
 	addrlen = sizeof(addr);
-	context->core.address = NULL;
+	context->address = NULL;
 	if(!getpeername(sock, (struct sockaddr *)&addr, &addrlen)){
 		if(addr.ss_family == AF_INET){
 			if(inet_ntop(AF_INET, &((struct sockaddr_in *)&addr)->sin_addr.s_addr, address, 1024)){
-				context->core.address = _mosquitto_strdup(address);
+				context->address = _mosquitto_strdup(address);
 			}
 		}else if(addr.ss_family == AF_INET6){
 			if(inet_ntop(AF_INET6, &((struct sockaddr_in6 *)&addr)->sin6_addr.s6_addr, address, 1024)){
-				context->core.address = _mosquitto_strdup(address);
+				context->address = _mosquitto_strdup(address);
 			}
 		}
 	}
-	if(!context->core.address && sock != -1){
+	if(!context->address && sock != -1){
 		/* getpeername and inet_ntop failed and not a bridge */
 		_mosquitto_free(context);
 		return NULL;
@@ -89,7 +89,7 @@ struct mosquitto *mqtt3_context_init(int sock)
 	context->bridge = NULL;
 	context->msgs = NULL;
 #ifdef WITH_SSL
-	context->core.ssl = NULL;
+	context->ssl = NULL;
 #endif
 
 	return context;
@@ -107,47 +107,47 @@ void mqtt3_context_cleanup(mosquitto_db *db, struct mosquitto *context, bool do_
 	mosquitto_client_msg *msg, *next;
 	if(!context) return;
 
-	if(context->core.username){
-		_mosquitto_free(context->core.username);
-		context->core.username = NULL;
+	if(context->username){
+		_mosquitto_free(context->username);
+		context->username = NULL;
 	}
-	if(context->core.password){
-		_mosquitto_free(context->core.password);
-		context->core.password = NULL;
+	if(context->password){
+		_mosquitto_free(context->password);
+		context->password = NULL;
 	}
-	if(context->core.sock != -1){
+	if(context->sock != -1){
 		if(context->listener){
 			context->listener->client_count--;
 			assert(context->listener->client_count >= 0);
 		}
-		_mosquitto_socket_close(&context->core);
+		_mosquitto_socket_close(context);
 		context->listener = NULL;
 	}
-	if(context->core.clean_session && db){
+	if(context->clean_session && db){
 		mqtt3_subs_clean_session(context, &db->subs);
 		mqtt3_db_messages_delete(context);
 	}
-	if(context->core.address){
-		_mosquitto_free(context->core.address);
-		context->core.address = NULL;
+	if(context->address){
+		_mosquitto_free(context->address);
+		context->address = NULL;
 	}
-	if(context->core.id){
-		_mosquitto_free(context->core.id);
-		context->core.id = NULL;
+	if(context->id){
+		_mosquitto_free(context->id);
+		context->id = NULL;
 	}
-	_mosquitto_packet_cleanup(&(context->core.in_packet));
-	while(context->core.out_packet){
-		_mosquitto_packet_cleanup(context->core.out_packet);
-		packet = context->core.out_packet;
-		context->core.out_packet = context->core.out_packet->next;
+	_mosquitto_packet_cleanup(&(context->in_packet));
+	while(context->out_packet){
+		_mosquitto_packet_cleanup(context->out_packet);
+		packet = context->out_packet;
+		context->out_packet = context->out_packet->next;
 		_mosquitto_free(packet);
 	}
-	if(context->core.will){
-		if(context->core.will->topic) _mosquitto_free(context->core.will->topic);
-		if(context->core.will->payload) _mosquitto_free(context->core.will->payload);
-		_mosquitto_free(context->core.will);
+	if(context->will){
+		if(context->will->topic) _mosquitto_free(context->will->topic);
+		if(context->will->payload) _mosquitto_free(context->will->payload);
+		_mosquitto_free(context->will);
 	}
-	if(do_free || context->core.clean_session){
+	if(do_free || context->clean_session){
 		msg = context->msgs;
 		while(msg){
 			next = msg->next;
@@ -167,15 +167,15 @@ void mqtt3_context_disconnect(mosquitto_db *db, int context_index)
 	struct mosquitto *ctxt;
 
 	ctxt = db->contexts[context_index];
-	if(ctxt->core.state != mosq_cs_disconnecting && ctxt->core.will){
+	if(ctxt->state != mosq_cs_disconnecting && ctxt->will){
 		/* Unexpected disconnect, queue the client will. */
-		mqtt3_db_messages_easy_queue(db, ctxt, ctxt->core.will->topic, ctxt->core.will->qos, ctxt->core.will->payloadlen, ctxt->core.will->payload, ctxt->core.will->retain);
+		mqtt3_db_messages_easy_queue(db, ctxt, ctxt->will->topic, ctxt->will->qos, ctxt->will->payloadlen, ctxt->will->payload, ctxt->will->retain);
 	}
 	if(ctxt->listener){
 		ctxt->listener->client_count--;
 		assert(ctxt->listener->client_count >= 0);
 		ctxt->listener = NULL;
 	}
-	_mosquitto_socket_close(&ctxt->core);
+	_mosquitto_socket_close(ctxt);
 }
 

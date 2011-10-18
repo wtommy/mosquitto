@@ -188,7 +188,7 @@ int mqtt3_db_client_count(mosquitto_db *db, int *count, int *inactive_count)
 	for(i=0; i<db->context_count; i++){
 		if(db->contexts[i]){
 			(*count)++;
-			if(db->contexts[i]->core.sock < 0){
+			if(db->contexts[i]->sock < 0){
 				(*inactive_count)++;
 			}
 		}
@@ -291,7 +291,7 @@ int mqtt3_db_message_insert(struct mosquitto *context, uint16_t mid, enum mosqui
 	assert(stored);
 	if(!context) return MOSQ_ERR_INVAL;
 
-	if(context->core.sock == INVALID_SOCKET){
+	if(context->sock == INVALID_SOCKET){
 		/* Client is not connected only queue messages with QoS>0. */
 		if(qos == 0) return 2;
 	}
@@ -306,7 +306,7 @@ int mqtt3_db_message_insert(struct mosquitto *context, uint16_t mid, enum mosqui
 		}
 	}
 
-	if(context->core.sock != INVALID_SOCKET){
+	if(context->sock != INVALID_SOCKET){
 		if(qos == 0 || max_inflight == 0 || msg_count < max_inflight){
 			if(dir == mosq_md_out){
 				switch(qos){
@@ -410,7 +410,7 @@ int mqtt3_db_messages_easy_queue(mosquitto_db *db, struct mosquitto *context, co
 	if(!topic) return MOSQ_ERR_INVAL;
 
 	if(context){
-		source_id = context->core.id;
+		source_id = context->id;
 	}else{
 		source_id = "";
 	}
@@ -602,8 +602,8 @@ int mqtt3_db_message_write(struct mosquitto *context)
 	uint32_t payloadlen;
 	const uint8_t *payload;
 
-	if(!context || context->core.sock == -1
-			|| (context->core.state == mosq_cs_connected && !context->core.id)){
+	if(!context || context->sock == -1
+			|| (context->state == mosq_cs_connected && !context->id)){
 		return MOSQ_ERR_INVAL;
 	}
 

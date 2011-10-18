@@ -39,12 +39,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <util_mosq.h>
 
 /* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
-int _mosquitto_send_command_with_mid(struct _mosquitto_core *core, uint8_t command, uint16_t mid, bool dup)
+int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid, bool dup)
 {
 	struct _mosquitto_packet *packet = NULL;
 	int rc;
 
-	assert(core);
+	assert(mosq);
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return MOSQ_ERR_NOMEM;
 
@@ -62,18 +62,18 @@ int _mosquitto_send_command_with_mid(struct _mosquitto_core *core, uint8_t comma
 	packet->payload[packet->pos+0] = MOSQ_MSB(mid);
 	packet->payload[packet->pos+1] = MOSQ_LSB(mid);
 
-	_mosquitto_packet_queue(core, packet);
+	_mosquitto_packet_queue(mosq, packet);
 
 	return MOSQ_ERR_SUCCESS;
 }
 
 /* For DISCONNECT, PINGREQ and PINGRESP */
-int _mosquitto_send_simple_command(struct _mosquitto_core *core, uint8_t command)
+int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 {
 	struct _mosquitto_packet *packet = NULL;
 	int rc;
 
-	assert(core);
+	assert(mosq);
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return MOSQ_ERR_NOMEM;
 
@@ -86,18 +86,18 @@ int _mosquitto_send_simple_command(struct _mosquitto_core *core, uint8_t command
 		return rc;
 	}
 
-	_mosquitto_packet_queue(core, packet);
+	_mosquitto_packet_queue(mosq, packet);
 
 	return MOSQ_ERR_SUCCESS;
 }
 
-int _mosquitto_send_real_publish(struct _mosquitto_core *core, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain, bool dup)
+int _mosquitto_send_real_publish(struct mosquitto *mosq, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain, bool dup)
 {
 	struct _mosquitto_packet *packet = NULL;
 	int packetlen;
 	int rc;
 
-	assert(core);
+	assert(mosq);
 	assert(topic);
 
 	packetlen = 2+strlen(topic) + payloadlen;
@@ -124,7 +124,7 @@ int _mosquitto_send_real_publish(struct _mosquitto_core *core, uint16_t mid, con
 		_mosquitto_write_bytes(packet, payload, payloadlen);
 	}
 
-	_mosquitto_packet_queue(core, packet);
+	_mosquitto_packet_queue(mosq, packet);
 
 	return MOSQ_ERR_SUCCESS;
 }

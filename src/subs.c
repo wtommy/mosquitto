@@ -66,7 +66,7 @@ static int _subs_process(struct _mosquitto_db *db, struct _mosquitto_subhier *hi
 		}
 	}
 	while(source_id && leaf){
-		if(leaf->context->bridge && !strcmp(leaf->context->core.id, source_id)){
+		if(leaf->context->bridge && !strcmp(leaf->context->id, source_id)){
 			leaf = leaf->next;
 			continue;
 		}
@@ -86,7 +86,7 @@ static int _subs_process(struct _mosquitto_db *db, struct _mosquitto_subhier *hi
 			msg_qos = qos;
 		}
 		if(msg_qos){
-			mid = _mosquitto_mid_generate(&leaf->context->core);
+			mid = _mosquitto_mid_generate(leaf->context);
 		}else{
 			mid = 0;
 		}
@@ -169,7 +169,7 @@ static int _sub_add(struct mosquitto *context, int qos, struct _mosquitto_subhie
 			leaf = subhier->subs;
 			last_leaf = NULL;
 			while(leaf){
-				if(!strcmp(leaf->context->core.id, context->core.id)){
+				if(!strcmp(leaf->context->id, context->id)){
 					/* Client making a second subscription to same topic. Only
 					 * need to update QoS. Return -1 to indicate this to the
 					 * calling function. */
@@ -539,7 +539,7 @@ static int _retain_process(struct _mosquitto_db *db, struct mosquitto_msg_store 
 
 	if(qos > sub_qos) qos = sub_qos;
 	if(qos > 0){
-		mid = _mosquitto_mid_generate(&context->core);
+		mid = _mosquitto_mid_generate(context);
 	}else{
 		mid = 0;
 	}

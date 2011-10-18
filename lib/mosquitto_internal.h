@@ -98,8 +98,7 @@ struct _mosquitto_ssl{
 };
 #endif
 
-struct _mosquitto_core
-{
+struct mosquitto {
 #ifndef WIN32
 	int sock;
 #else
@@ -121,10 +120,6 @@ struct _mosquitto_core
 #ifdef WITH_SSL
 	struct _mosquitto_ssl *ssl;
 #endif
-};
-
-struct mosquitto {
-	struct _mosquitto_core core;
 #ifdef WITH_BROKER
 	struct _mqtt3_bridge *bridge;
 	struct _mosquitto_client_msg *msgs;
