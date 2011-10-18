@@ -20,6 +20,7 @@ set (MOSQ_SRCS
 	security.c security_external.c
 	../lib/send_base_mosq.c
 	../lib/send_client_mosq.c ../lib/send_mosq.h
+	../lib/send_mosq.c ../lib/send_mosq.h
 	util.c
 	../lib/util_mosq.c ../lib/util_mosq.h
 	../lib/will_mosq.c ../lib/will_mosq.h)

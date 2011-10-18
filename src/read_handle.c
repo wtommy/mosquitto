@@ -242,7 +242,7 @@ int mqtt3_handle_publish(mosquitto_db *db, struct mosquitto *context)
 			break;
 		case 1:
 			if(mqtt3_db_messages_queue(db, context->id, topic, qos, retain, stored)) rc = 1;
-			if(mqtt3_raw_puback(context, mid)) rc = 1;
+			if(_mosquitto_send_puback(context, mid)) rc = 1;
 			break;
 		case 2:
 			if(!dup){

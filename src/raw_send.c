@@ -35,12 +35,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3_protocol.h>
 #include <send_mosq.h>
 
-int mqtt3_raw_puback(struct mosquitto *context, uint16_t mid)
-{
-	if(context) _mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Sending PUBACK to %s (Mid: %d)", context->id, mid);
-	return _mosquitto_send_command_with_mid(context, PUBACK, mid, false);
-}
-
 int mqtt3_raw_publish(struct mosquitto *context, int dup, uint8_t qos, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, bool retain)
 {
 	int len;
