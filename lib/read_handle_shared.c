@@ -138,3 +138,42 @@ int _mosquitto_handle_pubrec(struct mosquitto *mosq)
 	return MOSQ_ERR_SUCCESS;
 }
 
+int _mosquitto_handle_pubrel(struct _mosquitto_db *db, struct mosquitto *mosq)
+{
+	uint16_t mid;
+#ifndef WITH_BROKER
+	struct mosquitto_message_all *message = NULL;
+#endif
+	int rc;
+
+	assert(mosq);
+#ifdef WITH_STRICT_PROTOCOL
+	if(mosq->in_packet.remaining_length != 2){
+		return MOSQ_ERR_PROTOCOL;
+	}
+#endif
+	rc = _mosquitto_read_uint16(&mosq->in_packet, &mid);
+	if(rc) return rc;
+#ifdef WITH_BROKER
+	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received PUBREL from %s (Mid: %d)", mosq->id, mid);
+
+	mqtt3_db_message_release(db, mosq, mid, mosq_md_in);
+#else
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBREL (Mid: %d)", mid);
+
+	if(!_mosquitto_message_remove(mosq, mid, mosq_md_in, &message)){
+		/* Only pass the message on if we have removed it from the queue - this
+		 * prevents multiple callbacks for the same message. */
+		if(mosq->on_message){
+			mosq->on_message(mosq->obj, &message->msg);
+		}else{
+			_mosquitto_message_cleanup(&message);
+		}
+	}
+#endif
+	rc = _mosquitto_send_pubcomp(mosq, mid);
+	if(rc) return rc;
+
+	return MOSQ_ERR_SUCCESS;
+}
+

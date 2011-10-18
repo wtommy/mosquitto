@@ -59,7 +59,7 @@ int _mosquitto_packet_handle(struct mosquitto *mosq)
 		case PUBREC:
 			return _mosquitto_handle_pubrec(mosq);
 		case PUBREL:
-			return _mosquitto_handle_pubrel(mosq);
+			return _mosquitto_handle_pubrel(NULL, mosq);
 		case CONNACK:
 			return _mosquitto_handle_connack(mosq);
 		case SUBACK:
@@ -153,33 +153,3 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 	}
 }
 
-int _mosquitto_handle_pubrel(struct mosquitto *mosq)
-{
-	uint16_t mid;
-	struct mosquitto_message_all *message = NULL;
-	int rc;
-
-	assert(mosq);
-#ifdef WITH_STRICT_PROTOCOL
-	if(mosq->in_packet.remaining_length != 2){
-		return MOSQ_ERR_PROTOCOL;
-	}
-#endif
-	rc = _mosquitto_read_uint16(&mosq->in_packet, &mid);
-	if(rc) return rc;
-	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PUBREL (Mid: %d)", mid);
-
-	if(!_mosquitto_message_remove(mosq, mid, mosq_md_in, &message)){
-		/* Only pass the message on if we have removed it from the queue - this
-		 * prevents multiple callbacks for the same message. */
-		if(mosq->on_message){
-			mosq->on_message(mosq->obj, &message->msg);
-		}else{
-			_mosquitto_message_cleanup(&message);
-		}
-	}
-	rc = _mosquitto_send_pubcomp(mosq, mid);
-	if(rc) return rc;
-
-	return MOSQ_ERR_SUCCESS;
-}
