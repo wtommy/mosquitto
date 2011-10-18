@@ -20,7 +20,7 @@ clean :
 	make -C cpp clean
 	make -C python clean
 
-libmosquitto.so.0 : mosquitto.o logging_mosq.o memory_mosq.o messages_mosq.o net_mosq.o read_handle.o read_handle_client.o send_mosq.o send_base_mosq.o send_client_mosq.o util_mosq.o will_mosq.o
+libmosquitto.so.0 : mosquitto.o logging_mosq.o memory_mosq.o messages_mosq.o net_mosq.o read_handle.o read_handle_client.o send_mosq.o send_client_mosq.o util_mosq.o will_mosq.o
 	$(CC) -shared -Wl,--as-needed -Wl,--version-script=linker.version -Wl,-soname,libmosquitto.so.0 $^ -o $@ ${LIBS}
 
 mosquitto.o : mosquitto.c mosquitto.h
@@ -45,9 +45,6 @@ read_handle_client.o : read_handle_client.c read_handle.h
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
 send_mosq.o : send_mosq.c send_mosq.h
-	$(CC) $(CFLAGS) -fPIC -c $< -o $@
-
-send_base_mosq.o : send_base_mosq.c send_mosq.h
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
 send_client_mosq.o : send_client_mosq.c send_mosq.h

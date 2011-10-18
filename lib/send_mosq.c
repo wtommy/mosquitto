@@ -34,8 +34,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mosquitto_internal.h>
 #include <logging_mosq.h>
 #include <mqtt3_protocol.h>
+#include <memory_mosq.h>
 #include <net_mosq.h>
 #include <send_mosq.h>
+#include <util_mosq.h>
 
 #ifdef WITH_BROKER
 #include <mqtt3.h>
@@ -128,3 +130,93 @@ int _mosquitto_send_pubrel(struct mosquitto *mosq, uint16_t mid, bool dup)
 	return _mosquitto_send_command_with_mid(mosq, PUBREL|2, mid, dup);
 }
 
+/* For PUBACK, PUBCOMP, PUBREC, and PUBREL */
+int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, uint16_t mid, bool dup)
+{
+	struct _mosquitto_packet *packet = NULL;
+	int rc;
+
+	assert(mosq);
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
+	if(!packet) return MOSQ_ERR_NOMEM;
+
+	packet->command = command;
+	if(dup){
+		packet->command |= 8;
+	}
+	packet->remaining_length = 2;
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
+		_mosquitto_free(packet);
+		return rc;
+	}
+
+	packet->payload[packet->pos+0] = MOSQ_MSB(mid);
+	packet->payload[packet->pos+1] = MOSQ_LSB(mid);
+
+	_mosquitto_packet_queue(mosq, packet);
+
+	return MOSQ_ERR_SUCCESS;
+}
+
+/* For DISCONNECT, PINGREQ and PINGRESP */
+int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
+{
+	struct _mosquitto_packet *packet = NULL;
+	int rc;
+
+	assert(mosq);
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
+	if(!packet) return MOSQ_ERR_NOMEM;
+
+	packet->command = command;
+	packet->remaining_length = 0;
+
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
+		_mosquitto_free(packet);
+		return rc;
+	}
+
+	_mosquitto_packet_queue(mosq, packet);
+
+	return MOSQ_ERR_SUCCESS;
+}
+
+int _mosquitto_send_real_publish(struct mosquitto *mosq, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain, bool dup)
+{
+	struct _mosquitto_packet *packet = NULL;
+	int packetlen;
+	int rc;
+
+	assert(mosq);
+	assert(topic);
+
+	packetlen = 2+strlen(topic) + payloadlen;
+	if(qos > 0) packetlen += 2; /* For message id */
+	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
+	if(!packet) return MOSQ_ERR_NOMEM;
+
+	packet->mid = mid;
+	packet->command = PUBLISH | ((dup&0x1)<<3) | (qos<<1) | retain;
+	packet->remaining_length = packetlen;
+	rc = _mosquitto_packet_alloc(packet);
+	if(rc){
+		_mosquitto_free(packet);
+		return rc;
+	}
+	/* Variable header (topic string) */
+	_mosquitto_write_string(packet, topic, strlen(topic));
+	if(qos > 0){
+		_mosquitto_write_uint16(packet, mid);
+	}
+
+	/* Payload */
+	if(payloadlen){
+		_mosquitto_write_bytes(packet, payload, payloadlen);
+	}
+
+	_mosquitto_packet_queue(mosq, packet);
+
+	return MOSQ_ERR_SUCCESS;
+}
