@@ -73,31 +73,6 @@ int _mosquitto_packet_handle(struct mosquitto *mosq)
 	}
 }
 
-int _mosquitto_handle_pubackcomp(struct mosquitto *mosq, const char *type)
-{
-	uint16_t mid;
-	int rc;
-
-	assert(mosq);
-#ifdef WITH_STRICT_PROTOCOL
-	if(mosq->in_packet.remaining_length != 2){
-		return MOSQ_ERR_PROTOCOL;
-	}
-#endif
-	rc = _mosquitto_read_uint16(&mosq->in_packet, &mid);
-	if(rc) return rc;
-	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received %s (Mid: %d)", type, mid);
-
-	if(!_mosquitto_message_delete(mosq, mid, mosq_md_out)){
-		/* Only inform the client the message has been sent once. */
-		if(mosq->on_publish){
-			mosq->on_publish(mosq->obj, mid);
-		}
-	}
-
-	return MOSQ_ERR_SUCCESS;
-}
-
 int _mosquitto_handle_publish(struct mosquitto *mosq)
 {
 	uint8_t header;

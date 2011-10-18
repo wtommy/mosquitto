@@ -53,9 +53,9 @@ int mqtt3_packet_handle(mosquitto_db *db, int context_index)
 		case PINGRESP:
 			return _mosquitto_handle_pingresp(context);
 		case PUBACK:
-			return mqtt3_handle_puback(context);
+			return _mosquitto_handle_pubackcomp(context, "PUBACK");
 		case PUBCOMP:
-			return mqtt3_handle_pubcomp(context);
+			return _mosquitto_handle_pubackcomp(context, "PUBCOMP");
 		case PUBLISH:
 			return mqtt3_handle_publish(db, context);
 		case PUBREC:
@@ -82,49 +82,6 @@ int mqtt3_packet_handle(mosquitto_db *db, int context_index)
 			/* If we don't recognise the command, return an error straight away. */
 			return MOSQ_ERR_PROTOCOL;
 	}
-}
-
-int mqtt3_handle_puback(struct mosquitto *context)
-{
-	uint16_t mid;
-
-	if(!context){
-		return MOSQ_ERR_INVAL;
-	}
-#ifdef WITH_STRICT_PROTOCOL
-	if(context->in_packet.remaining_length != 2){
-		return MOSQ_ERR_PROTOCOL;
-	}
-#endif
-	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
-	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received PUBACK from %s (Mid: %d)", context->id, mid);
-
-	if(mid){
-		if(mqtt3_db_message_delete(context, mid, mosq_md_out)) return 1;
-	}
-	return MOSQ_ERR_SUCCESS;
-}
-
-int mqtt3_handle_pubcomp(struct mosquitto *context)
-{
-	uint16_t mid;
-
-	if(!context){
-		return MOSQ_ERR_INVAL;
-	}
-#ifdef WITH_STRICT_PROTOCOL
-	if(context->in_packet.remaining_length != 2){
-		return MOSQ_ERR_PROTOCOL;
-	}
-#endif
-
-	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
-	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received PUBCOMP from %s (Mid: %d)", context->id, mid);
-
-	if(mid){
-		if(mqtt3_db_message_delete(context, mid, mosq_md_out)) return 1;
-	}
-	return MOSQ_ERR_SUCCESS;
 }
 
 int mqtt3_handle_publish(mosquitto_db *db, struct mosquitto *context)

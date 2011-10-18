@@ -271,8 +271,6 @@ int mqtt3_packet_handle(mosquitto_db *db, int context_index);
 int mqtt3_handle_connack(struct mosquitto *context);
 int mqtt3_handle_connect(mosquitto_db *db, int context_index);
 int mqtt3_handle_disconnect(mosquitto_db *db, int context_index);
-int mqtt3_handle_puback(struct mosquitto *context);
-int mqtt3_handle_pubcomp(struct mosquitto *context);
 int mqtt3_handle_publish(mosquitto_db *db, struct mosquitto *context);
 int mqtt3_handle_pubrec(struct mosquitto *context);
 int mqtt3_handle_pubrel(mosquitto_db *db, struct mosquitto *context);

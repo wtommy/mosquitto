@@ -40,6 +40,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <read_handle.h>
 #include <send_mosq.h>
 #include <util_mosq.h>
+#ifdef WITH_BROKER
+#include <mqtt3.h>
+#endif
 
 int _mosquitto_handle_pingreq(struct mosquitto *mosq)
 {
@@ -70,6 +73,39 @@ int _mosquitto_handle_pingresp(struct mosquitto *mosq)
 #else
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PINGRESP");
 #endif
+	return MOSQ_ERR_SUCCESS;
+}
+
+int _mosquitto_handle_pubackcomp(struct mosquitto *mosq, const char *type)
+{
+	uint16_t mid;
+	int rc;
+
+	assert(mosq);
+#ifdef WITH_STRICT_PROTOCOL
+	if(mosq->in_packet.remaining_length != 2){
+		return MOSQ_ERR_PROTOCOL;
+	}
+#endif
+	rc = _mosquitto_read_uint16(&mosq->in_packet, &mid);
+	if(rc) return rc;
+#ifdef WITH_BROKER
+	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received %s from %s (Mid: %d)", type, mosq->id, mid);
+
+	if(mid){
+		if(mqtt3_db_message_delete(mosq, mid, mosq_md_out)) return 1;
+	}
+#else
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received %s (Mid: %d)", type, mid);
+
+	if(!_mosquitto_message_delete(mosq, mid, mosq_md_out)){
+		/* Only inform the client the message has been sent once. */
+		if(mosq->on_publish){
+			mosq->on_publish(mosq->obj, mid);
+		}
+	}
+#endif
+
 	return MOSQ_ERR_SUCCESS;
 }
 
