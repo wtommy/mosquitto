@@ -35,13 +35,13 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3_protocol.h>
 #include <send_mosq.h>
 
-int mqtt3_raw_puback(mqtt3_context *context, uint16_t mid)
+int mqtt3_raw_puback(struct mosquitto *context, uint16_t mid)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBACK to %s (Mid: %d)", context->core.id, mid);
 	return _mosquitto_send_command_with_mid(&context->core, PUBACK, mid, false);
 }
 
-int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, bool retain)
+int mqtt3_raw_publish(struct mosquitto *context, int dup, uint8_t qos, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, bool retain)
 {
 	int len;
 
@@ -60,31 +60,31 @@ int mqtt3_raw_publish(mqtt3_context *context, int dup, uint8_t qos, uint16_t mid
 	return _mosquitto_send_real_publish(&context->core, mid, topic, payloadlen, payload, qos, retain, dup);
 }
 
-int mqtt3_raw_pubcomp(mqtt3_context *context, uint16_t mid)
+int mqtt3_raw_pubcomp(struct mosquitto *context, uint16_t mid)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBCOMP to %s (Mid: %d)", context->core.id, mid);
 	return _mosquitto_send_command_with_mid(&context->core, PUBCOMP, mid, false);
 }
 
-int mqtt3_raw_pubrec(mqtt3_context *context, uint16_t mid)
+int mqtt3_raw_pubrec(struct mosquitto *context, uint16_t mid)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBREC to %s (Mid: %d)", context->core.id, mid);
 	return _mosquitto_send_command_with_mid(&context->core, PUBREC, mid, false);
 }
 
-int mqtt3_raw_pubrel(mqtt3_context *context, uint16_t mid, bool dup)
+int mqtt3_raw_pubrel(struct mosquitto *context, uint16_t mid, bool dup)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PUBREL to %s (Mid: %d)", context->core.id, mid);
 	return _mosquitto_send_command_with_mid(&context->core, PUBREL|2, mid, dup);
 }
 
-int mqtt3_raw_pingreq(mqtt3_context *context)
+int mqtt3_raw_pingreq(struct mosquitto *context)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PINGREQ to %s", context->core.id);
 	return _mosquitto_send_simple_command(&context->core, PINGREQ);
 }
 
-int mqtt3_raw_pingresp(mqtt3_context *context)
+int mqtt3_raw_pingresp(struct mosquitto *context)
 {
 	if(context) mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending PINGRESP to %s", context->core.id);
 	return _mosquitto_send_simple_command(&context->core, PINGRESP);

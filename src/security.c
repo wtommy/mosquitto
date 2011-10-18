@@ -204,7 +204,7 @@ int _add_acl(struct _mosquitto_db *db, const char *user, const char *topic, int 
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mosquitto_acl_check(struct _mosquitto_db *db, mqtt3_context *context, const char *topic, int access)
+int mosquitto_acl_check(struct _mosquitto_db *db, struct mosquitto *context, const char *topic, int access)
 {
 	char *local_topic;
 	char *token;

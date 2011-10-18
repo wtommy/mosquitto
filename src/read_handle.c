@@ -39,7 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 int mqtt3_packet_handle(mosquitto_db *db, int context_index)
 {
-	mqtt3_context *context;
+	struct mosquitto *context;
 
 	if(context_index < 0 || context_index >= db->context_count) return MOSQ_ERR_INVAL;
 	context = db->contexts[context_index];
@@ -82,7 +82,7 @@ int mqtt3_packet_handle(mosquitto_db *db, int context_index)
 	}
 }
 
-int mqtt3_handle_puback(mqtt3_context *context)
+int mqtt3_handle_puback(struct mosquitto *context)
 {
 	uint16_t mid;
 
@@ -103,7 +103,7 @@ int mqtt3_handle_puback(mqtt3_context *context)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_handle_pingreq(mqtt3_context *context)
+int mqtt3_handle_pingreq(struct mosquitto *context)
 {
 	if(!context){
 		return MOSQ_ERR_INVAL;
@@ -117,7 +117,7 @@ int mqtt3_handle_pingreq(mqtt3_context *context)
 	return mqtt3_raw_pingresp(context);
 }
 
-int mqtt3_handle_pingresp(mqtt3_context *context)
+int mqtt3_handle_pingresp(struct mosquitto *context)
 {
 	if(!context){
 		return MOSQ_ERR_INVAL;
@@ -131,7 +131,7 @@ int mqtt3_handle_pingresp(mqtt3_context *context)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_handle_pubcomp(mqtt3_context *context)
+int mqtt3_handle_pubcomp(struct mosquitto *context)
 {
 	uint16_t mid;
 
@@ -153,7 +153,7 @@ int mqtt3_handle_pubcomp(mqtt3_context *context)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
+int mqtt3_handle_publish(mosquitto_db *db, struct mosquitto *context)
 {
 	char *topic;
 	uint8_t *payload = NULL;
@@ -263,7 +263,7 @@ int mqtt3_handle_publish(mosquitto_db *db, mqtt3_context *context)
 	return rc;
 }
 
-int mqtt3_handle_pubrec(mqtt3_context *context)
+int mqtt3_handle_pubrec(struct mosquitto *context)
 {
 	uint16_t mid;
 
@@ -282,7 +282,7 @@ int mqtt3_handle_pubrec(mqtt3_context *context)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_handle_pubrel(mosquitto_db *db, mqtt3_context *context)
+int mqtt3_handle_pubrel(mosquitto_db *db, struct mosquitto *context)
 {
 	uint16_t mid;
 

@@ -45,10 +45,10 @@ POSSIBILITY OF SUCH DAMAGE.
 
 static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *sub, int qos);
 
-static mqtt3_context *_db_find_or_add_context(mosquitto_db *db, const char *client_id, uint16_t last_mid)
+static struct mosquitto *_db_find_or_add_context(mosquitto_db *db, const char *client_id, uint16_t last_mid)
 {
-	mqtt3_context *context;
-	mqtt3_context **tmp_contexts;
+	struct mosquitto *context;
+	struct mosquitto **tmp_contexts;
 	int i;
 
 	context = NULL;
@@ -70,7 +70,7 @@ static mqtt3_context *_db_find_or_add_context(mosquitto_db *db, const char *clie
 		}
 		if(i==db->context_count){
 			db->context_count++;
-			tmp_contexts = _mosquitto_realloc(db->contexts, sizeof(mqtt3_context*)*db->context_count);
+			tmp_contexts = _mosquitto_realloc(db->contexts, sizeof(struct mosquitto*)*db->context_count);
 			if(tmp_contexts){
 				db->contexts = tmp_contexts;
 				db->contexts[db->context_count-1] = context;
@@ -86,7 +86,7 @@ static mqtt3_context *_db_find_or_add_context(mosquitto_db *db, const char *clie
 	return context;
 }
 
-static int mqtt3_db_client_messages_write(mosquitto_db *db, FILE *db_fptr, mqtt3_context *context)
+static int mqtt3_db_client_messages_write(mosquitto_db *db, FILE *db_fptr, struct mosquitto *context)
 {
 	uint32_t length;
 	dbid_t i64temp;
@@ -213,7 +213,7 @@ error:
 static int mqtt3_db_client_write(mosquitto_db *db, FILE *db_fptr)
 {
 	int i;
-	mqtt3_context *context;
+	struct mosquitto *context;
 	uint16_t i16temp, slen;
 	uint32_t length;
 
@@ -385,7 +385,7 @@ static int _db_client_msg_restore(mosquitto_db *db, const char *client_id, uint1
 {
 	mosquitto_client_msg *cmsg, *tail;
 	struct mosquitto_msg_store *store;
-	mqtt3_context *context;
+	struct mosquitto *context;
 
 	cmsg = _mosquitto_calloc(1, sizeof(mosquitto_client_msg));
 	if(!cmsg){
@@ -440,7 +440,7 @@ static int _db_client_chunk_restore(mosquitto_db *db, FILE *db_fptr)
 	uint16_t i16temp, slen, last_mid;
 	char *client_id = NULL;
 	int rc = 0;
-	mqtt3_context *context;
+	struct mosquitto *context;
 
 	read_e(db_fptr, &i16temp, sizeof(uint16_t));
 	slen = ntohs(i16temp);
@@ -774,7 +774,7 @@ error:
 
 static int _db_restore_sub(mosquitto_db *db, const char *client_id, const char *sub, int qos)
 {
-	mqtt3_context *context;
+	struct mosquitto *context;
 
 	assert(db);
 	assert(client_id);

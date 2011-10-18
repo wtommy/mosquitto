@@ -68,8 +68,8 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 	int i;
 	int j;
 	int new_sock = -1;
-	mqtt3_context **tmp_contexts = NULL;
-	mqtt3_context *new_context;
+	struct mosquitto **tmp_contexts = NULL;
+	struct mosquitto *new_context;
 	int opt = 1;
 #ifdef WITH_WRAP
 	struct request_info wrap_req;
@@ -134,7 +134,7 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 			}
 		}
 		if(i==db->context_count){
-			tmp_contexts = _mosquitto_realloc(db->contexts, sizeof(mqtt3_context*)*(db->context_count+1));
+			tmp_contexts = _mosquitto_realloc(db->contexts, sizeof(struct mosquitto*)*(db->context_count+1));
 			if(tmp_contexts){
 				db->context_count++;
 				db->contexts = tmp_contexts;

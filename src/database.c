@@ -87,7 +87,7 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 	db->last_db_id = 0;
 
 	db->context_count = 1;
-	db->contexts = _mosquitto_malloc(sizeof(mqtt3_context*)*db->context_count);
+	db->contexts = _mosquitto_malloc(sizeof(struct mosquitto*)*db->context_count);
 	if(!db->contexts) return MOSQ_ERR_NOMEM;
 	db->contexts[0] = NULL;
 
@@ -222,7 +222,7 @@ static int _mqtt3_db_cleanup(mosquitto_db *db)
 	return rc;
 }
 
-int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir)
+int mqtt3_db_message_delete(struct mosquitto *context, uint16_t mid, enum mosquitto_msg_direction dir)
 {
 	mosquitto_client_msg *tail, *last = NULL;
 	int msg_index = 0;
@@ -281,7 +281,7 @@ int mqtt3_db_message_delete(mqtt3_context *context, uint16_t mid, enum mosquitto
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, int qos, bool retain, struct mosquitto_msg_store *stored)
+int mqtt3_db_message_insert(struct mosquitto *context, uint16_t mid, enum mosquitto_msg_direction dir, int qos, bool retain, struct mosquitto_msg_store *stored)
 {
 	mosquitto_client_msg *msg, *tail = NULL;
 	enum mqtt3_msg_state state = ms_invalid;
@@ -365,7 +365,7 @@ int mqtt3_db_message_insert(mqtt3_context *context, uint16_t mid, enum mosquitto
 	return rc;
 }
 
-int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_state state)
+int mqtt3_db_message_update(struct mosquitto *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_state state)
 {
 	mosquitto_client_msg *tail;
 
@@ -381,7 +381,7 @@ int mqtt3_db_message_update(mqtt3_context *context, uint16_t mid, enum mosquitto
 	return 1;
 }
 
-int mqtt3_db_messages_delete(mqtt3_context *context)
+int mqtt3_db_messages_delete(struct mosquitto *context)
 {
 	mosquitto_client_msg *tail, *next;
 
@@ -400,7 +400,7 @@ int mqtt3_db_messages_delete(mqtt3_context *context)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_db_messages_easy_queue(mosquitto_db *db, mqtt3_context *context, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
+int mqtt3_db_messages_easy_queue(mosquitto_db *db, struct mosquitto *context, const char *topic, int qos, uint32_t payloadlen, const uint8_t *payload, int retain)
 {
 	struct mosquitto_msg_store *stored;
 	char *source_id;
@@ -489,7 +489,7 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_db_message_store_find(mqtt3_context *context, uint16_t mid, struct mosquitto_msg_store **stored)
+int mqtt3_db_message_store_find(struct mosquitto *context, uint16_t mid, struct mosquitto_msg_store **stored)
 {
 	mosquitto_client_msg *tail;
 
@@ -513,7 +513,7 @@ int mqtt3_db_message_timeout_check(mosquitto_db *db, unsigned int timeout)
 	int i;
 	time_t threshold = time(NULL) - timeout;
 	enum mqtt3_msg_state new_state = ms_invalid;
-	mqtt3_context *context;
+	struct mosquitto *context;
 	mosquitto_client_msg *msg;
 
 	
@@ -553,7 +553,7 @@ int mqtt3_db_message_timeout_check(mosquitto_db *db, unsigned int timeout)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_db_message_release(mosquitto_db *db, mqtt3_context *context, uint16_t mid, enum mosquitto_msg_direction dir)
+int mqtt3_db_message_release(mosquitto_db *db, struct mosquitto *context, uint16_t mid, enum mosquitto_msg_direction dir)
 {
 	mosquitto_client_msg *tail, *last = NULL;
 	int qos;
@@ -590,7 +590,7 @@ int mqtt3_db_message_release(mosquitto_db *db, mqtt3_context *context, uint16_t 
 	return 1;
 }
 
-int mqtt3_db_message_write(mqtt3_context *context)
+int mqtt3_db_message_write(struct mosquitto *context)
 {
 	int rc;
 	mosquitto_client_msg *tail, *last = NULL;

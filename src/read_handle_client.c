@@ -36,7 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <send_mosq.h>
 #include <util_mosq.h>
 
-int mqtt3_handle_connack(mqtt3_context *context)
+int mqtt3_handle_connack(struct mosquitto *context)
 {
 	uint8_t byte;
 	uint8_t rc;
@@ -98,7 +98,7 @@ int mqtt3_handle_connack(mqtt3_context *context)
 	return 1;
 }
 
-int mqtt3_handle_suback(mqtt3_context *context)
+int mqtt3_handle_suback(struct mosquitto *context)
 {
 	uint16_t mid;
 	uint8_t granted_qos;
@@ -114,7 +114,7 @@ int mqtt3_handle_suback(mqtt3_context *context)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_handle_unsuback(mqtt3_context *context)
+int mqtt3_handle_unsuback(struct mosquitto *context)
 {
 	uint16_t mid;
 

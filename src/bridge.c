@@ -33,10 +33,11 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <config.h>
 
+#include <mosquitto.h>
+#include <mosquitto_internal.h>
 #include <net_mosq.h>
 #include <mqtt3.h>
 #include <memory_mosq.h>
-#include <mosquitto.h>
 #include <send_mosq.h>
 #include <util_mosq.h>
 #include <will_mosq.h>
@@ -46,8 +47,8 @@ POSSIBILITY OF SUCH DAMAGE.
 int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge)
 {
 	int i;
-	mqtt3_context *new_context = NULL;
-	mqtt3_context **tmp_contexts;
+	struct mosquitto *new_context = NULL;
+	struct mosquitto **tmp_contexts;
 	char hostname[256];
 	int len;
 
@@ -67,7 +68,7 @@ int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge)
 	}
 	if(i==db->context_count){
 		db->context_count++;
-		tmp_contexts = _mosquitto_realloc(db->contexts, sizeof(mqtt3_context*)*db->context_count);
+		tmp_contexts = _mosquitto_realloc(db->contexts, sizeof(struct mosquitto*)*db->context_count);
 		if(tmp_contexts){
 			db->contexts = tmp_contexts;
 			db->contexts[db->context_count-1] = new_context;
@@ -102,7 +103,7 @@ int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge)
 	return mqtt3_bridge_connect(db, new_context);
 }
 
-int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
+int mqtt3_bridge_connect(mosquitto_db *db, struct mosquitto *context)
 {
 	int rc;
 	int i;
@@ -159,7 +160,7 @@ int mqtt3_bridge_connect(mosquitto_db *db, mqtt3_context *context)
 	return MOSQ_ERR_SUCCESS;
 }
 
-void mqtt3_bridge_packet_cleanup(mqtt3_context *context)
+void mqtt3_bridge_packet_cleanup(struct mosquitto *context)
 {
 	struct _mosquitto_packet *packet;
 	if(!context) return;

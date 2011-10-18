@@ -40,14 +40,14 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <memory_mosq.h>
 
-mqtt3_context *mqtt3_context_init(int sock)
+struct mosquitto *mqtt3_context_init(int sock)
 {
-	mqtt3_context *context;
+	struct mosquitto *context;
 	struct sockaddr_storage addr;
 	socklen_t addrlen;
 	char address[1024];
 
-	context = _mosquitto_malloc(sizeof(mqtt3_context));
+	context = _mosquitto_malloc(sizeof(struct mosquitto));
 	if(!context) return NULL;
 	
 	context->core.state = mosq_cs_new;
@@ -101,7 +101,7 @@ mqtt3_context *mqtt3_context_init(int sock)
  * but it will mean that CONNACK messages will never get sent for bad protocol
  * versions for example.
  */
-void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_free)
+void mqtt3_context_cleanup(mosquitto_db *db, struct mosquitto *context, bool do_free)
 {
 	struct _mosquitto_packet *packet;
 	mosquitto_client_msg *msg, *next;
@@ -164,7 +164,7 @@ void mqtt3_context_cleanup(mosquitto_db *db, mqtt3_context *context, bool do_fre
 
 void mqtt3_context_disconnect(mosquitto_db *db, int context_index)
 {
-	mqtt3_context *ctxt;
+	struct mosquitto *ctxt;
 
 	ctxt = db->contexts[context_index];
 	if(ctxt->core.state != mosq_cs_disconnecting && ctxt->core.will){

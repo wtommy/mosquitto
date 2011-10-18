@@ -412,11 +412,7 @@ ssize_t _mosquitto_net_write(struct _mosquitto_core *core, void *buf, size_t cou
 #endif
 }
 
-#ifdef WITH_BROKER
-int _mosquitto_packet_write(struct _mqtt3_context *mosq)
-#else
 int _mosquitto_packet_write(struct mosquitto *mosq)
-#endif
 {
 	ssize_t write_length;
 	struct _mosquitto_packet *packet;
@@ -479,15 +475,13 @@ int _mosquitto_packet_read(struct mosquitto *mosq)
 	ssize_t read_length;
 	int rc = 0;
 #ifdef WITH_BROKER
-	mqtt3_context *mosq;
-#endif
+	struct mosquitto *mosq;
 
-#ifdef WITH_BROKER
 	if(context_index < 0 || context_index >= db->context_count) return MOSQ_ERR_INVAL;
 	mosq = db->contexts[context_index];
-#else
-	if(!mosq) return MOSQ_ERR_INVAL;
 #endif
+
+	if(!mosq) return MOSQ_ERR_INVAL;
 	if(mosq->core.sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 	/* This gets called if pselect() indicates that there is network data
 	 * available - ie. at least one byte.  What we do depends on what data we

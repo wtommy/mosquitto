@@ -71,7 +71,7 @@ const char *mqtt3_command_to_string(uint8_t command)
 	return "UNKNOWN";
 }
 
-void mqtt3_check_keepalive(mqtt3_context *context)
+void mqtt3_check_keepalive(struct mosquitto *context)
 {
 	if(context && context->core.sock != -1 && time(NULL) - context->core.last_msg_out >= context->core.keepalive){
 		if(context->core.state == mosq_cs_connected){

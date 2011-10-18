@@ -52,7 +52,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 	int i;
 	int rc;
 	struct _mosquitto_acl_user *acl_tail;
-	mqtt3_context *context;
+	struct mosquitto *context;
 
 	context = db->contexts[context_index];
 	
@@ -257,7 +257,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 
 int mqtt3_handle_disconnect(mosquitto_db *db, int context_index)
 {
-	mqtt3_context *context;
+	struct mosquitto *context;
 
 	context = db->contexts[context_index];
 
@@ -274,7 +274,7 @@ int mqtt3_handle_disconnect(mosquitto_db *db, int context_index)
 }
 
 
-int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
+int mqtt3_handle_subscribe(mosquitto_db *db, struct mosquitto *context)
 {
 	int rc = 0;
 	int rc2;
@@ -378,7 +378,7 @@ int mqtt3_handle_subscribe(mosquitto_db *db, mqtt3_context *context)
 	return rc;
 }
 
-int mqtt3_handle_unsubscribe(mosquitto_db *db, mqtt3_context *context)
+int mqtt3_handle_unsubscribe(mosquitto_db *db, struct mosquitto *context)
 {
 	uint16_t mid;
 	char *sub;
