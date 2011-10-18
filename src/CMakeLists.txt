@@ -15,6 +15,7 @@ set (MOSQ_SRCS
 	../lib/net_mosq.c ../lib/net_mosq.h
 	persist.c persist.h
 	read_handle.c read_handle_client.c read_handle_server.c
+	../lib/read_handle_shared.c ../lib/read_handle.h
 	subs.c
 	security.c security_external.c
 	../lib/send_client_mosq.c ../lib/send_mosq.h
