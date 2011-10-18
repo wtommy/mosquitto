@@ -51,7 +51,7 @@ int mqtt3_packet_handle(mosquitto_db *db, int context_index)
 		case PINGREQ:
 			return _mosquitto_handle_pingreq(context);
 		case PINGRESP:
-			return mqtt3_handle_pingresp(context);
+			return _mosquitto_handle_pingresp(context);
 		case PUBACK:
 			return mqtt3_handle_puback(context);
 		case PUBCOMP:
@@ -102,20 +102,6 @@ int mqtt3_handle_puback(struct mosquitto *context)
 	if(mid){
 		if(mqtt3_db_message_delete(context, mid, mosq_md_out)) return 1;
 	}
-	return MOSQ_ERR_SUCCESS;
-}
-
-int mqtt3_handle_pingresp(struct mosquitto *context)
-{
-	if(!context){
-		return MOSQ_ERR_INVAL;
-	}
-#ifdef WITH_STRICT_PROTOCOL
-	if(context->in_packet.remaining_length != 0){
-		return MOSQ_ERR_PROTOCOL;
-	}
-#endif
-	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received PINGRESP from %s", context->id);
 	return MOSQ_ERR_SUCCESS;
 }
 

@@ -73,18 +73,6 @@ int _mosquitto_packet_handle(struct mosquitto *mosq)
 	}
 }
 
-int _mosquitto_handle_pingresp(struct mosquitto *mosq)
-{
-	assert(mosq);
-#ifdef WITH_STRICT_PROTOCOL
-	if(mosq->in_packet.remaining_length != 0){
-		return MOSQ_ERR_PROTOCOL;
-	}
-#endif
-	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received PINGRESP");
-	return MOSQ_ERR_SUCCESS;
-}
-
 int _mosquitto_handle_pubackcomp(struct mosquitto *mosq, const char *type)
 {
 	uint16_t mid;
