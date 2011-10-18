@@ -82,7 +82,11 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 
 int _mosquitto_send_pubrec(struct mosquitto *mosq, uint16_t mid)
 {
+#ifdef WITH_BROKER
+	if(mosq) _mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Sending PUBREC to %s (Mid: %d)", mosq->id, mid);
+#else
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBREC (Mid: %d)", mid);
+#endif
 	return _mosquitto_send_command_with_mid(mosq, PUBREC, mid, false);
 }
 

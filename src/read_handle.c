@@ -252,7 +252,7 @@ int mqtt3_handle_publish(mosquitto_db *db, struct mosquitto *context)
 				res = 0;
 			}
 			if(!res){
-				if(mqtt3_raw_pubrec(context, mid)) rc = 1;
+				if(_mosquitto_send_pubrec(context, mid)) rc = 1;
 			}else if(res == 1){
 				rc = 1;
 			}

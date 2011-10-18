@@ -662,7 +662,7 @@ int mqtt3_db_message_write(struct mosquitto *context)
 					break;
 				
 				case ms_resend_pubrec:
-					rc = mqtt3_raw_pubrec(context, mid);
+					rc = _mosquitto_send_pubrec(context, mid);
 					if(!rc){
 						tail->state = ms_wait_pubrel;
 					}else{
