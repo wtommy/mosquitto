@@ -70,6 +70,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <memory_mosq.h>
 #include <mosquitto.h>
+#include <send_mosq.h>
 #include <util_mosq.h>
 
 static int max_inflight = 20;
@@ -683,7 +684,7 @@ int mqtt3_db_message_write(struct mosquitto *context)
 					break;
 
 				case ms_resend_pubcomp:
-					rc = mqtt3_raw_pubcomp(context, mid);
+					rc = _mosquitto_send_pubcomp(context, mid);
 					if(!rc){
 						tail->state = ms_wait_pubrel;
 					}else{

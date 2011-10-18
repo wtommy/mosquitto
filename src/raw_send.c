@@ -54,12 +54,6 @@ int mqtt3_raw_publish(struct mosquitto *context, int dup, uint8_t qos, uint16_t 
 	return _mosquitto_send_real_publish(context, mid, topic, payloadlen, payload, qos, retain, dup);
 }
 
-int mqtt3_raw_pubcomp(struct mosquitto *context, uint16_t mid)
-{
-	if(context) _mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Sending PUBCOMP to %s (Mid: %d)", context->id, mid);
-	return _mosquitto_send_command_with_mid(context, PUBCOMP, mid, false);
-}
-
 int mqtt3_raw_pubrec(struct mosquitto *context, uint16_t mid)
 {
 	if(context) _mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Sending PUBREC to %s (Mid: %d)", context->id, mid);

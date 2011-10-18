@@ -62,7 +62,11 @@ int _mosquitto_send_puback(struct mosquitto *mosq, uint16_t mid)
 
 int _mosquitto_send_pubcomp(struct mosquitto *mosq, uint16_t mid)
 {
+#ifdef WITH_BROKER
+	if(mosq) _mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Sending PUBCOMP to %s (Mid: %d)", mosq->id, mid);
+#else
 	if(mosq) _mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PUBCOMP (Mid: %d)", mid);
+#endif
 	return _mosquitto_send_command_with_mid(mosq, PUBCOMP, mid, false);
 }
 

@@ -35,6 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
 #include <memory_mosq.h>
+#include <send_mosq.h>
 #include <util_mosq.h>
 
 int mqtt3_packet_handle(mosquitto_db *db, int context_index)
@@ -296,7 +297,7 @@ int mqtt3_handle_pubrel(mosquitto_db *db, struct mosquitto *context)
 	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received PUBREL from %s (Mid: %d)", context->id, mid);
 
 	mqtt3_db_message_release(db, context, mid, mosq_md_in);
-	if(mqtt3_raw_pubcomp(context, mid)) return 1;
+	if(_mosquitto_send_pubcomp(context, mid)) return 1;
 
 	return MOSQ_ERR_SUCCESS;
 }
