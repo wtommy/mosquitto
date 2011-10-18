@@ -14,12 +14,12 @@ set (MOSQ_SRCS
 	net.c
 	../lib/net_mosq.c ../lib/net_mosq.h
 	persist.c persist.h
-	raw_send_server.c
 	read_handle.c read_handle_client.c read_handle_server.c
 	subs.c
 	security.c security_external.c
 	../lib/send_client_mosq.c ../lib/send_mosq.h
 	../lib/send_mosq.c ../lib/send_mosq.h
+	send_server.c
 	util.c
 	../lib/util_mosq.c ../lib/util_mosq.h
 	../lib/will_mosq.c ../lib/will_mosq.h)

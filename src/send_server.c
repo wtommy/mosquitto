@@ -34,7 +34,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <memory_mosq.h>
 #include <util_mosq.h>
 
-int mqtt3_raw_connack(struct mosquitto *context, uint8_t result)
+int _mosquitto_send_connack(struct mosquitto *context, uint8_t result)
 {
 	struct _mosquitto_packet *packet = NULL;
 	int rc;
@@ -65,7 +65,7 @@ int mqtt3_raw_connack(struct mosquitto *context, uint8_t result)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_raw_suback(struct mosquitto *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload)
+int _mosquitto_send_suback(struct mosquitto *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload)
 {
 	struct _mosquitto_packet *packet = NULL;
 	int rc;

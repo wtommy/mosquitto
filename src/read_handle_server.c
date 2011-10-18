@@ -87,7 +87,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 		_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "Invalid protocol version %d in CONNECT from %s.",
 				protocol_version, context->address);
 		_mosquitto_free(protocol_name);
-		mqtt3_raw_connack(context, 1);
+		_mosquitto_send_connack(context, 1);
 		mqtt3_context_disconnect(db, context_index);
 		return MOSQ_ERR_PROTOCOL;
 	}
@@ -118,7 +118,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 	if(db->config->clientid_prefixes){
 		if(strncmp(db->config->clientid_prefixes, client_id, strlen(db->config->clientid_prefixes))){
 			_mosquitto_free(client_id);
-			mqtt3_raw_connack(context, 2);
+			_mosquitto_send_connack(context, 2);
 			mqtt3_context_disconnect(db, context_index);
 			return MOSQ_ERR_SUCCESS;
 		}
@@ -161,7 +161,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 			context->username = username;
 			context->password = password;
 			if(rc == MOSQ_ERR_AUTH){
-				mqtt3_raw_connack(context, 2);
+				_mosquitto_send_connack(context, 2);
 				mqtt3_context_disconnect(db, context_index);
 				_mosquitto_free(client_id);
 				return MOSQ_ERR_SUCCESS;
@@ -179,7 +179,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 	}
 
 	if(!username_flag && db->config->allow_anonymous == false){
-		mqtt3_raw_connack(context, 2);
+		_mosquitto_send_connack(context, 2);
 		mqtt3_context_disconnect(db, context_index);
 		_mosquitto_free(client_id);
 		return MOSQ_ERR_SUCCESS;
@@ -252,7 +252,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 	_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "New client connected from %s as %s.", context->address, client_id);
 
 	context->state = mosq_cs_connected;
-	return mqtt3_raw_connack(context, 0);
+	return _mosquitto_send_connack(context, 0);
 }
 
 int mqtt3_handle_disconnect(mosquitto_db *db, int context_index)
@@ -372,7 +372,7 @@ int mqtt3_handle_subscribe(mosquitto_db *db, struct mosquitto *context)
 		}
 	}
 
-	if(mqtt3_raw_suback(context, mid, payloadlen, payload)) rc = 1;
+	if(_mosquitto_send_suback(context, mid, payloadlen, payload)) rc = 1;
 	_mosquitto_free(payload);
 	
 	return rc;

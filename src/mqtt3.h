@@ -245,13 +245,10 @@ int mqtt3_config_read(mqtt3_config *config, bool reload);
 void mqtt3_config_cleanup(mqtt3_config *config);
 
 /* ============================================================
- * Raw send functions - just construct the packet and send 
+ * Server send functions
  * ============================================================ */
-/* Generic function for sending a command to a client where there is no payload, just a mid.
- * Returns 0 on success, 1 on error.
- */
-int mqtt3_raw_connack(struct mosquitto *context, uint8_t result);
-int mqtt3_raw_suback(struct mosquitto *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload);
+int _mosquitto_send_connack(struct mosquitto *context, uint8_t result);
+int _mosquitto_send_suback(struct mosquitto *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload);
 
 /* ============================================================
  * Network functions
