@@ -97,13 +97,13 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 
 	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
 	if(!child){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+		_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Out of memory.");
 		return MOSQ_ERR_NOMEM;
 	}
 	child->next = NULL;
 	child->topic = _mosquitto_strdup("");
 	if(!child->topic){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+		_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Out of memory.");
 		return MOSQ_ERR_NOMEM;
 	}
 	child->subs = NULL;
@@ -113,13 +113,13 @@ int mqtt3_db_open(mqtt3_config *config, mosquitto_db *db)
 
 	child = _mosquitto_malloc(sizeof(struct _mosquitto_subhier));
 	if(!child){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+		_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Out of memory.");
 		return MOSQ_ERR_NOMEM;
 	}
 	child->next = NULL;
 	child->topic = _mosquitto_strdup("$SYS");
 	if(!child->topic){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+		_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Out of memory.");
 		return MOSQ_ERR_NOMEM;
 	}
 	child->subs = NULL;
@@ -440,7 +440,7 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 	}
 	if(!temp->source_id){
 		_mosquitto_free(temp);
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+		_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Out of memory.");
 		return MOSQ_ERR_NOMEM;
 	}
 	temp->source_mid = source_mid;
@@ -451,7 +451,7 @@ int mqtt3_db_message_store(mosquitto_db *db, const char *source, uint16_t source
 	if(!temp->msg.topic){
 		_mosquitto_free(temp);
 		_mosquitto_free(temp->source_id);
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+		_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Out of memory.");
 		return MOSQ_ERR_NOMEM;
 	}
 	temp->msg.payloadlen = payloadlen;

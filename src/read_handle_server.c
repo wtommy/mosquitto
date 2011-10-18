@@ -71,7 +71,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 		return 3;
 	}
 	if(strcmp(protocol_name, PROTOCOL_NAME)){
-		mqtt3_log_printf(MOSQ_LOG_INFO, "Invalid protocol \"%s\" in CONNECT from %s.",
+		_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "Invalid protocol \"%s\" in CONNECT from %s.",
 				protocol_name, context->address);
 		_mosquitto_free(protocol_name);
 		mqtt3_context_disconnect(db, context_index);
@@ -84,7 +84,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 		return 1;
 	}
 	if(protocol_version != PROTOCOL_VERSION){
-		mqtt3_log_printf(MOSQ_LOG_INFO, "Invalid protocol version %d in CONNECT from %s.",
+		_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "Invalid protocol version %d in CONNECT from %s.",
 				protocol_version, context->address);
 		_mosquitto_free(protocol_name);
 		mqtt3_raw_connack(context, 1);
@@ -194,7 +194,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 				/* FIXME - does anything else need to be done here? */
 			}else{
 				/* Client is already connected, disconnect old version */
-				mqtt3_log_printf(MOSQ_LOG_ERR, "Client %s already connected, closing old connection.", client_id);
+				_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Client %s already connected, closing old connection.", client_id);
 			}
 			db->contexts[i]->clean_session = clean_session;
 			mqtt3_context_cleanup(db, db->contexts[i], false);
@@ -249,7 +249,7 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 		context->acl_list = NULL;
 	}
 
-	mqtt3_log_printf(MOSQ_LOG_NOTICE, "New client connected from %s as %s.", context->address, client_id);
+	_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "New client connected from %s as %s.", context->address, client_id);
 
 	context->state = mosq_cs_connected;
 	return mqtt3_raw_connack(context, 0);
@@ -267,7 +267,7 @@ int mqtt3_handle_disconnect(mosquitto_db *db, int context_index)
 	if(context->in_packet.remaining_length != 0){
 		return MOSQ_ERR_PROTOCOL;
 	}
-	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received DISCONNECT from %s", context->id);
+	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received DISCONNECT from %s", context->id);
 	context->state = mosq_cs_disconnecting;
 	mqtt3_context_disconnect(db, context_index);
 	return MOSQ_ERR_SUCCESS;
@@ -287,7 +287,7 @@ int mqtt3_handle_subscribe(mosquitto_db *db, struct mosquitto *context)
 	char *sub_mount;
 
 	if(!context) return MOSQ_ERR_INVAL;
-	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received SUBSCRIBE from %s", context->id);
+	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received SUBSCRIBE from %s", context->id);
 	/* FIXME - plenty of potential for memory leaks here */
 
 	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
@@ -307,7 +307,7 @@ int mqtt3_handle_subscribe(mosquitto_db *db, struct mosquitto *context)
 				return 1;
 			}
 			if(qos > 2){
-				mqtt3_log_printf(MOSQ_LOG_INFO, "Invalid QoS in subscription command from %s, disconnecting.",
+				_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "Invalid QoS in subscription command from %s, disconnecting.",
 					context->address);
 				_mosquitto_free(sub);
 				if(payload) _mosquitto_free(payload);
@@ -319,7 +319,7 @@ int mqtt3_handle_subscribe(mosquitto_db *db, struct mosquitto *context)
 				return 1;
 			}
 			if(!strlen(sub)){
-				mqtt3_log_printf(MOSQ_LOG_INFO, "Empty subscription string from %s, disconnecting.",
+				_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "Empty subscription string from %s, disconnecting.",
 					context->address);
 				_mosquitto_free(sub);
 				if(payload) _mosquitto_free(payload);
@@ -338,7 +338,7 @@ int mqtt3_handle_subscribe(mosquitto_db *db, struct mosquitto *context)
 				sub = sub_mount;
 
 			}
-			mqtt3_log_printf(MOSQ_LOG_DEBUG, "\t%s (QoS %d)", sub, qos);
+			_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "\t%s (QoS %d)", sub, qos);
 			/* FIXME - need to deny access to retained messages. */
 #if 0
 			/* Check for topic access */
@@ -384,7 +384,7 @@ int mqtt3_handle_unsubscribe(mosquitto_db *db, struct mosquitto *context)
 	char *sub;
 
 	if(!context) return MOSQ_ERR_INVAL;
-	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received UNSUBSCRIBE from %s", context->id);
+	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received UNSUBSCRIBE from %s", context->id);
 
 	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
 
@@ -396,7 +396,7 @@ int mqtt3_handle_unsubscribe(mosquitto_db *db, struct mosquitto *context)
 		}
 
 		if(sub){
-			mqtt3_log_printf(MOSQ_LOG_DEBUG, "\t%s", sub);
+			_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "\t%s", sub);
 			mqtt3_sub_remove(context, sub, &db->subs);
 			_mosquitto_free(sub);
 		}

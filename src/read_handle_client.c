@@ -53,7 +53,7 @@ int mqtt3_handle_connack(struct mosquitto *context)
 		return MOSQ_ERR_PROTOCOL;
 	}
 #endif
-	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received CONNACK");
+	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received CONNACK");
 	if(_mosquitto_read_byte(&context->in_packet, &byte)) return 1; // Reserved byte, not used
 	if(_mosquitto_read_byte(&context->in_packet, &rc)) return 1;
 	switch(rc){
@@ -86,13 +86,13 @@ int mqtt3_handle_connack(struct mosquitto *context)
 			context->state = mosq_cs_connected;
 			return MOSQ_ERR_SUCCESS;
 		case 1:
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Connection Refused: unacceptable protocol version");
+			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Connection Refused: unacceptable protocol version");
 			return 1;
 		case 2:
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Connection Refused: identifier rejected");
+			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Connection Refused: identifier rejected");
 			return 1;
 		case 3:
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Connection Refused: broker unavailable");
+			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Connection Refused: broker unavailable");
 			return 1;
 	}
 	return 1;
@@ -103,7 +103,7 @@ int mqtt3_handle_suback(struct mosquitto *context)
 	uint16_t mid;
 	uint8_t granted_qos;
 
-	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received SUBACK");
+	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received SUBACK");
 	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
 
 	while(context->in_packet.pos < context->in_packet.remaining_length){
@@ -126,7 +126,7 @@ int mqtt3_handle_unsuback(struct mosquitto *context)
 		return MOSQ_ERR_PROTOCOL;
 	}
 #endif
-	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Received UNSUBACK");
+	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received UNSUBACK");
 	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
 
 	return MOSQ_ERR_SUCCESS;

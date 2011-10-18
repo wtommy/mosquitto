@@ -345,7 +345,7 @@ void mqtt3_context_disconnect(mosquitto_db *db, int context_index);
  * ============================================================ */
 int mqtt3_log_init(int level, int destinations);
 int mqtt3_log_close(void);
-int mqtt3_log_printf(int level, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+int _mosquitto_log_printf(struct mosquitto *mosq, int level, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
 
 /* ============================================================
  * Bridge functions

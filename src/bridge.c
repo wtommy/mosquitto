@@ -122,10 +122,10 @@ int mqtt3_bridge_connect(mosquitto_db *db, struct mosquitto *context)
 	context->in_packet.payload = NULL;
 	mqtt3_bridge_packet_cleanup(context);
 
-	mqtt3_log_printf(MOSQ_LOG_NOTICE, "Connecting bridge %s", context->bridge->name);
+	_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Connecting bridge %s", context->bridge->name);
 	rc = _mosquitto_socket_connect(context, context->bridge->address, context->bridge->port);
 	if(rc != MOSQ_ERR_SUCCESS){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error creating bridge.");
+		_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error creating bridge.");
 		return rc;
 	}
 

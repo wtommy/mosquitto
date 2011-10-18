@@ -42,13 +42,13 @@ int mosquitto_security_init(mosquitto_db *db)
 #ifdef WITH_EXTERNAL_SECURITY_CHECKS
 	rc = mosquitto_unpwd_init(db);
 	if(rc){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising passwords.");
+		_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error initialising passwords.");
 		return rc;
 	}
 
 	rc = mosquitto_acl_init(db);
 	if(rc){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error initialising ACLs.");
+		_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error initialising ACLs.");
 		return rc;
 	}
 #else
@@ -56,7 +56,7 @@ int mosquitto_security_init(mosquitto_db *db)
 	if(db->config->password_file){
 		rc = mqtt3_pwfile_parse(db);
 		if(rc){
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening password file.");
+			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error opening password file.");
 			return rc;
 		}
 	}
@@ -65,7 +65,7 @@ int mosquitto_security_init(mosquitto_db *db)
 	if(db->config->acl_file){
 		rc = mqtt3_aclfile_parse(db);
 		if(rc){
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Error opening acl file.");
+			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error opening acl file.");
 			return rc;
 		}
 	}
@@ -304,7 +304,7 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 			if(!strcmp(token, "topic")){
 				access_s = strtok(NULL, " ");
 				if(!access_s){
-					mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty topic in acl_file.");
+					_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Empty topic in acl_file.");
 					if(user) _mosquitto_free(user);
 					fclose(aclfile);
 					return 1;
@@ -322,7 +322,7 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 					}else if(!strcmp(access_s, "write")){
 						access = MOSQ_ACL_WRITE;
 					}else{
-						mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Empty invalid topic access type in acl_file.");
+						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Empty invalid topic access type in acl_file.");
 						if(user) _mosquitto_free(user);
 						fclose(aclfile);
 						return 1;
@@ -342,7 +342,7 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 						return MOSQ_ERR_NOMEM;
 					}
 				}else{
-					mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Missing username in acl_file.");
+					_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Missing username in acl_file.");
 					if(user) _mosquitto_free(user);
 					fclose(aclfile);
 					return 1;

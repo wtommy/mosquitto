@@ -41,9 +41,9 @@ int mqtt3_raw_connack(struct mosquitto *context, uint8_t result)
 
 	if(context){
 		if(context->id){
-			mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending CONNACK to %s (%d)", context->id, result);
+			_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Sending CONNACK to %s (%d)", context->id, result);
 		}else{
-			mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending CONNACK to %s (%d)", context->address, result);
+			_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Sending CONNACK to %s (%d)", context->address, result);
 		}
 	}
 
@@ -70,7 +70,7 @@ int mqtt3_raw_suback(struct mosquitto *context, uint16_t mid, uint32_t payloadle
 	struct _mosquitto_packet *packet = NULL;
 	int rc;
 
-	mqtt3_log_printf(MOSQ_LOG_DEBUG, "Sending SUBACK to %s", context->id);
+	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Sending SUBACK to %s", context->id);
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return MOSQ_ERR_NOMEM;

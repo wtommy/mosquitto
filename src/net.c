@@ -99,7 +99,7 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 	fromhost(&wrap_req);
 	if(!hosts_access(&wrap_req)){
 		/* Access is denied */
-		mqtt3_log_printf(MOSQ_LOG_NOTICE, "Client connection denied access by tcpd.");
+		_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Client connection denied access by tcpd.");
 		COMPAT_CLOSE(new_sock);
 		return -1;
 	}else{
@@ -126,7 +126,7 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 			COMPAT_CLOSE(new_sock);
 			return -1;
 		}
-		mqtt3_log_printf(MOSQ_LOG_NOTICE, "New connection from %s.", new_context->address);
+		_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "New connection from %s.", new_context->address);
 		for(i=0; i<db->context_count; i++){
 			if(db->contexts[i] == NULL){
 				db->contexts[i] = new_context;
@@ -182,22 +182,22 @@ int mqtt3_socket_listen(struct _mqtt3_listener *listener)
 
 	for(rp = ainfo; rp; rp = rp->ai_next){
 		if(rp->ai_family == AF_INET){
-			mqtt3_log_printf(MOSQ_LOG_INFO, "Opening ipv4 listen socket on port %d.", ntohs(((struct sockaddr_in *)rp->ai_addr)->sin_port));
+			_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "Opening ipv4 listen socket on port %d.", ntohs(((struct sockaddr_in *)rp->ai_addr)->sin_port));
 		}else if(rp->ai_family == AF_INET6){
-			mqtt3_log_printf(MOSQ_LOG_INFO, "Opening ipv6 listen socket on port %d.", ntohs(((struct sockaddr_in6 *)rp->ai_addr)->sin6_port));
+			_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "Opening ipv6 listen socket on port %d.", ntohs(((struct sockaddr_in6 *)rp->ai_addr)->sin6_port));
 		}else{
 			continue;
 		}
 
 		sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 		if(sock == -1){
-			mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: %s", strerror(errno));
+			_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: %s", strerror(errno));
 			continue;
 		}
 		listener->sock_count++;
 		listener->socks = _mosquitto_realloc(listener->socks, sizeof(int)*listener->sock_count);
 		if(!listener->socks){
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Out of memory.");
+			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Out of memory.");
 			return MOSQ_ERR_NOMEM;
 		}
 		listener->socks[listener->sock_count-1] = sock;
@@ -224,13 +224,13 @@ int mqtt3_socket_listen(struct _mqtt3_listener *listener)
 #endif
 
 		if(bind(sock, rp->ai_addr, rp->ai_addrlen) == -1){
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
+			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: %s", strerror(errno));
 			COMPAT_CLOSE(sock);
 			return 1;
 		}
 
 		if(listen(sock, 100) == -1){
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s", strerror(errno));
+			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: %s", strerror(errno));
 			COMPAT_CLOSE(sock);
 			return 1;
 		}
