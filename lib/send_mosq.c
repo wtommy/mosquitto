@@ -40,7 +40,11 @@ POSSIBILITY OF SUCH DAMAGE.
 int _mosquitto_send_pingreq(struct mosquitto *mosq)
 {
 	assert(mosq);
+#ifdef WITH_BROKER
+	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Sending PINGREQ to %s", mosq->id);
+#else
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Sending PINGREQ");
+#endif
 	return _mosquitto_send_simple_command(mosq, PINGREQ);
 }
 

@@ -34,6 +34,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <mqtt3.h>
 #include <mqtt3_protocol.h>
+#include <send_mosq.h>
 
 /* Convert mqtt command (as defined in mqtt3.h) to corresponding string. */
 const char *mqtt3_command_to_string(uint8_t command)
@@ -75,7 +76,7 @@ void mqtt3_check_keepalive(struct mosquitto *context)
 {
 	if(context && context->sock != -1 && time(NULL) - context->last_msg_out >= context->keepalive){
 		if(context->state == mosq_cs_connected){
-			mqtt3_raw_pingreq(context);
+			_mosquitto_send_pingreq(context);
 		}else{
 			if(context->listener){
 				context->listener->client_count--;
