@@ -70,21 +70,3 @@ int _mosquitto_handle_connack(struct mosquitto *mosq)
 	}
 }
 
-int _mosquitto_handle_unsuback(struct mosquitto *mosq)
-{
-	uint16_t mid;
-	int rc;
-
-	assert(mosq);
-#ifdef WITH_STRICT_PROTOCOL
-	if(mosq->in_packet.remaining_length != 2){
-		return MOSQ_ERR_PROTOCOL;
-	}
-#endif
-	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received UNSUBACK");
-	rc = _mosquitto_read_uint16(&mosq->in_packet, &mid);
-	if(rc) return rc;
-	if(mosq->on_unsubscribe) mosq->on_unsubscribe(mosq->obj, mid);
-
-	return MOSQ_ERR_SUCCESS;
-}

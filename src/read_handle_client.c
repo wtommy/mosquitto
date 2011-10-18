@@ -98,20 +98,3 @@ int mqtt3_handle_connack(struct mosquitto *context)
 	return 1;
 }
 
-int mqtt3_handle_unsuback(struct mosquitto *context)
-{
-	uint16_t mid;
-
-	if(!context){
-		return MOSQ_ERR_INVAL;
-	}
-#ifdef WITH_STRICT_PROTOCOL
-	if(context->in_packet.remaining_length != 2){
-		return MOSQ_ERR_PROTOCOL;
-	}
-#endif
-	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received UNSUBACK");
-	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
-
-	return MOSQ_ERR_SUCCESS;
-}

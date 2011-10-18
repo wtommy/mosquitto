@@ -272,9 +272,7 @@ int mqtt3_handle_connack(struct mosquitto *context);
 int mqtt3_handle_connect(mosquitto_db *db, int context_index);
 int mqtt3_handle_disconnect(mosquitto_db *db, int context_index);
 int mqtt3_handle_publish(mosquitto_db *db, struct mosquitto *context);
-int mqtt3_handle_suback(struct mosquitto *context);
 int mqtt3_handle_subscribe(mosquitto_db *db, struct mosquitto *context);
-int mqtt3_handle_unsuback(struct mosquitto *context);
 int mqtt3_handle_unsubscribe(mosquitto_db *db, struct mosquitto *context);
 
 /* ============================================================

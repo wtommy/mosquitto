@@ -76,7 +76,7 @@ int mqtt3_packet_handle(mosquitto_db *db, int context_index)
 		case SUBACK:
 			return _mosquitto_handle_suback(context);
 		case UNSUBACK:
-			return mqtt3_handle_unsuback(context);
+			return _mosquitto_handle_unsuback(context);
 #endif
 		default:
 			/* If we don't recognise the command, return an error straight away. */
