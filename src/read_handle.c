@@ -278,7 +278,7 @@ int mqtt3_handle_pubrec(struct mosquitto *context)
 	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received PUBREC from %s (Mid: %d)", context->id, mid);
 
 	if(mqtt3_db_message_update(context, mid, mosq_md_out, ms_wait_pubcomp)) return 1;
-	if(mqtt3_raw_pubrel(context, mid, false)) return 1;
+	if(_mosquitto_send_pubrel(context, mid, false)) return 1;
 
 	return MOSQ_ERR_SUCCESS;
 }
