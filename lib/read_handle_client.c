@@ -70,38 +70,6 @@ int _mosquitto_handle_connack(struct mosquitto *mosq)
 	}
 }
 
-int _mosquitto_handle_suback(struct mosquitto *mosq)
-{
-	uint16_t mid;
-	uint8_t *granted_qos;
-	int qos_count;
-	int i = 0;
-	int rc;
-
-	assert(mosq);
-	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received SUBACK");
-	rc = _mosquitto_read_uint16(&mosq->in_packet, &mid);
-	if(rc) return rc;
-
-	qos_count = mosq->in_packet.remaining_length - mosq->in_packet.pos;
-	granted_qos = _mosquitto_malloc(qos_count*sizeof(uint8_t));
-	if(!granted_qos) return MOSQ_ERR_NOMEM;
-	while(mosq->in_packet.pos < mosq->in_packet.remaining_length){
-		rc = _mosquitto_read_byte(&mosq->in_packet, &(granted_qos[i]));
-		if(rc){
-			_mosquitto_free(granted_qos);
-			return rc;
-		}
-		i++;
-	}
-	if(mosq->on_subscribe){
-		mosq->on_subscribe(mosq->obj, mid, qos_count, granted_qos);
-	}
-	_mosquitto_free(granted_qos);
-
-	return MOSQ_ERR_SUCCESS;
-}
-
 int _mosquitto_handle_unsuback(struct mosquitto *mosq)
 {
 	uint16_t mid;

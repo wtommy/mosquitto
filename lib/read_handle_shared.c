@@ -177,3 +177,41 @@ int _mosquitto_handle_pubrel(struct _mosquitto_db *db, struct mosquitto *mosq)
 	return MOSQ_ERR_SUCCESS;
 }
 
+int _mosquitto_handle_suback(struct mosquitto *mosq)
+{
+	uint16_t mid;
+	uint8_t *granted_qos;
+	int qos_count;
+	int i = 0;
+	int rc;
+
+	assert(mosq);
+#ifdef WITH_BROKER
+	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received SUBACK from %s", mosq->id);
+#else
+	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received SUBACK");
+#endif
+	rc = _mosquitto_read_uint16(&mosq->in_packet, &mid);
+	if(rc) return rc;
+
+	qos_count = mosq->in_packet.remaining_length - mosq->in_packet.pos;
+	granted_qos = _mosquitto_malloc(qos_count*sizeof(uint8_t));
+	if(!granted_qos) return MOSQ_ERR_NOMEM;
+	while(mosq->in_packet.pos < mosq->in_packet.remaining_length){
+		rc = _mosquitto_read_byte(&mosq->in_packet, &(granted_qos[i]));
+		if(rc){
+			_mosquitto_free(granted_qos);
+			return rc;
+		}
+		i++;
+	}
+#ifndef WITH_BROKER
+	if(mosq->on_subscribe){
+		mosq->on_subscribe(mosq->obj, mid, qos_count, granted_qos);
+	}
+#endif
+	_mosquitto_free(granted_qos);
+
+	return MOSQ_ERR_SUCCESS;
+}
+

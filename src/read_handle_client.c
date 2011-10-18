@@ -98,22 +98,6 @@ int mqtt3_handle_connack(struct mosquitto *context)
 	return 1;
 }
 
-int mqtt3_handle_suback(struct mosquitto *context)
-{
-	uint16_t mid;
-	uint8_t granted_qos;
-
-	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received SUBACK");
-	if(_mosquitto_read_uint16(&context->in_packet, &mid)) return 1;
-
-	while(context->in_packet.pos < context->in_packet.remaining_length){
-		/* FIXME - Need to do something with this */
-		if(_mosquitto_read_byte(&context->in_packet, &granted_qos)) return 1;
-	}
-
-	return MOSQ_ERR_SUCCESS;
-}
-
 int mqtt3_handle_unsuback(struct mosquitto *context)
 {
 	uint16_t mid;

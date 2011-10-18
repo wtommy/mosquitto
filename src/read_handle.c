@@ -74,7 +74,7 @@ int mqtt3_packet_handle(mosquitto_db *db, int context_index)
 		case CONNACK:
 			return mqtt3_handle_connack(context);
 		case SUBACK:
-			return mqtt3_handle_suback(context);
+			return _mosquitto_handle_suback(context);
 		case UNSUBACK:
 			return mqtt3_handle_unsuback(context);
 #endif
