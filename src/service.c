@@ -64,21 +64,23 @@ void __stdcall service_main(DWORD dwArgc, LPTSTR *lpszArgv)
 {
 	char **argv;
 	int argc = 1;
+	char conf_path[MAX_PATH + 20];
 	int rc;
-	char buf[2048];
 
 	service_handle = RegisterServiceCtrlHandler("mosquitto", service_handler);
 	if(service_handle){
-		rc = GetEnvironmentVariable("MOSQUITTO_DIR", buf, 2048);
-		if(!rc || rc == 2048){
+		rc = GetEnvironmentVariable("MOSQUITTO_DIR", conf_path, MAX_PATH);
+		if(!rc || rc == MAX_PATH){
 			service_status.dwCurrentState = SERVICE_STOPPED;
 			SetServiceStatus(service_handle, &service_status);
 			return;
 		}
+		strcat(conf_path, "/mosquitto.conf");
+
 		argv = _mosquitto_malloc(sizeof(char *)*3);
 		argv[0] = "mosquitto";
 		argv[1] = "-c";
-		argv[2] = buf;
+		argv[2] = conf_path;
 		argc = 3;
 
 		service_status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
