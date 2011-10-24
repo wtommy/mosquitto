@@ -9,6 +9,7 @@
   known.
 - Fix payload length calculation in python will_set function.
 - Fix Python publish and will_set functions for payload=None.
+- Fix keepalive value being lost when reconnecting a client (bug #880863).
 
 0.13 - 20110920
 ===============
