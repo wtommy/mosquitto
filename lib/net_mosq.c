@@ -102,7 +102,7 @@ void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet)
 	packet->pos = 0;
 }
 
-void _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *packet)
+int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *packet)
 {
 	struct _mosquitto_packet *tail;
 
@@ -122,6 +122,7 @@ void _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *p
 	}else{
 		mosq->out_packet = packet;
 	}
+	return _mosquitto_packet_write(mosq);
 }
 
 /* Close a socket associated with a context and set it to -1.

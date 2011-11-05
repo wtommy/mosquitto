@@ -154,9 +154,7 @@ int _mosquitto_send_command_with_mid(struct mosquitto *mosq, uint8_t command, ui
 	packet->payload[packet->pos+0] = MOSQ_MSB(mid);
 	packet->payload[packet->pos+1] = MOSQ_LSB(mid);
 
-	_mosquitto_packet_queue(mosq, packet);
-
-	return MOSQ_ERR_SUCCESS;
+	return _mosquitto_packet_queue(mosq, packet);
 }
 
 /* For DISCONNECT, PINGREQ and PINGRESP */
@@ -178,9 +176,7 @@ int _mosquitto_send_simple_command(struct mosquitto *mosq, uint8_t command)
 		return rc;
 	}
 
-	_mosquitto_packet_queue(mosq, packet);
-
-	return MOSQ_ERR_SUCCESS;
+	return _mosquitto_packet_queue(mosq, packet);
 }
 
 int _mosquitto_send_real_publish(struct mosquitto *mosq, uint16_t mid, const char *topic, uint32_t payloadlen, const uint8_t *payload, int qos, bool retain, bool dup)
@@ -216,7 +212,5 @@ int _mosquitto_send_real_publish(struct mosquitto *mosq, uint16_t mid, const cha
 		_mosquitto_write_bytes(packet, payload, payloadlen);
 	}
 
-	_mosquitto_packet_queue(mosq, packet);
-
-	return MOSQ_ERR_SUCCESS;
+	return _mosquitto_packet_queue(mosq, packet);
 }

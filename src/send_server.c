@@ -60,9 +60,7 @@ int _mosquitto_send_connack(struct mosquitto *context, uint8_t result)
 	packet->payload[packet->pos+0] = 0;
 	packet->payload[packet->pos+1] = result;
 
-	_mosquitto_packet_queue(context, packet);
-	_mosquitto_packet_write(context);
-	return MOSQ_ERR_SUCCESS;
+	return _mosquitto_packet_queue(context, packet);
 }
 
 int _mosquitto_send_suback(struct mosquitto *context, uint16_t mid, uint32_t payloadlen, const uint8_t *payload)
@@ -87,7 +85,5 @@ int _mosquitto_send_suback(struct mosquitto *context, uint16_t mid, uint32_t pay
 		_mosquitto_write_bytes(packet, payload, payloadlen);
 	}
 
-	_mosquitto_packet_queue(context, packet);
-
-	return MOSQ_ERR_SUCCESS;
+	return _mosquitto_packet_queue(context, packet);
 }
