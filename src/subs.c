@@ -75,22 +75,23 @@ static int _subs_process(struct _mosquitto_db *db, struct _mosquitto_subhier *hi
 		if(rc2 == MOSQ_ERR_ACL_DENIED){
 			leaf = leaf->next;
 			continue;
-		}else if(rc2 != MOSQ_ERR_SUCCESS){
+		}else if(rc2 == MOSQ_ERR_SUCCESS){
+			client_qos = leaf->qos;
+
+			if(qos > client_qos){
+				msg_qos = client_qos;
+			}else{
+				msg_qos = qos;
+			}
+			if(msg_qos){
+				mid = _mosquitto_mid_generate(leaf->context);
+			}else{
+				mid = 0;
+			}
+			if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, msg_qos, false, stored) == 1) rc = 1;
+		}else{
 			rc = 1;
 		}
-		client_qos = leaf->qos;
-
-		if(qos > client_qos){
-			msg_qos = client_qos;
-		}else{
-			msg_qos = qos;
-		}
-		if(msg_qos){
-			mid = _mosquitto_mid_generate(leaf->context);
-		}else{
-			mid = 0;
-		}
-		if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, msg_qos, false, stored) == 1) rc = 1;
 		leaf = leaf->next;
 	}
 	return rc;
