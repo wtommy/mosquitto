@@ -1,4 +1,4 @@
-0.14 - 2011xxxx
+0.14 - 20111116
 ===============
 
 - Add a Windows installer file (NSIS based).
