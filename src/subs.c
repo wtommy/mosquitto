@@ -115,7 +115,7 @@ static int _sub_topic_tokenise(const char *subtopic, struct _sub_token **topics)
 		new_topic = _mosquitto_malloc(sizeof(struct _sub_token));
 		if(!new_topic) goto cleanup;
 		new_topic->next = NULL;
-		new_topic->topic = _mosquitto_strdup("");
+		new_topic->topic = _mosquitto_strdup("/");
 		if(!new_topic->topic) goto cleanup;
 
 		*topics = new_topic;
@@ -279,7 +279,7 @@ static int _sub_search(struct _mosquitto_db *db, struct _mosquitto_subhier *subh
 			if(rc == -1 || !tokens->next){
 				_subs_process(db, branch, source_id, topic, qos, retain, stored);
 			}
-		}else if(!strcmp(branch->topic, "#") && !branch->children){
+		}else if(!strcmp(branch->topic, "#") && strcmp(tokens->topic, "/") && !branch->children){
 			/* The topic matches due to a # wildcard - process the
 			 * subscriptions but *don't* return. Although this branch has ended
 			 * there may still be other subscriptions to deal with.

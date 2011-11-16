@@ -19,6 +19,7 @@
 - Queued messages for clients reconnecting with clean_session=false set were
   not being sent until the next message for that client was received. This has
   been fixed (bug #890724).
+- Fix subscriptions to # incorrectly matching against topics beginning with /
 
 0.13 - 20110920
 ===============
