@@ -62,6 +62,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #  include <read_handle.h>
 #endif
 
+#ifndef WIN32
+#  define COMPAT_ECONNRESET ECONNRESET
+#else
+#  define COMPAT_ECONNRESET WSAECONNRESET
+#endif
+
 #include <memory_mosq.h>
 #include <mqtt3_protocol.h>
 #include <net_mosq.h>
@@ -438,7 +444,7 @@ int _mosquitto_packet_write(struct mosquitto *mosq)
 					return MOSQ_ERR_SUCCESS;
 				}else{
 					switch(errno){
-						case ECONNRESET:
+						case COMPAT_ECONNRESET:
 							return MOSQ_ERR_CONN_LOST;
 						default:
 							return MOSQ_ERR_UNKNOWN;
@@ -517,7 +523,7 @@ int _mosquitto_packet_read(struct mosquitto *mosq)
 				return MOSQ_ERR_SUCCESS;
 			}else{
 				switch(errno){
-					case ECONNRESET:
+					case COMPAT_ECONNRESET:
 						return MOSQ_ERR_CONN_LOST;
 					default:
 						return MOSQ_ERR_UNKNOWN;
@@ -554,7 +560,7 @@ int _mosquitto_packet_read(struct mosquitto *mosq)
 					return MOSQ_ERR_SUCCESS;
 				}else{
 					switch(errno){
-						case ECONNRESET:
+						case COMPAT_ECONNRESET:
 							return MOSQ_ERR_CONN_LOST;
 						default:
 							return MOSQ_ERR_UNKNOWN;
@@ -587,7 +593,7 @@ int _mosquitto_packet_read(struct mosquitto *mosq)
 				return MOSQ_ERR_SUCCESS;
 			}else{
 				switch(errno){
-					case ECONNRESET:
+					case COMPAT_ECONNRESET:
 						return MOSQ_ERR_CONN_LOST;
 					default:
 						return MOSQ_ERR_UNKNOWN;
