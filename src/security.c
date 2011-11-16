@@ -295,7 +295,7 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 
 	while(fgets(buf, 1024, aclfile)){
 		slen = strlen(buf);
-		while(buf[slen-1] == 10 || buf[slen-1] == 13){
+		while(slen > 0 && (buf[slen-1] == 10 || buf[slen-1] == 13)){
 			buf[slen-1] = '\0';
 			slen = strlen(buf);
 		}
