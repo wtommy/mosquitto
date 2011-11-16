@@ -93,7 +93,7 @@ int mqtt3_log_close(void)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_log_printf(int priority, const char *fmt, ...)
+int _mosquitto_log_printf(struct mosquitto *mosq, int priority, const char *fmt, ...)
 {
 	va_list va;
 	char *s;

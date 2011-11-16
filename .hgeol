@@ -7,6 +7,7 @@
 **.svg = native
 **.png = BIN
 **.xml = native
+**.nsi = native
 Makefile = LF
 config.mk = LF
 mosquitto.conf = native

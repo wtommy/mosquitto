@@ -84,20 +84,20 @@ int drop_privileges(mqtt3_config *config)
 		if(config->user){
 			pwd = getpwnam(config->user);
 			if(!pwd){
-				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Invalid user '%s'.", config->user);
+				_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid user '%s'.", config->user);
 				return 1;
 			}
 			if(setgid(pwd->pw_gid) == -1){
-				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
+				_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
 				return 1;
 			}
 			if(setuid(pwd->pw_uid) == -1){
-				mqtt3_log_printf(MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
+				_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: %s.", strerror(errno));
 				return 1;
 			}
 		}
 		if(geteuid() == 0 || getegid() == 0){
-			mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Mosquitto should not be run as root/administrator.");
+			_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Mosquitto should not be run as root/administrator.");
 		}
 	}
 #endif
@@ -144,6 +144,21 @@ int main(int argc, char *argv[])
 	int listener_max;
 	int rc;
 
+#ifdef WIN32
+	if(argc == 2){
+		if(!strcmp(argv[1], "run")){
+			service_run();
+			return 0;
+		}else if(!strcmp(argv[1], "install")){
+			service_install();
+			return 0;
+		}else if(!strcmp(argv[1], "uninstall")){
+			service_uninstall();
+			return 0;
+		}
+	}
+#endif
+
 	memset(&int_db, 0, sizeof(mosquitto_db));
 
 	_mosquitto_net_init();
@@ -158,13 +173,13 @@ int main(int argc, char *argv[])
 			case 0:
 				break;
 			case -1:
-				mqtt3_log_printf(MOSQ_LOG_ERR, "Error in fork: %s", strerror(errno));
+				_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error in fork: %s", strerror(errno));
 				return 1;
 			default:
 				return MOSQ_ERR_SUCCESS;
 		}
 #else
-		mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Can't start in daemon mode in Windows.");
+		_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Can't start in daemon mode in Windows.");
 #endif
 	}
 
@@ -174,21 +189,21 @@ int main(int argc, char *argv[])
 			fprintf(pid, "%d", getpid());
 			fclose(pid);
 		}else{
-			mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Unable to write pid file.");
+			_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Unable to write pid file.");
 			return 1;
 		}
 	}
 	if(drop_privileges(&config)) return 1;
 
 	if(mqtt3_db_open(&config, &int_db)){
-		mqtt3_log_printf(MOSQ_LOG_ERR, "Error: Couldn't open database.");
+		_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Couldn't open database.");
 		return 1;
 	}
 
 	/* Initialise logging only after initialising the database in case we're
 	 * logging to topics */
 	mqtt3_log_init(config.log_type, config.log_dest);
-	mqtt3_log_printf(MOSQ_LOG_INFO, "mosquitto version %s (build date %s) starting", VERSION, TIMESTAMP);
+	_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "mosquitto version %s (build date %s) starting", VERSION, TIMESTAMP);
 
 	rc = mosquitto_security_init(&int_db);
 	if(rc) return rc;
@@ -253,7 +268,7 @@ int main(int argc, char *argv[])
 #ifdef WITH_BRIDGE
 	for(i=0; i<config.bridge_count; i++){
 		if(mqtt3_bridge_new(&int_db, &(config.bridges[i]))){
-			mqtt3_log_printf(MOSQ_LOG_WARNING, "Warning: Unable to connect to bridge %s.", 
+			_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Unable to connect to bridge %s.", 
 					config.bridges[i].name);
 		}
 	}
@@ -262,7 +277,7 @@ int main(int argc, char *argv[])
 	run = 1;
 	rc = mosquitto_main_loop(&int_db, listensock, listensock_count, listener_max);
 
-	mqtt3_log_printf(MOSQ_LOG_INFO, "mosquitto version %s terminating", VERSION);
+	_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "mosquitto version %s terminating", VERSION);
 	mqtt3_log_close();
 
 #ifdef WITH_PERSISTENCE

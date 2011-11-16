@@ -37,6 +37,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <send_mosq.h>
 #include <util_mosq.h>
 
+#ifdef WITH_BROKER
+#include <mqtt3.h>
+#endif
+
 int _mosquitto_packet_alloc(struct _mosquitto_packet *packet)
 {
 	uint8_t remaining_bytes[5], byte;
@@ -72,19 +76,24 @@ int _mosquitto_packet_alloc(struct _mosquitto_packet *packet)
 	return MOSQ_ERR_SUCCESS;
 }
 
-#ifndef WITH_BROKER
 void _mosquitto_check_keepalive(struct mosquitto *mosq)
 {
 	assert(mosq);
-	if(mosq->core.sock != INVALID_SOCKET && time(NULL) - mosq->core.last_msg_out >= mosq->core.keepalive){
-		if(mosq->core.state == mosq_cs_connected){
+	if(mosq->sock != INVALID_SOCKET && time(NULL) - mosq->last_msg_out >= mosq->keepalive){
+		if(mosq->state == mosq_cs_connected){
 			_mosquitto_send_pingreq(mosq);
 		}else{
-			_mosquitto_socket_close(&mosq->core);
+#ifdef WITH_BROKER
+			if(mosq->listener){
+				mosq->listener->client_count--;
+				assert(mosq->listener->client_count >= 0);
+			}
+			mosq->listener = NULL;
+#endif
+			_mosquitto_socket_close(mosq);
 		}
 	}
 }
-#endif
 
 /* Convert ////some////over/slashed///topic/etc/etc//
  * into some/over/slashed/topic/etc/etc
@@ -119,14 +128,14 @@ int _mosquitto_fix_sub_topic(char **subtopic)
 	return MOSQ_ERR_SUCCESS;
 }
 
-uint16_t _mosquitto_mid_generate(struct _mosquitto_core *core)
+uint16_t _mosquitto_mid_generate(struct mosquitto *mosq)
 {
-	assert(core);
+	assert(mosq);
 
-	core->last_mid++;
-	if(core->last_mid == 0) core->last_mid++;
+	mosq->last_mid++;
+	if(mosq->last_mid == 0) mosq->last_mid++;
 	
-	return core->last_mid;
+	return mosq->last_mid;
 }
 
 /* Search for + or # in a string. Return true if found. */

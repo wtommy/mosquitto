@@ -14,12 +14,13 @@ set (MOSQ_SRCS
 	net.c
 	../lib/net_mosq.c ../lib/net_mosq.h
 	persist.c persist.h
-	raw_send.c raw_send_server.c
 	read_handle.c read_handle_client.c read_handle_server.c
+	../lib/read_handle_shared.c ../lib/read_handle.h
 	subs.c
 	security.c security_external.c
-	../lib/send_base_mosq.c
 	../lib/send_client_mosq.c ../lib/send_mosq.h
+	../lib/send_mosq.c ../lib/send_mosq.h
+	send_server.c
 	util.c
 	../lib/util_mosq.c ../lib/util_mosq.h
 	../lib/will_mosq.c ../lib/will_mosq.h)
@@ -51,14 +52,15 @@ if (${INC_MEMTRACK} STREQUAL ON)
 	add_definitions("-DWITH_MEMORY_TRACKING")
 endif (${INC_MEMTRACK} STREQUAL ON)
 
-if (NOT WIN32)
-	option(WITH_PERSISTENCE
-		"Include persistence support?" ON)
-	if (${WITH_PERSISTENCE} STREQUAL ON)
-		add_definitions("-DWITH_PERSISTENCE")
-	endif (${WITH_PERSISTENCE} STREQUAL ON)
-endif (NOT WIN32)
+option(WITH_PERSISTENCE
+	"Include persistence support?" ON)
+if (${WITH_PERSISTENCE} STREQUAL ON)
+	add_definitions("-DWITH_PERSISTENCE")
+endif (${WITH_PERSISTENCE} STREQUAL ON)
 
+if (WIN32)
+	set (MOSQ_SRCS ${MOSQ_SRCS} service.c)
+endif (WIN32)
 
 option(WITH_EXTERNAL_SECURITY_CHECKS
 	"Use external security checks (needs additional code)?" OFF)
@@ -68,7 +70,7 @@ endif (${WITH_EXTERNAL_SECURITY_CHECKS} STREQUAL ON)
 
 add_definitions (-DWITH_BROKER)
 
-add_executable(mosquitto WIN32 ${MOSQ_SRCS})
+add_executable(mosquitto ${MOSQ_SRCS})
 
 if (NOT WIN32)
 	target_link_libraries(mosquitto ${MOSQ_LIBS})

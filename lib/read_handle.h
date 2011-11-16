@@ -29,6 +29,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef _READ_HANDLE_H_
 #define _READ_HANDLE_H_
 
+#include <mosquitto.h>
+struct _mosquitto_db;
+
 int _mosquitto_packet_handle(struct mosquitto *mosq);
 int _mosquitto_handle_connack(struct mosquitto *mosq);
 int _mosquitto_handle_pingreq(struct mosquitto *mosq);
@@ -36,7 +39,7 @@ int _mosquitto_handle_pingresp(struct mosquitto *mosq);
 int _mosquitto_handle_pubackcomp(struct mosquitto *mosq, const char *type);
 int _mosquitto_handle_publish(struct mosquitto *mosq);
 int _mosquitto_handle_pubrec(struct mosquitto *mosq);
-int _mosquitto_handle_pubrel(struct mosquitto *mosq);
+int _mosquitto_handle_pubrel(struct _mosquitto_db *db, struct mosquitto *mosq);
 int _mosquitto_handle_suback(struct mosquitto *mosq);
 int _mosquitto_handle_unsuback(struct mosquitto *mosq);
 

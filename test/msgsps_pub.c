@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 	mosquitto_connect(mosq, "127.0.0.1", 1885, 600, true);
 
 	i=0;
-	while(!mosquitto_loop(mosq, 1) && run){
+	while(!mosquitto_loop(mosq, -1) && run){
 		if(i<MESSAGE_COUNT){
 			mosquitto_publish(mosq, NULL, "perf/test", MESSAGE_SIZE, &buf[i*MESSAGE_SIZE], 0, false);
 			i++;

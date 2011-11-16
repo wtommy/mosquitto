@@ -37,7 +37,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <send_mosq.h>
 #include <util_mosq.h>
 
-int _mosquitto_send_connect(struct _mosquitto_core *core, uint16_t keepalive, bool clean_session)
+int _mosquitto_send_connect(struct mosquitto *mosq, uint16_t keepalive, bool clean_session)
 {
 	struct _mosquitto_packet *packet = NULL;
 	int payloadlen;
@@ -45,23 +45,23 @@ int _mosquitto_send_connect(struct _mosquitto_core *core, uint16_t keepalive, bo
 	uint8_t byte;
 	int rc;
 
-	assert(core);
-	assert(core->id);
+	assert(mosq);
+	assert(mosq->id);
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
 	if(!packet) return MOSQ_ERR_NOMEM;
 
-	payloadlen = 2+strlen(core->id);
-	if(core->will){
+	payloadlen = 2+strlen(mosq->id);
+	if(mosq->will){
 		will = 1;
-		assert(core->will->topic);
+		assert(mosq->will->topic);
 
-		payloadlen += 2+strlen(core->will->topic) + 2+core->will->payloadlen;
+		payloadlen += 2+strlen(mosq->will->topic) + 2+mosq->will->payloadlen;
 	}
-	if(core->username){
-		payloadlen += 2+strlen(core->username);
-		if(core->password){
-			payloadlen += 2+strlen(core->password);
+	if(mosq->username){
+		payloadlen += 2+strlen(mosq->username);
+		if(mosq->password){
+			payloadlen += 2+strlen(mosq->password);
 		}
 	}
 
@@ -78,11 +78,11 @@ int _mosquitto_send_connect(struct _mosquitto_core *core, uint16_t keepalive, bo
 	_mosquitto_write_byte(packet, PROTOCOL_VERSION);
 	byte = (clean_session&0x1)<<1;
 	if(will){
-		byte = byte | ((core->will->retain&0x1)<<5) | ((core->will->qos&0x3)<<3) | ((will&0x1)<<2);
+		byte = byte | ((mosq->will->retain&0x1)<<5) | ((mosq->will->qos&0x3)<<3) | ((will&0x1)<<2);
 	}
-	if(core->username){
+	if(mosq->username){
 		byte = byte | 0x1<<7;
-		if(core->password){
+		if(mosq->password){
 			byte = byte | 0x1<<6;
 		}
 	}
@@ -90,30 +90,29 @@ int _mosquitto_send_connect(struct _mosquitto_core *core, uint16_t keepalive, bo
 	_mosquitto_write_uint16(packet, keepalive);
 
 	/* Payload */
-	_mosquitto_write_string(packet, core->id, strlen(core->id));
+	_mosquitto_write_string(packet, mosq->id, strlen(mosq->id));
 	if(will){
-		_mosquitto_write_string(packet, core->will->topic, strlen(core->will->topic));
-		_mosquitto_write_string(packet, (const char *)core->will->payload, core->will->payloadlen);
+		_mosquitto_write_string(packet, mosq->will->topic, strlen(mosq->will->topic));
+		_mosquitto_write_string(packet, (const char *)mosq->will->payload, mosq->will->payloadlen);
 	}
-	if(core->username){
-		_mosquitto_write_string(packet, core->username, strlen(core->username));
-		if(core->password){
-			_mosquitto_write_string(packet, core->password, strlen(core->password));
+	if(mosq->username){
+		_mosquitto_write_string(packet, mosq->username, strlen(mosq->username));
+		if(mosq->password){
+			_mosquitto_write_string(packet, mosq->password, strlen(mosq->password));
 		}
 	}
 
-	core->keepalive = keepalive;
-	_mosquitto_packet_queue(core, packet);
-	return MOSQ_ERR_SUCCESS;
+	mosq->keepalive = keepalive;
+	return _mosquitto_packet_queue(mosq, packet);
 }
 
-int _mosquitto_send_disconnect(struct _mosquitto_core *core)
+int _mosquitto_send_disconnect(struct mosquitto *mosq)
 {
-	assert(core);
-	return _mosquitto_send_simple_command(core, DISCONNECT);
+	assert(mosq);
+	return _mosquitto_send_simple_command(mosq, DISCONNECT);
 }
 
-int _mosquitto_send_subscribe(struct _mosquitto_core *core, uint16_t *mid, bool dup, const char *topic, uint8_t topic_qos)
+int _mosquitto_send_subscribe(struct mosquitto *mosq, uint16_t *mid, bool dup, const char *topic, uint8_t topic_qos)
 {
 	/* FIXME - only deals with a single topic */
 	struct _mosquitto_packet *packet = NULL;
@@ -121,7 +120,7 @@ int _mosquitto_send_subscribe(struct _mosquitto_core *core, uint16_t *mid, bool 
 	uint16_t local_mid;
 	int rc;
 
-	assert(core);
+	assert(mosq);
 	assert(topic);
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
@@ -138,7 +137,7 @@ int _mosquitto_send_subscribe(struct _mosquitto_core *core, uint16_t *mid, bool 
 	}
 
 	/* Variable header */
-	local_mid = _mosquitto_mid_generate(core);
+	local_mid = _mosquitto_mid_generate(mosq);
 	if(mid) *mid = local_mid;
 	_mosquitto_write_uint16(packet, local_mid);
 
@@ -146,12 +145,11 @@ int _mosquitto_send_subscribe(struct _mosquitto_core *core, uint16_t *mid, bool 
 	_mosquitto_write_string(packet, topic, strlen(topic));
 	_mosquitto_write_byte(packet, topic_qos);
 
-	_mosquitto_packet_queue(core, packet);
-	return MOSQ_ERR_SUCCESS;
+	return _mosquitto_packet_queue(mosq, packet);
 }
 
 
-int _mosquitto_send_unsubscribe(struct _mosquitto_core *core, uint16_t *mid, bool dup, const char *topic)
+int _mosquitto_send_unsubscribe(struct mosquitto *mosq, uint16_t *mid, bool dup, const char *topic)
 {
 	/* FIXME - only deals with a single topic */
 	struct _mosquitto_packet *packet = NULL;
@@ -159,7 +157,7 @@ int _mosquitto_send_unsubscribe(struct _mosquitto_core *core, uint16_t *mid, boo
 	uint16_t local_mid;
 	int rc;
 
-	assert(core);
+	assert(mosq);
 	assert(topic);
 
 	packet = _mosquitto_calloc(1, sizeof(struct _mosquitto_packet));
@@ -176,14 +174,13 @@ int _mosquitto_send_unsubscribe(struct _mosquitto_core *core, uint16_t *mid, boo
 	}
 
 	/* Variable header */
-	local_mid = _mosquitto_mid_generate(core);
+	local_mid = _mosquitto_mid_generate(mosq);
 	if(mid) *mid = local_mid;
 	_mosquitto_write_uint16(packet, local_mid);
 
 	/* Payload */
 	_mosquitto_write_string(packet, topic, strlen(topic));
 
-	_mosquitto_packet_queue(core, packet);
-	return MOSQ_ERR_SUCCESS;
+	return _mosquitto_packet_queue(mosq, packet);
 }
 

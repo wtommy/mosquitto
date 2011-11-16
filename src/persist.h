@@ -40,7 +40,7 @@ const unsigned char magic[15] = {0x00, 0xB5, 0x00, 'm','o','s','q','u','i','t','
 #define DB_CHUNK_CLIENT 6
 /* End DB read/write */
 
-#define read_e(a, b, c) if(read(a, b, c) != c){ goto error; }
-#define write_e(a, b, c) if(write(a, b, c) != c){ goto error; }
+#define read_e(f, b, c) if(fread(b, 1, c, f) != c){ goto error; }
+#define write_e(f, b, c) if(fwrite(b, 1, c, f) != c){ goto error; }
 
 #endif

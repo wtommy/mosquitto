@@ -1,7 +1,0 @@
-<service>
-	<id>mosquitto-svc</id>
-	<name>Mosquitto</name>
-	<description>MQTTv3.1 broker</description>
-	<executable>mosquitto.exe</executable>
-	<arguments></arguments>
-</service>

@@ -291,7 +291,12 @@ class Mosquitto:
 		  mid argument in the on_publish() callback if it is defined."""
 
 		mid = c_uint16(0)
-		result = _mosquitto_publish(self._mosq, mid, topic, len(payload), cast(payload, POINTER(c_uint8)), qos, retain)
+		if payload == None
+			payloadlen = 0
+		else
+			payloadlen = len(payload)
+
+		result = _mosquitto_publish(self._mosq, mid, topic, payloadlen, cast(payload, POINTER(c_uint8)), qos, retain)
 		return result, mid.value
 
 	def will_set(self, topic, payload=None, qos=0, retain=False):
@@ -309,7 +314,12 @@ class Mosquitto:
 		Returns 0 on success.
 		Returns >1 on error."""
 
-		return _mosquitto_will_set(self._mosq, true, topic, len(payloadlen), cast(payload, POINTER(c_uint8)), qos, retain)
+		if payload == None
+			payloadlen = 0
+		else
+			payloadlen = len(payload)
+
+		return _mosquitto_will_set(self._mosq, true, topic, payloadlen, cast(payload, POINTER(c_uint8)), qos, retain)
 
 	def will_clear(self):
 		"""Clear a Will that was previously set with the will_set() call.

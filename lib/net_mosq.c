@@ -53,7 +53,23 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <netinet/in.h>
 #endif
 
+#ifdef WITH_BROKER
+#  include <mqtt3.h>
+   extern uint64_t bytes_received;
+   extern unsigned long msgs_received;
+   extern unsigned long msgs_sent;
+#else
+#  include <read_handle.h>
+#endif
+
+#ifndef WIN32
+#  define COMPAT_ECONNRESET ECONNRESET
+#else
+#  define COMPAT_ECONNRESET WSAECONNRESET
+#endif
+
 #include <memory_mosq.h>
+#include <mqtt3_protocol.h>
 #include <net_mosq.h>
 
 void _mosquitto_net_init(void)
@@ -92,41 +108,42 @@ void _mosquitto_packet_cleanup(struct _mosquitto_packet *packet)
 	packet->pos = 0;
 }
 
-void _mosquitto_packet_queue(struct _mosquitto_core *core, struct _mosquitto_packet *packet)
+int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *packet)
 {
 	struct _mosquitto_packet *tail;
 
-	assert(core);
+	assert(mosq);
 	assert(packet);
 
 	packet->pos = 0;
 	packet->to_process = packet->packet_length;
 
 	packet->next = NULL;
-	if(core->out_packet){
-		tail = core->out_packet;
+	if(mosq->out_packet){
+		tail = mosq->out_packet;
 		while(tail->next){
 			tail = tail->next;
 		}
 		tail->next = packet;
 	}else{
-		core->out_packet = packet;
+		mosq->out_packet = packet;
 	}
+	return _mosquitto_packet_write(mosq);
 }
 
 /* Close a socket associated with a context and set it to -1.
  * Returns 1 on failure (context is NULL)
  * Returns 0 on success.
  */
-int _mosquitto_socket_close(struct _mosquitto_core *core)
+int _mosquitto_socket_close(struct mosquitto *mosq)
 {
 	int rc = 0;
 
-	assert(core);
+	assert(mosq);
 	/* FIXME - need to shutdown SSL here. */
-	if(core->sock != INVALID_SOCKET){
-		rc = COMPAT_CLOSE(core->sock);
-		core->sock = INVALID_SOCKET;
+	if(mosq->sock != INVALID_SOCKET){
+		rc = COMPAT_CLOSE(mosq->sock);
+		mosq->sock = INVALID_SOCKET;
 	}
 
 	return rc;
@@ -136,7 +153,7 @@ int _mosquitto_socket_close(struct _mosquitto_core *core)
  * Returns -1 on failure (ip is NULL, socket creation/connection error)
  * Returns sock number on success.
  */
-int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, uint16_t port)
+int _mosquitto_socket_connect(struct mosquitto *mosq, const char *host, uint16_t port)
 {
 	int sock = INVALID_SOCKET;
 	int opt;
@@ -151,7 +168,7 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 	int ret;
 #endif
 
-	if(!core || !host || !port) return MOSQ_ERR_INVAL;
+	if(!mosq || !host || !port) return MOSQ_ERR_INVAL;
 
 	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = PF_UNSPEC;
@@ -187,15 +204,15 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 	freeaddrinfo(ainfo);
 
 #ifdef WITH_SSL
-	if(core->ssl){
-		core->ssl->bio = BIO_new_socket(sock, BIO_NOCLOSE);
-		if(!core->ssl->bio){
+	if(mosq->ssl){
+		mosq->ssl->bio = BIO_new_socket(sock, BIO_NOCLOSE);
+		if(!mosq->ssl->bio){
 			COMPAT_CLOSE(sock);
 			return MOSQ_ERR_SSL;
 		}
-		SSL_set_bio(core->ssl->ssl, core->ssl->bio, core->ssl->bio);
+		SSL_set_bio(mosq->ssl->ssl, mosq->ssl->bio, mosq->ssl->bio);
 
-		ret = SSL_connect(core->ssl->ssl);
+		ret = SSL_connect(mosq->ssl->ssl);
 		if(ret != 1){
 			COMPAT_CLOSE(sock);
 			return MOSQ_ERR_SSL;
@@ -208,9 +225,9 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 	opt = fcntl(sock, F_GETFL, 0);
 	if(opt == -1 || fcntl(sock, F_SETFL, opt | O_NONBLOCK) == -1){
 #ifdef WITH_SSL
-		if(core->ssl){
-			_mosquitto_free(core->ssl);
-			core->ssl = NULL;
+		if(mosq->ssl){
+			_mosquitto_free(mosq->ssl);
+			mosq->ssl = NULL;
 		}
 #endif
 		COMPAT_CLOSE(sock);
@@ -219,9 +236,9 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 #else
 	if(ioctlsocket(sock, FIONBIO, &val)){
 #ifdef WITH_SSL
-		if(core->ssl){
-			_mosquitto_free(core->ssl);
-			core->ssl = NULL;
+		if(mosq->ssl){
+			_mosquitto_free(mosq->ssl);
+			mosq->ssl = NULL;
 		}
 #endif
 		COMPAT_CLOSE(sock);
@@ -229,7 +246,7 @@ int _mosquitto_socket_connect(struct _mosquitto_core *core, const char *host, ui
 	}
 #endif
 
-	core->sock = sock;
+	mosq->sock = sock;
 
 	return MOSQ_ERR_SUCCESS;
 }
@@ -326,25 +343,25 @@ void _mosquitto_write_uint16(struct _mosquitto_packet *packet, uint16_t word)
 	_mosquitto_write_byte(packet, MOSQ_LSB(word));
 }
 
-ssize_t _mosquitto_net_read(struct _mosquitto_core *core, void *buf, size_t count)
+ssize_t _mosquitto_net_read(struct mosquitto *mosq, void *buf, size_t count)
 {
 #ifdef WITH_SSL
 	int ret;
 	int err;
 #endif
-	assert(core);
+	assert(mosq);
 #ifdef WITH_SSL
-	if(core->ssl){
-		ret = SSL_read(core->ssl->ssl, buf, count);
+	if(mosq->ssl){
+		ret = SSL_read(mosq->ssl->ssl, buf, count);
 		if(ret < 0){
-			err = SSL_get_error(core->ssl->ssl, ret);
+			err = SSL_get_error(mosq->ssl->ssl, ret);
 			if(err == SSL_ERROR_WANT_READ){
 				ret = -1;
-				core->ssl->want_read = true;
+				mosq->ssl->want_read = true;
 				errno = EAGAIN;
 			}else if(err == SSL_ERROR_WANT_WRITE){
 				ret = -1;
-				core->ssl->want_write = true;
+				mosq->ssl->want_write = true;
 				errno = EAGAIN;
 			}
 		}
@@ -355,9 +372,9 @@ ssize_t _mosquitto_net_read(struct _mosquitto_core *core, void *buf, size_t coun
 #endif
 
 #ifndef WIN32
-	return read(core->sock, buf, count);
+	return read(mosq->sock, buf, count);
 #else
-	return recv(core->sock, buf, count, 0);
+	return recv(mosq->sock, buf, count, 0);
 #endif
 
 #ifdef WITH_SSL
@@ -365,25 +382,25 @@ ssize_t _mosquitto_net_read(struct _mosquitto_core *core, void *buf, size_t coun
 #endif
 }
 
-ssize_t _mosquitto_net_write(struct _mosquitto_core *core, void *buf, size_t count)
+ssize_t _mosquitto_net_write(struct mosquitto *mosq, void *buf, size_t count)
 {
 #ifdef WITH_SSL
 	int ret;
 	int err;
 #endif
-	assert(core);
+	assert(mosq);
 
 #ifdef WITH_SSL
-	if(core->ssl){
-		ret = SSL_write(core->ssl->ssl, buf, count);
+	if(mosq->ssl){
+		ret = SSL_write(mosq->ssl->ssl, buf, count);
 		if(ret < 0){
-			err = SSL_get_error(core->ssl->ssl, ret);
+			err = SSL_get_error(mosq->ssl->ssl, ret);
 			if(err == SSL_ERROR_WANT_READ){
 				ret = -1;
-				core->ssl->want_read = true;
+				mosq->ssl->want_read = true;
 			}else if(err == SSL_ERROR_WANT_WRITE){
 				ret = -1;
-				core->ssl->want_write = true;
+				mosq->ssl->want_write = true;
 			}
 		}
 		return (ssize_t )ret;
@@ -392,13 +409,212 @@ ssize_t _mosquitto_net_write(struct _mosquitto_core *core, void *buf, size_t cou
 #endif
 
 #ifndef WIN32
-	return write(core->sock, buf, count);
+	return write(mosq->sock, buf, count);
 #else
-	return send(core->sock, buf, count, 0);
+	return send(mosq->sock, buf, count, 0);
 #endif
 
 #ifdef WITH_SSL
 	}
 #endif
+}
+
+int _mosquitto_packet_write(struct mosquitto *mosq)
+{
+	ssize_t write_length;
+	struct _mosquitto_packet *packet;
+
+	if(!mosq) return MOSQ_ERR_INVAL;
+	if(mosq->sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
+
+	while(mosq->out_packet){
+		packet = mosq->out_packet;
+
+		while(packet->to_process > 0){
+			write_length = _mosquitto_net_write(mosq, &(packet->payload[packet->pos]), packet->to_process);
+			if(write_length > 0){
+				packet->to_process -= write_length;
+				packet->pos += write_length;
+			}else{
+#ifndef WIN32
+				if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+				if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
+					return MOSQ_ERR_SUCCESS;
+				}else{
+					switch(errno){
+						case COMPAT_ECONNRESET:
+							return MOSQ_ERR_CONN_LOST;
+						default:
+							return MOSQ_ERR_UNKNOWN;
+					}
+				}
+			}
+		}
+
+#ifdef WITH_BROKER
+		msgs_sent++;
+#else
+		if(((packet->command)&0xF6) == PUBLISH && mosq->on_publish){
+			/* This is a QoS=0 message */
+			mosq->on_publish(mosq->obj, packet->mid);
+		}
+#endif
+
+		/* Free data and reset values */
+		mosq->out_packet = packet->next;
+		_mosquitto_packet_cleanup(packet);
+		_mosquitto_free(packet);
+
+		mosq->last_msg_out = time(NULL);
+	}
+	return MOSQ_ERR_SUCCESS;
+}
+
+#ifdef WITH_BROKER
+int _mosquitto_packet_read(mosquitto_db *db, int context_index)
+#else
+int _mosquitto_packet_read(struct mosquitto *mosq)
+#endif
+{
+	uint8_t byte;
+	ssize_t read_length;
+	int rc = 0;
+#ifdef WITH_BROKER
+	struct mosquitto *mosq;
+
+	if(context_index < 0 || context_index >= db->context_count) return MOSQ_ERR_INVAL;
+	mosq = db->contexts[context_index];
+#endif
+
+	if(!mosq) return MOSQ_ERR_INVAL;
+	if(mosq->sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
+	/* This gets called if pselect() indicates that there is network data
+	 * available - ie. at least one byte.  What we do depends on what data we
+	 * already have.
+	 * If we've not got a command, attempt to read one and save it. This should
+	 * always work because it's only a single byte.
+	 * Then try to read the remaining length. This may fail because it is may
+	 * be more than one byte - will need to save data pending next read if it
+	 * does fail.
+	 * Then try to read the remaining payload, where 'payload' here means the
+	 * combined variable header and actual payload. This is the most likely to
+	 * fail due to longer length, so save current data and current position.
+	 * After all data is read, send to _mosquitto_handle_packet() to deal with.
+	 * Finally, free the memory and reset everything to starting conditions.
+	 */
+	if(!mosq->in_packet.command){
+		read_length = _mosquitto_net_read(mosq, &byte, 1);
+		if(read_length == 1){
+			mosq->in_packet.command = byte;
+#ifdef WITH_BROKER
+			bytes_received++;
+			/* Clients must send CONNECT as their first command. */
+			if(!(mosq->bridge) && mosq->state == mosq_cs_new && (byte&0xF0) != CONNECT) return 1;
+#endif
+		}else{
+			if(read_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */
+#ifndef WIN32
+			if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+			if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
+				return MOSQ_ERR_SUCCESS;
+			}else{
+				switch(errno){
+					case COMPAT_ECONNRESET:
+						return MOSQ_ERR_CONN_LOST;
+					default:
+						return MOSQ_ERR_UNKNOWN;
+				}
+			}
+		}
+	}
+	if(!mosq->in_packet.have_remaining){
+		/* Read remaining
+		 * Algorithm for decoding taken from pseudo code at
+		 * http://publib.boulder.ibm.com/infocenter/wmbhelp/v6r0m0/topic/com.ibm.etools.mft.doc/ac10870_.htm
+		 */
+		do{
+			read_length = _mosquitto_net_read(mosq, &byte, 1);
+			if(read_length == 1){
+				mosq->in_packet.remaining_count++;
+				/* Max 4 bytes length for remaining length as defined by protocol.
+				 * Anything more likely means a broken/malicious client.
+				 */
+				if(mosq->in_packet.remaining_count > 4) return MOSQ_ERR_PROTOCOL;
+
+#ifdef WITH_BROKER
+				bytes_received++;
+#endif
+				mosq->in_packet.remaining_length += (byte & 127) * mosq->in_packet.remaining_mult;
+				mosq->in_packet.remaining_mult *= 128;
+			}else{
+				if(read_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */
+#ifndef WIN32
+				if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+				if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
+					return MOSQ_ERR_SUCCESS;
+				}else{
+					switch(errno){
+						case COMPAT_ECONNRESET:
+							return MOSQ_ERR_CONN_LOST;
+						default:
+							return MOSQ_ERR_UNKNOWN;
+					}
+				}
+			}
+		}while((byte & 128) != 0);
+
+		if(mosq->in_packet.remaining_length > 0){
+			mosq->in_packet.payload = _mosquitto_malloc(mosq->in_packet.remaining_length*sizeof(uint8_t));
+			if(!mosq->in_packet.payload) return MOSQ_ERR_NOMEM;
+			mosq->in_packet.to_process = mosq->in_packet.remaining_length;
+		}
+		mosq->in_packet.have_remaining = 1;
+	}
+	while(mosq->in_packet.to_process>0){
+		read_length = _mosquitto_net_read(mosq, &(mosq->in_packet.payload[mosq->in_packet.pos]), mosq->in_packet.to_process);
+		if(read_length > 0){
+#ifdef WITH_BROKER
+			bytes_received += read_length;
+#endif
+			mosq->in_packet.to_process -= read_length;
+			mosq->in_packet.pos += read_length;
+		}else{
+#ifndef WIN32
+			if(errno == EAGAIN || errno == EWOULDBLOCK){
+#else
+			if(WSAGetLastError() == WSAEWOULDBLOCK){
+#endif
+				return MOSQ_ERR_SUCCESS;
+			}else{
+				switch(errno){
+					case COMPAT_ECONNRESET:
+						return MOSQ_ERR_CONN_LOST;
+					default:
+						return MOSQ_ERR_UNKNOWN;
+				}
+			}
+		}
+	}
+
+	/* All data for this packet is read. */
+	mosq->in_packet.pos = 0;
+#ifdef WITH_BROKER
+	msgs_received++;
+	rc = mqtt3_packet_handle(db, context_index);
+#else
+	rc = _mosquitto_packet_handle(mosq);
+#endif
+
+	/* Free data and reset values */
+	_mosquitto_packet_cleanup(&mosq->in_packet);
+
+	mosq->last_msg_in = time(NULL);
+	return rc;
 }
 

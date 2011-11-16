@@ -35,13 +35,13 @@ extern "C" {
 #endif
 
 #ifdef _WIN32
-#ifdef libmosquitto_EXPORTS
-#define libmosq_EXPORT  __declspec(dllexport)
+#	ifdef libmosquitto_EXPORTS
+#		define libmosq_EXPORT  __declspec(dllexport)
+#	else
+#		define libmosq_EXPORT  __declspec(dllimport)
+#	endif
 #else
-#define libmosq_EXPORT  __declspec(dllimport)
-#endif
-#else
-#define libmosq_EXPORT
+#	define libmosq_EXPORT
 #endif
 
 #ifdef WIN32
@@ -64,7 +64,7 @@ extern "C" {
 #endif
 
 #define LIBMOSQUITTO_MAJOR 0
-#define LIBMOSQUITTO_MINOR 13
+#define LIBMOSQUITTO_MINOR 14
 #define LIBMOSQUITTO_REVISION 0
 #define LIBMOSQUITTO_VERSION_NUMBER (LIBMOSQUITTO_MAJOR*1000000+LIBMOSQUITTO_MINOR*1000+LIBMOSQUITTO_REVISION)
 
