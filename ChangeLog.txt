@@ -1,6 +1,7 @@
 0.14 - 20111116
 ===============
 
+- Add support for matching ACLs based on client id and username.
 - Add a Windows installer file (NSIS based).
 - Add native support for running the broker as a Windows service. This is the
   default when installed using the new installer.

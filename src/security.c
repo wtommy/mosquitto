@@ -204,6 +204,78 @@ int _add_acl(struct _mosquitto_db *db, const char *user, const char *topic, int 
 	return MOSQ_ERR_SUCCESS;
 }
 
+int _add_acl_pattern(struct _mosquitto_db *db, const char *topic, int access)
+{
+	struct _mosquitto_acl *acl, *acl_root=NULL, *acl_tail=NULL;
+	char *local_topic;
+	char *token = NULL;
+
+	if(!db || !topic) return MOSQ_ERR_INVAL;
+
+	local_topic = _mosquitto_strdup(topic);
+	if(!local_topic){
+		return MOSQ_ERR_NOMEM;
+	}
+
+	/* Tokenise topic */
+	if(local_topic[0] == '/'){
+		acl_root = _mosquitto_malloc(sizeof(struct _mosquitto_acl));
+		if(!acl_root) return MOSQ_ERR_NOMEM;
+		acl_tail = acl_root;
+		acl_root->child = NULL;
+		acl_root->next = NULL;
+		acl_root->access = MOSQ_ACL_NONE;
+		acl_root->topic = _mosquitto_strdup("/");
+		if(!acl_root->topic) return MOSQ_ERR_NOMEM;
+
+		token = strtok(local_topic+1, "/");
+	}else{
+		token = strtok(local_topic, "/");
+	}
+
+	while(token){
+		acl = _mosquitto_malloc(sizeof(struct _mosquitto_acl));
+		if(!acl) return MOSQ_ERR_NOMEM;
+		acl->child = NULL;
+		acl->next = NULL;
+		acl->access = MOSQ_ACL_NONE;
+		acl->topic = _mosquitto_strdup(token);
+		if(!acl->topic) return MOSQ_ERR_NOMEM;
+		if(acl_root){
+			acl_tail->child = acl;
+			acl_tail = acl;
+		}else{
+			acl_root = acl;
+			acl_tail = acl;
+		}
+
+		token = strtok(NULL, "/");
+	}
+
+	if(acl_root){
+		acl_tail = acl_root;
+		while(acl_tail->child){
+			acl_tail = acl_tail->child;
+		}
+		acl_tail->access = access;
+
+		if(db->acl_patterns){
+			acl_tail = db->acl_patterns;
+			while(acl_tail->next){
+				acl_tail = acl_tail->next;
+			}
+			acl_tail->next = acl_root;
+		}else{
+			db->acl_patterns = acl_root;
+		}
+	}else{
+		return MOSQ_ERR_INVAL;
+	}
+
+	_mosquitto_free(local_topic);
+	return MOSQ_ERR_SUCCESS;
+}
+
 int mosquitto_acl_check(struct _mosquitto_db *db, struct mosquitto *context, const char *topic, int access)
 {
 	char *local_topic;
@@ -212,9 +284,13 @@ int mosquitto_acl_check(struct _mosquitto_db *db, struct mosquitto *context, con
 
 	if(!db || !context || !topic) return MOSQ_ERR_INVAL;
 	if(!db->acl_list) return MOSQ_ERR_SUCCESS;
-	if(!context->acl_list) return MOSQ_ERR_ACL_DENIED;
+	if(!context->acl_list && !db->acl_patterns) return MOSQ_ERR_ACL_DENIED;
 
-	acl_root = context->acl_list->acl;
+	if(context->acl_list){
+		acl_root = context->acl_list->acl;
+	}else{
+		acl_root = NULL;
+	}
 
 	/* Loop through all ACLs for this client. */
 	while(acl_root){
@@ -269,6 +345,92 @@ int mosquitto_acl_check(struct _mosquitto_db *db, struct mosquitto *context, con
 		acl_root = acl_root->next;
 	}
 
+	acl_root = db->acl_patterns;
+	/* Loop through all pattern ACLs. */
+	while(acl_root){
+		local_topic = _mosquitto_strdup(topic);
+		if(!local_topic) return MOSQ_ERR_NOMEM;
+
+		acl_tail = acl_root;
+
+		if(local_topic[0] == '/'){
+			if(strcmp(acl_tail->topic, "/")){
+				acl_root = acl_root->next;
+				continue;
+			}
+			acl_tail = acl_tail->child;
+		}
+
+		token = strtok(local_topic, "/");
+		/* Loop through the topic looking for matches to this ACL. */
+		while(token){
+			if(acl_tail){
+				if(!strcmp(acl_tail->topic, "#") && acl_tail->child == NULL){
+					/* We have a match */
+					if(access & acl_tail->access){
+						/* And access is allowed. */
+						_mosquitto_free(local_topic);
+						return MOSQ_ERR_SUCCESS;
+					}else{
+						break;
+					}
+				}else if(!strcmp(acl_tail->topic, "%c")){
+					if(!context->id || strcmp(token, context->id)){
+						/* No access */
+						break;
+					}
+					token = strtok(NULL, "/");
+					if(!token && acl_tail->child == NULL){
+						/* We have a match */
+						if(access & acl_tail->access){
+							/* And access is allowed. */
+							_mosquitto_free(local_topic);
+							return MOSQ_ERR_SUCCESS;
+						}else{
+							break;
+						}
+					}
+				}else if(!strcmp(acl_tail->topic, "%u")){
+					if(!context->username || strcmp(token, context->username)){
+						/* No access */
+						break;
+					}
+					token = strtok(NULL, "/");
+					if(!token && acl_tail->child == NULL){
+						/* We have a match */
+						if(access & acl_tail->access){
+							/* And access is allowed. */
+							_mosquitto_free(local_topic);
+							return MOSQ_ERR_SUCCESS;
+						}else{
+							break;
+						}
+					}
+				}else if(!strcmp(acl_tail->topic, token) || !strcmp(acl_tail->topic, "+")){
+					token = strtok(NULL, "/");
+					if(!token && acl_tail->child == NULL){
+						/* We have a match */
+						if(access & acl_tail->access){
+							/* And access is allowed. */
+							_mosquitto_free(local_topic);
+							return MOSQ_ERR_SUCCESS;
+						}else{
+							break;
+						}
+					}
+				}else{
+					break;
+				}
+				acl_tail = acl_tail->child;
+			}else{
+				break;
+			}
+		}
+		_mosquitto_free(local_topic);
+
+		acl_root = acl_root->next;
+	}
+
 	return MOSQ_ERR_ACL_DENIED;
 }
 
@@ -283,6 +445,7 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 	int access;
 	int rc;
 	int slen;
+	int topic_pattern;
 
 	if(!db || !db->config) return MOSQ_ERR_INVAL;
 	if(!db->config->acl_file) return MOSQ_ERR_SUCCESS;
@@ -301,7 +464,13 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 		}
 		token = strtok(buf, " ");
 		if(token){
-			if(!strcmp(token, "topic")){
+			if(!strcmp(token, "topic") || !strcmp(token, "pattern")){
+				if(!strcmp(token, "topic")){
+					topic_pattern = 0;
+				}else{
+					topic_pattern = 1;
+				}
+
 				access_s = strtok(NULL, " ");
 				if(!access_s){
 					_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Empty topic in acl_file.");
@@ -330,7 +499,11 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 				}else{
 					access = MOSQ_ACL_READ | MOSQ_ACL_WRITE;
 				}
-				rc = _add_acl(db, user, topic, access);
+				if(topic_pattern == 0){
+					rc = _add_acl(db, user, topic, access);
+				}else{
+					rc = _add_acl_pattern(db, topic, access);
+				}
 				if(rc) return rc;
 			}else if(!strcmp(token, "user")){
 				token = strtok(NULL, " ");
@@ -404,6 +577,10 @@ void mosquitto_acl_cleanup(struct _mosquitto_db *db)
 		_mosquitto_free(db->acl_list);
 		
 		db->acl_list = user_tail;
+	}
+
+	if(db->acl_patterns){
+		_free_acl(db->acl_patterns);
 	}
 }
 

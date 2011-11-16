@@ -65,9 +65,32 @@
 
 					<para>The username referred to here is the same as in
 					password_file. It is not the clientid.</para>
+
+					<para>It is also possible to define ACLs based on pattern
+					substitution within the topic. The form is the same as for
+					the topic keyword, but using pattern as the keyword.</para>
+					<para><code>pattern [read|write] &lt;topic&gt;</code></para>
+					
+					<para>The patterns available for substition are:</para>
+					<itemizedlist mark="circle">
+						<listitem><para>%c to match the client id of the client</para></listitem>
+						<listitem><para>%u to match the username of the client</para></listitem>
+					<!-- BUG - putting itemizedlist close tag here breaks the
+						 indentation of the man page. -->
+					<para>The substitution pattern must be the only text for
+					that level of hierarchy. Pattern ACLs apply to all users
+					even if the "user" keyword has previously been
+					given.</para>
+
+					<para>Example:</para>
+					<para><code>pattern write sensor/%u/data</code></para>
+
 					<para>Reloaded on reload signal. The currently loaded ACLs will be
 					freed and reloaded. Existing subscriptions will be affected
 					after the reload.</para>
+
+					<!-- BUG - this should be above. -->
+					</itemizedlist>
 				</listitem>
 			</varlistentry>
 			<varlistentry>

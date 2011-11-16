@@ -181,6 +181,7 @@ typedef struct _mosquitto_db{
 	struct _mosquitto_subhier subs;
 	struct _mosquitto_unpwd *unpwd;
 	struct _mosquitto_acl_user *acl_list;
+	struct _mosquitto_acl *acl_patterns;
 	struct mosquitto **contexts;
 	int context_count;
 	struct mosquitto_msg_store *msg_store;
