@@ -1,6 +1,9 @@
 0.14 - 2011xxxx
 ===============
 
+- Add a Windows installer file (NSIS based).
+- Add native support for running the broker as a Windows service. This is the
+  default when installed using the new installer.
 - Fix client count for listeners. When clients disconnect, decrement the
   count. Allow max_connections to work again.
 - Attempt to send all packets immediately upon being queued. This will result
@@ -10,6 +13,9 @@
 - Fix payload length calculation in python will_set function.
 - Fix Python publish and will_set functions for payload=None.
 - Fix keepalive value being lost when reconnecting a client (bug #880863).
+- Persistence file writing now uses portable file functions, so the Cygwin
+  broker build should no longer be necessary.
+- Duplicate code between the client and broker side has been reduced.
 
 0.13 - 20110920
 ===============
