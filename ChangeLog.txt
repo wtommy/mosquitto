@@ -16,6 +16,9 @@
 - Persistence file writing now uses portable file functions, so the Cygwin
   broker build should no longer be necessary.
 - Duplicate code between the client and broker side has been reduced.
+- Queued messages for clients reconnecting with clean_session=false set were
+  not being sent until the next message for that client was received. This has
+  been fixed (bug #890724).
 
 0.13 - 20110920
 ===============
