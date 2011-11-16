@@ -49,7 +49,7 @@ Section "Files" SecInstall
 	File "..\mosquitto.conf"
 	File "..\pwfile.example"
 	File "..\readme.txt"
-	;File "..\readme-windows.txt"
+	File "..\readme-windows.txt"
 
 	SetOutPath "$INSTDIR\devel"
 	File "..\lib\mosquitto.h"
@@ -92,7 +92,7 @@ Section "Uninstall"
 	Delete "$INSTDIR\mosquitto.conf"
 	Delete "$INSTDIR\pwfile.example"
 	Delete "$INSTDIR\readme.txt"
-	;Delete "$INSTDIR\readme-windows.txt"
+	Delete "$INSTDIR\readme-windows.txt"
 
 	Delete "$INSTDIR\devel\mosquitto.h"
 	Delete "$INSTDIR\devel\mosquitto.lib"
