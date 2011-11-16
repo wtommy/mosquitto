@@ -52,13 +52,11 @@ if (${INC_MEMTRACK} STREQUAL ON)
 	add_definitions("-DWITH_MEMORY_TRACKING")
 endif (${INC_MEMTRACK} STREQUAL ON)
 
-if (NOT WIN32)
-	option(WITH_PERSISTENCE
-		"Include persistence support?" ON)
-	if (${WITH_PERSISTENCE} STREQUAL ON)
-		add_definitions("-DWITH_PERSISTENCE")
-	endif (${WITH_PERSISTENCE} STREQUAL ON)
-endif (NOT WIN32)
+option(WITH_PERSISTENCE
+	"Include persistence support?" ON)
+if (${WITH_PERSISTENCE} STREQUAL ON)
+	add_definitions("-DWITH_PERSISTENCE")
+endif (${WITH_PERSISTENCE} STREQUAL ON)
 
 if (WIN32)
 	set (MOSQ_SRCS ${MOSQ_SRCS} service.c)
