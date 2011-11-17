@@ -291,9 +291,9 @@ class Mosquitto:
 		  mid argument in the on_publish() callback if it is defined."""
 
 		mid = c_uint16(0)
-		if payload == None
+		if payload == None:
 			payloadlen = 0
-		else
+		else:
 			payloadlen = len(payload)
 
 		result = _mosquitto_publish(self._mosq, mid, topic, payloadlen, cast(payload, POINTER(c_uint8)), qos, retain)
@@ -314,9 +314,9 @@ class Mosquitto:
 		Returns 0 on success.
 		Returns >1 on error."""
 
-		if payload == None
+		if payload == None:
 			payloadlen = 0
-		else
+		else:
 			payloadlen = len(payload)
 
 		return _mosquitto_will_set(self._mosq, true, topic, payloadlen, cast(payload, POINTER(c_uint8)), qos, retain)
