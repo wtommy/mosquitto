@@ -132,14 +132,18 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 	switch(message->msg.qos){
 		case 0:
 			if(mosq->on_message){
+				mosq->in_callback = true;
 				mosq->on_message(mosq->obj, &message->msg);
+				mosq->in_callback = false;
 			}
 			_mosquitto_message_cleanup(&message);
 			return MOSQ_ERR_SUCCESS;
 		case 1:
 			rc = _mosquitto_send_puback(mosq, message->msg.mid);
 			if(mosq->on_message){
+				mosq->in_callback = true;
 				mosq->on_message(mosq->obj, &message->msg);
+				mosq->in_callback = false;
 			}
 			_mosquitto_message_cleanup(&message);
 			return rc;

@@ -128,7 +128,11 @@ int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *pa
 	}else{
 		mosq->out_packet = packet;
 	}
-	return _mosquitto_packet_write(mosq);
+	if(mosq->in_callback == false){
+		return _mosquitto_packet_write(mosq);
+	}else{
+		return MOSQ_ERR_SUCCESS;
+	}
 }
 
 /* Close a socket associated with a context and set it to -1.
@@ -458,7 +462,9 @@ int _mosquitto_packet_write(struct mosquitto *mosq)
 #else
 		if(((packet->command)&0xF6) == PUBLISH && mosq->on_publish){
 			/* This is a QoS=0 message */
+			mosq->in_callback = true;
 			mosq->on_publish(mosq->obj, packet->mid);
+			mosq->in_callback = false;
 		}
 #endif
 
