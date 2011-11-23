@@ -128,11 +128,15 @@ int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *pa
 	}else{
 		mosq->out_packet = packet;
 	}
+#ifdef WITH_BROKER
+	return _mosquitto_packet_write(mosq);
+#else
 	if(mosq->in_callback == false){
 		return _mosquitto_packet_write(mosq);
 	}else{
 		return MOSQ_ERR_SUCCESS;
 	}
+#endif
 }
 
 /* Close a socket associated with a context and set it to -1.
