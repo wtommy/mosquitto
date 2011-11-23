@@ -6,7 +6,7 @@ project(mosquitto)
 
 cmake_minimum_required(VERSION 2.6)
 
-set (VERSION 0.14.1)
+set (VERSION 0.14.2)
 
 if (WIN32)
 	execute_process(COMMAND echo "%DATE% %TIME%" OUTPUT_VARIABLE TIMESTAMP

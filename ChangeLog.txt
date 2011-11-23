@@ -1,5 +1,5 @@
-0.xx - 20xxxxxx
-===============
+0.14.2 - 20111123
+=================
 
 - Add uninstall target for libs.
 - Don't try to write packet whilst in a callback.
