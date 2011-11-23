@@ -11,6 +11,11 @@ install : all
 	$(INSTALL) -d ${DESTDIR}${prefix}/include/
 	$(INSTALL) mosquittopp.h ${DESTDIR}${prefix}/include/mosquittopp.h
 	
+uninstall :
+	-rm -f ${DESTDIR}${prefix}/lib${LIB_SUFFIX}/libmosquittopp.so.0
+	-rm -f ${DESTDIR}${prefix}/lib${LIB_SUFFIX}/libmosquittopp.so
+	-rm -f ${DESTDIR}${prefix}/include/mosquittopp.h
+
 clean :
 	-rm -f *.o libmosquittopp.so.0
 

@@ -127,6 +127,7 @@ struct mosquitto {
 	struct _mqtt3_listener *listener;
 #else
 	void *obj;
+	bool in_callback;
 	unsigned int message_retry;
 	time_t last_retry_check;
 	struct mosquitto_message_all *messages;

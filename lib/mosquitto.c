@@ -118,6 +118,7 @@ struct mosquitto *mosquitto_new(const char *id, void *obj)
 		mosq->log_priorities = MOSQ_LOG_ERR | MOSQ_LOG_WARNING | MOSQ_LOG_NOTICE | MOSQ_LOG_INFO;
 		mosq->host = NULL;
 		mosq->port = 1883;
+		mosq->in_callback = false;
 #ifdef WITH_SSL
 		mosq->ssl = NULL;
 #endif
@@ -387,7 +388,9 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 					rc = MOSQ_ERR_SUCCESS;
 				}
 				if(mosq->on_disconnect){
+					mosq->in_callback = true;
 					mosq->on_disconnect(mosq->obj);
+					mosq->in_callback = false;
 				}
 				return rc;
 			}
@@ -400,7 +403,9 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 					rc = MOSQ_ERR_SUCCESS;
 				}
 				if(mosq->on_disconnect){
+					mosq->in_callback = true;
 					mosq->on_disconnect(mosq->obj);
+					mosq->in_callback = false;
 				}
 				return rc;
 			}

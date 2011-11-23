@@ -101,7 +101,9 @@ int _mosquitto_handle_pubackcomp(struct mosquitto *mosq, const char *type)
 	if(!_mosquitto_message_delete(mosq, mid, mosq_md_out)){
 		/* Only inform the client the message has been sent once. */
 		if(mosq->on_publish){
+			mosq->in_callback = true;
 			mosq->on_publish(mosq->obj, mid);
+			mosq->in_callback = false;
 		}
 	}
 #endif
@@ -165,7 +167,9 @@ int _mosquitto_handle_pubrel(struct _mosquitto_db *db, struct mosquitto *mosq)
 		/* Only pass the message on if we have removed it from the queue - this
 		 * prevents multiple callbacks for the same message. */
 		if(mosq->on_message){
+			mosq->in_callback = true;
 			mosq->on_message(mosq->obj, &message->msg);
+			mosq->in_callback = false;
 		}else{
 			_mosquitto_message_cleanup(&message);
 		}
@@ -207,7 +211,9 @@ int _mosquitto_handle_suback(struct mosquitto *mosq)
 	}
 #ifndef WITH_BROKER
 	if(mosq->on_subscribe){
+		mosq->in_callback = true;
 		mosq->on_subscribe(mosq->obj, mid, qos_count, granted_qos);
+		mosq->in_callback = false;
 	}
 #endif
 	_mosquitto_free(granted_qos);
@@ -234,7 +240,11 @@ int _mosquitto_handle_unsuback(struct mosquitto *mosq)
 	rc = _mosquitto_read_uint16(&mosq->in_packet, &mid);
 	if(rc) return rc;
 #ifndef WITH_BROKER
-	if(mosq->on_unsubscribe) mosq->on_unsubscribe(mosq->obj, mid);
+	if(mosq->on_unsubscribe){
+		mosq->in_callback = true;
+	   	mosq->on_unsubscribe(mosq->obj, mid);
+		mosq->in_callback = false;
+	}
 #endif
 
 	return MOSQ_ERR_SUCCESS;

@@ -15,6 +15,11 @@ install : all
 	make -C cpp install
 	make -C python install
 
+uninstall :
+	-rm -f ${DESTDIR}${prefix}/lib${LIB_SUFFIX}/libmosquitto.so.0
+	-rm -f ${DESTDIR}${prefix}/lib${LIB_SUFFIX}/libmosquitto.so
+	-rm -f ${DESTDIR}${prefix}/include/mosquitto.h
+
 clean :
 	-rm -f *.o libmosquitto.so.0 libmosquitto.so
 	make -C cpp clean
