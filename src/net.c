@@ -76,7 +76,7 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 #endif
 
 	new_sock = accept(listensock, NULL, 0);
-	if(new_sock < 0) return -1;
+	if(new_sock == INVALID_SOCKET) return -1;
 
 #ifndef WIN32
 	/* Set non-blocking */

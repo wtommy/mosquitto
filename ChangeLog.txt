@@ -2,6 +2,7 @@
 =================
 
 - Fix potential crash when client connects with an invalid CONNECT packet.
+- Fix incorrect invalid socket comparison on Windows.
 
 0.14.2 - 20111123
 =================

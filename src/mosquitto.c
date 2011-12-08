@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 		for(j=0; j<config.listeners[i].sock_count; j++){
-			if(config.listeners[i].socks[j] < 0){
+			if(config.listeners[i].socks[j] == INVALID_SOCKET){
 				_mosquitto_free(int_db.contexts);
 				mqtt3_db_close(&int_db);
 				if(config.pid_file){
@@ -297,7 +297,7 @@ int main(int argc, char *argv[])
 
 	if(listensock){
 		for(i=0; i<listensock_count; i++){
-			if(listensock[i] >= 0){
+			if(listensock[i] != INVALID_SOCKET){
 #ifndef WIN32
 				close(listensock[i]);
 #else

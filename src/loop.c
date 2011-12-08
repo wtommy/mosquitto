@@ -86,7 +86,7 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 		if(new_clients){
 			client_max = -1;
 			for(i=0; i<db->context_count; i++){
-				if(db->contexts[i] && db->contexts[i]->sock >= 0 && db->contexts[i]->sock > sock_max){
+				if(db->contexts[i] && db->contexts[i]->sock != INVALID_SOCKET && db->contexts[i]->sock > sock_max){
 					client_max = db->contexts[i]->sock;
 				}
 			}
@@ -118,7 +118,7 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 		now = time(NULL);
 		for(i=0; i<db->context_count; i++){
 			if(db->contexts[i]){
-				if(db->contexts[i]->sock >= 0){
+				if(db->contexts[i]->sock != INVALID_SOCKET){
 					if(db->contexts[i]->sock > sock_max){
 						sock_max = db->contexts[i]->sock;
 					}
@@ -247,7 +247,7 @@ static void loop_handle_errors(mosquitto_db *db, struct pollfd *pollfds)
 	int i;
 
 	for(i=0; i<db->context_count; i++){
-		if(db->contexts[i] && db->contexts[i]->sock >= 0){
+		if(db->contexts[i] && db->contexts[i]->sock != INVALID_SOCKET){
 			if(pollfds[db->contexts[i]->sock].revents & POLLHUP){
 				if(db->contexts[i]->state != mosq_cs_disconnecting){
 					_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Socket error on client %s, disconnecting.", db->contexts[i]->id);
@@ -265,7 +265,7 @@ static void loop_handle_reads_writes(mosquitto_db *db, struct pollfd *pollfds)
 	int i;
 
 	for(i=0; i<db->context_count; i++){
-		if(db->contexts[i] && db->contexts[i]->sock >= 0){
+		if(db->contexts[i] && db->contexts[i]->sock != INVALID_SOCKET){
 			if(pollfds[db->contexts[i]->sock].revents & POLLOUT){
 				if(_mosquitto_packet_write(db->contexts[i])){
 					if(db->contexts[i]->state != mosq_cs_disconnecting){
@@ -278,7 +278,7 @@ static void loop_handle_reads_writes(mosquitto_db *db, struct pollfd *pollfds)
 				}
 			}
 		}
-		if(db->contexts[i] && db->contexts[i]->sock >= 0){
+		if(db->contexts[i] && db->contexts[i]->sock != INVALID_SOCKET){
 			if(pollfds[db->contexts[i]->sock].revents & POLLIN){
 				if(_mosquitto_packet_read(db, i)){
 					if(db->contexts[i]->state != mosq_cs_disconnecting){
