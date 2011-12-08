@@ -3,6 +3,8 @@
 
 - Fix potential crash when client connects with an invalid CONNECT packet.
 - Fix incorrect invalid socket comparison on Windows.
+- Server shouldn't crash when a message is published to foo/ when a
+  subscription to foo/# exists (bug #901697).
 
 0.14.2 - 20111123
 =================
