@@ -56,6 +56,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifdef WITH_BROKER
 #  include <mqtt3.h>
    extern uint64_t bytes_received;
+   extern uint64_t bytes_sent;
    extern unsigned long msgs_received;
    extern unsigned long msgs_sent;
 #else
@@ -441,6 +442,9 @@ int _mosquitto_packet_write(struct mosquitto *mosq)
 		while(packet->to_process > 0){
 			write_length = _mosquitto_net_write(mosq, &(packet->payload[packet->pos]), packet->to_process);
 			if(write_length > 0){
+#ifdef WITH_BROKER
+				bytes_sent += write_length;
+#endif
 				packet->to_process -= write_length;
 				packet->pos += write_length;
 			}else{

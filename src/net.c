@@ -59,7 +59,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <net_mosq.h>
 
 uint64_t bytes_received = 0;
-static uint64_t bytes_sent = 0;
+uint64_t bytes_sent = 0;
 unsigned long msgs_received = 0;
 unsigned long msgs_sent = 0;
 
