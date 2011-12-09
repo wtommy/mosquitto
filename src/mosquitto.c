@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 	int listener_max;
 	int rc;
 
-#ifdef WIN32
+#if defined(WIN32) || defined(__CYGWIN__)
 	if(argc == 2){
 		if(!strcmp(argv[1], "run")){
 			service_run();

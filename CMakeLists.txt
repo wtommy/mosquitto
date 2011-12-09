@@ -2,6 +2,8 @@
 # It is intended to be the default means of building mosquitto, but isn't
 # quite ready for all cases yet.
 
+set(CMAKE_LEGACY_CYGWIN_WIN32 0)
+
 project(mosquitto)
 
 cmake_minimum_required(VERSION 2.6)

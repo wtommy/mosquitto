@@ -6,6 +6,7 @@
 - Server shouldn't crash when a message is published to foo/ when a
   subscription to foo/# exists (bug #901697).
 - SO_REUSEADDR doesn't work the same on Windows, so don't use it.
+- Cygwin builds now support Windows service features.
 
 0.14.2 - 20111123
 =================

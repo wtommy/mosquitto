@@ -58,9 +58,9 @@ if (${WITH_PERSISTENCE} STREQUAL ON)
 	add_definitions("-DWITH_PERSISTENCE")
 endif (${WITH_PERSISTENCE} STREQUAL ON)
 
-if (WIN32)
+if (WIN32 OR CYGWIN)
 	set (MOSQ_SRCS ${MOSQ_SRCS} service.c)
-endif (WIN32)
+endif (WIN32 OR CYGWIN)
 
 option(WITH_EXTERNAL_SECURITY_CHECKS
 	"Use external security checks (needs additional code)?" OFF)
