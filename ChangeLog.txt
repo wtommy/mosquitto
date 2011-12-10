@@ -1,4 +1,4 @@
-0.14.3 - 2011xxxx
+0.14.3 - 20111210
 =================
 
 - Fix potential crash when client connects with an invalid CONNECT packet.
