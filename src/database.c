@@ -189,7 +189,7 @@ int mqtt3_db_client_count(mosquitto_db *db, int *count, int *inactive_count)
 	for(i=0; i<db->context_count; i++){
 		if(db->contexts[i]){
 			(*count)++;
-			if(db->contexts[i]->sock < 0){
+			if(db->contexts[i]->sock == INVALID_SOCKET){
 				(*inactive_count)++;
 			}
 		}

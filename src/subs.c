@@ -279,7 +279,7 @@ static int _sub_search(struct _mosquitto_db *db, struct _mosquitto_subhier *subh
 			if(rc == -1 || !tokens->next){
 				_subs_process(db, branch, source_id, topic, qos, retain, stored);
 			}
-		}else if(!strcmp(branch->topic, "#") && strcmp(tokens->topic, "/") && !branch->children){
+		}else if(!strcmp(branch->topic, "#") && !branch->children && (!tokens || strcmp(tokens->topic, "/"))){
 			/* The topic matches due to a # wildcard - process the
 			 * subscriptions but *don't* return. Although this branch has ended
 			 * there may still be other subscriptions to deal with.

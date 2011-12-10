@@ -59,7 +59,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <net_mosq.h>
 
 uint64_t bytes_received = 0;
-static uint64_t bytes_sent = 0;
+uint64_t bytes_sent = 0;
 unsigned long msgs_received = 0;
 unsigned long msgs_sent = 0;
 
@@ -76,7 +76,7 @@ int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock)
 #endif
 
 	new_sock = accept(listensock, NULL, 0);
-	if(new_sock < 0) return -1;
+	if(new_sock == INVALID_SOCKET) return -1;
 
 #ifndef WIN32
 	/* Set non-blocking */
@@ -202,8 +202,10 @@ int mqtt3_socket_listen(struct _mqtt3_listener *listener)
 		}
 		listener->socks[listener->sock_count-1] = sock;
 
+#ifndef WIN32
 		ss_opt = 1;
 		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &ss_opt, sizeof(ss_opt));
+#endif
 		ss_opt = 1;
 		setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &ss_opt, sizeof(ss_opt));
 

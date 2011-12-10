@@ -1,3 +1,14 @@
+0.14.3 - 20111210
+=================
+
+- Fix potential crash when client connects with an invalid CONNECT packet.
+- Fix incorrect invalid socket comparison on Windows.
+- Server shouldn't crash when a message is published to foo/ when a
+  subscription to foo/# exists (bug #901697).
+- SO_REUSEADDR doesn't work the same on Windows, so don't use it.
+- Cygwin builds now support Windows service features.
+- Fix $SYS/broker/bytes/sent reporting.
+
 0.14.2 - 20111123
 =================
 

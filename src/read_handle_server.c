@@ -110,7 +110,6 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 
 	if(_mosquitto_read_string(&context->in_packet, &client_id)){
 		mqtt3_context_disconnect(db, context_index);
-		_mosquitto_free(client_id);
 		return 1;
 	}
 
@@ -320,7 +319,6 @@ int mqtt3_handle_subscribe(mosquitto_db *db, struct mosquitto *context)
 	while(context->in_packet.pos < context->in_packet.remaining_length){
 		sub = NULL;
 		if(_mosquitto_read_string(&context->in_packet, &sub)){
-			if(sub) _mosquitto_free(sub);
 			if(payload) _mosquitto_free(payload);
 			return 1;
 		}
@@ -416,7 +414,6 @@ int mqtt3_handle_unsubscribe(mosquitto_db *db, struct mosquitto *context)
 	while(context->in_packet.pos < context->in_packet.remaining_length){
 		sub = NULL;
 		if(_mosquitto_read_string(&context->in_packet, &sub)){
-			if(sub) _mosquitto_free(sub);
 			return 1;
 		}
 

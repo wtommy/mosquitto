@@ -8,7 +8,7 @@
 
 Name "mosquitto"
 !define VERSION 0.14.3
-OutFile "mosquitto-${VERSION}-install-win32.exe"
+OutFile "mosquitto-${VERSION}-install-cygwin.exe"
 
 InstallDir "$PROGRAMFILES\mosquitto"
 
@@ -39,7 +39,8 @@ InstallDir "$PROGRAMFILES\mosquitto"
 Section "Files" SecInstall
 	SectionIn RO
 	SetOutPath "$INSTDIR"
-	File "..\build\src\Release\mosquitto.exe"
+	File "cygwin1.dll"
+	File "..\src\mosquitto.exe"
 	File "..\build\client\Release\mosquitto_pub.exe"
 	File "..\build\client\Release\mosquitto_sub.exe"
 	File "..\build\lib\Release\mosquitto.dll"
@@ -82,6 +83,7 @@ SectionEnd
 
 Section "Uninstall"
 	ExecWait '"$INSTDIR\mosquitto.exe" uninstall'
+	Delete "$INSTDIR\cygwin1.dll"
 	Delete "$INSTDIR\mosquitto.exe"
 	Delete "$INSTDIR\mosquitto_pub.exe"
 	Delete "$INSTDIR\mosquitto_sub.exe"
