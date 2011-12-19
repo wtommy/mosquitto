@@ -195,6 +195,13 @@ enum mqtt3_bridge_direction{
 	bd_both = 2
 };
 
+enum mosquitto_bridge_start_type{
+	bst_automatic = 0,
+	bst_lazy = 1,
+	bst_manual = 2,
+	bst_once = 3
+};
+
 struct _mqtt3_bridge_topic{
 	char *topic;
 	int qos;
@@ -214,6 +221,7 @@ struct _mqtt3_bridge{
 	char *username;
 	char *password;
 	bool notifications;
+	enum mosquitto_bridge_start_type start_type;
 };
 
 #include <net_mosq.h>

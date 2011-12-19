@@ -452,6 +452,32 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>start_type</option> [ automatic | lazy | once ]</term>
+				<listitem>
+					<para>Set the start type of the bridge. This controls how
+					the bridge starts and can be one of three types: automatic,
+					lazy and once. Note that RSMB provides a fourth start type
+					"manual" which isn't currently supported by
+					mosquitto.</para>
+
+					<para>"automatic" is the default start type and means that
+					the bridge connection will be started automatically when
+					the broker starts and also restarted after a short delay
+					(30 seconds) if the connection fails.</para>
+
+					<para>Bridges using the "lazy" start type will be started
+					automatically when the number of queued messages exceeds
+					the number set with the "threshold" parameter. It will be
+					stopped automatically after the time set by the
+					"idle_timeout" parameter. Use this start type if you wish
+					the connection to only be active when it is needed.</para>
+
+					<para>A bridge using the "once" start type will be started
+					automatically when the broker starts but will not be
+					restarted if the connection fails.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>topic</option> <replaceable>pattern</replaceable> [ out | in | both ]</term>
 				<listitem>
 					<para>Define a topic pattern to be shared between the two
