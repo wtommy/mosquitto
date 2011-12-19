@@ -163,7 +163,7 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 								}
 							}
 						}else{
-							if(time(NULL) > db->contexts[i]->bridge->restart_t){
+							if(db->contexts[i]->bridge->start_type == bst_automatic && time(NULL) > db->contexts[i]->bridge->restart_t){
 								db->contexts[i]->bridge->restart_t = 0;
 								mqtt3_bridge_connect(db, db->contexts[i]);
 							}
