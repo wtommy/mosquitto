@@ -100,7 +100,11 @@ int mqtt3_bridge_new(mosquitto_db *db, struct _mqtt3_bridge *bridge)
 	new_context->username = new_context->bridge->username;
 	new_context->password = new_context->bridge->password;
 
-	return mqtt3_bridge_connect(db, new_context);
+	if(new_context->bridge->start_type == bst_automatic || new_context->bridge->start_type == bst_once){
+		return mqtt3_bridge_connect(db, new_context);
+	}else{
+		return MOSQ_ERR_SUCCESS;
+	}
 }
 
 int mqtt3_bridge_connect(mosquitto_db *db, struct mosquitto *context)
