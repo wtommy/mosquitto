@@ -400,6 +400,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						cur_bridge->notifications = true;
 						cur_bridge->start_type = bst_automatic;
 						cur_bridge->idle_timeout = 60;
+						cur_bridge->threshold = 10;
 					}else{
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Empty connection value in configuration.");
 						return MOSQ_ERR_INVAL;
@@ -664,6 +665,21 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid sys_interval value (%d).", config->sys_interval);
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "threshold")){
+#ifdef WITH_BRIDGE
+					if(reload) continue; // FIXME
+					if(!cur_bridge){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					if(_conf_parse_int(&token, "threshold", &cur_bridge->threshold)) return 1;
+					if(cur_bridge->threshold < 1){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "threshold too low, using 1 message.");
+						cur_bridge->threshold = 1;
+					}
+#else
+					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "topic")){
 #ifdef WITH_BRIDGE
 					if(reload) continue; // FIXME

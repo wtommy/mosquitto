@@ -486,6 +486,14 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>threshold</option> <replaceable>count</replaceable></term>
+				<listitem>
+					<para>Set the number of messages that need to be queued
+					for a bridge with lazy start type to be restarted.
+					Defaults to 10 messages.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>topic</option> <replaceable>pattern</replaceable> [ out | in | both ]</term>
 				<listitem>
 					<para>Define a topic pattern to be shared between the two

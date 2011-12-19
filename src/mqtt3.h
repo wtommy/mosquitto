@@ -223,6 +223,7 @@ struct _mqtt3_bridge{
 	bool notifications;
 	enum mosquitto_bridge_start_type start_type;
 	int idle_timeout;
+	int threshold;
 };
 
 #include <net_mosq.h>
