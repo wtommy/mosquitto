@@ -431,6 +431,14 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>idle_timeout</option> <replaceable>seconds</replaceable></term>
+				<listitem>
+					<para>Set the amount of time a bridge using the lazy start
+					type must be idle before it will be stopped. Defaults to
+					60 seconds.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>notifications</option> [ true | false ]</term>
 				<listitem>
 					<para>If set to true, publish notification messages to the

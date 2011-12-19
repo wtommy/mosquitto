@@ -399,9 +399,25 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						cur_bridge->password = NULL;
 						cur_bridge->notifications = true;
 						cur_bridge->start_type = bst_automatic;
+						cur_bridge->idle_timeout = 60;
 					}else{
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Empty connection value in configuration.");
 						return MOSQ_ERR_INVAL;
+					}
+#else
+					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
+				}else if(!strcmp(token, "idle_timeout")){
+#ifdef WITH_BRIDGE
+					if(reload) continue; // FIXME
+					if(!cur_bridge){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					if(_conf_parse_int(&token, "idle_timeout", &cur_bridge->idle_timeout)) return 1;
+					if(cur_bridge->idle_timeout < 1){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "idle_timeout interval too low, using 1 second.");
+						cur_bridge->idle_timeout = 1;
 					}
 #else
 					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
