@@ -256,10 +256,6 @@ int _mosquitto_send_suback(struct mosquitto *context, uint16_t mid, uint32_t pay
 int mqtt3_socket_accept(struct _mosquitto_db *db, int listensock);
 int mqtt3_socket_listen(struct _mqtt3_listener *listener);
 
-int mqtt3_net_packet_queue(struct mosquitto *context, struct _mosquitto_packet *packet);
-int mqtt3_net_read(mosquitto_db *db, int context_index);
-int mqtt3_net_write(struct mosquitto *context);
-
 uint64_t mqtt3_net_bytes_total_received(void);
 uint64_t mqtt3_net_bytes_total_sent(void);
 unsigned long mqtt3_net_msgs_total_received(void);
