@@ -330,6 +330,8 @@ int mqtt3_sub_add(struct mosquitto *context, const char *sub, int qos, struct _m
 		_mosquitto_free(tokens);
 		tokens = tail;
 	}
+	/* We aren't worried about -1 (already subscribed) return codes. */
+	if(rc == -1) rc = MOSQ_ERR_SUCCESS;
 	return rc;
 }
 
