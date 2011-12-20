@@ -122,6 +122,12 @@ int mqtt3_bridge_connect(mosquitto_db *db, struct mosquitto *context)
 	context->in_packet.payload = NULL;
 	mqtt3_bridge_packet_cleanup(context);
 
+	for(i=0; i<context->bridge->topic_count; i++){
+		if(context->bridge->topics[i].direction == bd_out || context->bridge->topics[i].direction == bd_both){
+			if(mqtt3_sub_add(context, context->bridge->topics[i].topic, context->bridge->topics[i].qos, &db->subs)) return 1;
+		}
+	}
+
 	_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Connecting bridge %s", context->bridge->name);
 	rc = _mosquitto_socket_connect(context, context->bridge->address, context->bridge->port);
 	if(rc != MOSQ_ERR_SUCCESS){
@@ -147,12 +153,6 @@ int mqtt3_bridge_connect(mosquitto_db *db, struct mosquitto *context)
 
 	if(_mosquitto_send_connect(context, context->keepalive, context->clean_session)){
 		return 1;
-	}
-
-	for(i=0; i<context->bridge->topic_count; i++){
-		if(context->bridge->topics[i].direction == bd_out || context->bridge->topics[i].direction == bd_both){
-			if(mqtt3_sub_add(context, context->bridge->topics[i].topic, context->bridge->topics[i].qos, &db->subs)) return 1;
-		}
 	}
 
 	return MOSQ_ERR_SUCCESS;
