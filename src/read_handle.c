@@ -177,7 +177,7 @@ int mqtt3_handle_publish(mosquitto_db *db, struct mosquitto *context)
 			break;
 		case 2:
 			if(!dup){
-				res = mqtt3_db_message_insert(context, mid, mosq_md_in, qos, retain, stored);
+				res = mqtt3_db_message_insert(db, context, mid, mosq_md_in, qos, retain, stored);
 			}else{
 				res = 0;
 			}

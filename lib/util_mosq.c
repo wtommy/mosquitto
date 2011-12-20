@@ -79,6 +79,17 @@ int _mosquitto_packet_alloc(struct _mosquitto_packet *packet)
 void _mosquitto_check_keepalive(struct mosquitto *mosq)
 {
 	assert(mosq);
+#if defined(WITH_BROKER) && defined(WITH_BRIDGE)
+	/* Check if a lazy bridge should be timed out due to idle. */
+	if(mosq->bridge && mosq->bridge->start_type == bst_lazy
+				&& mosq->sock != INVALID_SOCKET
+				&& time(NULL) - mosq->last_msg_out >= mosq->bridge->idle_timeout){
+
+		_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Bridge connection %s has exceeded idle timeout, disconnecting.", mosq->id);
+		_mosquitto_socket_close(mosq);
+		return;
+	}
+#endif
 	if(mosq->sock != INVALID_SOCKET && time(NULL) - mosq->last_msg_out >= mosq->keepalive){
 		if(mosq->state == mosq_cs_connected){
 			_mosquitto_send_pingreq(mosq);

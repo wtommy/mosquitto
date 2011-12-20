@@ -68,7 +68,6 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 	int i;
 	struct pollfd *pollfds = NULL;
 	unsigned int pollfd_count = 0;
-	int new_clients = 1;
 	int client_max = 0;
 	unsigned int sock_max = 0;
 
@@ -80,14 +79,11 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 	while(run){
 		mqtt3_db_sys_update(db, db->config->sys_interval, start_time);
 
-		if(new_clients){
-			client_max = -1;
-			for(i=0; i<db->context_count; i++){
-				if(db->contexts[i] && db->contexts[i]->sock != INVALID_SOCKET && db->contexts[i]->sock > sock_max){
-					client_max = db->contexts[i]->sock;
-				}
+		client_max = -1;
+		for(i=0; i<db->context_count; i++){
+			if(db->contexts[i] && db->contexts[i]->sock != INVALID_SOCKET && db->contexts[i]->sock > client_max){
+				client_max = db->contexts[i]->sock;
 			}
-			new_clients = 0;
 		}
 
 		if(client_max > listener_max){
@@ -183,7 +179,6 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 
 			for(i=0; i<listensock_count; i++){
 				if(pollfds[listensock[i]].revents & (POLLIN | POLLPRI)){
-					new_clients = 1;
 					while(mqtt3_socket_accept(db, listensock[i]) != -1){
 					}
 				}
