@@ -195,6 +195,13 @@ enum mqtt3_bridge_direction{
 	bd_both = 2
 };
 
+enum mosquitto_bridge_start_type{
+	bst_automatic = 0,
+	bst_lazy = 1,
+	bst_manual = 2,
+	bst_once = 3
+};
+
 struct _mqtt3_bridge_topic{
 	char *topic;
 	int qos;
@@ -214,6 +221,9 @@ struct _mqtt3_bridge{
 	char *username;
 	char *password;
 	bool notifications;
+	enum mosquitto_bridge_start_type start_type;
+	int idle_timeout;
+	int threshold;
 };
 
 #include <net_mosq.h>
@@ -265,7 +275,7 @@ unsigned long mqtt3_net_msgs_total_sent(void);
  * Read handling functions
  * ============================================================ */
 int mqtt3_packet_handle(mosquitto_db *db, int context_index);
-int mqtt3_handle_connack(struct mosquitto *context);
+int mqtt3_handle_connack(mosquitto_db *db, struct mosquitto *context);
 int mqtt3_handle_connect(mosquitto_db *db, int context_index);
 int mqtt3_handle_disconnect(mosquitto_db *db, int context_index);
 int mqtt3_handle_publish(mosquitto_db *db, struct mosquitto *context);
@@ -286,7 +296,7 @@ void mqtt3_db_limits_set(int inflight, int queued);
 /* Return the number of in-flight messages in count. */
 int mqtt3_db_message_count(int *count);
 int mqtt3_db_message_delete(struct mosquitto *context, uint16_t mid, enum mosquitto_msg_direction dir);
-int mqtt3_db_message_insert(struct mosquitto *context, uint16_t mid, enum mosquitto_msg_direction dir, int qos, bool retain, struct mosquitto_msg_store *stored);
+int mqtt3_db_message_insert(mosquitto_db *db, struct mosquitto *context, uint16_t mid, enum mosquitto_msg_direction dir, int qos, bool retain, struct mosquitto_msg_store *stored);
 int mqtt3_db_message_release(mosquitto_db *db, struct mosquitto *context, uint16_t mid, enum mosquitto_msg_direction dir);
 int mqtt3_db_message_update(struct mosquitto *context, uint16_t mid, enum mosquitto_msg_direction dir, enum mqtt3_msg_state state);
 int mqtt3_db_message_write(struct mosquitto *context);

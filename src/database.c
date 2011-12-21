@@ -282,7 +282,7 @@ int mqtt3_db_message_delete(struct mosquitto *context, uint16_t mid, enum mosqui
 	return MOSQ_ERR_SUCCESS;
 }
 
-int mqtt3_db_message_insert(struct mosquitto *context, uint16_t mid, enum mosquitto_msg_direction dir, int qos, bool retain, struct mosquitto_msg_store *stored)
+int mqtt3_db_message_insert(mosquitto_db *db, struct mosquitto *context, uint16_t mid, enum mosquitto_msg_direction dir, int qos, bool retain, struct mosquitto_msg_store *stored)
 {
 	mosquitto_client_msg *msg, *tail = NULL;
 	enum mqtt3_msg_state state = ms_invalid;
@@ -362,6 +362,17 @@ int mqtt3_db_message_insert(struct mosquitto *context, uint16_t mid, enum mosqui
 	}else{
 		context->msgs = msg;
 	}
+
+#ifdef WITH_BRIDGE
+	msg_count++; /* We've just added a message to the list */
+	if(context->bridge && context->bridge->start_type == bst_lazy
+			&& context->sock == INVALID_SOCKET
+			&& msg_count >= context->bridge->threshold){
+
+		context->state = mosq_cs_new;
+		mqtt3_bridge_connect(db, context);
+	}
+#endif
 
 	return rc;
 }

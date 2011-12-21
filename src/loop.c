@@ -68,12 +68,8 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 	int i;
 	struct pollfd *pollfds = NULL;
 	unsigned int pollfd_count = 0;
-	int new_clients = 1;
 	int client_max = 0;
 	unsigned int sock_max = 0;
-	char *notification_topic;
-	int notification_topic_len;
-	uint8_t notification_payload[2];
 
 #ifndef WIN32
 	sigemptyset(&sigblock);
@@ -83,14 +79,11 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 	while(run){
 		mqtt3_db_sys_update(db, db->config->sys_interval, start_time);
 
-		if(new_clients){
-			client_max = -1;
-			for(i=0; i<db->context_count; i++){
-				if(db->contexts[i] && db->contexts[i]->sock != INVALID_SOCKET && db->contexts[i]->sock > sock_max){
-					client_max = db->contexts[i]->sock;
-				}
+		client_max = -1;
+		for(i=0; i<db->context_count; i++){
+			if(db->contexts[i] && db->contexts[i]->sock != INVALID_SOCKET && db->contexts[i]->sock > client_max){
+				client_max = db->contexts[i]->sock;
 			}
-			new_clients = 0;
 		}
 
 		if(client_max > listener_max){
@@ -151,19 +144,8 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 						/* Want to try to restart the bridge connection */
 						if(!db->contexts[i]->bridge->restart_t){
 							db->contexts[i]->bridge->restart_t = time(NULL)+30;
-							if(db->contexts[i]->bridge->notifications){
-								notification_topic_len = strlen(db->contexts[i]->id)+strlen("$SYS/broker/connection//state");
-								notification_topic = _mosquitto_malloc(sizeof(char)*(notification_topic_len+1));
-								if(notification_topic){
-									snprintf(notification_topic, notification_topic_len+1, "$SYS/broker/connection/%s/state", db->contexts[i]->id);
-									notification_payload[0] = '0';
-									notification_payload[1] = '\0';
-									mqtt3_db_messages_easy_queue(db, db->contexts[i], notification_topic, 1, 2, (uint8_t *)&notification_payload, 1);
-									_mosquitto_free(notification_topic);
-								}
-							}
 						}else{
-							if(time(NULL) > db->contexts[i]->bridge->restart_t){
+							if(db->contexts[i]->bridge->start_type == bst_automatic && time(NULL) > db->contexts[i]->bridge->restart_t){
 								db->contexts[i]->bridge->restart_t = 0;
 								mqtt3_bridge_connect(db, db->contexts[i]);
 							}
@@ -197,7 +179,6 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 
 			for(i=0; i<listensock_count; i++){
 				if(pollfds[listensock[i]].revents & (POLLIN | POLLPRI)){
-					new_clients = 1;
 					while(mqtt3_socket_accept(db, listensock[i]) != -1){
 					}
 				}

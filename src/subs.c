@@ -88,7 +88,7 @@ static int _subs_process(struct _mosquitto_db *db, struct _mosquitto_subhier *hi
 			}else{
 				mid = 0;
 			}
-			if(mqtt3_db_message_insert(leaf->context, mid, mosq_md_out, msg_qos, false, stored) == 1) rc = 1;
+			if(mqtt3_db_message_insert(db, leaf->context, mid, mosq_md_out, msg_qos, false, stored) == 1) rc = 1;
 		}else{
 			rc = 1;
 		}
@@ -330,6 +330,8 @@ int mqtt3_sub_add(struct mosquitto *context, const char *sub, int qos, struct _m
 		_mosquitto_free(tokens);
 		tokens = tail;
 	}
+	/* We aren't worried about -1 (already subscribed) return codes. */
+	if(rc == -1) rc = MOSQ_ERR_SUCCESS;
 	return rc;
 }
 
@@ -544,7 +546,7 @@ static int _retain_process(struct _mosquitto_db *db, struct mosquitto_msg_store 
 	}else{
 		mid = 0;
 	}
-	return mqtt3_db_message_insert(context, mid, mosq_md_out, qos, true, retained);
+	return mqtt3_db_message_insert(db, context, mid, mosq_md_out, qos, true, retained);
 }
 
 static int _retain_search(struct _mosquitto_db *db, struct _mosquitto_subhier *subhier, struct _sub_token *tokens, struct mosquitto *context, const char *sub, int sub_qos)

@@ -398,9 +398,27 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						cur_bridge->username = NULL;
 						cur_bridge->password = NULL;
 						cur_bridge->notifications = true;
+						cur_bridge->start_type = bst_automatic;
+						cur_bridge->idle_timeout = 60;
+						cur_bridge->threshold = 10;
 					}else{
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Empty connection value in configuration.");
 						return MOSQ_ERR_INVAL;
+					}
+#else
+					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
+				}else if(!strcmp(token, "idle_timeout")){
+#ifdef WITH_BRIDGE
+					if(reload) continue; // FIXME
+					if(!cur_bridge){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					if(_conf_parse_int(&token, "idle_timeout", &cur_bridge->idle_timeout)) return 1;
+					if(cur_bridge->idle_timeout < 1){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "idle_timeout interval too low, using 1 second.");
+						cur_bridge->idle_timeout = 1;
 					}
 #else
 					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
@@ -606,6 +624,35 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid retry_interval value (%d).", config->retry_interval);
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "start_type")){
+#ifdef WITH_BRIDGE
+					if(reload) continue; // FIXME
+					if(!cur_bridge){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					token = strtok(NULL, " ");
+					if(token){
+						if(!strcmp(token, "automatic")){
+							cur_bridge->start_type = bst_automatic;
+						}else if(!strcmp(token, "lazy")){
+							cur_bridge->start_type = bst_lazy;
+						}else if(!strcmp(token, "manual")){
+							_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Manual start_type not supported.");
+							return MOSQ_ERR_INVAL;
+						}else if(!strcmp(token, "once")){
+							cur_bridge->start_type = bst_once;
+						}else{
+							_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid start_type value in configuration (%s).", token);
+							return MOSQ_ERR_INVAL;
+						}
+					}else{
+						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Empty start_type value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+#else
+					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "store_clean_interval")){
 					if(_conf_parse_int(&token, "store_clean_interval", &config->store_clean_interval)) return 1;
 					if(config->store_clean_interval < 0 || config->store_clean_interval > 65535){
@@ -618,6 +665,21 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid sys_interval value (%d).", config->sys_interval);
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "threshold")){
+#ifdef WITH_BRIDGE
+					if(reload) continue; // FIXME
+					if(!cur_bridge){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					if(_conf_parse_int(&token, "threshold", &cur_bridge->threshold)) return 1;
+					if(cur_bridge->threshold < 1){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "threshold too low, using 1 message.");
+						cur_bridge->threshold = 1;
+					}
+#else
+					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "topic")){
 #ifdef WITH_BRIDGE
 					if(reload) continue; // FIXME
@@ -740,7 +802,6 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						|| !strcmp(token, "idle_timeout")
 						|| !strcmp(token, "notification_topic")
 						|| !strcmp(token, "round_robin")
-						|| !strcmp(token, "start_type")
 						|| !strcmp(token, "threshold")
 						|| !strcmp(token, "try_private")
 						|| !strcmp(token, "ffdc_output")
