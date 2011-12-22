@@ -234,12 +234,6 @@ struct _mqtt3_bridge{
 int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count, int listener_max);
 
 /* ============================================================
- * Utility functions
- * ============================================================ */
-/* Return a string that corresponds to the MQTT command number (left shifted 4 bits). */
-const char *mqtt3_command_to_string(uint8_t command);
-
-/* ============================================================
  * Config functions
  * ============================================================ */
 /* Initialise config struct to default values. */
