@@ -53,7 +53,7 @@ int mqtt3_handle_connack(mosquitto_db *db, struct mosquitto *context)
 		return MOSQ_ERR_PROTOCOL;
 	}
 #endif
-	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received CONNACK");
+	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received CONNACK on connection %s.", context->id);
 	if(_mosquitto_read_byte(&context->in_packet, &byte)) return 1; // Reserved byte, not used
 	if(_mosquitto_read_byte(&context->in_packet, &rc)) return 1;
 	switch(rc){
@@ -62,7 +62,7 @@ int mqtt3_handle_connack(mosquitto_db *db, struct mosquitto *context)
 				if(context->bridge->notifications){
 					notification_topic_len = strlen(context->id)+strlen("$SYS/broker/connection//state");
 					notification_topic = _mosquitto_malloc(sizeof(char)*(notification_topic_len+1));
-					if(!notification_topic) return 1;
+					if(!notification_topic) return MOSQ_ERR_NOMEM;
 
 					snprintf(notification_topic, notification_topic_len+1, "$SYS/broker/connection/%s/state", context->id);
 					notification_payload[0] = '1';

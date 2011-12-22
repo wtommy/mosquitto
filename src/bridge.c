@@ -138,24 +138,21 @@ int mqtt3_bridge_connect(mosquitto_db *db, struct mosquitto *context)
 	if(context->bridge->notifications){
 		notification_topic_len = strlen(context->id)+strlen("$SYS/broker/connection//state");
 		notification_topic = _mosquitto_malloc(sizeof(char)*(notification_topic_len+1));
-		if(!notification_topic) return 1;
+		if(!notification_topic) return MOSQ_ERR_NOMEM;
 
 		snprintf(notification_topic, notification_topic_len+1, "$SYS/broker/connection/%s/state", context->id);
 		notification_payload[0] = '0';
 		notification_payload[1] = '\0';
 		mqtt3_db_messages_easy_queue(db, context, notification_topic, 1, 2, (uint8_t *)&notification_payload, 1);
-		if(_mosquitto_will_set(context, true, notification_topic, 2, (uint8_t *)&notification_payload, 1, true)){
+		rc = _mosquitto_will_set(context, true, notification_topic, 2, (uint8_t *)&notification_payload, 1, true);
+		if(rc != MOSQ_ERR_SUCCESS){
 			_mosquitto_free(notification_topic);
-			return 1;
+			return rc;
 		}
 		_mosquitto_free(notification_topic);
 	}
 
-	if(_mosquitto_send_connect(context, context->keepalive, context->clean_session)){
-		return 1;
-	}
-
-	return MOSQ_ERR_SUCCESS;
+	return _mosquitto_send_connect(context, context->keepalive, context->clean_session);
 }
 
 void mqtt3_bridge_packet_cleanup(struct mosquitto *context)
