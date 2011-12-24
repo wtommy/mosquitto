@@ -48,6 +48,7 @@ static void _config_init_reload(mqtt3_config *config)
 	config->allow_anonymous = true;
 	config->autosave_interval = 1800;
 	if(config->clientid_prefixes) _mosquitto_free(config->clientid_prefixes);
+	config->connection_messages = true;
 	config->clientid_prefixes = NULL;
 #ifndef WIN32
 	config->log_dest = MQTT3_LOG_STDERR;
@@ -408,6 +409,8 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 #else
 					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
 #endif
+				}else if(!strcmp(token, "connection_messages")){
+					if(_conf_parse_bool(&token, token, &config->connection_messages)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "idle_timeout")){
 #ifdef WITH_BRIDGE
 					if(reload) continue; // FIXME
