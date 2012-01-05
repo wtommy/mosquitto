@@ -1,5 +1,6 @@
 - Implement "once" and "lazy" bridge start types.
 - Fix local bridge notification messages.
+- Fix incorrect out of memory check in library.
 
 0.14.3 - 20111210
 =================
