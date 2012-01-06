@@ -2,6 +2,7 @@
 =================
 
 - Fix local bridge notification messages.
+- Fix return values for more library calls.
 
 0.14.3 - 20111210
 =================

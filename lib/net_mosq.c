@@ -525,7 +525,7 @@ int _mosquitto_packet_read(struct mosquitto *mosq)
 #ifdef WITH_BROKER
 			bytes_received++;
 			/* Clients must send CONNECT as their first command. */
-			if(!(mosq->bridge) && mosq->state == mosq_cs_new && (byte&0xF0) != CONNECT) return 1;
+			if(!(mosq->bridge) && mosq->state == mosq_cs_new && (byte&0xF0) != CONNECT) return MOSQ_ERR_PROTOCOL;
 #endif
 		}else{
 			if(read_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */

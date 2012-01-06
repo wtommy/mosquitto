@@ -476,7 +476,7 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 					_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Empty topic in acl_file.");
 					if(user) _mosquitto_free(user);
 					fclose(aclfile);
-					return 1;
+					return MOSQ_ERR_INVAL;
 				}
 				token = strtok(NULL, " ");
 				if(token){
@@ -494,7 +494,7 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Empty invalid topic access type in acl_file.");
 						if(user) _mosquitto_free(user);
 						fclose(aclfile);
-						return 1;
+						return MOSQ_ERR_INVAL;
 					}
 				}else{
 					access = MOSQ_ACL_READ | MOSQ_ACL_WRITE;

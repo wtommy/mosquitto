@@ -93,7 +93,8 @@ int _mosquitto_handle_pubackcomp(struct mosquitto *mosq, const char *type)
 	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received %s from %s (Mid: %d)", type, mosq->id, mid);
 
 	if(mid){
-		if(mqtt3_db_message_delete(mosq, mid, mosq_md_out)) return 1;
+		rc = mqtt3_db_message_delete(mosq, mid, mosq_md_out);
+		if(rc) return rc;
 	}
 #else
 	_mosquitto_log_printf(mosq, MOSQ_LOG_DEBUG, "Received %s (Mid: %d)", type, mid);
