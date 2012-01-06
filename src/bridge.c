@@ -129,8 +129,6 @@ int mqtt3_bridge_connect(mosquitto_db *db, struct mosquitto *context)
 		return rc;
 	}
 
-	context->last_msg_in = time(NULL);
-
 	if(context->bridge->notifications){
 		notification_topic_len = strlen(context->id)+strlen("$SYS/broker/connection//state");
 		notification_topic = _mosquitto_malloc(sizeof(char)*(notification_topic_len+1));
