@@ -124,7 +124,9 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 						_mosquitto_check_keepalive(db->contexts[i]);
 					}
 #endif
-					if(!(db->contexts[i]->keepalive) || now - db->contexts[i]->last_msg_in < (time_t)(db->contexts[i]->keepalive)*3/2){
+
+					/* Local bridges never time out in this fashion. */
+					if(!(db->contexts[i]->keepalive) || db->contexts[i]->bridge || now - db->contexts[i]->last_msg_in < (time_t)(db->contexts[i]->keepalive)*3/2){
 						if(mqtt3_db_message_write(db->contexts[i]) == MOSQ_ERR_SUCCESS){
 							if(db->contexts[i]->sock < pollfd_count){
 								pollfds[db->contexts[i]->sock].fd = db->contexts[i]->sock;
