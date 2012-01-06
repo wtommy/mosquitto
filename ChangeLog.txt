@@ -3,6 +3,7 @@
 
 - Fix local bridge notification messages.
 - Fix return values for more library calls.
+- Fix incorrect out of memory checks in library and broker.
 
 0.14.3 - 20111210
 =================
