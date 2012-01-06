@@ -71,9 +71,6 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 	int new_clients = 1;
 	int client_max = 0;
 	unsigned int sock_max = 0;
-	char *notification_topic;
-	int notification_topic_len;
-	uint8_t notification_payload[2];
 
 #ifndef WIN32
 	sigemptyset(&sigblock);
@@ -151,17 +148,6 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 						/* Want to try to restart the bridge connection */
 						if(!db->contexts[i]->bridge->restart_t){
 							db->contexts[i]->bridge->restart_t = time(NULL)+30;
-							if(db->contexts[i]->bridge->notifications){
-								notification_topic_len = strlen(db->contexts[i]->id)+strlen("$SYS/broker/connection//state");
-								notification_topic = _mosquitto_malloc(sizeof(char)*(notification_topic_len+1));
-								if(notification_topic){
-									snprintf(notification_topic, notification_topic_len+1, "$SYS/broker/connection/%s/state", db->contexts[i]->id);
-									notification_payload[0] = '0';
-									notification_payload[1] = '\0';
-									mqtt3_db_messages_easy_queue(db, db->contexts[i], notification_topic, 1, 2, (uint8_t *)&notification_payload, 1);
-									_mosquitto_free(notification_topic);
-								}
-							}
 						}else{
 							if(time(NULL) > db->contexts[i]->bridge->restart_t){
 								db->contexts[i]->bridge->restart_t = 0;
