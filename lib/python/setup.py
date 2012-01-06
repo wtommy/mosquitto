@@ -1,6 +1,6 @@
 from distutils.core import setup
 setup(name='mosquitto',
-	version='0.14.3',
+	version='0.14.4',
 	description='MQTT version 3.1 client class',
 	author='Roger Light',
 	author_email='roger@atchoo.org',
