@@ -265,7 +265,7 @@ unsigned long mqtt3_net_msgs_total_sent(void);
  * Read handling functions
  * ============================================================ */
 int mqtt3_packet_handle(mosquitto_db *db, int context_index);
-int mqtt3_handle_connack(struct mosquitto *context);
+int mqtt3_handle_connack(mosquitto_db *db, struct mosquitto *context);
 int mqtt3_handle_connect(mosquitto_db *db, int context_index);
 int mqtt3_handle_disconnect(mosquitto_db *db, int context_index);
 int mqtt3_handle_publish(mosquitto_db *db, struct mosquitto *context);

@@ -72,7 +72,7 @@ int mqtt3_packet_handle(mosquitto_db *db, int context_index)
 			return mqtt3_handle_unsubscribe(db, context);
 #ifdef WITH_BRIDGE
 		case CONNACK:
-			return mqtt3_handle_connack(context);
+			return mqtt3_handle_connack(db, context);
 		case SUBACK:
 			return _mosquitto_handle_suback(context);
 		case UNSUBACK:
