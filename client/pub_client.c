@@ -241,6 +241,7 @@ int main(int argc, char *argv[])
 	struct mosquitto *mosq = NULL;
 	int rc;
 	int rc2;
+	char hostname[21];
 
 	uint8_t *will_payload = NULL;
 	long will_payloadlen = 0;
@@ -459,7 +460,9 @@ int main(int argc, char *argv[])
 			if(!quiet) fprintf(stderr, "Error: Out of memory.\n");
 			return 1;
 		}
-		snprintf(id, 30, "mosquitto_pub_%d", getpid());
+		memset(hostname, 0, 21);
+		gethostname(hostname, 20);
+		snprintf(id, 23, "mosq_pub_%d_%s", getpid(), hostname);
 	}
 
 	if(!topic || mode == MSGMODE_NONE){

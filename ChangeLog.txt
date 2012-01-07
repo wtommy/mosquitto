@@ -3,6 +3,7 @@
 - Add support for $SYS/broker/clients/maximum topic.
 - Updated mosquitto man page - $SYS hierarchy and signal support were out of
   date.
+- Auto generated pub/sub client ids now include the hostname.
 
 0.14.3 - 20111210
 =================
