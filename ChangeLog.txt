@@ -1,6 +1,8 @@
 0.15 - 2012xxxx
 
 - Add support for $SYS/broker/clients/maximum topic.
+- Updated mosquitto man page - $SYS hierarchy and signal support were out of
+  date.
 
 0.14.3 - 20111210
 =================

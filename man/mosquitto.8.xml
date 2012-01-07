@@ -264,17 +264,30 @@
 			<varlistentry>
 				<term>SIGUSR1</term>
 				<listitem>
-					<para>Upon receiving the SIGUSR1 signal, mosquitto will write the persistence database to disk. This signal is only acted upon if persistence is enabled.</para>
+					<para>Upon receiving the SIGUSR1 signal, mosquitto will
+					write the persistence database to disk. This signal is only
+					acted upon if persistence is enabled.</para>
 				</listitem>
 			</varlistentry>
-			<!--<varlistentry>
+			<varlistentry>
+				<term>SIGHUP</term>
+				<listitem>
+					<para>Upon receiving the SIGHUP signal, mosquitto will
+					attempt to reload its configuration. Not all configuration
+					parameters can be reloaded without a restart. See
+					<citerefentry><refentrytitle>mosquitto.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+					for details.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term>SIGUSR2</term>
 				<listitem>
-					<para>The SIGUSR2 signal causes mosquitto to run VACUUM on
-					the in-memory database. This frees currently unused memory
-					associated with the database.</para>
+					<para>The SIGUSR2 signal causes mosquitto to print out the
+					current subscription tree, along with information about
+					where retained messages exist. This is intended as a
+					testing feature only and may be removed at any time.</para>
 				</listitem>
-			</varlistentry>-->
+			</varlistentry>
 		</variablelist>
 	</refsect1>
 
@@ -282,7 +295,7 @@
 		<title>Files</title>
 		<variablelist>
 			<varlistentry>
-				<term><filename>/etc/mosquitto.conf</filename></term>
+				<term><filename>/etc/mosquitto/mosquitto.conf</filename></term>
 				<listitem>
 					<para>Configuration file. See <citerefentry><refentrytitle>mosquitto.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
 				</listitem>
