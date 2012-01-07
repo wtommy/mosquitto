@@ -755,6 +755,7 @@ void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time)
 
 	static int msg_store_count = -1;
 	static int client_count = -1;
+	static int client_max = -1;
 	static int inactive_count = -1;
 #ifdef REAL_WITH_MEMORY_TRACKING
 	static unsigned long current_heap = -1;
@@ -785,6 +786,11 @@ void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time)
 				inactive_count = inactive;
 				snprintf(buf, 100, "%d", inactive_count);
 				mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/clients/inactive", 2, strlen(buf), (uint8_t *)buf, 1);
+			}
+			if(value > client_max){
+				client_max = value;
+				snprintf(buf, 100, "%d", client_max);
+				mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/clients/maximum", 2, strlen(buf), (uint8_t *)buf, 1);
 			}
 		}
 

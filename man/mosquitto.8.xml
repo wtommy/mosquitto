@@ -77,30 +77,55 @@
 
 	<refsect1>
 		<title>Broker Status</title>
-		<para>Clients can find information about the broker by subscribing to topics in the $SYS hierarchy as follows. Topics marked as static are only sent once per client on subscription. All other topics are updated every <option>sys_interval</option> seconds. If <option>sys_interval</option> is 0, then updates are not sent.</para>
+		<para>Clients can find information about the broker by subscribing to
+		topics in the $SYS hierarchy as follows. Topics marked as static are
+		only sent once per client on subscription. All other topics are updated
+		every <option>sys_interval</option> seconds. If
+		<option>sys_interval</option> is 0, then updates are not sent.</para>
 		<variablelist>
 			<varlistentry>
 				<term><option>$SYS/broker/bytes/received</option></term>
 				<listitem>
-					<para>The total number of bytes received since the broker started.</para>
+					<para>The total number of bytes received since the broker
+					started.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>$SYS/broker/bytes/sent</option></term>
 				<listitem>
-					<para>The total number of bytes sent since the broker started.</para>
+					<para>The total number of bytes sent since the broker
+					started.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>$SYS/broker/changeset</option></term>
 				<listitem>
-					<para>The repository changeset (revision) associated with this build.</para>
+					<para>The repository changeset (revision) associated with
+					this build. Static.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/broker/clients/inactive</option></term>
+				<listitem>
+					<para>The total number of persistent clients (with clean
+					session disabled) that are registered at the broker but are
+					currently disconnected.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/broker/clients/maximum</option></term>
+				<listitem>
+					<para>The maximum number of active clients that have been
+					connected to the broker. This is only calculated when the
+					$SYS topic tree is updated, so short lived client
+					connections may not be counted.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term><option>$SYS/broker/clients/total</option></term>
 				<listitem>
-					<para>The total number of clients currently either connected to the broker or disconnected but with clean session not set.</para>
+					<para>The total number of active clients currently
+					connected to the broker.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -112,9 +137,18 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
-				<term><option>$SYS/broker/messages/stored</option></term>
+				<term><option>$SYS/broker/heap/maximum size</option></term>
 				<listitem>
-					<para>The number of messages currently held in the message store.</para>
+					<para>The largest amount of heap memory used by
+					mosquitto. Note that this topic may be unavailable
+					depending on compile time options.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/broker/messages/inflight</option></term>
+				<listitem>
+					<para>The number of messages with QoS>0 that are awaiting
+					acknowledgments.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -127,6 +161,12 @@
 				<term><option>$SYS/broker/messages/sent</option></term>
 				<listitem>
 					<para>The total number of messages sent since the broker started.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/broker/messages/stored</option></term>
+				<listitem>
+					<para>The number of messages currently held in the message store.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
