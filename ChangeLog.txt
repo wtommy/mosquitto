@@ -1,6 +1,12 @@
 - Implement "once" and "lazy" bridge start types.
+
+0.14.4 - 20120106
+=================
+
 - Fix local bridge notification messages.
+- Fix return values for more internal library calls.
 - Fix incorrect out of memory checks in library and broker.
+- Never time out local bridge connections.
 
 0.14.3 - 20111210
 =================
