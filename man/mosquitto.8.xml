@@ -84,6 +84,18 @@
 		<option>sys_interval</option> is 0, then updates are not sent.</para>
 		<variablelist>
 			<varlistentry>
+				<term><option>$SYS/broker/bytes/per second/received</option></term>
+				<listitem>
+					<para>The average number of bytes received per second since the broker started.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/broker/bytes/per second/sent</option></term>
+				<listitem>
+					<para>The average number of bytes sent per second since the broker started.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>$SYS/broker/bytes/received</option></term>
 				<listitem>
 					<para>The total number of bytes received since the broker
@@ -149,6 +161,18 @@
 				<listitem>
 					<para>The number of messages with QoS>0 that are awaiting
 					acknowledgments.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/broker/messages/per second/received</option></term>
+				<listitem>
+					<para>The average number of messages received per second since the broker started.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>$SYS/broker/messages/per second/sent</option></term>
+				<listitem>
+					<para>The average number of messages sent per second since the broker started.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
