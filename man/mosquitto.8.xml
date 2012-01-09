@@ -69,7 +69,6 @@
 			<listitem><para>There is only basic bridge support.</para></listitem>
 			<listitem><para>There are fewer configuration options.</para></listitem>
 			<listitem><para>There is less logging information.</para></listitem>
-			<listitem><para>The $SYS hierarchy is smaller.</para></listitem>
 			<listitem><para>It isn't as well tested or documented...</para></listitem>
 		</itemizedlist>
 		<para>It should be noted that all of the above limitations should have &quot;currently&quot; included in them. They will all be fixed at some point.</para>
