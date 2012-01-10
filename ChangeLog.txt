@@ -6,6 +6,8 @@
 - Updated mosquitto man page - $SYS hierarchy and signal support were out of
   date.
 - Auto generated pub/sub client ids now include the hostname.
+- Tool for dumping persistent DB contents is available in src/db_dump. It isn't
+  installed by default.
 
 0.14.3 - 20111210
 =================

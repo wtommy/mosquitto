@@ -4,13 +4,13 @@ CFLAGS_FINAL=${CFLAGS} -I.. -I../../lib -I../..
 
 .PHONY: all clean reallyclean
 
-all : db_dump
+all : mosquitto_db_dump
 
-db_dump : db_dump.o
+mosquitto_db_dump : db_dump.o
 	${CC} $^ -o $@ ${LDFLAGS} ${LIBS}
 
 db_dump.o : db_dump.c ../persist.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
 clean : 
-	-rm -f *.o db_dump
+	-rm -f *.o mosquitto_db_dump

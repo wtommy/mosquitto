@@ -40,7 +40,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mqtt3.h>
 #include <persist.h>
 
-static int _db_client_chunk_restore(mosquitto_db *db, int db_fd)
+static int _db_client_chunk_restore(mosquitto_db *db, FILE *db_fd)
 {
 	uint16_t i16temp, slen, last_mid;
 	char *client_id = NULL;
@@ -50,12 +50,12 @@ static int _db_client_chunk_restore(mosquitto_db *db, int db_fd)
 	slen = ntohs(i16temp);
 	if(!slen){
 		fprintf(stderr, "Error: Corrupt persistent database.");
-		close(db_fd);
+		fclose(db_fd);
 		return 1;
 	}
 	client_id = calloc(slen+1, sizeof(char));
 	if(!client_id){
-		close(db_fd);
+		fclose(db_fd);
 		fprintf(stderr, "Error: Out of memory.");
 		return 1;
 	}
@@ -71,12 +71,12 @@ static int _db_client_chunk_restore(mosquitto_db *db, int db_fd)
 	return rc;
 error:
 	fprintf(stderr, "Error: %s.", strerror(errno));
-	if(db_fd >= 0) close(db_fd);
+	if(db_fd >= 0) fclose(db_fd);
 	if(client_id) free(client_id);
 	return 1;
 }
 
-static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
+static int _db_client_msg_chunk_restore(mosquitto_db *db, FILE *db_fd)
 {
 	dbid_t i64temp, store_id;
 	uint16_t i16temp, slen, mid;
@@ -87,12 +87,12 @@ static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
 	slen = ntohs(i16temp);
 	if(!slen){
 		fprintf(stderr, "Error: Corrupt persistent database.");
-		close(db_fd);
+		fclose(db_fd);
 		return 1;
 	}
 	client_id = calloc(slen+1, sizeof(char));
 	if(!client_id){
-		close(db_fd);
+		fclose(db_fd);
 		fprintf(stderr, "Error: Out of memory.");
 		return 1;
 	}
@@ -123,12 +123,12 @@ static int _db_client_msg_chunk_restore(mosquitto_db *db, int db_fd)
 	return 0;
 error:
 	fprintf(stderr, "Error: %s.", strerror(errno));
-	if(db_fd >= 0) close(db_fd);
+	if(db_fd >= 0) fclose(db_fd);
 	if(client_id) free(client_id);
 	return 1;
 }
 
-static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
+static int _db_msg_store_chunk_restore(mosquitto_db *db, FILE *db_fd)
 {
 	dbid_t i64temp, store_id;
 	uint32_t i32temp, payloadlen;
@@ -149,13 +149,13 @@ static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 	if(slen){
 		source_id = calloc(slen+1, sizeof(char));
 		if(!source_id){
-			close(db_fd);
+			fclose(db_fd);
 			fprintf(stderr, "Error: Out of memory.");
 			return 1;
 		}
-		if(read(db_fd, source_id, slen) != slen){
+		if(fread(source_id, 1, slen, db_fd) != slen){
 			fprintf(stderr, "Error: %s.", strerror(errno));
-			close(db_fd);
+			fclose(db_fd);
 			free(source_id);
 			return 1;
 		}
@@ -175,14 +175,14 @@ static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 	if(slen){
 		topic = calloc(slen+1, sizeof(char));
 		if(!topic){
-			close(db_fd);
+			fclose(db_fd);
 			free(source_id);
 			fprintf(stderr, "Error: Out of memory.");
 			return 1;
 		}
-		if(read(db_fd, topic, slen) != slen){
+		if(fread(topic, 1, slen, db_fd) != slen){
 			fprintf(stderr, "Error: %s.", strerror(errno));
-			close(db_fd);
+			fclose(db_fd);
 			free(source_id);
 			free(topic);
 			return 1;
@@ -191,7 +191,7 @@ static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 		free(topic);
 	}else{
 		fprintf(stderr, "Error: Invalid msg_store chunk when restoring persistent database.");
-		close(db_fd);
+		fclose(db_fd);
 		free(source_id);
 		return 1;
 	}
@@ -207,16 +207,16 @@ static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 	if(payloadlen){
 		payload = malloc(payloadlen+1);
 		if(!payload){
-			close(db_fd);
+			fclose(db_fd);
 			free(source_id);
 			free(topic);
 			fprintf(stderr, "Error: Out of memory.");
 			return 1;
 		}
 		memset(payload, 0, payloadlen+1);
-		if(read(db_fd, payload, payloadlen) != payloadlen){
+		if(fread(payload, 1, payloadlen, db_fd) != payloadlen){
 			fprintf(stderr, "Error: %s.", strerror(errno));
-			close(db_fd);
+			fclose(db_fd);
 			free(source_id);
 			free(topic);
 			free(payload);
@@ -235,19 +235,19 @@ static int _db_msg_store_chunk_restore(mosquitto_db *db, int db_fd)
 	return rc;
 error:
 	fprintf(stderr, "Error: %s.", strerror(errno));
-	if(db_fd >= 0) close(db_fd);
+	if(db_fd >= 0) fclose(db_fd);
 	if(source_id) free(source_id);
 	if(topic) free(topic);
 	return 1;
 }
 
-static int _db_retain_chunk_restore(mosquitto_db *db, int db_fd)
+static int _db_retain_chunk_restore(mosquitto_db *db, FILE *db_fd)
 {
 	dbid_t i64temp, store_id;
 
-	if(read(db_fd, &i64temp, sizeof(dbid_t)) != sizeof(dbid_t)){
+	if(fread(&i64temp, sizeof(dbid_t), 1, db_fd) != sizeof(dbid_t)){
 		fprintf(stderr, "Error: %s.", strerror(errno));
-		close(db_fd);
+		fclose(db_fd);
 		return 1;
 	}
 	store_id = i64temp;
@@ -255,7 +255,7 @@ static int _db_retain_chunk_restore(mosquitto_db *db, int db_fd)
 	return 0;
 }
 
-static int _db_sub_chunk_restore(mosquitto_db *db, int db_fd)
+static int _db_sub_chunk_restore(mosquitto_db *db, FILE *db_fd)
 {
 	uint16_t i16temp, slen;
 	uint8_t qos;
@@ -267,7 +267,7 @@ static int _db_sub_chunk_restore(mosquitto_db *db, int db_fd)
 	slen = ntohs(i16temp);
 	client_id = calloc(slen+1, sizeof(char));
 	if(!client_id){
-		close(db_fd);
+		fclose(db_fd);
 		fprintf(stderr, "Error: Out of memory.");
 		return 1;
 	}
@@ -277,7 +277,7 @@ static int _db_sub_chunk_restore(mosquitto_db *db, int db_fd)
 	slen = ntohs(i16temp);
 	topic = calloc(slen+1, sizeof(char));
 	if(!topic){
-		close(db_fd);
+		fclose(db_fd);
 		fprintf(stderr, "Error: Out of memory.");
 		free(client_id);
 		return 1;
@@ -292,13 +292,13 @@ static int _db_sub_chunk_restore(mosquitto_db *db, int db_fd)
 	return rc;
 error:
 	fprintf(stderr, "Error: %s.", strerror(errno));
-	if(db_fd >= 0) close(db_fd);
+	if(db_fd >= 0) fclose(db_fd);
 	return 1;
 }
 
 int main(int argc, char *argv[])
 {
-	int fd;
+	FILE *fd;
 	char header[15];
 	int rc = 0;
 	uint32_t crc, db_version;
@@ -314,8 +314,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	memset(&db, 0, sizeof(mosquitto_db));
-	fd = open(argv[1], O_RDONLY);
-	if(fd < 0) return 0;
+	fd = fopen(argv[1], "rb");
+	if(!fd) return 0;
 	read_e(fd, &header, 15);
 	if(!memcmp(header, magic, 15)){
 		printf("Mosquitto DB dump\n");
@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
 		db_version = ntohl(i32temp);
 		printf("DB version: %d\n", db_version);
 
-		while(rlen = read(fd, &i16temp, sizeof(uint16_t)), rlen == sizeof(uint16_t)){
+		while(rlen = fread(&i16temp, sizeof(uint16_t), 1, fd), rlen == 1){
 			chunk = ntohs(i16temp);
 			read_e(fd, &i32temp, sizeof(uint32_t));
 			length = ntohl(i32temp);
@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
 					if(i8temp != sizeof(dbid_t)){
 						fprintf(stderr, "Error: Incompatible database configuration (dbid size is %d bytes, expected %d)",
 								i8temp, sizeof(dbid_t));
-						close(fd);
+						fclose(fd);
 						return 1;
 					}
 					read_e(fd, &i64temp, sizeof(dbid_t));
@@ -380,7 +380,7 @@ int main(int argc, char *argv[])
 
 				default:
 					fprintf(stderr, "Warning: Unsupported chunk \"%d\" in persistent database file. Ignoring.", chunk);
-					lseek(fd, length, SEEK_CUR);
+					fseek(fd, length, SEEK_CUR);
 					break;
 			}
 		}
@@ -390,12 +390,12 @@ int main(int argc, char *argv[])
 		rc = 1;
 	}
 
-	close(fd);
+	fclose(fd);
 
 	return rc;
 error:
 	fprintf(stderr, "Error: %s.", strerror(errno));
-	if(fd >= 0) close(fd);
+	if(fd >= 0) fclose(fd);
 	return 1;
 }
 
