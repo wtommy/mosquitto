@@ -476,7 +476,7 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 					_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Empty topic in acl_file.");
 					if(user) _mosquitto_free(user);
 					fclose(aclfile);
-					return 1;
+					return MOSQ_ERR_INVAL;
 				}
 				token = strtok(NULL, " ");
 				if(token){
@@ -494,7 +494,7 @@ int mqtt3_aclfile_parse(struct _mosquitto_db *db)
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Empty invalid topic access type in acl_file.");
 						if(user) _mosquitto_free(user);
 						fclose(aclfile);
-						return 1;
+						return MOSQ_ERR_INVAL;
 					}
 				}else{
 					access = MOSQ_ACL_READ | MOSQ_ACL_WRITE;
@@ -606,7 +606,7 @@ int mqtt3_pwfile_parse(struct _mosquitto_db *db)
 				unpwd = _mosquitto_calloc(1, sizeof(struct _mosquitto_unpwd));
 				if(!unpwd) return MOSQ_ERR_NOMEM;
 				unpwd->username = _mosquitto_strdup(username);
-				if(!unpwd) return MOSQ_ERR_NOMEM;
+				if(!unpwd->username) return MOSQ_ERR_NOMEM;
 				len = strlen(unpwd->username);
 				while(unpwd->username[len-1] == 10 || unpwd->username[len-1] == 13){
 					unpwd->username[len-1] = '\0';
@@ -615,7 +615,7 @@ int mqtt3_pwfile_parse(struct _mosquitto_db *db)
 				password = strtok(NULL, ":");
 				if(password){
 					unpwd->password = _mosquitto_strdup(password);
-					if(!unpwd) return MOSQ_ERR_NOMEM;
+					if(!unpwd->password) return MOSQ_ERR_NOMEM;
 					len = strlen(unpwd->password);
 					while(unpwd->password[len-1] == 10 || unpwd->password[len-1] == 13){
 						unpwd->password[len-1] = '\0';

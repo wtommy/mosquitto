@@ -122,6 +122,12 @@ int mqtt3_bridge_connect(mosquitto_db *db, struct mosquitto *context)
 	context->in_packet.payload = NULL;
 	mqtt3_bridge_packet_cleanup(context);
 
+	for(i=0; i<context->bridge->topic_count; i++){
+		if(context->bridge->topics[i].direction == bd_out || context->bridge->topics[i].direction == bd_both){
+			if(mqtt3_sub_add(context, context->bridge->topics[i].topic, context->bridge->topics[i].qos, &db->subs)) return 1;
+		}
+	}
+
 	_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Connecting bridge %s", context->bridge->name);
 	rc = _mosquitto_socket_connect(context, context->bridge->address, context->bridge->port);
 	if(rc != MOSQ_ERR_SUCCESS){
@@ -129,35 +135,24 @@ int mqtt3_bridge_connect(mosquitto_db *db, struct mosquitto *context)
 		return rc;
 	}
 
-	context->last_msg_in = time(NULL);
-
 	if(context->bridge->notifications){
 		notification_topic_len = strlen(context->id)+strlen("$SYS/broker/connection//state");
 		notification_topic = _mosquitto_malloc(sizeof(char)*(notification_topic_len+1));
-		if(!notification_topic) return 1;
+		if(!notification_topic) return MOSQ_ERR_NOMEM;
 
 		snprintf(notification_topic, notification_topic_len+1, "$SYS/broker/connection/%s/state", context->id);
 		notification_payload[0] = '0';
 		notification_payload[1] = '\0';
 		mqtt3_db_messages_easy_queue(db, context, notification_topic, 1, 2, (uint8_t *)&notification_payload, 1);
-		if(_mosquitto_will_set(context, true, notification_topic, 2, (uint8_t *)&notification_payload, 1, true)){
+		rc = _mosquitto_will_set(context, true, notification_topic, 2, (uint8_t *)&notification_payload, 1, true);
+		if(rc != MOSQ_ERR_SUCCESS){
 			_mosquitto_free(notification_topic);
-			return 1;
+			return rc;
 		}
 		_mosquitto_free(notification_topic);
 	}
 
-	if(_mosquitto_send_connect(context, context->keepalive, context->clean_session)){
-		return 1;
-	}
-
-	for(i=0; i<context->bridge->topic_count; i++){
-		if(context->bridge->topics[i].direction == bd_out || context->bridge->topics[i].direction == bd_both){
-			if(mqtt3_sub_add(context, context->bridge->topics[i].topic, context->bridge->topics[i].qos, &db->subs)) return 1;
-		}
-	}
-
-	return MOSQ_ERR_SUCCESS;
+	return _mosquitto_send_connect(context, context->keepalive, context->clean_session);
 }
 
 void mqtt3_bridge_packet_cleanup(struct mosquitto *context)

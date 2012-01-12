@@ -424,8 +424,6 @@ int mqtt3_handle_unsubscribe(mosquitto_db *db, struct mosquitto *context)
 		}
 	}
 
-	if(_mosquitto_send_command_with_mid(context, UNSUBACK, mid, false)) return 1;
-
-	return MOSQ_ERR_SUCCESS;
+	return _mosquitto_send_command_with_mid(context, UNSUBACK, mid, false);
 }
 

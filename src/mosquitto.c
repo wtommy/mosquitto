@@ -164,7 +164,8 @@ int main(int argc, char *argv[])
 	_mosquitto_net_init();
 
 	mqtt3_config_init(&config);
-	if(mqtt3_config_parse_args(&config, argc, argv)) return 1;
+	rc = mqtt3_config_parse_args(&config, argc, argv);
+	if(rc != MOSQ_ERR_SUCCESS) return rc;
 	int_db.config = &config;
 
 	if(config.daemon){
@@ -193,11 +194,13 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
-	if(drop_privileges(&config)) return 1;
+	rc = drop_privileges(&config);
+	if(rc != MOSQ_ERR_SUCCESS) return rc;
 
-	if(mqtt3_db_open(&config, &int_db)){
+	rc = mqtt3_db_open(&config, &int_db);
+	if(rc != MOSQ_ERR_SUCCESS){
 		_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Couldn't open database.");
-		return 1;
+		return rc;
 	}
 
 	/* Initialise logging only after initialising the database in case we're

@@ -75,9 +75,6 @@ service.o : service.c mqtt3.h
 subs.o : subs.c mqtt3.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
-util.o : util.c mqtt3.h
-	${CC} $(CFLAGS_FINAL) -c $< -o $@
-
 util_mosq.o : ../lib/util_mosq.c ../lib/util_mosq.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 

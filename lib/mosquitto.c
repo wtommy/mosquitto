@@ -277,7 +277,7 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 		if(payloadlen){
 			message->msg.payloadlen = payloadlen;
 			message->msg.payload = _mosquitto_malloc(payloadlen*sizeof(uint8_t));
-			if(!message){
+			if(!message->msg.payload){
 				_mosquitto_message_cleanup(&message);
 				return MOSQ_ERR_NOMEM;
 			}

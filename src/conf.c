@@ -176,7 +176,7 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 
 				if(mqtt3_config_read(config, false)){
 					_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Unable to open configuration file.");
-					return 1;
+					return MOSQ_ERR_INVAL;
 				}
 			}else{
 				_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: -c argument given, but no config file specified.");
@@ -208,7 +208,7 @@ int mqtt3_config_parse_args(mqtt3_config *config, int argc, char *argv[])
 		}else{
 			fprintf(stderr, "Error: Unknown option '%s'.\n",argv[i]);
 			print_usage();
-			return 1;
+			return MOSQ_ERR_INVAL;
 		}
 	}
 
@@ -286,7 +286,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 							config->acl_file = NULL;
 						}
 					}
-					if(_conf_parse_string(&token, "acl_file", &config->acl_file)) return 1;
+					if(_conf_parse_string(&token, "acl_file", &config->acl_file)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "address") || !strcmp(token, "addresses")){
 #ifdef WITH_BRIDGE
 					if(reload) continue; // FIXME
@@ -323,13 +323,13 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
 #endif
 				}else if(!strcmp(token, "allow_anonymous")){
-					if(_conf_parse_bool(&token, "allow_anonymous", &config->allow_anonymous)) return 1;
+					if(_conf_parse_bool(&token, "allow_anonymous", &config->allow_anonymous)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "autosave_interval")){
-					if(_conf_parse_int(&token, "autosave_interval", &config->autosave_interval)) return 1;
+					if(_conf_parse_int(&token, "autosave_interval", &config->autosave_interval)) return MOSQ_ERR_INVAL;
 					if(config->autosave_interval < 0) config->autosave_interval = 0;
 				}else if(!strcmp(token, "bind_address")){
 					if(reload) continue; // Listener not valid for reloading.
-					if(_conf_parse_string(&token, "default listener bind_address", &config->default_listener.host)) return 1;
+					if(_conf_parse_string(&token, "default listener bind_address", &config->default_listener.host)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "clientid")){
 #ifdef WITH_BRIDGE
 					if(reload) continue; // FIXME
@@ -362,7 +362,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
 						return MOSQ_ERR_INVAL;
 					}
-					if(_conf_parse_bool(&token, "cleansession", &cur_bridge->clean_session)) return 1;
+					if(_conf_parse_bool(&token, "cleansession", &cur_bridge->clean_session)) return MOSQ_ERR_INVAL;
 #else
 					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
 #endif
@@ -373,7 +373,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 							config->clientid_prefixes = NULL;
 						}
 					}
-					if(_conf_parse_string(&token, "clientid_prefixes", &config->clientid_prefixes)) return 1;
+					if(_conf_parse_string(&token, "clientid_prefixes", &config->clientid_prefixes)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "connection")){
 #ifdef WITH_BRIDGE
 					if(reload) continue; // FIXME
@@ -398,9 +398,27 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						cur_bridge->username = NULL;
 						cur_bridge->password = NULL;
 						cur_bridge->notifications = true;
+						cur_bridge->start_type = bst_automatic;
+						cur_bridge->idle_timeout = 60;
+						cur_bridge->threshold = 10;
 					}else{
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Empty connection value in configuration.");
 						return MOSQ_ERR_INVAL;
+					}
+#else
+					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
+				}else if(!strcmp(token, "idle_timeout")){
+#ifdef WITH_BRIDGE
+					if(reload) continue; // FIXME
+					if(!cur_bridge){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					if(_conf_parse_int(&token, "idle_timeout", &cur_bridge->idle_timeout)) return MOSQ_ERR_INVAL;
+					if(cur_bridge->idle_timeout < 1){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "idle_timeout interval too low, using 1 second.");
+						cur_bridge->idle_timeout = 1;
 					}
 #else
 					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
@@ -412,7 +430,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
 						return MOSQ_ERR_INVAL;
 					}
-					if(_conf_parse_int(&token, "keepalive_interval", &cur_bridge->keepalive)) return 1;
+					if(_conf_parse_int(&token, "keepalive_interval", &cur_bridge->keepalive)) return MOSQ_ERR_INVAL;
 					if(cur_bridge->keepalive < 5){
 						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "keepalive interval too low, using 5 seconds.");
 						cur_bridge->keepalive = 5;
@@ -473,7 +491,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "log_timestamp")){
-					if(_conf_parse_bool(&token, token, &config->log_timestamp)) return 1;
+					if(_conf_parse_bool(&token, token, &config->log_timestamp)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "log_type")){
 					token = strtok(NULL, " ");
 					if(token){
@@ -533,7 +551,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: You must use create a listener before using the mount_point option in the configuration file.");
 						return MOSQ_ERR_INVAL;
 					}
-					if(_conf_parse_string(&token, "mount_point", &config->listeners[config->listener_count-1].mount_point)) return 1;
+					if(_conf_parse_string(&token, "mount_point", &config->listeners[config->listener_count-1].mount_point)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "notifications")){
 #ifdef WITH_BRIDGE
 					if(reload) continue; // FIXME
@@ -541,7 +559,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
 						return MOSQ_ERR_INVAL;
 					}
-					if(_conf_parse_bool(&token, "notifications", &cur_bridge->notifications)) return 1;
+					if(_conf_parse_bool(&token, "notifications", &cur_bridge->notifications)) return MOSQ_ERR_INVAL;
 #else
 					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
 #endif
@@ -577,47 +595,91 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 							config->password_file = NULL;
 						}
 					}
-					if(_conf_parse_string(&token, "password_file", &config->password_file)) return 1;
+					if(_conf_parse_string(&token, "password_file", &config->password_file)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "persistence") || !strcmp(token, "retained_persistence")){
-					if(_conf_parse_bool(&token, token, &config->persistence)) return 1;
+					if(_conf_parse_bool(&token, token, &config->persistence)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "persistence_file")){
 					if(reload) continue; // FIXME
-					if(_conf_parse_string(&token, "persistence_file", &config->persistence_file)) return 1;
+					if(_conf_parse_string(&token, "persistence_file", &config->persistence_file)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "persistence_location")){
 					if(reload) continue; // FIXME
-					if(_conf_parse_string(&token, "persistence_location", &config->persistence_location)) return 1;
+					if(_conf_parse_string(&token, "persistence_location", &config->persistence_location)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "pid_file")){
 					if(reload) continue; // pid file not valid for reloading.
-					if(_conf_parse_string(&token, "pid_file", &config->pid_file)) return 1;
+					if(_conf_parse_string(&token, "pid_file", &config->pid_file)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "port")){
 					if(reload) continue; // Listener not valid for reloading.
 					if(config->default_listener.port){
 						_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Default listener port specified multiple times. Only the latest will be used.");
 					}
-					if(_conf_parse_int(&token, "port", &port_tmp)) return 1;
+					if(_conf_parse_int(&token, "port", &port_tmp)) return MOSQ_ERR_INVAL;
 					if(port_tmp < 1 || port_tmp > 65535){
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid port value (%d).", port_tmp);
 						return MOSQ_ERR_INVAL;
 					}
 					config->default_listener.port = port_tmp;
 				}else if(!strcmp(token, "retry_interval")){
-					if(_conf_parse_int(&token, "retry_interval", &config->retry_interval)) return 1;
+					if(_conf_parse_int(&token, "retry_interval", &config->retry_interval)) return MOSQ_ERR_INVAL;
 					if(config->retry_interval < 1 || config->retry_interval > 3600){
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid retry_interval value (%d).", config->retry_interval);
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "start_type")){
+#ifdef WITH_BRIDGE
+					if(reload) continue; // FIXME
+					if(!cur_bridge){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					token = strtok(NULL, " ");
+					if(token){
+						if(!strcmp(token, "automatic")){
+							cur_bridge->start_type = bst_automatic;
+						}else if(!strcmp(token, "lazy")){
+							cur_bridge->start_type = bst_lazy;
+						}else if(!strcmp(token, "manual")){
+							_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Manual start_type not supported.");
+							return MOSQ_ERR_INVAL;
+						}else if(!strcmp(token, "once")){
+							cur_bridge->start_type = bst_once;
+						}else{
+							_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid start_type value in configuration (%s).", token);
+							return MOSQ_ERR_INVAL;
+						}
+					}else{
+						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Empty start_type value in configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+#else
+					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "store_clean_interval")){
-					if(_conf_parse_int(&token, "store_clean_interval", &config->store_clean_interval)) return 1;
+					if(_conf_parse_int(&token, "store_clean_interval", &config->store_clean_interval)) return MOSQ_ERR_INVAL;
 					if(config->store_clean_interval < 0 || config->store_clean_interval > 65535){
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid store_clean_interval value (%d).", config->store_clean_interval);
 						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "sys_interval")){
-					if(_conf_parse_int(&token, "sys_interval", &config->sys_interval)) return 1;
+					if(_conf_parse_int(&token, "sys_interval", &config->sys_interval)) return MOSQ_ERR_INVAL;
 					if(config->sys_interval < 1 || config->sys_interval > 65535){
 						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid sys_interval value (%d).", config->sys_interval);
 						return MOSQ_ERR_INVAL;
 					}
+				}else if(!strcmp(token, "threshold")){
+#ifdef WITH_BRIDGE
+					if(reload) continue; // FIXME
+					if(!cur_bridge){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error: Invalid bridge configuration.");
+						return MOSQ_ERR_INVAL;
+					}
+					if(_conf_parse_int(&token, "threshold", &cur_bridge->threshold)) return MOSQ_ERR_INVAL;
+					if(cur_bridge->threshold < 1){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "threshold too low, using 1 message.");
+						cur_bridge->threshold = 1;
+					}
+#else
+					_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
+#endif
 				}else if(!strcmp(token, "topic")){
 #ifdef WITH_BRIDGE
 					if(reload) continue; // FIXME
@@ -671,7 +733,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 #endif
 				}else if(!strcmp(token, "user")){
 					if(reload) continue; // Drop privileges user not valid for reloading.
-					if(_conf_parse_string(&token, "user", &config->user)) return 1;
+					if(_conf_parse_string(&token, "user", &config->user)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "username")){
 #ifdef WITH_BRIDGE
 					if(reload) continue; // FIXME
@@ -705,7 +767,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 							config->db_host = NULL;
 						}
 					}
-					if(_conf_parse_string(&token, "db_host", &config->db_host)) return 1;
+					if(_conf_parse_string(&token, "db_host", &config->db_host)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "db_name")){
 					if(reload){
 						if(config->db_name){
@@ -713,7 +775,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 							config->db_name = NULL;
 						}
 					}
-					if(_conf_parse_string(&token, "db_name", &config->db_name)) return 1;
+					if(_conf_parse_string(&token, "db_name", &config->db_name)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "db_username")){
 					if(reload){
 						if(config->db_username){
@@ -721,7 +783,7 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 							config->db_username = NULL;
 						}
 					}
-					if(_conf_parse_string(&token, "db_username", &config->db_username)) return 1;
+					if(_conf_parse_string(&token, "db_username", &config->db_username)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "db_password")){
 					if(reload){
 						if(config->db_password){
@@ -729,9 +791,9 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 							config->db_password = NULL;
 						}
 					}
-					if(_conf_parse_string(&token, "db_password", &config->db_password)) return 1;
+					if(_conf_parse_string(&token, "db_password", &config->db_password)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "db_port")){
-					if(_conf_parse_int(&token, "db_port", &config->db_port)) return 1;
+					if(_conf_parse_int(&token, "db_port", &config->db_port)) return MOSQ_ERR_INVAL;
 #endif
 				}else if(!strcmp(token, "autosave_on_changes")
 						|| !strcmp(token, "connection_messages")
@@ -740,7 +802,6 @@ int mqtt3_config_read(mqtt3_config *config, bool reload)
 						|| !strcmp(token, "idle_timeout")
 						|| !strcmp(token, "notification_topic")
 						|| !strcmp(token, "round_robin")
-						|| !strcmp(token, "start_type")
 						|| !strcmp(token, "threshold")
 						|| !strcmp(token, "try_private")
 						|| !strcmp(token, "ffdc_output")
