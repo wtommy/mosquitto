@@ -138,14 +138,21 @@ uint16_t _mosquitto_mid_generate(struct mosquitto *mosq)
 	return mosq->last_mid;
 }
 
-/* Search for + or # in a string. Return true if found. */
-bool _mosquitto_wildcard_check(const char *str)
+/* Search for + or # in a topic. Return MOSQ_ERR_INVAL if found.
+ * Also returns MOSQ_ERR_INVAL if the topic string is too long.
+ * Returns MOSQ_ERR_SUCCESS if everything is fine.
+ */
+int _mosquitto_topic_wildcard_len_check(const char *str)
 {
+	int len = 0;
 	while(str && str[0]){
 		if(str[0] == '+' || str[0] == '#'){
-			return true;
+			return MOSQ_ERR_INVAL;
 		}
+		len++;
 		str = &str[1];
 	}
-	return false;
+	if(len > 65535) return MOSQ_ERR_INVAL;
+
+	return MOSQ_ERR_SUCCESS;
 }
