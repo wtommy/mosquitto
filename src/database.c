@@ -294,7 +294,15 @@ int mqtt3_db_message_insert(mosquitto_db *db, struct mosquitto *context, uint16_
 
 	if(context->sock == INVALID_SOCKET){
 		/* Client is not connected only queue messages with QoS>0. */
-		if(qos == 0) return 2;
+		if(qos == 0){
+			if(!context->bridge){
+				return 2;
+			}else{
+				if(context->bridge->start_type != bst_lazy){
+					return 2;
+				}
+			}
+		}
 	}
 	if(context->msgs){
 		tail = context->msgs;
