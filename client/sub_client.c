@@ -34,6 +34,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 #else
 #include <process.h>
+#include <winsock2.h>
 #define snprintf sprintf_s
 #endif
 
