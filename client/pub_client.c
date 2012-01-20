@@ -28,6 +28,7 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -243,6 +244,7 @@ int main(int argc, char *argv[])
 	int rc;
 	int rc2;
 	char hostname[21];
+	char err[1024];
 
 	uint8_t *will_payload = NULL;
 	long will_payloadlen = 0;
@@ -510,7 +512,18 @@ int main(int argc, char *argv[])
 
 	rc = mosquitto_connect(mosq, host, port, keepalive, true);
 	if(rc){
-		if(!quiet) fprintf(stderr, "Unable to connect (%d).\n", rc);
+		if(!quiet){
+			if(rc == MOSQ_ERR_ERRNO){
+#ifndef WIN32
+				strerror_r(errno, err, 1024);
+#else
+				FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, errno, 0, (LPTSTR)&err, 1024, NULL);
+#endif
+				fprintf(stderr, "Error: %s\n", err);
+			}else{
+				fprintf(stderr, "Unable to connect (%d).\n", rc);
+			}
+		}
 		return rc;
 	}
 

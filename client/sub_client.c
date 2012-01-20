@@ -27,6 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -153,6 +154,7 @@ int main(int argc, char *argv[])
 	struct mosquitto *mosq = NULL;
 	int rc;
 	char hostname[21];
+	char err[1024];
 	
 	uint8_t *will_payload = NULL;
 	long will_payloadlen = 0;
@@ -379,7 +381,18 @@ int main(int argc, char *argv[])
 
 	rc = mosquitto_connect(mosq, host, port, keepalive, clean_session);
 	if(rc){
-		if(!quiet) fprintf(stderr, "Unable to connect (%d).\n", rc);
+		if(!quiet){
+			if(rc == MOSQ_ERR_ERRNO){
+#ifndef WIN32
+				strerror_r(errno, err, 1024);
+#else
+				FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, errno, 0, (LPTSTR)&err, 1024, NULL);
+#endif
+				fprintf(stderr, "Error: %s\n", err);
+			}else{
+				fprintf(stderr, "Unable to connect (%d).\n", rc);
+			}
+		}
 		return rc;
 	}
 
