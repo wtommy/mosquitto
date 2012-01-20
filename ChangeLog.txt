@@ -10,6 +10,8 @@
   installed by default.
 - Enforce topic length checks in client library.
 - Implement "once" and "lazy" bridge start types.
+- Add new return type MOSQ_ERR_ERRNO to indicate that the errno variable should
+  be checked for the real error code.
 
 0.14.4 - 20120106
 =================

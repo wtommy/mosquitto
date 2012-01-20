@@ -65,8 +65,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef WIN32
 #  define COMPAT_ECONNRESET ECONNRESET
+#  define COMPAT_EWOULDBLOCK EWOULDBLOCK
 #else
-#  define COMPAT_ECONNRESET WSAECONNRESET
+#  define COMPAT_EWOULDBLOCK WSAEWOULDBLOCK
 #endif
 
 #include <memory_mosq.h>
@@ -169,7 +170,6 @@ int _mosquitto_socket_connect(struct mosquitto *mosq, const char *host, uint16_t
 	struct addrinfo hints;
 	struct addrinfo *ainfo, *rp;
 	int s;
-	char err[1024];
 #ifdef WIN32
 	uint32_t val = 1;
 #endif
@@ -202,13 +202,14 @@ int _mosquitto_socket_connect(struct mosquitto *mosq, const char *host, uint16_t
 			break;
 		}
 
+#ifdef WIN32
+		errno = WSAGetLastError();
+#endif
 		COMPAT_CLOSE(sock);
 	}
 	if(!rp){
-		strerror_r(errno, err, 1024);
-		fprintf(stderr, "Error: %s\n", err);
 		COMPAT_CLOSE(sock);
-		return MOSQ_ERR_UNKNOWN;
+		return MOSQ_ERR_ERRNO;
 	}
 	freeaddrinfo(ainfo);
 
@@ -240,10 +241,11 @@ int _mosquitto_socket_connect(struct mosquitto *mosq, const char *host, uint16_t
 		}
 #endif
 		COMPAT_CLOSE(sock);
-		return MOSQ_ERR_UNKNOWN;
+		return MOSQ_ERR_ERRNO;
 	}
 #else
 	if(ioctlsocket(sock, FIONBIO, &val)){
+		errno = WSAGetLastError();
 #ifdef WITH_SSL
 		if(mosq->ssl){
 			_mosquitto_free(mosq->ssl);
@@ -251,7 +253,7 @@ int _mosquitto_socket_connect(struct mosquitto *mosq, const char *host, uint16_t
 		}
 #endif
 		COMPAT_CLOSE(sock);
-		return MOSQ_ERR_UNKNOWN;
+		return MOSQ_ERR_ERRNO;
 	}
 #endif
 
@@ -448,18 +450,17 @@ int _mosquitto_packet_write(struct mosquitto *mosq)
 				packet->to_process -= write_length;
 				packet->pos += write_length;
 			}else{
-#ifndef WIN32
-				if(errno == EAGAIN || errno == EWOULDBLOCK){
-#else
-				if(WSAGetLastError() == WSAEWOULDBLOCK){
+#ifdef WIN32
+				errno = WSAGetLastError();
 #endif
+				if(errno == EAGAIN || errno == COMPAT_EWOULDBLOCK){
 					return MOSQ_ERR_SUCCESS;
 				}else{
 					switch(errno){
 						case COMPAT_ECONNRESET:
 							return MOSQ_ERR_CONN_LOST;
 						default:
-							return MOSQ_ERR_UNKNOWN;
+							return MOSQ_ERR_ERRNO;
 					}
 				}
 			}
@@ -529,18 +530,17 @@ int _mosquitto_packet_read(struct mosquitto *mosq)
 #endif
 		}else{
 			if(read_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */
-#ifndef WIN32
-			if(errno == EAGAIN || errno == EWOULDBLOCK){
-#else
-			if(WSAGetLastError() == WSAEWOULDBLOCK){
+#ifdef WIN32
+			errno = WSAGetLastError();
 #endif
+			if(errno == EAGAIN || errno == COMPAT_EWOULDBLOCK){
 				return MOSQ_ERR_SUCCESS;
 			}else{
 				switch(errno){
 					case COMPAT_ECONNRESET:
 						return MOSQ_ERR_CONN_LOST;
 					default:
-						return MOSQ_ERR_UNKNOWN;
+						return MOSQ_ERR_ERRNO;
 				}
 			}
 		}
@@ -566,18 +566,17 @@ int _mosquitto_packet_read(struct mosquitto *mosq)
 				mosq->in_packet.remaining_mult *= 128;
 			}else{
 				if(read_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */
-#ifndef WIN32
-				if(errno == EAGAIN || errno == EWOULDBLOCK){
-#else
-				if(WSAGetLastError() == WSAEWOULDBLOCK){
+#ifdef WIN32
+				errno = WSAGetLastError();
 #endif
+				if(errno == EAGAIN || errno == COMPAT_EWOULDBLOCK){
 					return MOSQ_ERR_SUCCESS;
 				}else{
 					switch(errno){
 						case COMPAT_ECONNRESET:
 							return MOSQ_ERR_CONN_LOST;
 						default:
-							return MOSQ_ERR_UNKNOWN;
+							return MOSQ_ERR_ERRNO;
 					}
 				}
 			}
@@ -599,18 +598,17 @@ int _mosquitto_packet_read(struct mosquitto *mosq)
 			mosq->in_packet.to_process -= read_length;
 			mosq->in_packet.pos += read_length;
 		}else{
-#ifndef WIN32
-			if(errno == EAGAIN || errno == EWOULDBLOCK){
-#else
-			if(WSAGetLastError() == WSAEWOULDBLOCK){
+#ifdef WIN32
+			errno = WSAGetLastError();
 #endif
+			if(errno == EAGAIN || errno == COMPAT_EWOULDBLOCK){
 				return MOSQ_ERR_SUCCESS;
 			}else{
 				switch(errno){
 					case COMPAT_ECONNRESET:
 						return MOSQ_ERR_CONN_LOST;
 					default:
-						return MOSQ_ERR_UNKNOWN;
+						return MOSQ_ERR_ERRNO;
 				}
 			}
 		}

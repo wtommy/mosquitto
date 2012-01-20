@@ -378,7 +378,10 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	fdcount = select(mosq->sock+1, &readfds, &writefds, NULL, &local_timeout);
 #endif
 	if(fdcount == -1){
-		return MOSQ_ERR_UNKNOWN; // FIXME what error to return?
+#ifdef WIN32
+		errno = WSAGetLastError();
+#endif
+		return MOSQ_ERR_ERRNO;
 	}else{
 		if(FD_ISSET(mosq->sock, &readfds)){
 			rc = mosquitto_loop_read(mosq);
