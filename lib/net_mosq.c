@@ -208,7 +208,6 @@ int _mosquitto_socket_connect(struct mosquitto *mosq, const char *host, uint16_t
 		COMPAT_CLOSE(sock);
 	}
 	if(!rp){
-		COMPAT_CLOSE(sock);
 		return MOSQ_ERR_ERRNO;
 	}
 	freeaddrinfo(ainfo);
