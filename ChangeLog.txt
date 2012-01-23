@@ -12,6 +12,7 @@
 - Implement "once" and "lazy" bridge start types.
 - Add new return type MOSQ_ERR_ERRNO to indicate that the errno variable should
   be checked for the real error code.
+- Fix Python will_set() true/True typo.
 
 0.14.4 - 20120106
 =================
