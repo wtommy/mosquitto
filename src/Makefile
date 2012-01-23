@@ -81,7 +81,7 @@ util_mosq.o : ../lib/util_mosq.c ../lib/util_mosq.h
 will_mosq.o : ../lib/will_mosq.c ../lib/will_mosq.h
 	${CC} $(CFLAGS_FINAL) -c $< -o $@
 
-install :
+install : all
 	$(INSTALL) -d ${DESTDIR}$(prefix)/sbin
 	$(INSTALL) -s mosquitto ${DESTDIR}${prefix}/sbin/mosquitto
 
