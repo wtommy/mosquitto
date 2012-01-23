@@ -91,6 +91,7 @@ typedef struct {
 	bool allow_anonymous;
 	int autosave_interval;
 	char *clientid_prefixes;
+	bool connection_messages;
 	bool daemon;
 	struct _mqtt3_listener default_listener;
 	struct _mqtt3_listener *listeners;
