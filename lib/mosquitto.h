@@ -114,12 +114,13 @@ struct mosquitto;
  * 
  * The following functions that deal with network operations will return
  * MOSQ_ERR_SUCCESS on success, but this does not mean that the operation has
- * taken place. Rather, the appropriate messages will have been queued and will
- * be completed when calling mosquitto_loop(). To be sure of the event having
- * taken place, use the callbacks. This is especially important when
- * disconnecting a client that has a will. If the broker does not receive the
- * DISCONNECT command, it will assume that the client has disconnected
- * unexpectedly and send the will.
+ * taken place. An attempt will be made to write the network data, but if the
+ * socket is not available for writing at that time then the packet will not be
+ * sent. To ensure the packet is sent, call mosquitto_loop() (which must also
+ * be called to process incoming network data).
+ * This is especially important when disconnecting a client that has a will. If
+ * the broker does not receive the DISCONNECT command, it will assume that the
+ * client has disconnected unexpectedly and send the will.
  *
  * mosquitto_connect()
  * mosquitto_disconnect()
