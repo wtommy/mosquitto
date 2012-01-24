@@ -319,6 +319,10 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
+	if(clean_session == false && (id_prefix || !id)){
+		if(!quiet) fprintf(stderr, "Error: You must provide a client id if you are using the -c option.\n");
+		return 1;
+	}
 	if(id_prefix){
 		id = malloc(strlen(id_prefix)+10);
 		if(!id){

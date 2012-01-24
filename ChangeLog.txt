@@ -13,6 +13,8 @@
 - Add new return type MOSQ_ERR_ERRNO to indicate that the errno variable should
   be checked for the real error code.
 - Add support for connection_messages config option.
+- mosquitto_sub will now refuse to run if the -c option (disable clean session)
+  is given and no client id is provided.
 - Fix Python will_set() true/True typo.
 
 0.14.4 - 20120106
