@@ -16,6 +16,8 @@
 - mosquitto_sub will now refuse to run if the -c option (disable clean session)
   is given and no client id is provided.
 - Fix Python will_set() true/True typo.
+- Fix messages to topic "a/b" incorrectly matching on a subscription "a" if
+  another subscription "a/#" exists.
 
 0.14.4 - 20120106
 =================
