@@ -76,8 +76,6 @@ if (NOT WIN32)
 else (NOT WIN32)
 	target_link_libraries(mosquitto ws2_32 ${MOSQ_LIBS})
 endif (NOT WIN32)
-set_target_properties(mosquitto PROPERTIES
-	VERSION ${VERSION})
 
 install(TARGETS mosquitto RUNTIME DESTINATION ${SBINDIR} LIBRARY DESTINATION ${LIBDIR})
 
