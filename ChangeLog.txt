@@ -1,4 +1,4 @@
-0.15 - 2012xxxx
+0.15 - 20120205
 ===============
 
 - Add support for $SYS/broker/clients/maximum and $SYS/broker/clients/active
