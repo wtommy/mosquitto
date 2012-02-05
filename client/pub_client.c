@@ -87,7 +87,25 @@ void my_connect_callback(void *obj, int result)
 				break;
 		}
 		if(rc){
-			if(!quiet) fprintf(stderr, "Error: Publish returned %d, disconnecting.\n", rc);
+			if(!quiet){
+				switch(rc){
+					case MOSQ_ERR_INVAL:
+						fprintf(stderr, "Error: Invalid input. Does your topic contain '+' or '#'?\n");
+						break;
+					case MOSQ_ERR_NOMEM:
+						fprintf(stderr, "Error: Out of memory when trying to publish message.\n");
+						break;
+					case MOSQ_ERR_NO_CONN:
+						fprintf(stderr, "Error: Client not connected when trying to publish.\n");
+						break;
+					case MOSQ_ERR_PROTOCOL:
+						fprintf(stderr, "Error: Protocol error when communicating with broker.\n");
+						break;
+					case MOSQ_ERR_PAYLOAD_SIZE:
+						fprintf(stderr, "Error: Message payload is too large.\n");
+						break;
+				}
+			}
 			mosquitto_disconnect(mosq);
 		}
 	}else{
