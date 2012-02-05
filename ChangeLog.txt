@@ -1,7 +1,8 @@
 0.15 - 2012xxxx
 ===============
 
-- Add support for $SYS/broker/clients/maximum topic.
+- Add support for $SYS/broker/clients/maximum and $SYS/broker/clients/active
+  topics.
 - Add support for $SYS messages/byte per second received/sent topics.
 - Updated mosquitto man page - $SYS hierarchy and signal support were out of
   date.
