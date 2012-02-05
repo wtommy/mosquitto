@@ -32,7 +32,6 @@
 	<refsect1>
 		<title>Description</title>
 		<para><command>mosquitto</command> is a broker for the mqtt protocol version 3.1.</para>
-		<para>It is intended to be a drop in replacement for rsmb, but it's a little way off yet.</para>
 	</refsect1>
 
 	<refsect1>
@@ -64,9 +63,8 @@
 
 	<refsect1>
 		<title>Limitations</title>
-		<para><command>mosquitto</command> implements all of the mqtt protocol version 3.1, but there are some significant limitations compared to rsmb.</para>
+		<para><command>mosquitto</command> implements all of the mqtt protocol version 3.1, but there are some limitations compared to rsmb.</para>
 		<itemizedlist mark="circle">
-			<listitem><para>There is only basic bridge support.</para></listitem>
 			<listitem><para>There are fewer configuration options.</para></listitem>
 			<listitem><para>There is less logging information.</para></listitem>
 			<listitem><para>It isn't as well tested or documented...</para></listitem>
