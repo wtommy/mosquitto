@@ -21,7 +21,6 @@ set (MOSQ_SRCS
 	../lib/send_client_mosq.c ../lib/send_mosq.h
 	../lib/send_mosq.c ../lib/send_mosq.h
 	send_server.c
-	util.c
 	../lib/util_mosq.c ../lib/util_mosq.h
 	../lib/will_mosq.c ../lib/will_mosq.h)
 
@@ -77,8 +76,6 @@ if (NOT WIN32)
 else (NOT WIN32)
 	target_link_libraries(mosquitto ws2_32 ${MOSQ_LIBS})
 endif (NOT WIN32)
-set_target_properties(mosquitto PROPERTIES
-	VERSION ${VERSION})
 
 install(TARGETS mosquitto RUNTIME DESTINATION ${SBINDIR} LIBRARY DESTINATION ${LIBDIR})
 

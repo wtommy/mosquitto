@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2010,2011 Roger Light <roger@atchoo.org>
+Copyright (c) 2010-2012 Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -245,7 +245,7 @@ int mosquitto_publish(struct mosquitto *mosq, uint16_t *mid, const char *topic, 
 	if(!mosq || !topic || qos<0 || qos>2) return MOSQ_ERR_INVAL;
 	if(payloadlen > 268435455) return MOSQ_ERR_PAYLOAD_SIZE;
 
-	if(_mosquitto_wildcard_check(topic)){
+	if(_mosquitto_topic_wildcard_len_check(topic) != MOSQ_ERR_SUCCESS){
 		return MOSQ_ERR_INVAL;
 	}
 
@@ -378,7 +378,10 @@ int mosquitto_loop(struct mosquitto *mosq, int timeout)
 	fdcount = select(mosq->sock+1, &readfds, &writefds, NULL, &local_timeout);
 #endif
 	if(fdcount == -1){
-		return MOSQ_ERR_UNKNOWN; // FIXME what error to return?
+#ifdef WIN32
+		errno = WSAGetLastError();
+#endif
+		return MOSQ_ERR_ERRNO;
 	}else{
 		if(FD_ISSET(mosq->sock, &readfds)){
 			rc = mosquitto_loop_read(mosq);

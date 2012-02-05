@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2009-2011 Roger Light <roger@atchoo.org>
+Copyright (c) 2009-2012 Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,6 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 #else
 #include <process.h>
+#include <winsock2.h>
 #define snprintf sprintf_s
 #endif
 
@@ -151,6 +153,8 @@ int main(int argc, char *argv[])
 	bool debug = false;
 	struct mosquitto *mosq = NULL;
 	int rc;
+	char hostname[21];
+	char err[1024];
 	
 	uint8_t *will_payload = NULL;
 	long will_payloadlen = 0;
@@ -315,6 +319,10 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
+	if(clean_session == false && (id_prefix || !id)){
+		if(!quiet) fprintf(stderr, "Error: You must provide a client id if you are using the -c option.\n");
+		return 1;
+	}
 	if(id_prefix){
 		id = malloc(strlen(id_prefix)+10);
 		if(!id){
@@ -328,7 +336,9 @@ int main(int argc, char *argv[])
 			if(!quiet) fprintf(stderr, "Error: Out of memory.\n");
 			return 1;
 		}
-		snprintf(id, 30, "mosquitto_sub_%d", getpid());
+		memset(hostname, 0, 21);
+		gethostname(hostname, 20);
+		snprintf(id, 23, "mosq_sub_%d_%s", getpid(), hostname);
 	}
 
 	if(topic_count == 0){
@@ -375,7 +385,18 @@ int main(int argc, char *argv[])
 
 	rc = mosquitto_connect(mosq, host, port, keepalive, clean_session);
 	if(rc){
-		if(!quiet) fprintf(stderr, "Unable to connect (%d).\n", rc);
+		if(!quiet){
+			if(rc == MOSQ_ERR_ERRNO){
+#ifndef WIN32
+				strerror_r(errno, err, 1024);
+#else
+				FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, errno, 0, (LPTSTR)&err, 1024, NULL);
+#endif
+				fprintf(stderr, "Error: %s\n", err);
+			}else{
+				fprintf(stderr, "Unable to connect (%d).\n", rc);
+			}
+		}
 		return rc;
 	}
 

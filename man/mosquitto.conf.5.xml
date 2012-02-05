@@ -143,6 +143,15 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>connection_messages</option> &lt; true | false &gt;</term>
+				<listitem>
+					<para>If set to true, the log will include entries when
+					clients connect and disconnect. If set to false, these
+					entries will not appear.</para>
+					<para>Reloaded on reload signal.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>listener</option> <replaceable>port</replaceable></term>
 				<listitem>
 					<para>Listen for incoming network connection on the

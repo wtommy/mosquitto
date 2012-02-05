@@ -1,6 +1,5 @@
 /*
-Copyright (c) 2010,2011 Roger Light <roger@atchoo.org>
-Copyright (c) 2011 Sang Kyeong Nam
+Copyright (c) 2010-2012 Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -268,15 +267,14 @@ static int _sub_search(struct _mosquitto_db *db, struct _mosquitto_subhier *subh
 	/* FIXME - need to take into account source_id if the client is a bridge */
 	struct _mosquitto_subhier *branch;
 	int flag = 0;
-	int rc;
 
 	branch = subhier->children;
 	while(branch){
 		if(tokens && tokens->topic && (!strcmp(branch->topic, tokens->topic) || !strcmp(branch->topic, "+"))){
 			/* The topic matches this subscription.
 			 * Doesn't include # wildcards */
-			rc = _sub_search(db, branch, tokens->next, source_id, topic, qos, retain, stored);
-			if(rc == -1 || !tokens->next){
+			_sub_search(db, branch, tokens->next, source_id, topic, qos, retain, stored);
+			if(!tokens->next){
 				_subs_process(db, branch, source_id, topic, qos, retain, stored);
 			}
 		}else if(!strcmp(branch->topic, "#") && !branch->children && (!tokens || strcmp(tokens->topic, "/"))){
@@ -558,7 +556,7 @@ static int _retain_search(struct _mosquitto_db *db, struct _mosquitto_subhier *s
 		/* Subscriptions with wildcards in aren't really valid topics to publish to
 		 * so they can't have retained messages.
 		 */
-		if(!_mosquitto_wildcard_check(branch->topic)){
+		if(_mosquitto_topic_wildcard_len_check(branch->topic) == MOSQ_ERR_SUCCESS){
 			if(!strcmp(tokens->topic, "#") && !tokens->next){
 				if(branch->retained){
 					_retain_process(db, branch->retained, context, sub, sub_qos);

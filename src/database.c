@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2009-2011 Roger Light <roger@atchoo.org>
+Copyright (c) 2009-2012 Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -294,7 +294,15 @@ int mqtt3_db_message_insert(mosquitto_db *db, struct mosquitto *context, uint16_
 
 	if(context->sock == INVALID_SOCKET){
 		/* Client is not connected only queue messages with QoS>0. */
-		if(qos == 0) return 2;
+		if(qos == 0){
+			if(!context->bridge){
+				return 2;
+			}else{
+				if(context->bridge->start_type != bst_lazy){
+					return 2;
+				}
+			}
+		}
 	}
 	if(context->msgs){
 		tail = context->msgs;
@@ -758,26 +766,35 @@ void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time)
 {
 	static time_t last_update = 0;
 	time_t now = time(NULL);
+	time_t uptime;
 	char buf[100];
 	int value;
 	int inactive;
+	int active;
 	unsigned long value_ul;
 	unsigned long long value_ull;
 
 	static int msg_store_count = -1;
 	static int client_count = -1;
+	static int client_max = -1;
 	static int inactive_count = -1;
+	static int active_count = -1;
 #ifdef REAL_WITH_MEMORY_TRACKING
 	static unsigned long current_heap = -1;
 	static unsigned long max_heap = -1;
 #endif
 	static unsigned long msgs_received = -1;
 	static unsigned long msgs_sent = -1;
+	static unsigned int msgsps_received = -1;
+	static unsigned int msgsps_sent = -1;
 	static unsigned long long bytes_received = -1;
 	static unsigned long long bytes_sent = -1;
+	static unsigned int bytesps_received = -1;
+	static unsigned int bytesps_sent = -1;
 
 	if(interval && now - interval > last_update){
-		snprintf(buf, 100, "%d seconds", (int)(now - start_time));
+		uptime = now - start_time;
+		snprintf(buf, 100, "%d seconds", (int)uptime);
 		mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/uptime", 2, strlen(buf), (uint8_t *)buf, 1);
 
 		if(db->msg_store_count != msg_store_count){
@@ -796,6 +813,17 @@ void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time)
 				inactive_count = inactive;
 				snprintf(buf, 100, "%d", inactive_count);
 				mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/clients/inactive", 2, strlen(buf), (uint8_t *)buf, 1);
+			}
+			active = client_count - inactive;
+			if(active_count != active){
+				active_count = active;
+				snprintf(buf, 100, "%d", active_count);
+				mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/clients/active", 2, strlen(buf), (uint8_t *)buf, 1);
+			}
+			if(value > client_max){
+				client_max = value;
+				snprintf(buf, 100, "%d", client_max);
+				mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/clients/maximum", 2, strlen(buf), (uint8_t *)buf, 1);
 			}
 		}
 
@@ -842,6 +870,36 @@ void mqtt3_db_sys_update(mosquitto_db *db, int interval, time_t start_time)
 			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/bytes/sent", 2, strlen(buf), (uint8_t *)buf, 1);
 		}
 		
+		if(uptime){
+			value = msgs_received/uptime;
+			if(msgsps_received != value){
+				msgsps_received = value;
+				snprintf(buf, 100, "%u", msgsps_received);
+				mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/per second/received", 2, strlen(buf), (uint8_t *)buf, 1);
+			}
+
+			value = msgs_sent/uptime;
+			if(msgsps_sent != value){
+				msgsps_sent = value;
+				snprintf(buf, 100, "%u", msgsps_sent);
+				mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/messages/per second/sent", 2, strlen(buf), (uint8_t *)buf, 1);
+			}
+
+			value = bytes_received/uptime;
+			if(bytesps_received != value){
+				bytesps_received = value;
+				snprintf(buf, 100, "%u", bytesps_received);
+				mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/bytes/per second/received", 2, strlen(buf), (uint8_t *)buf, 1);
+			}
+
+			value = bytes_sent/uptime;
+			if(bytesps_sent != value){
+				bytesps_sent = value;
+				snprintf(buf, 100, "%u", bytesps_sent);
+				mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/bytes/per second/sent", 2, strlen(buf), (uint8_t *)buf, 1);
+			}
+		}
+
 		last_update = time(NULL);
 	}
 }

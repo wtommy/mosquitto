@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2009-2011 Roger Light <roger@atchoo.org>
+Copyright (c) 2009-2012 Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -71,8 +71,10 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 		return 3;
 	}
 	if(strcmp(protocol_name, PROTOCOL_NAME)){
-		_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "Invalid protocol \"%s\" in CONNECT from %s.",
-				protocol_name, context->address);
+		if(db->config->connection_messages == true){
+			_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "Invalid protocol \"%s\" in CONNECT from %s.",
+					protocol_name, context->address);
+		}
 		_mosquitto_free(protocol_name);
 		mqtt3_context_disconnect(db, context_index);
 		return MOSQ_ERR_PROTOCOL;
@@ -84,8 +86,10 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 		return 1;
 	}
 	if(protocol_version != PROTOCOL_VERSION){
-		_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "Invalid protocol version %d in CONNECT from %s.",
-				protocol_version, context->address);
+		if(db->config->connection_messages == true){
+			_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "Invalid protocol version %d in CONNECT from %s.",
+					protocol_version, context->address);
+		}
 		_mosquitto_free(protocol_name);
 		_mosquitto_send_connack(context, 1);
 		mqtt3_context_disconnect(db, context_index);
@@ -193,7 +197,9 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 				/* FIXME - does anything else need to be done here? */
 			}else{
 				/* Client is already connected, disconnect old version */
-				_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Client %s already connected, closing old connection.", client_id);
+				if(db->config->connection_messages == true){
+					_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Client %s already connected, closing old connection.", client_id);
+				}
 			}
 			db->contexts[i]->clean_session = clean_session;
 			mqtt3_context_cleanup(db, db->contexts[i], false);
@@ -273,7 +279,9 @@ int mqtt3_handle_connect(mosquitto_db *db, int context_index)
 		context->acl_list = NULL;
 	}
 
-	_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "New client connected from %s as %s.", context->address, client_id);
+	if(db->config->connection_messages == true){
+		_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "New client connected from %s as %s.", context->address, client_id);
+	}
 
 	context->state = mosq_cs_connected;
 	return _mosquitto_send_connack(context, 0);

@@ -1,4 +1,4 @@
-# Copyright (c) 2010, Roger Light <roger@atchoo.org>
+# Copyright (c) 2010-2012 Roger Light <roger@atchoo.org>
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -319,7 +319,7 @@ class Mosquitto:
 		else:
 			payloadlen = len(payload)
 
-		return _mosquitto_will_set(self._mosq, true, topic, payloadlen, cast(payload, POINTER(c_uint8)), qos, retain)
+		return _mosquitto_will_set(self._mosq, True, topic, payloadlen, cast(payload, POINTER(c_uint8)), qos, retain)
 
 	def will_clear(self):
 		"""Clear a Will that was previously set with the will_set() call.

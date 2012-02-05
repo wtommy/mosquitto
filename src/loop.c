@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2009-2011 Roger Light <roger@atchoo.org>
+Copyright (c) 2009-2012 Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -136,7 +136,9 @@ int mosquitto_main_loop(mosquitto_db *db, int *listensock, int listensock_count,
 							mqtt3_context_disconnect(db, i);
 						}
 					}else{
-						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", db->contexts[i]->id);
+						if(db->config->connection_messages == true){
+							_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Client %s has exceeded timeout, disconnecting.", db->contexts[i]->id);
+						}
 						/* Client has exceeded keepalive*1.5 */
 						mqtt3_context_disconnect(db, i);
 					}
@@ -232,10 +234,12 @@ static void loop_handle_errors(mosquitto_db *db, struct pollfd *pollfds)
 	for(i=0; i<db->context_count; i++){
 		if(db->contexts[i] && db->contexts[i]->sock != INVALID_SOCKET){
 			if(pollfds[db->contexts[i]->sock].revents & POLLHUP){
-				if(db->contexts[i]->state != mosq_cs_disconnecting){
-					_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Socket error on client %s, disconnecting.", db->contexts[i]->id);
-				}else{
-					_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Client %s disconnected.", db->contexts[i]->id);
+				if(db->config->connection_messages == true){
+					if(db->contexts[i]->state != mosq_cs_disconnecting){
+						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Socket error on client %s, disconnecting.", db->contexts[i]->id);
+					}else{
+						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Client %s disconnected.", db->contexts[i]->id);
+					}
 				}
 				mqtt3_context_disconnect(db, i);
 			}
@@ -251,10 +255,12 @@ static void loop_handle_reads_writes(mosquitto_db *db, struct pollfd *pollfds)
 		if(db->contexts[i] && db->contexts[i]->sock != INVALID_SOCKET){
 			if(pollfds[db->contexts[i]->sock].revents & POLLOUT){
 				if(_mosquitto_packet_write(db->contexts[i])){
-					if(db->contexts[i]->state != mosq_cs_disconnecting){
-						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Socket write error on client %s, disconnecting.", db->contexts[i]->id);
-					}else{
-						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Client %s disconnected.", db->contexts[i]->id);
+					if(db->config->connection_messages == true){
+						if(db->contexts[i]->state != mosq_cs_disconnecting){
+							_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Socket write error on client %s, disconnecting.", db->contexts[i]->id);
+						}else{
+							_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Client %s disconnected.", db->contexts[i]->id);
+						}
 					}
 					/* Write error or other that means we should disconnect */
 					mqtt3_context_disconnect(db, i);
@@ -264,10 +270,12 @@ static void loop_handle_reads_writes(mosquitto_db *db, struct pollfd *pollfds)
 		if(db->contexts[i] && db->contexts[i]->sock != INVALID_SOCKET){
 			if(pollfds[db->contexts[i]->sock].revents & POLLIN){
 				if(_mosquitto_packet_read(db, i)){
-					if(db->contexts[i]->state != mosq_cs_disconnecting){
-						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Socket read error on client %s, disconnecting.", db->contexts[i]->id);
-					}else{
-						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Client %s disconnected.", db->contexts[i]->id);
+					if(db->config->connection_messages == true){
+						if(db->contexts[i]->state != mosq_cs_disconnecting){
+							_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Socket read error on client %s, disconnecting.", db->contexts[i]->id);
+						}else{
+							_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "Client %s disconnected.", db->contexts[i]->id);
+						}
 					}
 					/* Read error or other that means we should disconnect */
 					mqtt3_context_disconnect(db, i);

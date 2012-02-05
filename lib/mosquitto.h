@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2010,2011 Roger Light <roger@atchoo.org>
+Copyright (c) 2010-2012 Roger Light <roger@atchoo.org>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -64,8 +64,8 @@ extern "C" {
 #endif
 
 #define LIBMOSQUITTO_MAJOR 0
-#define LIBMOSQUITTO_MINOR 14
-#define LIBMOSQUITTO_REVISION 4
+#define LIBMOSQUITTO_MINOR 15
+#define LIBMOSQUITTO_REVISION 0
 #define LIBMOSQUITTO_VERSION_NUMBER (LIBMOSQUITTO_MAJOR*1000000+LIBMOSQUITTO_MINOR*1000+LIBMOSQUITTO_REVISION)
 
 /* Log destinations */
@@ -96,6 +96,7 @@ extern "C" {
 #define MOSQ_ERR_AUTH 11
 #define MOSQ_ERR_ACL_DENIED 12
 #define MOSQ_ERR_UNKNOWN 13
+#define MOSQ_ERR_ERRNO 14
 
 struct mosquitto_message{
 	uint16_t mid;
@@ -113,12 +114,13 @@ struct mosquitto;
  * 
  * The following functions that deal with network operations will return
  * MOSQ_ERR_SUCCESS on success, but this does not mean that the operation has
- * taken place. Rather, the appropriate messages will have been queued and will
- * be completed when calling mosquitto_loop(). To be sure of the event having
- * taken place, use the callbacks. This is especially important when
- * disconnecting a client that has a will. If the broker does not receive the
- * DISCONNECT command, it will assume that the client has disconnected
- * unexpectedly and send the will.
+ * taken place. An attempt will be made to write the network data, but if the
+ * socket is not available for writing at that time then the packet will not be
+ * sent. To ensure the packet is sent, call mosquitto_loop() (which must also
+ * be called to process incoming network data).
+ * This is especially important when disconnecting a client that has a will. If
+ * the broker does not receive the DISCONNECT command, it will assume that the
+ * client has disconnected unexpectedly and send the will.
  *
  * mosquitto_connect()
  * mosquitto_disconnect()
@@ -309,6 +311,10 @@ libmosq_EXPORT int mosquitto_username_pw_set(struct mosquitto *mosq, const char 
  * Returns:
  * 	MOSQ_ERR_SUCCESS - on success.
  * 	MOSQ_ERR_INVAL -   if the input parameters were invalid.
+ * 	MOSQ_ERR_ERRNO -   if a system call returned an error. The variable errno
+ *                     contains the error code, even on Windows.
+ *                     Use strerror_r() where available or FormatMessage() on
+ *                     Windows.
  *
  * See Also:
  * 	<mosquitto_reconnect>, <mosquitto_disconnect>
@@ -324,6 +330,14 @@ libmosq_EXPORT int mosquitto_connect(struct mosquitto *mosq, const char *host, i
  * connection has been lost. It uses the values provided in the
  * <mosquitto_connect> call and so must not be called before
  * <mosquitto_connect>.
+ *
+ * Returns:
+ * 	MOSQ_ERR_SUCCESS - on success.
+ * 	MOSQ_ERR_INVAL -   if the input parameters were invalid.
+ * 	MOSQ_ERR_ERRNO -   if a system call returned an error. The variable errno
+ *                     contains the error code, even on Windows.
+ *                     Use strerror_r() where available or FormatMessage() on
+ *                     Windows.
  *
  * See Also:
  * 	<mosquitto_connect>, <mosquitto_disconnect>
@@ -481,6 +495,10 @@ libmosq_EXPORT void mosquitto_message_free(struct mosquitto_message **message);
  *  MOSQ_ERR_CONN_LOST - if the connection to the broker was lost.
  *	MOSQ_ERR_PROTOCOL -  if there is a protocol error communicating with the
  *                       broker.
+ * 	MOSQ_ERR_ERRNO -     if a system call returned an error. The variable errno
+ *                       contains the error code, even on Windows.
+ *                       Use strerror_r() where available or FormatMessage() on
+ *                       Windows.
  */
 libmosq_EXPORT int mosquitto_loop(struct mosquitto *mosq, int timeout);
 
@@ -516,6 +534,10 @@ libmosq_EXPORT int mosquitto_socket(struct mosquitto *mosq);
  *  MOSQ_ERR_CONN_LOST - if the connection to the broker was lost.
  *	MOSQ_ERR_PROTOCOL -  if there is a protocol error communicating with the
  *                       broker.
+ * 	MOSQ_ERR_ERRNO -     if a system call returned an error. The variable errno
+ *                       contains the error code, even on Windows.
+ *                       Use strerror_r() where available or FormatMessage() on
+ *                       Windows.
  *
  * See Also:
  *	<mosquitto_socket>, <mosquitto_loop_write>, <mosquitto_loop_misc>
@@ -540,6 +562,10 @@ libmosq_EXPORT int mosquitto_loop_read(struct mosquitto *mosq);
  *  MOSQ_ERR_CONN_LOST - if the connection to the broker was lost.
  *	MOSQ_ERR_PROTOCOL -  if there is a protocol error communicating with the
  *                       broker.
+ * 	MOSQ_ERR_ERRNO -     if a system call returned an error. The variable errno
+ *                       contains the error code, even on Windows.
+ *                       Use strerror_r() where available or FormatMessage() on
+ *                       Windows.
  *
  * See Also:
  *	<mosquitto_socket>, <mosquitto_loop_read>, <mosquitto_loop_misc>
