@@ -31,7 +31,7 @@ dist : reallyclean
 	@for d in ${DISTDIRS}; do $(MAKE) -C $${d} dist; done
 	
 	mkdir -p dist/mosquitto-${VERSION}
-	cp -r client installer lib logo man misc security service src ChangeLog.txt CMakeLists.txt COPYING Makefile compiling.txt config.h config.mk external_security_checks.txt readme.txt readme-windows.txt mosquitto.conf aclfile.example pwfile.example dist/mosquitto-${VERSION}/
+	cp -r client examples installer lib logo man misc security service src ChangeLog.txt CMakeLists.txt COPYING Makefile compiling.txt config.h config.mk external_security_checks.txt readme.txt readme-windows.txt mosquitto.conf aclfile.example pwfile.example dist/mosquitto-${VERSION}/
 	cd dist; tar -zcf mosquitto-${VERSION}.tar.gz mosquitto-${VERSION}/
 	for m in libmosquitto.3 mosquitto.8 mosquitto.conf.5 mosquitto_pub.1 mosquitto_sub.1 mqtt.7; \
 		do \
